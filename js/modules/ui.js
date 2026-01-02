@@ -27,8 +27,7 @@ function enterGameScene() {
 }
 
 /**
- * 刷新主界面 UI (左侧状态栏)
- * 将 player 数据映射到 HTML 元素
+ * 刷新主界面 UI (核心渲染函数)
  */
 function updateUI() {
   if (!player) return;
@@ -39,30 +38,52 @@ function updateUI() {
     if (el) el.innerText = val;
   };
 
-  // 1. 角色名片
+  // --- 1. 角色名片 ---
   setTxt('profile_name', player.name);
   setTxt('profile_age', player.age + "岁");
-  setTxt('profile_generation', `第 ${player.generation || 1} 世`); // 兼容旧档
+  setTxt('profile_generation', `第 ${player.generation || 1} 世`);
 
-  // 2. 核心属性
+  // --- 【新增】日期与时辰计算 ---
+  // 假设 player.dayCount 是总天数，player.timeHours 是当前小时(0-23)
+  // 年份计算：初始秦始皇三十七年(前210年) + (总天数 / 365)
+  const startYear = 37;
+  const currentYear = startYear + Math.floor(player.dayCount / 360); // 简单按360天一年
+  const month = Math.floor((player.dayCount % 360) / 30) + 1;
+  const day = (player.dayCount % 30) + 1;
+
+  // 时辰计算
+  // (小时+1)/2 取整，就是时辰索引。比如 23点和0点都是 (24/2)=12%12=0 (子时)
+  const hour = player.timeHours || 0;
+  const shichenIndex = Math.floor((hour + 1) % 24 / 2) % 12;
+  const shichenName = (typeof SHICHEN_NAMES !== 'undefined') ? SHICHEN_NAMES[shichenIndex] : '子';
+
+  const dateStr = `秦始皇${currentYear}年 ${month}月 ${day}日 · ${shichenName}时`;
+  setTxt('profile_date', dateStr);
+
+
+  // --- 2. 核心属性 (左右对齐已经在CSS里实现了) ---
   setTxt('val_jing', player.attr.jing);
   setTxt('val_qi', player.attr.qi);
   setTxt('val_shen', player.attr.shen);
   setTxt('val_money', player.money);
 
-  // 3. 状态条 (数值/上限)
-  // 这是一个简单的计算，实际应该用 derived 属性
+  // --- 3. 状态条 ---
   const hpMax = player.derived ? player.derived.hpMax : 100;
   const mpMax = player.derived ? player.derived.mpMax : 50;
 
-  setTxt('val_hp', `${Math.floor(player.status.hp)}/${hpMax}`);
-  setTxt('val_mp', `${Math.floor(player.status.mp)}/${mpMax}`);
-  setTxt('val_hunger', `${Math.floor(player.status.hunger)}/100`);
+  // 为了美观，可以显示 "当前/上限"
+  setTxt('val_hp', `${Math.floor(player.status.hp)} / ${hpMax}`);
+  setTxt('val_mp', `${Math.floor(player.status.mp)} / ${mpMax}`);
+  setTxt('val_hunger', `${Math.floor(player.status.hunger)} / 100`);
 
-  // 4. 战斗属性
+  // --- 4. 战斗属性 ---
   setTxt('val_atk', player.derived.atk || 0);
   setTxt('val_def', player.derived.def || 0);
   setTxt('val_speed', player.derived.speed || 0);
+
+  // --- 5. 刷新Buff列表 (如果有的话) ---
+  // 这里预留一个刷新 Buff DOM 的逻辑位置
+  // updateBuffList();
 }
 
 /* --- 弹窗逻辑 --- */

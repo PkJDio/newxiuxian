@@ -2,7 +2,7 @@
 
 /* --- 通用中型按钮 (弹窗底部用) --- */
 .ink_btn_medium {
-  padding: 6px 20px;
+  padding: 8px 24px;
   border: 1px solid #333;
   background: #fff;
   color: #333;
@@ -10,6 +10,8 @@
   cursor: pointer;
   font-family: "Kaiti", serif;
   transition: all 0.2s;
+  /* 【修改】加大 */
+  font-size: 16px;
 }
 .ink_btn_medium:hover {
   background: #333;
@@ -44,15 +46,16 @@
 
 /* --- 顶部标签页按钮 (Tab) --- */
 .ink_btn_tab {
-  padding: 8px 18px;
+  padding: 10px 20px;
   background: #dcdcdc;
   border: 1px solid #999;
-  border-bottom: none; /* 底部开口 */
+  border-bottom: none;
   border-radius: 4px 4px 0 0;
   color: #444;
   cursor: pointer;
   font-weight: bold;
-  font-size: 14px;
+  /* 【修改】加大 */
+  font-size: 16px;
   transition: background 0.2s;
 }
 .ink_btn_tab:hover { background: #eee; color: #000; }
@@ -63,7 +66,8 @@
 .act_btn {
   background: #fdfdfd;
   border: none;
-  font-size: 15px;
+  /* 【修改】加大，且加粗 */
+  font-size: 18px;
   font-weight: bold;
   color: #333;
   cursor: pointer;
@@ -73,7 +77,7 @@
   justify-content: center;
   align-items: center;
   gap: 4px;
-  height: 100%; /* 撑满格子 */
+  height: 100%;
   font-family: "Kaiti", serif;
 }
 .act_btn:hover {

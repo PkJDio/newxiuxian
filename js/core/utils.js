@@ -200,6 +200,7 @@ const TooltipManager = {
   // 2. 物品悬浮窗 (已升级：支持功法学习状态显示)
   // 2. 物品悬浮窗 (升级版：支持不同模式)
   // 参数: e(事件), itemId(ID), instance(实体对象), mode(模式字符串)
+  // 2. 物品悬浮窗 (优化版：隐藏0值属性，自动管理分割线)
   showItem: function(e, itemId, instance = null, mode = 'normal') {
     this._init();
     const item = instance || GAME_DB.items.find(i => i.id === itemId);
@@ -207,7 +208,7 @@ const TooltipManager = {
 
     const color = (RARITY_CONFIG[item.rarity] || { color: '#ccc' }).color;
 
-    // --- 基础信息 (所有模式都显示) ---
+    // --- 基础信息 ---
     let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
     html += `<div class="tt_sub">${TYPE_MAPPING[item.type] || '未知'} · ${item.rarity}品</div>`;
     html += `<div class="tt_desc">${item.desc}</div>`;
@@ -228,17 +229,41 @@ const TooltipManager = {
             </div>`;
       }
 
-      // 2. 价格显示 (预留逻辑，如果物品有 price 属性)
+      // 2. 价格显示
       if (item.price) {
         html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.price} 灵石</span></div>`;
       }
     }
 
-    // --- 属性效果 (所有模式都显示) ---
+    // --- 属性效果 (Effects) ---
     if (item.effects) {
-      html += `<div class="tt_sep"></div>`;
+      let effectRows = ""; // 先缓存 HTML，确认有内容后再拼接
+
       for (let k in item.effects) {
-        html += `<div class="tt_row"><span>${k}</span><span>+${item.effects[k]}</span></div>`;
+        const val = item.effects[k];
+
+        // 【关键修改】数值为0直接跳过
+        if (val === 0) continue;
+
+        // 获取中文名
+        const attrName = (typeof ATTR_MAPPING !== 'undefined' && ATTR_MAPPING[k]) ? ATTR_MAPPING[k] : k;
+
+        // 格式化数值
+        const valStr = val > 0 ? `+${val}` : `${val}`;
+        const valColor = val > 0 ? '#5cff5c' : '#ff5555';
+
+        effectRows += `
+            <div class="tt_row">
+                <span style="color:#aaa">${attrName}</span>
+                <span style="color:${valColor}">${valStr}</span>
+            </div>
+        `;
+      }
+
+      // 只有当有有效属性时，才添加分割线和内容
+      if (effectRows !== "") {
+        html += `<div class="tt_sep"></div>`;
+        html += effectRows;
       }
     }
 
@@ -247,7 +272,6 @@ const TooltipManager = {
     this.el.classList.remove('hidden');
     this._move(e);
   },
-
   // 3. 技能悬浮窗 (纯技能面板用)
   showSkill: function(e, skillId) {
     this._init();

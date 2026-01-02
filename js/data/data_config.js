@@ -18,6 +18,37 @@ const TYPE_MAPPING = {
     'pill': '丹药', 'herb': '草药', 'tool': '工具',
     'mount': '坐骑', 'fishing_rod': '钓具'
 };
+// 【新增】属性名映射表 (用于悬浮窗显示)
+const ATTR_MAPPING = {
+  // 基础属性
+  "jing": "精(体质)",
+  "qi": "气(能量)",
+  "shen": "神(悟性)",
+
+  // 战斗属性
+  "hpMax": "生命上限",
+  "hp_max": "生命上限",
+  "mpMax": "法力上限",
+  "hp": "生命",
+  "mp": "法力",
+  "atk": "攻击",
+  "def": "防御",
+  "speed": "速度",
+  "critRate": "暴击率",
+  "critDmg": "暴击伤害",
+  "dodge": "闪避",
+
+  // 生活/特殊
+  "mining": "采矿效率",
+  "gathering": "采集效率",
+  "alchemy": "炼丹成功率",
+  "luck": "气运",
+  "storage": "背包空间",
+  //饱食度
+  "hunger": "饱食度",
+  //功法上限
+  "max_skill_level": "修行上限",
+};
 
 /* ================= 游戏核心常量配置 ================= */
 

@@ -32,8 +32,9 @@
 #modal_header {
   background: #333;
   color: #eee;
-  padding: 12px;
-  font-size: 18px;
+  padding: 15px;
+  /* 【修改】标题加大 */
+  font-size: 22px;
   font-weight: bold;
   text-align: center;
   letter-spacing: 4px;
@@ -44,9 +45,11 @@
 /* 弹窗内容区 */
 #modal_body {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
   overflow-y: auto;
-  font-size: 16px;
+  /* 【修改】正文加大 */
+  font-size: 18px;
+  font-weight: 500;
   color: #333;
   line-height: 1.6;
 }
@@ -98,22 +101,25 @@
   color: #fff;
 }
 
+
 /* --- 4. Toast (自动消失的提示条) --- */
 .ink_toast {
   position: fixed;
-  top: 15%; /* 靠上显示 */
+  top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(20, 20, 20, 0.9);
+  background: rgba(20, 20, 20, 0.95);
   color: #fff;
-  padding: 12px 24px;
+  padding: 15px 30px;
   border-radius: 4px;
-  font-size: 16px;
+  /* 【修改】提示字加大 */
+  font-size: 20px;
+  font-weight: bold;
   border: 1px solid #555;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   opacity: 0;
   transition: opacity 0.3s, transform 0.3s;
-  z-index: 2000; /* 比弹窗更高 */
+  z-index: 2000;
   pointer-events: none;
   font-family: "Kaiti", serif;
   white-space: nowrap;
