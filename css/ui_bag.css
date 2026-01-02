@@ -1,0 +1,173 @@
+/* css/ui_bag.css - 背包样式 (宽屏重构版) */
+
+/* === 弹窗宽屏控制 === */
+/* 这个类名需要由 JS 在打开弹窗时传入 */
+.modal_bag {
+  width: 75vw !important; /* 占据屏幕 3/4 */
+  max-width: 95vw !important; /* 覆盖默认的最大限制 */
+}
+
+/* === 背包整体布局 === */
+.bag_container {
+  display: flex;
+  flex-direction: column;
+  height: 65vh; /* 稍微增加高度以适应更宽的布局 */
+  gap: 15px;
+  font-size: 18px; /* 【需求】最小文字 18px */
+}
+
+/* === 顶部装备栏 === */
+.bag_equipment_row {
+  display: flex;
+  justify-content: center;
+  gap: 30px; /* 增加间距 */
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+/* 装备单元包裹 (文字 + 框) */
+.bag_equip_wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* 装备标签文字 */
+.bag_equip_label {
+  margin-right: 10px;
+  font-size: 18px; /* 增大文字 */
+  font-weight: bold;
+  color: #555;
+  white-space: nowrap;
+}
+
+/* 装备槽方框 */
+.bag_equip_box {
+  width: 55px;  /* 稍微加大 */
+  height: 55px;
+  border: 2px dashed #999;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #fafafa;
+  transition: all 0.2s;
+  font-size: 32px; /* Emoji 变大 */
+}
+
+.bag_equip_box:hover {
+  border-color: #555;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.bag_equip_box.equipped {
+  border-style: solid;
+  border-color: #333;
+  background-color: #fff;
+}
+
+/* === 中间主体区域 (网格 + 详情) === */
+.bag_main_area {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* 防止撑开父容器 */
+  gap: 15px;
+}
+
+/* 左侧网格滚动区 */
+.bag_grid_scroll {
+  flex: 3; /* 占比加大 */
+  overflow-y: auto; /* 仅垂直滚动 */
+  overflow-x: hidden; /* 禁止水平滚动 */
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #fcfcfc;
+}
+
+/* 网格布局核心 */
+.bag_grid_content {
+  display: grid;
+  /* 【需求核心】自动填充，最小宽度90px，不够就换行，绝不出现横向滚动条 */
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+/* 单个物品格子 */
+.bag_grid_item {
+  aspect-ratio: 1/1; /* 保持正方形 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  background-color: #fff;
+  transition: all 0.2s;
+  padding: 5px;
+}
+
+.bag_grid_item:hover {
+  border-color: #333;
+  background-color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.bag_grid_icon {
+  font-size: 36px; /* 物品图标加大 */
+  margin-bottom: 5px;
+}
+
+.bag_grid_name {
+  width: 100%;
+  text-align: center;
+  font-size: 14px; /* 名字稍微小一点点以免换行太严重，但整体UI是18px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bag_item_count {
+  position: absolute;
+  right: 4px; bottom: 2px;
+  font-weight: bold;
+  font-size: 14px;
+  background: rgba(255,255,255,0.9);
+  padding: 0 4px;
+  border-radius: 4px;
+  color: #333;
+}
+
+/* === 右侧详情面板 === */
+.bag_detail_panel {
+  flex: 2; /* 详情页占比 */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #eee;
+  background: #fff;
+  font-size: 18px; /* 详情文字统一 18px */
+}
+
+.bag_detail_header {
+  font-size: 24px;
+  font-weight: bold;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bag_detail_type { font-size: 16px; color: #666; margin-bottom: 10px; }
+.bag_detail_desc { font-style: italic; color: #666; margin-bottom: 20px; line-height: 1.5; }
+.bag_detail_stats { font-size: 18px; color: #444; margin: 10px 0; line-height: 1.6; }
+.bag_detail_line { height: 1px; background: #eee; margin: 10px 0; }
+.bag_detail_actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }

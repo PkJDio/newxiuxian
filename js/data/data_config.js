@@ -143,3 +143,14 @@ const PLAYER_TEMPLATE = {
 
   logs: []
 };
+// =========================================================
+// 【核心修正】将常量显式挂载到 window，防止其他文件访问不到
+// =========================================================
+window.RARITY_CONFIG = RARITY_CONFIG;
+window.TYPE_MAPPING = TYPE_MAPPING;
+window.ATTR_MAPPING = ATTR_MAPPING;
+window.CURRENT_GAME_VERSION = CURRENT_GAME_VERSION;
+window.SAVE_KEY = SAVE_KEY;
+window.SKILL_CONFIG = SKILL_CONFIG;
+window.PLAYER_TEMPLATE = PLAYER_TEMPLATE;
+window.SHICHEN_NAMES = SHICHEN_NAMES;

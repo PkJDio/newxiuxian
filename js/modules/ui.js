@@ -1,4 +1,4 @@
-// 界面交互：背包、技能面板、更新DOM
+// ui.js - 核心界面交互 (去除背包逻辑)
 console.log("加载 界面交互")
 
 /* ================= 界面交互逻辑 ================= */
@@ -17,8 +17,6 @@ function enterGameScene() {
 
     // 进入后立即刷新一次界面
     updateUI();
-
-
   }
 }
 
@@ -30,7 +28,6 @@ function updateUI() {
   if (!player) return;
 
   // 1. 核心：每帧刷新前，先重新计算属性
-  // 这样保证装备、Buff变动后立刻生效
   if (typeof recalcStats === 'function') {
     recalcStats();
   }
@@ -44,10 +41,9 @@ function updateUI() {
     const val = player.derived[key] || 0;
 
     // 更新文本
-    el.innerText = Math.floor(val); // 取整显示
+    el.innerText = Math.floor(val);
 
     // 绑定悬浮窗 (Tooltip)
-    // 移入时显示详情，移出时隐藏
     el.onmouseenter = function(e) {
       if(window.showStatusTooltip) window.showStatusTooltip(e, key, label);
     };
@@ -66,7 +62,7 @@ function updateUI() {
   const elGen = document.getElementById('profile_generation');
   if(elGen) elGen.innerText = `第 ${player.generation || 1} 世`;
 
-  // 2. 核心属性 (精气神)
+  // 2. 核心属性
   updateVal('val_jing', 'jing', '精(体质)');
   updateVal('val_qi',   'qi',   '气(能量)');
   updateVal('val_shen', 'shen', '神(悟性)');
@@ -76,12 +72,11 @@ function updateUI() {
   updateVal('val_def',   'def',   '防御力');
   updateVal('val_speed', 'speed', '速度');
 
-  // 4. 状态条 (数值/上限)
+  // 4. 状态条
   const setBar = (idVal, current, max, label) => {
     const el = document.getElementById(idVal);
     if(el) {
       el.innerText = `${Math.floor(current)}/${Math.floor(max)}`;
-      // 绑定上限的悬浮窗
       el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, label, '上限详情'); };
       el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
     }
@@ -99,10 +94,6 @@ function updateUI() {
   updateBuffs();
 }
 
-/**
- * 渲染左侧“当前状态”栏的 Buff 列表
- * 读取 player.buffs 数组
- */
 /**
  * 渲染左侧“当前状态”栏的 Buff 列表
  */
@@ -126,14 +117,12 @@ function updateBuffs() {
   Object.values(player.buffs || {}).forEach(buff => {
     const div = document.createElement('div');
     div.className = 'buff_item';
-    // 样式处理
     if (buff.type === 'bad' || buff.type === 'debuff') {
       div.classList.add('text_red');
     } else {
       div.classList.add('text_green');
     }
 
-    // 显示文本：中毒 (hpMax -10)
     let effectText = "";
     if(buff.attr && buff.val) {
       const op = buff.val > 0 ? "+" : "";
@@ -144,7 +133,8 @@ function updateBuffs() {
     buffListEl.appendChild(div);
   });
 }
-/* --- 弹窗逻辑 --- */
+
+/* --- 通用弹窗逻辑 (保留) --- */
 
 /**
  * 显示更新日志
@@ -160,8 +150,6 @@ function showChangelogModal() {
                 <li>[地图] 2700里超大无缝地图底层实装。</li>
                 <li>[系统] 引入时间、疲劳、天气系统。</li>
             </ul>
-            <br>
-            <p style="color:#666">更多内容持续开发中...</p>
         </div>
     `;
   if (window.showGeneralModal) window.showGeneralModal(title, content);
@@ -176,22 +164,19 @@ function showGalleryModal() {
   let html = `<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding: 10px;">`;
 
   if (!GAME_DB.items || GAME_DB.items.length === 0) {
-    html += `<div style="padding:20px; color:#888;">暂无收录物品数据...<br>(请在 data 文件夹下添加数据)</div>`;
+    html += `<div style="padding:20px; color:#888;">暂无收录物品数据...</div>`;
   } else {
     GAME_DB.items.forEach(item => {
       const color = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
-
       html += `
                 <div class="ink_card"
                      style="width:120px; height:120px; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:help; transition:transform 0.2s;"
                      onmouseenter="showItemTooltip(event, '${item.id}', null, 'gallery')"
                      onmouseleave="hideTooltip()"
                      onmousemove="moveTooltip(event)">
-
                     <div style="font-weight:bold; color:${color}; font-size:18px; text-align:center; margin-bottom:6px;">
                         ${item.name}
                     </div>
-
                     <div style="color:#999; font-size:16px;">
                         ${TYPE_MAPPING[item.type] || '未知'}
                     </div>

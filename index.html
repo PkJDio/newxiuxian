@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>水墨修仙 - 重构版</title>
     <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
 
     <div id="scene_menu" class="scene active">
         <div class="ink_bg_decoration"></div>
-        
+
         <h1 class="menu_title">修仙模拟器</h1>
-        
+
         <div class="menu_btn_group">
             <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
             <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
@@ -20,7 +21,7 @@
         </div>
 
         <div class="menu_version">当前版本：HTML重构版 v2.0</div>
-        
+
         <div id="menu_changelog_panel" class="ink_panel hidden">
             <h3>更新日志</h3>
             <p>1. 架构重构完成</p>
@@ -29,7 +30,7 @@
     </div>
 
     <div id="scene_game" class="scene">
-        
+
         <div id="left_status_panel">
             <div id="left_profile_box" class="ink_card">
                 <div class="profile_row">
@@ -78,10 +79,10 @@
         <div id="center_action_panel">
             <div id="center_toolbar">
                 <button id="btn_open_map" class="ink_btn_tab">🗺️ 地图</button>
-                <button id="btn_open_bag" class="ink_btn_tab">🎒 行囊</button>
+                <button id="btn_open_bag" class="ink_btn_tab" onclick="openBag()">🎒 行囊</button>
                 <button id="btn_open_skill" class="ink_btn_tab">📚 技能</button>
                 <button id="btn_open_gongfa" class="ink_btn_tab">🧘 功法</button>
-                <button id="btn_debug" class="ink_btn_tab btn_faded">🔧 天道</button>
+                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="openTiandao()">🔧 天道</button>
             </div>
 
             <div id="center_map_container">
@@ -94,7 +95,7 @@
         </div>
 
         <div id="right_info_panel">
-            
+
             <div id="right_log_container" class="ink_card">
                 <div class="panel_header">江湖传闻</div>
                 <div id="game_log_content">
@@ -151,15 +152,21 @@
     <script src="js/data/data_enemies.js"></script>
     <script src="js/data/data_world.js"></script>
     <script src="js/data/data_npcs.js"></script>
+    <script src="js/data/data_icon.js"></script>
 
+    <script src="js/core/utils_item.js"></script>
     <script src="js/core/global.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/core/state.js"></script>
+    <script src="js/core/utils_debug.js"></script>
+    <script src="js/core/utils_modal.js"></script>
+    <script src="js/core/utils_add.js"></script>
 
     <script src="js/modules/map_camera.js"></script>
     <script src="js/modules/map_atlas.js"></script>
     <script src="js/modules/combat.js"></script>
     <script src="js/modules/ui.js"></script>
+    <script src="js/modules/ui_bag.js"></script>
 
     <script src="js/main.js"></script>
 

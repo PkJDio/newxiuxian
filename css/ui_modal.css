@@ -175,3 +175,53 @@
 .ink_modal_btn_group .ink_btn_danger:hover {
   background-color: #c9302c;
 }
+/* --- style.css 新增部分 --- */
+
+/* 1. 针对“选项列表”类型的弹窗 (天道/选择框) */
+.modal_selection {
+  width: 25vw;          /* 核心需求：宽度设为视口宽度的 1/4 */
+  min-width: 380px;     /* 设置一个最小宽度，防止在手机上太窄 */
+  max-width: 600px;
+}
+
+/* 2. 弹窗底部按钮栏优化 */
+.ink_modal_footer {
+  display: flex;
+  justify-content: flex-end; /* 按钮靠右排列，也可以改为 center 居中 */
+  gap: 15px;                 /* 按钮之间的间距 */
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  margin-top: 10px;
+}
+
+/* 3. 美化按钮：通用主按钮 (确认) */
+.ink_btn {
+  padding: 8px 20px;
+  background-color: #333; /* 墨色背景 */
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.ink_btn:hover {
+  background-color: #555;
+  border-color: #555;
+}
+
+/* 4. 美化按钮：次级按钮 (关闭/取消) */
+.ink_btn_normal {
+  padding: 8px 20px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.ink_btn_normal:hover {
+  border-color: #333;
+  background-color: #f9f9f9;
+}
