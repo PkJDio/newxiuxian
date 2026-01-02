@@ -55,6 +55,9 @@ const ATTR_MAPPING = {
 // 1. 游戏版本
 const CURRENT_GAME_VERSION = "3.0";
 
+// 全局配置：存档键名 (修改此处可重置所有玩家存档)
+const SAVE_KEY = "xiuxian_save_data_v1";
+
 // 2. 时辰名称
 const SHICHEN_NAMES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 

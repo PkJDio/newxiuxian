@@ -6,61 +6,146 @@ console.log("加载 存档管理")
 // 全局玩家对象
 var player = null;
 
-// 保存游戏到本地
+// 游戏状态管理：存档、读档、重置
+
+
+/**
+ * 保存游戏
+ */
 function saveGame() {
   if (!player) return;
+
   try {
-    // 记录保存时间
-    player.lastSaveTime = new Date().getTime();
-    localStorage.setItem('xiuxian_save_v3', JSON.stringify(player));
-    console.log("[State] 游戏已保存");
-    // 如果有提示框功能，可以弹个提示
-    if(window.showToast) window.showToast("存档已保存");
-  } catch (e) {
-    console.error("保存失败:", e);
-    alert("存档空间不足，保存失败！");
-  }
-}
+    // 直接使用全局的 SAVE_KEY
+    const dataStr = JSON.stringify(player);
+    localStorage.setItem(SAVE_KEY, dataStr); //
 
-// 从本地读取游戏
-function loadGame() {
-  const data = localStorage.getItem('xiuxian_save_v3');
-  if (data) {
-    try {
-      player = JSON.parse(data);
-      console.log("[State] 读取存档成功:", player.name);
-      return true;
-    } catch (e) {
-      console.error("存档损坏:", e);
-      return false;
+    if (window.LogManager) {
+      window.LogManager.add("<span class='text_green'>存档成功！道心已固。</span>");
+    } else {
+      if(window.showToast) window.showToast("存档成功");
     }
+    console.log("游戏已保存");
+  } catch (e) {
+    console.error("存档失败", e);
+    alert("存档失败，空间不足或权限受限");
   }
-  return false;
 }
 
-// 开启新游戏 (点击“开启一世轮回”时调用)
-function startNewGame() {
-  console.log("[State] 初始化新角色...");
+/**
+ * 读取游戏
+ */
+function loadGame() {
+  try {
+    // 直接使用全局的 SAVE_KEY
+    const dataStr = localStorage.getItem(SAVE_KEY); //
 
-  // 1. 深拷贝模板 (依赖 data_config.js 中的 PLAYER_TEMPLATE)
-  if (typeof PLAYER_TEMPLATE === 'undefined') {
-    alert("错误：配置文件丢失 (PLAYER_TEMPLATE)");
+    if (!dataStr) return false;
+
+    const data = JSON.parse(dataStr);
+
+    if (!data || typeof data !== 'object') {
+      throw new Error("存档数据格式错误");
+    }
+
+    window.player = data;
+    console.log("读取存档成功");
+    return true;
+
+  } catch (e) {
+    console.error("读取存档失败（坏档）:", e);
+
+    // 直接使用全局的 SAVE_KEY
+    localStorage.removeItem(SAVE_KEY); //
+    window.player = null;
+
+    if (window.showWarningModal) {
+      window.showWarningModal(
+        "天地大劫 (存档损坏)",
+        `
+            <div style="text-align:center">
+                <p class="text_red" style="font-weight:bold; font-size:18px;">检测到存档数据异常</p>
+                <p style="color:#666; margin-top:10px;">可能是由于天道法则变动导致旧数据不兼容。</p>
+                <br>
+                <p>为了重塑世界，必须<b>清除旧档并重置</b>。</p>
+            </div>
+            `,
+        function() {
+          window.location.reload();
+        }
+      );
+    } else {
+      alert("存档已损坏，系统将自动重置。");
+      window.location.reload();
+    }
+
     return false;
   }
-
-  player = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
-
-  // 2. 生成随机属性 (暂时简写)
-  player.name = "道友" + Math.floor(Math.random() * 10000);
-  player.worldSeed = Math.floor(Math.random() * 99999999);
-
-  // 3. 初始保存
-  saveGame();
-  return true;
 }
 
-// 删除存档 (可选功能)
-function deleteSave() {
-  localStorage.removeItem('xiuxian_save_v3');
-  location.reload();
+
+/**
+ * 兵解 (重置/转世)
+ * 保留部分属性（如转世次数），重置其他属性
+ */
+function attemptDie() {
+  // 1. 确认弹窗
+  const confirmed = confirm("道友确定要兵解转世吗？\n兵解后将保留【世数】，重置修为与肉身。");
+
+  if (confirmed) {
+    // 2. 继承数据
+    const currentGen = (player.generation || 1) + 1;
+
+    // 3. 重置 player 数据
+    // 手动重置核心字段
+    player.name = "道友" + currentGen + "世";
+    player.generation = currentGen;
+    player.age = 16;
+    player.status.hp = 100;
+    player.status.mp = 50;
+    player.status.hunger = 100;
+    player.attr.jing = 10;
+    player.attr.qi = 10;
+    player.attr.shen = 10;
+    player.money = 0;
+    player.location = "t_newbie_village"; // 确保这里是有效的 ID
+
+    // 清空 Buff
+    player.buffs = [];
+
+    // 4. 保存新状态 (覆盖旧档)
+    saveGame();
+
+    // 5. 刷新界面并提示
+    // 兵解不需要重载页面，直接刷新UI即可
+    if(window.updateUI) window.updateUI();
+    if(window.enterGameScene) window.enterGameScene();
+
+    if (window.LogManager) {
+      window.LogManager.clear();
+      window.LogManager.add(`兵解成功！你开启了第 ${currentGen} 世轮回。`);
+    }
+  }
 }
+
+/**
+ * 返回主页
+ */
+function backToMenu() {
+  // 可选：切回主页时自动保存
+  // saveGame();
+
+  const game = document.getElementById('scene_game');
+  const menu = document.getElementById('scene_menu');
+
+  if (game && menu) {
+    game.classList.remove('active');
+    menu.classList.add('active');
+  }
+}
+
+// 将函数暴露给全局 window
+window.saveGame = saveGame;
+window.loadGame = loadGame;
+window.attemptDie = attemptDie;
+window.backToMenu = backToMenu;

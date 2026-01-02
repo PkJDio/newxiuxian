@@ -50,3 +50,10 @@
     position: absolute; bottom: 10px; right: 10px;
     color: #666; font-size: 12px;
 }
+/* 针对底部系统按钮的特殊增强 */
+#left_system_btns button {
+  font-size: 16px;       /* 增大字体 (原先可能是 12-14px) */
+  font-weight: bold;     /* 加粗 */
+  padding: 8px 0;        /* 增加高度，更容易点击 */
+  line-height: 1.2;
+}

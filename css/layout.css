@@ -113,7 +113,6 @@
     z-index: 10;
 }
 
-/* ... 前面的 #left_status_panel 保持不变 ... */
 
 /* --- 1. 角色名片区域 --- */
 #left_profile_box {
@@ -180,7 +179,31 @@
   background: rgba(0,0,0,0.02);
   border-radius: 2px;
 }
+/* === 新增：左侧底部系统按钮组 === */
+#left_system_btns {
+  /* 关键：margin-top: auto 会自动占据剩余空间，把按钮推到容器最底部 */
+  margin-top: auto;
 
+  /* 布局：弹性盒子，横向排列 */
+  display: flex;
+  flex-direction: row;
+
+  /* 间距：按钮之间的缝隙 */
+  gap: 8px;
+
+  /* 宽度：占满容器 */
+  width: 100%;
+
+  /* 上边距，稍微留点呼吸空间 */
+  padding-top: 10px;
+  border-top: 1px dashed #ccc; /* 可选：加个虚线分割 */
+}
+
+/* 让里面的三个按钮平分宽度 */
+#left_system_btns button {
+  flex: 1;          /* 1:1:1 平均分配 */
+  justify-content: center; /* 文字居中 */
+}
 
 /* 2. 中间行动区 */
 #center_action_panel {

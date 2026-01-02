@@ -95,8 +95,15 @@ const ModalManager = {
   },
 
   // 5. 警告/死亡弹窗 (Warning) - 红色风格, 强制性
+  // 【重要修复】这里我帮你换成了更安全的 temp_cb 调用方式，防止 callback.toString() 在复杂闭包下报错
   showWarningModal: function(title, contentHtml, callback) {
-    const footer = `<button class="ink_btn_danger" onclick="(${callback.toString()})()">确认</button>`;
+    const tempName = 'temp_cb_' + Date.now();
+    window[tempName] = function() {
+      callback();
+      delete window[tempName]; // 执行完自毁
+    };
+
+    const footer = `<button class="ink_btn_danger" onclick="window['${tempName}']()">确认</button>`;
     this._showBaseModal('modal_warning', title, contentHtml, footer);
   },
 
@@ -144,7 +151,8 @@ const ModalManager = {
 
 // 暴露全局简便接口
 window.showToast = ModalManager.showToast.bind(ModalManager);
-window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager); // 兼容旧代码
+window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager);
+window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager); // 确保暴露这个
 window.closeModal = function() {
   document.getElementById('modal_overlay').classList.add('hidden');
   // 解绑 ESC，防止关闭了还在监听
@@ -197,20 +205,20 @@ const TooltipManager = {
     this._move(e);
   },
 
-  // 2. 物品悬浮窗 (已升级：支持功法学习状态显示)
-  // 2. 物品悬浮窗 (升级版：支持不同模式)
-  // 参数: e(事件), itemId(ID), instance(实体对象), mode(模式字符串)
   // 2. 物品悬浮窗 (优化版：隐藏0值属性，自动管理分割线)
   showItem: function(e, itemId, instance = null, mode = 'normal') {
     this._init();
-    const item = instance || GAME_DB.items.find(i => i.id === itemId);
+    const item = instance || (typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i => i.id === itemId) : null);
     if (!item) return;
 
-    const color = (RARITY_CONFIG[item.rarity] || { color: '#ccc' }).color;
+    // 安全获取配置，防止报错
+    const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : {};
+    const color = rarityConf.color || '#ccc';
+    const typeName = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING[item.type] : item.type;
 
     // --- 基础信息 ---
     let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
-    html += `<div class="tt_sub">${TYPE_MAPPING[item.type] || '未知'} · ${item.rarity}品</div>`;
+    html += `<div class="tt_sub">${typeName || '未知'} · ${item.rarity}品</div>`;
     html += `<div class="tt_desc">${item.desc}</div>`;
 
     // --- 动态信息 (图鉴模式下隐藏) ---
@@ -237,12 +245,12 @@ const TooltipManager = {
 
     // --- 属性效果 (Effects) ---
     if (item.effects) {
-      let effectRows = ""; // 先缓存 HTML，确认有内容后再拼接
+      let effectRows = ""; // 先缓存 HTML
 
       for (let k in item.effects) {
         const val = item.effects[k];
 
-        // 【关键修改】数值为0直接跳过
+        // 【关键逻辑】数值为0直接跳过 (保留了你的优化)
         if (val === 0) continue;
 
         // 获取中文名
@@ -272,7 +280,8 @@ const TooltipManager = {
     this.el.classList.remove('hidden');
     this._move(e);
   },
-  // 3. 技能悬浮窗 (纯技能面板用)
+
+  // 3. 技能悬浮窗
   showSkill: function(e, skillId) {
     this._init();
     const item = GAME_DB.items.find(i => i.id === skillId);
@@ -280,7 +289,7 @@ const TooltipManager = {
 
     let name = item ? item.name : skillId;
     let desc = item ? item.desc : "未知技能";
-    let level = skillData ? SKILL_CONFIG.levelNames[skillData.level] : "未入门";
+    let level = (skillData && typeof SKILL_CONFIG !== 'undefined') ? SKILL_CONFIG.levelNames[skillData.level] : "未入门";
 
     let html = `<div class="tt_header_skill">${name}</div>`;
     html += `<div class="tt_sub">境界: ${level}</div>`;
@@ -311,3 +320,58 @@ document.addEventListener('mousemove', (e) => {
     TooltipManager._move(e);
   }
 });
+
+
+/* ================= 模块 4: 日志管理器 (新增) ================= */
+const LogManager = {
+  el: null,
+
+  // 初始化：绑定DOM元素
+  init: function() {
+    this.el = document.getElementById('game_log_content');
+  },
+
+  // 添加一条日志
+  // msg: 支持 HTML 格式
+  add: function(msg) {
+    if (!this.el) this.init();
+    if (!this.el) return;
+
+    // 1. 获取时间标签
+    let timeStr = "[系统]";
+    if (typeof player !== 'undefined' && player) {
+      // 简单的时间计算示例
+      timeStr = `[第${player.generation || 1}世]`;
+    }
+
+    // 2. 创建 DOM
+    const timeP = document.createElement('p');
+    timeP.className = 'log_time';
+    timeP.innerText = timeStr;
+
+    const msgP = document.createElement('p');
+    msgP.innerHTML = msg; // 允许传入带颜色的HTML
+
+    // 3. 插入
+    this.el.appendChild(timeP);
+    this.el.appendChild(msgP);
+
+    // 4. 自动滚动到底部
+    this.el.scrollTop = this.el.scrollHeight;
+
+    // 5. 限制日志数量（防止无限增长内存溢出）
+    while (this.el.children.length > 200) {
+      this.el.removeChild(this.el.firstChild);
+      this.el.removeChild(this.el.firstChild);
+    }
+  },
+
+  // 清空日志
+  clear: function() {
+    if (!this.el) this.init();
+    if (this.el) this.el.innerHTML = '';
+  }
+};
+
+// 暴露全局
+window.LogManager = LogManager;

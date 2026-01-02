@@ -1,7 +1,31 @@
 // NPC数据：特殊NPC, 随机库, 姓氏名字
 console.log("加载 NPC数据")
 
-/* --- 12. 固定 NPC 数据 (Unique NPCs) --- */
+/* ================= 0. 核心辅助函数 (新增) ================= */
+// 必须先定义这些工具，下面的生成逻辑才能调用
+
+/**
+ * 获取基于种子的随机数 (0~1)
+ * 包装 utils.js 里的 window.getSeededRandom
+ */
+function getWorldGenRandom(key) {
+  if (window.getSeededRandom) {
+    // 使用 "npc" 作为命名空间，避免与其他系统冲突
+    return window.getSeededRandom("npc_gen", key);
+  }
+  // 如果工具箱未加载的兜底方案
+  return Math.random();
+}
+
+/**
+ * 从数组中随机选取一项 (基于种子)
+ */
+function getFixedRandomItem(arr, key) {
+  if (!arr || arr.length === 0) return null;
+  const r = getWorldGenRandom(key);
+  return arr[Math.floor(r * arr.length)];
+}
+
 /* ================= 1. 特殊历史人物 (Unique NPCs) ================= */
 /* 秦始皇37年背景：始皇东巡途中，蒙恬驻守北疆，扶苏监军，赵高李斯随行 */
 const specialNpcs = [
@@ -168,11 +192,15 @@ const surnames = ["赵", "李", "王", "蒙", "章", "白", "司马", "公孙", 
 // 名字库
 const givenNames = ["通", "劫", "平", "信", "广", "何", "成", "咎", "婴", "布", "离", "昧", "且", "喜"];
 
-
-
 // 辅助函数：生成NPC数据
 function generateLocalNpcs() {
   const generatedNpcs = [];
+
+  // 确保地图数据已加载
+  if (typeof WORLD_TOWNS === 'undefined') {
+    console.error("NPC生成失败：WORLD_TOWNS 未定义");
+    return [];
+  }
 
   // 遍历所有地图节点
   WORLD_TOWNS.forEach(town => {
@@ -180,11 +208,10 @@ function generateLocalNpcs() {
 
     // 1. 生成官员
     if (id !== 't_xianyang') {
-      // === 【核心修改】 使用新的稳定随机函数 ===
+      // === 使用新的稳定随机函数 ===
       // 传入唯一的 Key，确保这个城的官员永远是这个人
       const surname = getFixedRandomItem(surnames, id + "_gov_surname");
       const givenName = getFixedRandomItem(givenNames, id + "_gov_name");
-      // =======================================
 
       let officialTitle = "";
       let officialLevel = 0;
@@ -251,7 +278,7 @@ function generateLocalNpcs() {
     }
 
     // 3. 生成游商/路人
-    // === 【核心修改】 使用新的稳定随机函数获取概率 ===
+    // === 使用新的稳定随机函数获取概率 ===
     const wanderChance = getWorldGenRandom(id + "_wander_chance");
 
     if (wanderChance > 0.6) {
@@ -261,7 +288,7 @@ function generateLocalNpcs() {
         { n: "秦军更卒", a: "⚔️", s: [], d: "服役的士兵，正在换防途中。" }
       ];
 
-      // === 【核心修改】 随机选择类型 ===
+      // === 随机选择类型 ===
       const type = getFixedRandomItem(wanderTypes, id + "_wander_type");
 
       generatedNpcs.push({
@@ -285,6 +312,7 @@ function generateLocalNpcs() {
 
   return generatedNpcs;
 }
+
 // 合并所有 NPC
 const npc = [
   ...specialNpcs,
