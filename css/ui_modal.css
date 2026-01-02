@@ -128,3 +128,50 @@
   opacity: 1;
   transform: translate(-50%, -40%); /* 微微上浮 */
 }
+/* === 新增：弹窗底部按钮组优化 === */
+.ink_modal_btn_group {
+  display: flex;
+  justify-content: center; /* 居中对齐 */
+  gap: 20px;               /* 按钮之间的间距 */
+  margin-top: 15px;        /* 与上方文字拉开距离 */
+  padding-top: 15px;
+  border-top: 1px dashed #ddd; /* 加一条淡淡的虚线分割 */
+}
+
+/* 按钮基础增强 */
+.ink_modal_btn_group button {
+  min-width: 110px;        /* 保证按钮有一定宽度 */
+  padding: 8px 16px;       /* 增加内边距 */
+  font-size: 15px;         /* 字体稍大 */
+  border-radius: 4px;      /* 轻微圆角 */
+  transition: all 0.2s;    /* 动效 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;                /* 图标和文字间距 */
+}
+
+/* 悬浮效果 */
+.ink_modal_btn_group button:hover {
+  transform: translateY(-2px); /* 鼠标放上去微微上浮 */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 针对不同按钮的微调 */
+.ink_modal_btn_group .ink_btn_medium {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+.ink_modal_btn_group .ink_btn_medium:hover {
+  background-color: #e0e0e0;
+}
+
+.ink_modal_btn_group .ink_btn_danger {
+  background-color: #d9534f;
+  color: white;
+  border: 1px solid #d43f3a;
+}
+.ink_modal_btn_group .ink_btn_danger:hover {
+  background-color: #c9302c;
+}

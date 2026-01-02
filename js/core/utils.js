@@ -5,7 +5,6 @@ console.log("加载 工具箱")
 
 /**
  * 模块 1: 高级随机系统 (基于种子)
- * 使用 MurmurHash3 算法变体，确保同一存档、同一地点、同一时间的结果固定
  */
 const RandomSystem = {
   _hash: function(str) {
@@ -41,7 +40,7 @@ window.getSeededRandom = (...args) => RandomSystem.get(...args);
 
 
 /**
- * 模块 2: 弹窗管理器
+ * 模块 2: 弹窗管理器 (支持 确认/取消 双选)
  */
 const ModalManager = {
   showToast: function(msg, duration = 2000) {
@@ -64,22 +63,64 @@ const ModalManager = {
   showEventModal: function(title, contentHtml) {
     this._showBaseModal('modal_event', title, contentHtml, null);
   },
+
+  // 5. 警告弹窗 (Warning) - 只有确认
   showWarningModal: function(title, contentHtml, callback) {
-    const tempName = 'temp_cb_' + Date.now();
-    window[tempName] = function() {
-      callback();
-      delete window[tempName];
-    };
-    const footer = `<button class="ink_btn_danger" onclick="window['${tempName}']()">确认</button>`;
-    this._showBaseModal('modal_warning', title, contentHtml, footer);
+    this._createTempCallback(callback, (funcName) => {
+      const footer = `<button class="ink_btn_danger" onclick="window['${funcName}']()">确认</button>`;
+      this._showBaseModal('modal_warning', title, contentHtml, footer);
+    });
   },
+
+
+// 6. 确认/取消弹窗 (Confirm) - 双按钮 [已美化]
+  showConfirmModal: function(title, contentHtml, onConfirm) {
+    this._createTempCallback(onConfirm, (funcName) => {
+      // 优化布局：使用 CSS 类控制
+      // 左侧灰色取消，右侧红色确认
+      const footer = `
+            <div class="ink_modal_btn_group">
+                <button class="ink_btn_medium" onclick="window.closeModal()">
+                    <span>↩</span> 尘缘未了
+                </button>
+                <button class="ink_btn_danger" onclick="window['${funcName}']()">
+                    <span>⚔</span> 兵解转世
+                </button>
+            </div>
+        `;
+      this._showBaseModal('modal_warning', title, contentHtml, footer);
+    });
+  },
+
+  // 内部辅助：创建临时回调函数
+  _createTempCallback: function(callback, renderFn) {
+    const tempName = 'temp_cb_' + Date.now();
+    console.log("[Modal] 创建临时回调:", tempName);
+
+    window[tempName] = function() {
+      try {
+        if (typeof callback === 'function') callback();
+      } catch (e) {
+        console.error("[Modal] 回调执行出错:", e);
+      } finally {
+        window.closeModal();
+        delete window[tempName];
+      }
+    };
+    renderFn(tempName);
+  },
+
   _showBaseModal: function(typeClass, title, content, footer) {
     const overlay = document.getElementById('modal_overlay');
     const box = document.getElementById('modal_content');
+
+    if (!overlay || !box) return;
+
     box.className = `ink_modal_box ${typeClass}`;
     document.getElementById('modal_header').innerHTML = title;
     document.getElementById('modal_body').innerHTML = content;
     const footerEl = document.getElementById('modal_footer');
+
     if (footer) {
       footerEl.style.display = 'block';
       footerEl.innerHTML = footer;
@@ -87,11 +128,16 @@ const ModalManager = {
       footerEl.style.display = 'block';
       footerEl.innerHTML = `<button onclick="closeModal()" class="ink_btn_medium">关闭</button>`;
     }
+
     overlay.classList.remove('hidden');
+
+    // 如果是警告/确认类，通常不绑定 ESC 关闭，必须点按钮 (防止误触)
+    // 但如果有取消按钮，是否允许 ESC 取决于设计。这里保持一致性，还是不绑定 ESC。
     if (typeClass !== 'modal_warning') {
       this._bindEscKey();
     }
   },
+
   _bindEscKey: function() {
     if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
     this._escHandler = (e) => {
@@ -100,11 +146,16 @@ const ModalManager = {
     document.addEventListener('keydown', this._escHandler);
   }
 };
+
+// 暴露全局
 window.showToast = ModalManager.showToast.bind(ModalManager);
 window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager);
 window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager);
+window.showConfirmModal = ModalManager.showConfirmModal.bind(ModalManager); // 暴露新方法
+
 window.closeModal = function() {
-  document.getElementById('modal_overlay').classList.add('hidden');
+  const overlay = document.getElementById('modal_overlay');
+  if (overlay) overlay.classList.add('hidden');
   if (ModalManager._escHandler) document.removeEventListener('keydown', ModalManager._escHandler);
 };
 
@@ -219,34 +270,27 @@ document.addEventListener('mousemove', (e) => {
 });
 
 
-/* ================= 模块 4: 日志管理器 (持久化升级版) ================= */
+/* ================= 模块 4: 日志管理器 ================= */
 const LogManager = {
   el: null,
-  cache: [], // 内存缓存
+  cache: [],
 
-  // 初始化：绑定DOM元素并读取历史记录
   init: function() {
     this.el = document.getElementById('game_log_content');
     if(this.el) {
       this.loadFromCache();
     }
   },
-
-  // 从 LocalStorage 读取日志
   loadFromCache: function() {
-    // 读取配置中的 Key，如果未定义则使用默认
     const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
     const savedLogs = localStorage.getItem(key);
-
     if (savedLogs) {
       try {
         this.cache = JSON.parse(savedLogs);
-        // 重新渲染所有日志
         this.el.innerHTML = '';
         this.cache.forEach(log => {
           this._renderLogItem(log.time, log.msg);
         });
-        // 滚到底部
         this.el.scrollTop = this.el.scrollHeight;
       } catch (e) {
         console.error("日志缓存读取失败", e);
@@ -254,79 +298,48 @@ const LogManager = {
       }
     }
   },
-
-  // 保存到 LocalStorage
   saveToCache: function() {
     const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
     localStorage.setItem(key, JSON.stringify(this.cache));
   },
-
-  // 内部渲染方法
   _renderLogItem: function(timeStr, msgHtml) {
     if (!this.el) return;
-
     const timeP = document.createElement('p');
     timeP.className = 'log_time';
     timeP.innerText = timeStr;
-
     const msgP = document.createElement('p');
     msgP.innerHTML = msgHtml;
-
     this.el.appendChild(timeP);
     this.el.appendChild(msgP);
   },
-
-  // 添加一条日志
-  // msg: 支持 HTML 格式
   add: function(msg) {
     if (!this.el) this.init();
     if (!this.el) return;
-
-    // 1. 获取当前现实时间 (时:分:秒)
     const now = new Date();
     const h = now.getHours().toString().padStart(2, '0');
     const m = now.getMinutes().toString().padStart(2, '0');
     const s = now.getSeconds().toString().padStart(2, '0');
     const timeStr = `[${h}:${m}:${s}]`;
-
-    // 2. 渲染到 DOM
     this._renderLogItem(timeStr, msg);
-
-    // 3. 更新缓存
     this.cache.push({ time: timeStr, msg: msg });
-
-    // 4. 自动滚动到底部
     this.el.scrollTop = this.el.scrollHeight;
-
-    // 5. 限制数量 (基于配置，默认250条记录 = 500行DOM)
     const maxEntries = (typeof LOG_MAX_ENTRIES !== 'undefined') ? LOG_MAX_ENTRIES : 250;
-
-    // 削减缓存
     while (this.cache.length > maxEntries) {
-      this.cache.shift(); // 移除最老的一条
+      this.cache.shift();
     }
-
-    // 削减 DOM (每条记录对应 2 个 P 标签)
     const maxDomLines = maxEntries * 2;
     while (this.el.children.length > maxDomLines) {
       this.el.removeChild(this.el.firstChild);
       this.el.removeChild(this.el.firstChild);
     }
-
-    // 6. 只有在变动时才保存
     this.saveToCache();
   },
-
-  // 清空日志 (用于兵解重开时彻底清除)
   clear: function() {
     if (!this.el) this.init();
     if (this.el) this.el.innerHTML = '';
-
     this.cache = [];
     const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
     localStorage.removeItem(key);
   }
 };
-
-// 暴露全局
 window.LogManager = LogManager;

@@ -71,8 +71,9 @@ const SKILL_CONFIG = {
   levelNames: ["未入门", "入门", "进阶", "大成"],
   dmgBonus: [0, 0.10, 0.20, 0.30],
   hitRate: [0.7, 1.0, 1.0, 1.0],
-  difficulty: [1, 1, 1.5, 2.0,2.5,3.0],
-
+  // 【新增】难度系数/转世加成系数 (索引对应稀有度：0位占位, 1=普通, 2=优秀...)
+  // 稀有度:  0  1    2    3    4    5    6
+  difficulty: [1,1, 1.0, 1.5, 2.0, 2.5, 3.0, 5.0]
 };
 
 // 4. 玩家初始模板 (新档使用)
@@ -94,11 +95,12 @@ const PLAYER_TEMPLATE = {
   location: 'guanzhong',
   mapUnlocked: false,
 
-  // 核心属性
-  attr: { jing: 5, qi: 5, shen: 5 },
-
-  // 衍生属性 (初始占位，实际由 recalcStats 计算)
-  derived: { hpMax: 200, mpMax: 100, storageMax: 40, speed: 3 },
+  //基础
+  attr: { jing: 5, qi: 5, shen: 5 , atk: 0, def: 0, speed: 0,space: 25,hpMax: 200, mpMax: 100,hungerMax: 100},
+  //额外加成的属性
+  exAttr: { jing: 0, qi: 0, shen: 0 , atk: 0, def: 0, speed: 0,space: 0,hpMax: 0, mpMax: 0,hungerMax: 0},
+  //基础属性+加成之后显示的实际属性，显示在UI上，有计算属性的方法计算
+  derived: { jing: 5, qi: 5, shen: 5 , atk: 0, def: 0, speed: 0,space: 25,hpMax: 200, mpMax: 100,hungerMax: 100},
 
   // 动态状态
   status: { hp: 200, mp: 100, hunger: 100, mood: 100, toxicity: 0 },

@@ -23,43 +23,79 @@ function enterGameScene() {
 }
 
 /**
- * 刷新主界面 UI (左侧状态栏)
- * 将 player 数据映射到 HTML 元素
+ * 刷新主界面 UI
+ * 核心逻辑：调用 recalcStats -> 更新 DOM -> 绑定 Tooltip
  */
 function updateUI() {
   if (!player) return;
 
-  // 辅助函数：安全设置文本
-  const setTxt = (id, val) => {
+  // 1. 核心：每帧刷新前，先重新计算属性
+  // 这样保证装备、Buff变动后立刻生效
+  if (typeof recalcStats === 'function') {
+    recalcStats();
+  }
+
+  // 辅助函数：安全设置文本 + 绑定悬浮窗
+  const updateVal = (id, key, label) => {
     const el = document.getElementById(id);
-    if (el) el.innerText = val;
+    if (!el) return;
+
+    // 获取计算后的数值 (如果没有则为0)
+    const val = player.derived[key] || 0;
+
+    // 更新文本
+    el.innerText = Math.floor(val); // 取整显示
+
+    // 绑定悬浮窗 (Tooltip)
+    // 移入时显示详情，移出时隐藏
+    el.onmouseenter = function(e) {
+      if(window.showStatusTooltip) window.showStatusTooltip(e, key, label);
+    };
+    el.onmouseleave = function() {
+      if(window.hideTooltip) window.hideTooltip();
+    };
   };
 
   // 1. 角色名片
-  setTxt('profile_name', player.name);
-  setTxt('profile_age', player.age + "岁");
-  setTxt('profile_generation', `第 ${player.generation || 1} 世`); // 兼容旧档
+  const elName = document.getElementById('profile_name');
+  if(elName) elName.innerText = player.name;
 
-  // 2. 核心属性
-  setTxt('val_jing', player.attr.jing);
-  setTxt('val_qi', player.attr.qi);
-  setTxt('val_shen', player.attr.shen);
-  setTxt('val_money', player.money);
+  const elAge = document.getElementById('profile_age');
+  if(elAge) elAge.innerText = player.age + "岁";
 
-  // 3. 状态条 (数值/上限)
-  const hpMax = player.derived ? player.derived.hpMax : 100;
-  const mpMax = player.derived ? player.derived.mpMax : 50;
+  const elGen = document.getElementById('profile_generation');
+  if(elGen) elGen.innerText = `第 ${player.generation || 1} 世`;
 
-  setTxt('val_hp', `${Math.floor(player.status.hp)}/${hpMax}`);
-  setTxt('val_mp', `${Math.floor(player.status.mp)}/${mpMax}`);
-  setTxt('val_hunger', `${Math.floor(player.status.hunger)}/100`);
+  // 2. 核心属性 (精气神)
+  updateVal('val_jing', 'jing', '精(体质)');
+  updateVal('val_qi',   'qi',   '气(能量)');
+  updateVal('val_shen', 'shen', '神(悟性)');
 
-  // 4. 战斗属性
-  setTxt('val_atk', player.derived.atk || 0);
-  setTxt('val_def', player.derived.def || 0);
-  setTxt('val_speed', player.derived.speed || 0);
+  // 3. 战斗属性
+  updateVal('val_atk',   'atk',   '攻击力');
+  updateVal('val_def',   'def',   '防御力');
+  updateVal('val_speed', 'speed', '速度');
 
-  // 5. 刷新 Buff 状态栏 (新增)
+  // 4. 状态条 (数值/上限)
+  const setBar = (idVal, current, max, label) => {
+    const el = document.getElementById(idVal);
+    if(el) {
+      el.innerText = `${Math.floor(current)}/${Math.floor(max)}`;
+      // 绑定上限的悬浮窗
+      el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, label, '上限详情'); };
+      el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
+    }
+  };
+
+  setBar('val_hp', player.status.hp, player.derived.hpMax, 'hpMax');
+  setBar('val_mp', player.status.mp, player.derived.mpMax, 'mpMax');
+  setBar('val_hunger', player.status.hunger, player.derived.hungerMax, 'hungerMax');
+
+  // 5. 财富
+  const elMoney = document.getElementById('val_money');
+  if(elMoney) elMoney.innerText = player.money;
+
+  // 6. 刷新 Buff 列表
   updateBuffs();
 }
 
@@ -67,17 +103,16 @@ function updateUI() {
  * 渲染左侧“当前状态”栏的 Buff 列表
  * 读取 player.buffs 数组
  */
+/**
+ * 渲染左侧“当前状态”栏的 Buff 列表
+ */
 function updateBuffs() {
   const buffListEl = document.getElementById('left_buff_list');
   if (!buffListEl) return;
 
-  // 清空现有列表
   buffListEl.innerHTML = '';
 
-  // 检查是否有 buffs 数据
-  // 假设 player.buffs 是一个对象数组: [{name:"中毒", desc:"每回合扣血", type:"bad"}, ...]
   if (!player.buffs || player.buffs.length === 0) {
-    // 如果没有状态，可以留空或者显示提示
     const emptyTip = document.createElement('div');
     emptyTip.style.color = '#999';
     emptyTip.style.fontSize = '12px';
@@ -88,30 +123,27 @@ function updateBuffs() {
     return;
   }
 
-  // 遍历并生成 Buff 条目
-  player.buffs.forEach(buff => {
+  Object.values(player.buffs || {}).forEach(buff => {
     const div = document.createElement('div');
     div.className = 'buff_item';
-
-    // 根据类型设置颜色 (需要在 CSS 定义 .text_red, .text_green 等)
+    // 样式处理
     if (buff.type === 'bad' || buff.type === 'debuff') {
       div.classList.add('text_red');
     } else {
       div.classList.add('text_green');
     }
 
-    // 构造显示文本，例如：精力充沛 (速度+2)
-    // 假设 buff 对象有 name 和 desc 字段
-    const descText = buff.desc ? ` (${buff.desc})` : '';
-    div.innerText = `${buff.name}${descText}`;
+    // 显示文本：中毒 (hpMax -10)
+    let effectText = "";
+    if(buff.attr && buff.val) {
+      const op = buff.val > 0 ? "+" : "";
+      effectText = ` (${buff.attr} ${op}${buff.val})`;
+    }
 
-    // 可选：添加鼠标悬停提示 (如果需要更详细的解释)
-    div.title = buff.tips || buff.desc || buff.name;
-
+    div.innerText = `${buff.name}${effectText}`;
     buffListEl.appendChild(div);
   });
 }
-
 /* --- 弹窗逻辑 --- */
 
 /**
