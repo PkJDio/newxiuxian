@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水墨修仙 - 重构版</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="scene_menu" class="scene active">
+        <div class="ink_bg_decoration"></div>
+        
+        <h1 class="menu_title">修仙模拟器</h1>
+        
+        <div class="menu_btn_group">
+            <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
+            <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
+            <button id="menu_btn_changelog" class="ink_btn_large">更新日志</button>
+        </div>
+
+        <div class="menu_version">当前版本：HTML重构版 v2.0</div>
+        
+        <div id="menu_changelog_panel" class="ink_panel hidden">
+            <h3>更新日志</h3>
+            <p>1. 架构重构完成</p>
+            <p>2. 全新水墨UI上线</p>
+        </div>
+    </div>
+
+    <div id="scene_game" class="scene">
+        
+        <div id="left_status_panel">
+            <div id="left_profile_box" class="ink_card">
+                <div class="profile_row">
+                    <span id="profile_name">道友未命名</span>
+                    <span id="profile_generation" class="ink_tag">第 1 世</span>
+                </div>
+                <div class="profile_row">
+                    <span id="profile_level">凡人 (0/100)</span>
+                    <span id="profile_age">16岁</span>
+                </div>
+                <div id="profile_date">秦始皇三十七年 正月 初一</div>
+            </div>
+
+            <div id="left_attr_primary" class="ink_card">
+                <div class="attr_row"><span>精 (体质)</span> <span id="val_jing">10</span></div>
+                <div class="attr_row"><span>气 (能量)</span> <span id="val_qi">10</span></div>
+                <div class="attr_row"><span>神 (悟性)</span> <span id="val_shen">10</span></div>
+                <div class="separator_line"></div>
+                <div class="attr_row"><span>💰 钱财</span> <span id="val_money" class="text_gold">100</span></div>
+            </div>
+
+            <div id="left_attr_combat" class="ink_card">
+                <div class="bar_row"><span>❤️ 生命</span> <span id="val_hp">100/100</span></div>
+                <div class="bar_row"><span>💧 法力</span> <span id="val_mp">50/50</span></div>
+                <div class="bar_row"><span>🍖 饱食</span> <span id="val_hunger">100/100</span></div>
+                <div class="separator_line"></div>
+                <div class="attr_row"><span>⚔️ 攻击</span> <span id="val_atk">5</span></div>
+                <div class="attr_row"><span>🛡️ 防御</span> <span id="val_def">1</span></div>
+                <div class="attr_row"><span>🦶 速度</span> <span id="val_speed">10</span></div>
+            </div>
+
+            <div id="left_buff_container" class="ink_card flex_grow">
+                <div class="panel_header">当前状态</div>
+                <div id="left_buff_list">
+                    <div class="buff_item text_green">精力充沛 (速度+2)</div>
+                </div>
+            </div>
+
+            <div id="left_system_btns">
+                <button onclick="saveGame()" class="ink_btn_small">💾 保存</button>
+                <button onclick="attemptDie()" class="ink_btn_small btn_danger">💀 兵解</button>
+                <button onclick="backToMenu()" class="ink_btn_small">🏠 主页</button>
+            </div>
+        </div>
+
+        <div id="center_action_panel">
+            <div id="center_toolbar">
+                <button id="btn_open_map" class="ink_btn_tab">🗺️ 地图</button>
+                <button id="btn_open_bag" class="ink_btn_tab">🎒 行囊</button>
+                <button id="btn_open_skill" class="ink_btn_tab">📚 技能</button>
+                <button id="btn_open_gongfa" class="ink_btn_tab">🧘 功法</button>
+                <button id="btn_debug" class="ink_btn_tab btn_faded">🔧 天道</button>
+            </div>
+
+            <div id="center_map_container">
+                <canvas id="big_map_canvas"></canvas>
+                <div id="center_map_overlay">
+                    <span id="overlay_terrain_info">当前: <span class="text_gold">未知区域</span></span>
+                    <span id="overlay_coord">(0, 0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="right_info_panel">
+            
+            <div id="right_log_container" class="ink_card">
+                <div class="panel_header">江湖传闻</div>
+                <div id="game_log_content">
+                    <p class="log_time">[辰时]</p> <p>你踏入了江湖...</p>
+                    <p class="log_time">[辰时]</p> <p>清风拂面，你感觉神清气爽。</p>
+                </div>
+            </div>
+
+            <div id="right_action_container" class="ink_card">
+                <div class="panel_header">行动指令</div>
+                <div id="right_action_grid">
+                    <button class="act_btn" onclick="doGather()">🌿 寻幽</button>
+                    <button class="act_btn" onclick="doStudy()">📖 研读</button>
+                    <button class="act_btn" onclick="doTrain('ext')">⚔️ 外功</button>
+                    <button class="act_btn" onclick="doTrain('int')">🧘 内功</button>
+                    <button class="act_btn" onclick="doRest()">🛏️ 休憩</button>
+                    <button class="act_btn" onclick="showCook()">🍳 烹饪</button>
+                    <button class="act_btn" onclick="doFish()">🎣 垂钓</button>
+                    <button class="act_btn" onclick="doEat()">🍖 进食</button>
+                    <button class="act_btn" onclick="doWater()">💧 打水</button>
+                    <button class="act_btn" onclick="doShop()">⚖️ 集市</button>
+                    <button class="act_btn btn_locked">🔒</button>
+                    <button class="act_btn btn_locked">🔒</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal_overlay" class="modal hidden">
+        <div id="modal_content" class="ink_modal_box">
+            <h2 id="modal_header">标题</h2>
+            <div id="modal_body">内容区域</div>
+            <div id="modal_footer">
+                <button onclick="closeModal()" class="ink_btn_medium">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="global_tooltip" class="ink_tooltip hidden"></div>
+
+    <script src="js/data/data_config.js"></script>
+    <script src="js/data/data_materials.js"></script>
+    <script src="js/data/data_food_materials.js"></script>
+    <script src="js/data/data_foods.js"></script>
+    <script src="js/data/data_herbs.js"></script>
+    <script src="js/data/data_pills.js"></script>
+    <script src="js/data/data_weapons.js"></script>
+    <script src="js/data/data_head.js"></script>
+    <script src="js/data/data_body.js"></script>
+    <script src="js/data/data_feet.js"></script>
+    <script src="js/data/data_mounts.js"></script>
+    <script src="js/data/data_tools.js"></script>
+    <script src="js/data/data_books.js"></script>
+    <script src="js/data/data_enemies.js"></script>
+    <script src="js/data/data_world.js"></script>
+    <script src="js/data/data_npcs.js"></script>
+
+    <script src="js/core/global.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/state.js"></script>
+
+    <script src="js/modules/map_camera.js"></script>
+    <script src="js/modules/map_atlas.js"></script>
+    <script src="js/modules/combat.js"></script>
+    <script src="js/modules/ui.js"></script>
+
+    <script src="js/main.js"></script>
+
+</body>
+</html>

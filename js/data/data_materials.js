@@ -1,0 +1,30 @@
+// 基础材料
+console.log("加载 基础材料")
+const materials = [
+        { id: "materials_001", name: "狗皮", type: "material", grade: 0, rarity: 1, value: 5, desc: "普通的狗皮，可以做成帽子。" },
+        { id: "materials_002", name: "狗牙", type: "material", grade: 0, rarity: 1, value: 2, desc: "并不锋利，稍微打磨可做挂饰。" },
+        { id: "materials_003", name: "野猪皮", type: "material", grade: 0, rarity: 1, value: 10, desc: "厚实粗糙，制作皮甲的基础材料。" },
+        { id: "materials_004", name: "野猪獠牙", type: "material", grade: 0, rarity: 1, value: 15, desc: "弯曲锋利，可做匕首柄或装饰。" },
+        { id: "materials_005", name: "蛇皮", type: "material", grade: 0, rarity: 1, value: 12, desc: "表面有鳞片，凉爽透气。" },
+        { id: "materials_006", name: "毒蛇牙", type: "material", grade: 0, rarity: 1, value: 8, desc: "中空，依然残留着一丝毒液。" },
+        { id: "materials_007", name: "灰狼皮", type: "material", grade: 0, rarity: 1, value: 15, desc: "保暖性不错的皮毛。" },
+        { id: "materials_008", name: "狼牙", type: "material", grade: 0, rarity: 1, value: 10, desc: "尖锐，常被做成护身符。" },
+        { id: "materials_009", name: "飞禽羽毛", type: "material", grade: 0, rarity: 1, value: 2, desc: "普通的羽毛。" },
+        { id: "materials_010", name: "蛇胆", type: "material", grade: 0, rarity: 2, value: 30, effects: { hp: 10, toxicity: -5, shen: 1 }, desc: "清热解毒，明目良药。" },
+        { id: "materials_011", name: "黑熊皮", type: "material", grade: 0, rarity: 2, value: 50, desc: "厚重保暖，极佳的御寒材料。" },
+        { id: "materials_012", name: "熊爪", type: "material", grade: 0, rarity: 2, value: 40, desc: "坚硬如铁，力量的象征。" },
+        { id: "materials_013", name: "鳄鱼皮", type: "material", grade: 0, rarity: 2, value: 45, desc: "极其坚韧，刀剑难伤。" },
+        { id: "materials_014", name: "鳄鱼牙", type: "material", grade: 0, rarity: 2, value: 20, desc: "密集且锋利。" },
+        { id: "materials_015", name: "鹰羽", type: "material", grade: 0, rarity: 2, value: 25, desc: "制作上等箭矢的箭羽。" },
+        { id: "materials_016", name: "鹰爪", type: "material", grade: 0, rarity: 2, value: 30, desc: "如钩般锋利，抓握力极强。" },
+        { id: "materials_017", name: "蝎壳", type: "material", grade: 0, rarity: 2, value: 20, desc: "坚硬的甲壳。" },
+        { id: "materials_018", name: "毒蝎尾针", type: "material", grade: 0, rarity: 2, value: 35, desc: "剧毒汇聚之处。" },
+        { id: "materials_019", name: "龟甲", type: "material", grade: 0, rarity: 2, value: 60, desc: "可以用来占卜，也可以做盾牌。" },
+        { id: "materials_020", name: "斑斓虎皮", type: "material", grade: 0, rarity: 3, value: 150, desc: "百兽之王的皮，挂在家里辟邪镇宅。" },
+        { id: "materials_021", name: "虎骨", type: "material", grade: 0, rarity: 3, value: 100, desc: "极其珍贵的药材，强筋健骨。" },
+        { id: "materials_022", name: "猛虎獠牙", type: "material", grade: 0, rarity: 3, value: 80, desc: "最顶级的猛兽獠牙。" },
+        { id: "materials_023", name: "金胆", type: "material", grade: 0, rarity: 3, value: 120, desc: "铜皮铁骨的熊偶尔才能产出的金胆，解毒圣品。" },
+        { id: "materials_024", name: "食铁兽毛皮", type: "material", grade: 0, rarity: 3, value: 200, desc: "黑白相间，极其罕见且柔软。" },
+        { id: "materials_025", name: "巨猿獠牙", type: "material", grade: 0, rarity: 3, value: 60, desc: "比人类手指还长的獠牙。" },
+        { id: "materials_026", name: "鲛人泪(珍珠)", type: "material", grade: 0, rarity: 3, value: 300, desc: "大如龙眼的珍珠，光彩夺目。" }
+    ];

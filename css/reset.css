@@ -1,0 +1,22 @@
+/* 基础重置 */
+body, h1, h2, h3, p, div, span, button {
+    margin: 0; padding: 0; box-sizing: border-box;
+}
+
+body {
+    font-family: "Kaiti SC", "STKaiti", "KaiTi", "Microsoft YaHei", serif; /* 优先使用楷体 */
+    background-color: #e6e6e6; /* 宣纸灰白底色 */
+    color: #1a1a1a; /* 墨色字 */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* 滚动条美化 (水墨风) */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #dcdcdc; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #333; }
+
+.hidden { display: none !important; }

@@ -1,0 +1,108 @@
+/* ================= 基础组件 (Buttons & Controls) ================= */
+
+/* --- 通用中型按钮 (弹窗底部用) --- */
+.ink_btn_medium {
+  padding: 6px 20px;
+  border: 1px solid #333;
+  background: #fff;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: "Kaiti", serif;
+  transition: all 0.2s;
+}
+.ink_btn_medium:hover {
+  background: #333;
+  color: #fff;
+}
+
+/* --- 大型菜单按钮 (主页用) --- */
+.ink_btn_large {
+  display: block;
+  width: 220px;
+  padding: 14px 0;
+  margin: 12px 0;
+  font-size: 22px;
+  background: transparent;
+  border: 2px solid #333;
+  color: #333;
+  font-family: "Kaiti", serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  /* 按钮内的水墨纹理 */
+  background-image: linear-gradient(45deg, transparent 50%, rgba(0,0,0,0.03) 50%);
+  background-size: 10px 10px;
+}
+.ink_btn_large:hover {
+  background-color: #333;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* --- 顶部标签页按钮 (Tab) --- */
+.ink_btn_tab {
+  padding: 8px 18px;
+  background: #dcdcdc;
+  border: 1px solid #999;
+  border-bottom: none; /* 底部开口 */
+  border-radius: 4px 4px 0 0;
+  color: #444;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.ink_btn_tab:hover { background: #eee; color: #000; }
+.ink_btn_tab.active { background: #333; color: #fff; border-color: #333; }
+.btn_faded { opacity: 0.6; font-weight: normal; }
+
+/* --- 行动网格按钮 (Grid Action) --- */
+.act_btn {
+  background: #fdfdfd;
+  border: none;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  height: 100%; /* 撑满格子 */
+  font-family: "Kaiti", serif;
+}
+.act_btn:hover {
+  background: #333;
+  color: #fff;
+}
+.act_btn:active {
+  background: #000;
+  transform: scale(0.98);
+}
+
+/* 禁用/锁定状态 */
+.btn_locked {
+  background: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.btn_locked:hover {
+  background: #e0e0e0;
+  color: #aaa;
+}
+
+/* 危险操作按钮 (红色系) */
+.btn_danger {
+  border-color: #8b0000;
+  color: #8b0000;
+}
+.btn_danger:hover {
+  background: #8b0000;
+  color: #fff;
+  border-color: #8b0000;
+}

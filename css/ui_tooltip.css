@@ -1,0 +1,79 @@
+/* ================= 悬浮窗系统 (Tooltips) ================= */
+
+/* 悬浮窗容器 */
+.ink_tooltip {
+  position: fixed;
+  z-index: 3000; /* 最高层级 */
+  background: rgba(30, 30, 30, 0.95); /* 深黑半透明 */
+  border: 1px solid #666;
+  padding: 10px;
+  border-radius: 3px;
+  color: #eee;
+  font-size: 13px;
+  max-width: 260px;
+  pointer-events: none; /* 关键：让鼠标穿透，不挡操作 */
+  box-shadow: 4px 4px 15px rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  line-height: 1.4;
+  font-family: "Microsoft YaHei", sans-serif; /* 悬浮窗用黑体更清晰 */
+}
+.ink_tooltip.hidden { display: none; }
+
+/* --- 内部元素通用样式 --- */
+
+/* 标题 */
+.tt_title {
+  font-weight: bold;
+  color: #ffd700; /* 金色 */
+  border-bottom: 1px solid #555;
+  margin-bottom: 6px;
+  padding-bottom: 2px;
+}
+
+/* 物品头部 */
+.tt_header {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+/* 技能头部 (特殊色) */
+.tt_header_skill {
+  font-size: 15px;
+  font-weight: bold;
+  color: #aaffff; /* 亮青色 */
+  margin-bottom: 2px;
+}
+
+/* 副标题 (类型/稀有度) */
+.tt_sub {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+/* 描述文本 */
+.tt_desc {
+  color: #ccc;
+  margin-bottom: 6px;
+  font-style: italic; /* 斜体更有味道 */
+}
+
+/* 分割线 */
+.tt_sep {
+  height: 1px;
+  background: #444;
+  margin: 6px 0;
+}
+
+/* 属性行 (左右对齐) */
+.tt_row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+/* 数值颜色 */
+.tt_pos { color: #5cff5c; } /* 正面增益 绿 */
+.tt_neg { color: #ff5555; } /* 负面减益 红 */
+.tt_neu { color: #888; }    /* 中性/需求未满足 灰 */

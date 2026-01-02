@@ -1,0 +1,52 @@
+/* === 水墨风格定义 === */
+
+/* 卡片容器 */
+.ink_card {
+    background: #fdfdfd;
+    border: 1px solid #999;
+    border-radius: 2px;
+    padding: 8px;
+    position: relative;
+    /* 模拟宣纸纹理 (可选) */
+    /* background-image: url('paper_texture.png'); */
+}
+
+/* 标题栏 */
+.panel_header {
+    background: #333;
+    color: #eee;
+    padding: 5px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 2px solid #000;
+    letter-spacing: 2px;
+}
+
+/* 分割线 */
+.separator_line {
+    height: 1px;
+    background: #ccc;
+    margin: 5px 0;
+    border-bottom: 1px dashed #999;
+}
+
+/* 字体颜色 */
+.text_gold { color: #b8860b; font-weight: bold; }
+.text_green { color: #2e8b57; }
+.text_red { color: #8b0000; }
+
+/* 菜单标题 */
+.menu_title {
+    font-size: 64px;
+    color: #1a1a1a;
+    text-shadow: 2px 2px 0px #aaa;
+    font-family: "LiSu", "Kaiti", serif; /* 隶书 */
+    margin-bottom: 40px;
+}
+
+/* 版本号 */
+.menu_version {
+    position: absolute; bottom: 10px; right: 10px;
+    color: #666; font-size: 12px;
+}

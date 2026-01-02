@@ -1,0 +1,124 @@
+/* ================= 弹窗系统 (Windows & Modals) ================= */
+
+/* --- 1. 全屏遮罩层 --- */
+.modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); /* 深色遮罩 */
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px); /* 稍微模糊背景 */
+}
+.modal.hidden { display: none; }
+
+/* --- 2. 弹窗基础盒子 (水墨风) --- */
+.ink_modal_box {
+  background: #fdfdfd; /* 宣纸白 */
+  border: 3px double #333; /* 双线墨边 */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+  border-radius: 2px;
+  position: relative;
+  /* 弹窗进入动画 */
+  animation: modalPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* 弹窗头部 */
+#modal_header {
+  background: #333;
+  color: #eee;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 4px;
+  border-bottom: 1px solid #000;
+  font-family: "Kaiti", serif;
+}
+
+/* 弹窗内容区 */
+#modal_body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 16px;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 弹窗底部 (按钮区) */
+#modal_footer {
+  padding: 12px;
+  text-align: right;
+  border-top: 1px solid #ccc;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- 3. 不同类型的弹窗尺寸 --- */
+
+/* 类型A: 交互大弹窗 (背包/商店) - 占屏幕 75% */
+.ink_modal_box.modal_interactive {
+  width: 75vw;
+  height: 75vh;
+  min-width: 800px; /* 最小宽度限制 */
+}
+
+/* 类型B: 技能/功法弹窗 - 同样大，但可以有特殊边框色 */
+.ink_modal_box.modal_skill {
+  width: 75vw;
+  height: 75vh;
+  border-color: #4a4a6a; /* 偏蓝黑的墨色 */
+}
+
+/* 类型C: 历史大事件 (宽屏) */
+.ink_modal_box.modal_event {
+  width: 60vw;
+  height: 50vh;
+  background: #fffdf5; /* 泛黄旧纸 */
+  border: 2px solid #555;
+}
+
+/* 类型D: 警告/死亡 (红色调) */
+.ink_modal_box.modal_warning {
+  width: 400px;
+  height: auto; /* 高度自适应 */
+  border: 4px solid #8b0000;
+  background: #fff0f0;
+}
+.ink_modal_box.modal_warning #modal_header {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* --- 4. Toast (自动消失的提示条) --- */
+.ink_toast {
+  position: fixed;
+  top: 15%; /* 靠上显示 */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 20, 20, 0.9);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 16px;
+  border: 1px solid #555;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 2000; /* 比弹窗更高 */
+  pointer-events: none;
+  font-family: "Kaiti", serif;
+  white-space: nowrap;
+}
+.ink_toast.show {
+  opacity: 1;
+  transform: translate(-50%, -40%); /* 微微上浮 */
+}
