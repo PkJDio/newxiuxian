@@ -58,6 +58,10 @@ const CURRENT_GAME_VERSION = "3.0";
 // 全局配置：存档键名 (修改此处可重置所有玩家存档)
 const SAVE_KEY = "xiuxian_save_data_v1";
 
+// 【新增】日志系统配置
+const LOG_SAVE_KEY = "xiuxian_game_logs_v1"; // 日志缓存Key
+const LOG_MAX_ENTRIES = 250; // 最大保留条数 (250条 x 2行/条 = 500行)
+
 // 2. 时辰名称
 const SHICHEN_NAMES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 
@@ -66,7 +70,9 @@ const SKILL_CONFIG = {
   levels: [0, 100, 400, 999],
   levelNames: ["未入门", "入门", "进阶", "大成"],
   dmgBonus: [0, 0.10, 0.20, 0.30],
-  hitRate: [0.7, 1.0, 1.0, 1.0]
+  hitRate: [0.7, 1.0, 1.0, 1.0],
+  difficulty: [1, 1, 1.5, 2.0,2.5,3.0],
+
 };
 
 // 4. 玩家初始模板 (新档使用)
@@ -74,6 +80,8 @@ const PLAYER_TEMPLATE = {
   version: CURRENT_GAME_VERSION,
   name: "未命名",
   isAlive: true,
+  generation:1 ,
+  money: 10,
 
   // 基础进度
   age: 16,

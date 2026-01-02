@@ -8,188 +8,128 @@ console.log("加载 工具箱")
  * 使用 MurmurHash3 算法变体，确保同一存档、同一地点、同一时间的结果固定
  */
 const RandomSystem = {
-  // 核心哈希算法
   _hash: function(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) {
       h ^= str.charCodeAt(i);
       h = Math.imul(h, 0x01000193);
     }
-    return (h >>> 0) / 4294967296; // 转为 0.0 ~ 1.0
+    return (h >>> 0) / 4294967296;
   },
-
-  // 基础：获取随机数 (0.0 - 1.0)
-  // 参数可以是任意数量的字符串或数字
   get: function(...args) {
-    // 自动加入玩家世界种子，确保存档隔离
     const seed = (typeof player !== 'undefined' && player.worldSeed) ? player.worldSeed : 12345;
     const key = `${seed}_${args.join('_')}`;
     return this._hash(key);
   },
-
-  // 场景 A: 基于【坐标 + 周数】(用于野外资源/天气刷新)
-  // 传入: x, y
   getByWeekAndCoord: function(x, y, extraKey = "") {
     const week = typeof player !== 'undefined' ? Math.floor(player.dayCount / 7) : 0;
     return this.get("week", week, "coord", x, y, extraKey);
   },
-
-  // 场景 B: 基于【月数 + 城镇】(用于商店刷新)
-  // 传入: townId (如 "t_xianyang")
   getByMonthAndTown: function(townId, extraKey = "") {
     const month = typeof player !== 'undefined' ? Math.floor(player.dayCount / 30) : 0;
     return this.get("month", month, "town", townId, extraKey);
   },
-
-  // 场景 C: 基于【城镇固定】(用于NPC姓名/性格生成，永久不变)
   getByTownFixed: function(townId, extraKey = "") {
     return this.get("fixed", "town", townId, extraKey);
   },
-
-  // 辅助：获取范围整数 [min, max]
   getInt: function(min, max, ...seedArgs) {
     const r = this.get(...seedArgs);
     return Math.floor(r * (max - min + 1)) + min;
   }
 };
-
-// 暴露简便调用接口
 window.getSeededRandom = (...args) => RandomSystem.get(...args);
 
 
 /**
- * 模块 2: 弹窗管理器 (5种类型)
- * 依赖 css/components.css 中的样式
+ * 模块 2: 弹窗管理器
  */
 const ModalManager = {
-  // 1. 小弹窗 (Toast) - 自动消失，无按钮
   showToast: function(msg, duration = 2000) {
     const toast = document.createElement('div');
-    toast.className = 'ink_toast'; // 需在 CSS 定义动画
+    toast.className = 'ink_toast';
     toast.innerHTML = msg;
     document.body.appendChild(toast);
-
-    // 动画进入
     requestAnimationFrame(() => toast.classList.add('show'));
-
     setTimeout(() => {
       toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300); // 等待淡出动画结束
+      setTimeout(() => toast.remove(), 300);
     }, duration);
   },
-
-  // 2. 交互大弹窗 (Inventory/Shop) - 3/4 屏幕, 复杂交互
   showInteractiveModal: function(title, contentHtml, footerHtml = null) {
     this._showBaseModal('modal_interactive', title, contentHtml, footerHtml);
   },
-
-  // 3. 技能/功法弹窗 (Skills) - 3/4 屏幕, 简洁样式
   showSkillModal: function(title, contentHtml) {
-    // 复用大弹窗结构，但可以加个特殊的类名控制内部样式
     this._showBaseModal('modal_skill', title, contentHtml, null);
   },
-
-  // 4. 历史大事件弹窗 (History) - 1/2 屏幕, 长方形
   showEventModal: function(title, contentHtml) {
     this._showBaseModal('modal_event', title, contentHtml, null);
   },
-
-  // 5. 警告/死亡弹窗 (Warning) - 红色风格, 强制性
-  // 【重要修复】这里我帮你换成了更安全的 temp_cb 调用方式，防止 callback.toString() 在复杂闭包下报错
   showWarningModal: function(title, contentHtml, callback) {
     const tempName = 'temp_cb_' + Date.now();
     window[tempName] = function() {
       callback();
-      delete window[tempName]; // 执行完自毁
+      delete window[tempName];
     };
-
     const footer = `<button class="ink_btn_danger" onclick="window['${tempName}']()">确认</button>`;
     this._showBaseModal('modal_warning', title, contentHtml, footer);
   },
-
-  // --- 内部通用渲染方法 ---
   _showBaseModal: function(typeClass, title, content, footer) {
     const overlay = document.getElementById('modal_overlay');
     const box = document.getElementById('modal_content');
-
-    // 1. 重置并设置类型类名
     box.className = `ink_modal_box ${typeClass}`;
-
-    // 2. 填充内容
     document.getElementById('modal_header').innerHTML = title;
     document.getElementById('modal_body').innerHTML = content;
-
     const footerEl = document.getElementById('modal_footer');
     if (footer) {
       footerEl.style.display = 'block';
       footerEl.innerHTML = footer;
     } else {
-      // 默认只有一个关闭按钮
       footerEl.style.display = 'block';
       footerEl.innerHTML = `<button onclick="closeModal()" class="ink_btn_medium">关闭</button>`;
     }
-
-    // 3. 显示
     overlay.classList.remove('hidden');
-
-    // 4. 绑定 ESC 关闭 (对于非警告类)
     if (typeClass !== 'modal_warning') {
       this._bindEscKey();
     }
   },
-
   _bindEscKey: function() {
-    // 防止重复绑定
     if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
-
     this._escHandler = (e) => {
       if (e.key === 'Escape') closeModal();
     };
     document.addEventListener('keydown', this._escHandler);
   }
 };
-
-// 暴露全局简便接口
 window.showToast = ModalManager.showToast.bind(ModalManager);
 window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager);
-window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager); // 确保暴露这个
+window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager);
 window.closeModal = function() {
   document.getElementById('modal_overlay').classList.add('hidden');
-  // 解绑 ESC，防止关闭了还在监听
   if (ModalManager._escHandler) document.removeEventListener('keydown', ModalManager._escHandler);
 };
 
 
 /**
- * 模块 3: 悬浮窗管理器 (分离逻辑)
- * 分为: 状态数值(Stat), 物品(Item), 技能(Skill)
+ * 模块 3: 悬浮窗管理器
  */
 const TooltipManager = {
   el: null,
-
   _init: function() {
     if (!this.el) this.el = document.getElementById('global_tooltip');
   },
-
-  // 显示位置跟随鼠标
   _move: function(e) {
     if (!this.el) return;
     const x = e.clientX + 15;
     const y = e.clientY + 15;
-
     const rect = this.el.getBoundingClientRect();
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-
     this.el.style.left = (x + rect.width > winW ? x - rect.width - 15 : x) + 'px';
     this.el.style.top = (y + rect.height > winH ? y - rect.height - 15 : y) + 'px';
   },
-
-  // 1. 状态数值悬浮窗
   showStatus: function(e, key, label) {
     this._init();
     const breakdown = window.player && window.player.statBreakdown ? window.player.statBreakdown[key] : [];
-
     let html = `<div class="tt_title">${label}详情</div>`;
     if (breakdown && breakdown.length > 0) {
       breakdown.forEach(b => {
@@ -198,122 +138,79 @@ const TooltipManager = {
     } else {
       html += `<div class="tt_desc">暂无加成</div>`;
     }
-
     this.el.className = 'ink_tooltip tt_status';
     this.el.innerHTML = html;
     this.el.classList.remove('hidden');
     this._move(e);
   },
-
-  // 2. 物品悬浮窗 (优化版：隐藏0值属性，自动管理分割线)
   showItem: function(e, itemId, instance = null, mode = 'normal') {
     this._init();
     const item = instance || (typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i => i.id === itemId) : null);
     if (!item) return;
 
-    // 安全获取配置，防止报错
     const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : {};
     const color = rarityConf.color || '#ccc';
     const typeName = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING[item.type] : item.type;
 
-    // --- 基础信息 ---
     let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
     html += `<div class="tt_sub">${typeName || '未知'} · ${item.rarity}品</div>`;
     html += `<div class="tt_desc">${item.desc}</div>`;
 
-    // --- 动态信息 (图鉴模式下隐藏) ---
     if (mode !== 'gallery') {
-      // 1. 功法/配方 学习状态
       if (item.type === 'book' && typeof player !== 'undefined') {
         const isLearned = (player.skills && player.skills[item.id]) ||
           (player.learnedRecipes && player.learnedRecipes.includes(item.id));
-
         html += `<div class="tt_sep"></div>`;
-        html += `<div class="tt_row">
-                <span>修习状态</span>
-                <span style="${isLearned ? 'color:#5cff5c' : 'color:#888'}">
-                    ${isLearned ? '已研读' : '未研读'}
-                </span>
-            </div>`;
+        html += `<div class="tt_row"><span>修习状态</span><span style="${isLearned ? 'color:#5cff5c' : 'color:#888'}">${isLearned ? '已研读' : '未研读'}</span></div>`;
       }
-
-      // 2. 价格显示
       if (item.price) {
         html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.price} 灵石</span></div>`;
       }
     }
-
-    // --- 属性效果 (Effects) ---
     if (item.effects) {
-      let effectRows = ""; // 先缓存 HTML
-
+      let effectRows = "";
       for (let k in item.effects) {
         const val = item.effects[k];
-
-        // 【关键逻辑】数值为0直接跳过 (保留了你的优化)
         if (val === 0) continue;
-
-        // 获取中文名
         const attrName = (typeof ATTR_MAPPING !== 'undefined' && ATTR_MAPPING[k]) ? ATTR_MAPPING[k] : k;
-
-        // 格式化数值
         const valStr = val > 0 ? `+${val}` : `${val}`;
         const valColor = val > 0 ? '#5cff5c' : '#ff5555';
-
-        effectRows += `
-            <div class="tt_row">
-                <span style="color:#aaa">${attrName}</span>
-                <span style="color:${valColor}">${valStr}</span>
-            </div>
-        `;
+        effectRows += `<div class="tt_row"><span style="color:#aaa">${attrName}</span><span style="color:${valColor}">${valStr}</span></div>`;
       }
-
-      // 只有当有有效属性时，才添加分割线和内容
       if (effectRows !== "") {
         html += `<div class="tt_sep"></div>`;
         html += effectRows;
       }
     }
-
     this.el.className = 'ink_tooltip tt_item';
     this.el.innerHTML = html;
     this.el.classList.remove('hidden');
     this._move(e);
   },
-
-  // 3. 技能悬浮窗
   showSkill: function(e, skillId) {
     this._init();
     const item = GAME_DB.items.find(i => i.id === skillId);
     const skillData = player.skills[skillId];
-
     let name = item ? item.name : skillId;
     let desc = item ? item.desc : "未知技能";
     let level = (skillData && typeof SKILL_CONFIG !== 'undefined') ? SKILL_CONFIG.levelNames[skillData.level] : "未入门";
-
     let html = `<div class="tt_header_skill">${name}</div>`;
     html += `<div class="tt_sub">境界: ${level}</div>`;
     html += `<div class="tt_desc">${desc}</div>`;
-
     this.el.className = 'ink_tooltip tt_skill';
     this.el.innerHTML = html;
     this.el.classList.remove('hidden');
     this._move(e);
   },
-
   hide: function() {
     if (this.el) this.el.classList.add('hidden');
   }
 };
-
-// 暴露全局简便接口
 window.showStatusTooltip = TooltipManager.showStatus.bind(TooltipManager);
 window.showItemTooltip = TooltipManager.showItem.bind(TooltipManager);
 window.showSkillTooltip = TooltipManager.showSkill.bind(TooltipManager);
 window.hideTooltip = TooltipManager.hide.bind(TooltipManager);
 window.moveTooltip = TooltipManager._move.bind(TooltipManager);
-
-// 绑定全局鼠标移动事件
 document.addEventListener('mousemove', (e) => {
   const tt = document.getElementById('global_tooltip');
   if (tt && !tt.classList.contains('hidden')) {
@@ -322,13 +219,61 @@ document.addEventListener('mousemove', (e) => {
 });
 
 
-/* ================= 模块 4: 日志管理器 (新增) ================= */
+/* ================= 模块 4: 日志管理器 (持久化升级版) ================= */
 const LogManager = {
   el: null,
+  cache: [], // 内存缓存
 
-  // 初始化：绑定DOM元素
+  // 初始化：绑定DOM元素并读取历史记录
   init: function() {
     this.el = document.getElementById('game_log_content');
+    if(this.el) {
+      this.loadFromCache();
+    }
+  },
+
+  // 从 LocalStorage 读取日志
+  loadFromCache: function() {
+    // 读取配置中的 Key，如果未定义则使用默认
+    const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
+    const savedLogs = localStorage.getItem(key);
+
+    if (savedLogs) {
+      try {
+        this.cache = JSON.parse(savedLogs);
+        // 重新渲染所有日志
+        this.el.innerHTML = '';
+        this.cache.forEach(log => {
+          this._renderLogItem(log.time, log.msg);
+        });
+        // 滚到底部
+        this.el.scrollTop = this.el.scrollHeight;
+      } catch (e) {
+        console.error("日志缓存读取失败", e);
+        this.cache = [];
+      }
+    }
+  },
+
+  // 保存到 LocalStorage
+  saveToCache: function() {
+    const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
+    localStorage.setItem(key, JSON.stringify(this.cache));
+  },
+
+  // 内部渲染方法
+  _renderLogItem: function(timeStr, msgHtml) {
+    if (!this.el) return;
+
+    const timeP = document.createElement('p');
+    timeP.className = 'log_time';
+    timeP.innerText = timeStr;
+
+    const msgP = document.createElement('p');
+    msgP.innerHTML = msgHtml;
+
+    this.el.appendChild(timeP);
+    this.el.appendChild(msgP);
   },
 
   // 添加一条日志
@@ -337,39 +282,49 @@ const LogManager = {
     if (!this.el) this.init();
     if (!this.el) return;
 
-    // 1. 获取时间标签
-    let timeStr = "[系统]";
-    if (typeof player !== 'undefined' && player) {
-      // 简单的时间计算示例
-      timeStr = `[第${player.generation || 1}世]`;
-    }
+    // 1. 获取当前现实时间 (时:分:秒)
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    const s = now.getSeconds().toString().padStart(2, '0');
+    const timeStr = `[${h}:${m}:${s}]`;
 
-    // 2. 创建 DOM
-    const timeP = document.createElement('p');
-    timeP.className = 'log_time';
-    timeP.innerText = timeStr;
+    // 2. 渲染到 DOM
+    this._renderLogItem(timeStr, msg);
 
-    const msgP = document.createElement('p');
-    msgP.innerHTML = msg; // 允许传入带颜色的HTML
-
-    // 3. 插入
-    this.el.appendChild(timeP);
-    this.el.appendChild(msgP);
+    // 3. 更新缓存
+    this.cache.push({ time: timeStr, msg: msg });
 
     // 4. 自动滚动到底部
     this.el.scrollTop = this.el.scrollHeight;
 
-    // 5. 限制日志数量（防止无限增长内存溢出）
-    while (this.el.children.length > 200) {
+    // 5. 限制数量 (基于配置，默认250条记录 = 500行DOM)
+    const maxEntries = (typeof LOG_MAX_ENTRIES !== 'undefined') ? LOG_MAX_ENTRIES : 250;
+
+    // 削减缓存
+    while (this.cache.length > maxEntries) {
+      this.cache.shift(); // 移除最老的一条
+    }
+
+    // 削减 DOM (每条记录对应 2 个 P 标签)
+    const maxDomLines = maxEntries * 2;
+    while (this.el.children.length > maxDomLines) {
       this.el.removeChild(this.el.firstChild);
       this.el.removeChild(this.el.firstChild);
     }
+
+    // 6. 只有在变动时才保存
+    this.saveToCache();
   },
 
-  // 清空日志
+  // 清空日志 (用于兵解重开时彻底清除)
   clear: function() {
     if (!this.el) this.init();
     if (this.el) this.el.innerHTML = '';
+
+    this.cache = [];
+    const key = (typeof LOG_SAVE_KEY !== 'undefined') ? LOG_SAVE_KEY : 'xiuxian_logs_default';
+    localStorage.removeItem(key);
   }
 };
 

@@ -89,41 +89,68 @@ function loadGame() {
  * 保留部分属性（如转世次数），重置其他属性
  */
 function attemptDie() {
-  // 1. 确认弹窗
-  const confirmed = confirm("道友确定要兵解转世吗？\n兵解后将保留【世数】，重置修为与肉身。");
+  // 定义兵解的具体执行逻辑
+  const executeDie = function() {
+    // 1. 计算下一世的世数
+    const nextGen = (player && player.generation ? player.generation : 1) + 1;
 
-  if (confirmed) {
-    // 2. 继承数据
-    const currentGen = (player.generation || 1) + 1;
+    // 2. 使用模板构建新身体 (关键修复：防止缺失 lifeSkills 等新字段)
+    let newPlayer;
+    if (typeof PLAYER_TEMPLATE !== 'undefined') {
+      // 深拷贝模板
+      newPlayer = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
+    } else {
+      // 兜底：如果模板也没加载，就只能手写一个简易版
+      console.error("兵解严重错误：找不到 PLAYER_TEMPLATE");
+      newPlayer = { attr:{jing:10,qi:10,shen:10}, status:{hp:100,mp:100,hunger:100}, money:0, inventory:[] };
+    }
 
-    // 3. 重置 player 数据
-    // 手动重置核心字段
-    player.name = "道友" + currentGen + "世";
-    player.generation = currentGen;
-    player.age = 16;
-    player.status.hp = 100;
-    player.status.mp = 50;
-    player.status.hunger = 100;
-    player.attr.jing = 10;
-    player.attr.qi = 10;
-    player.attr.shen = 10;
-    player.money = 0;
-    player.location = "t_newbie_village"; // 确保这里是有效的 ID
+    // 3. 继承关键数据
+    newPlayer.generation = nextGen;
+    newPlayer.name = "道友" + nextGen + "世"; // 自动改名
+    newPlayer.location = "t_xianyang";        // 确保出生在咸阳
+    newPlayer.worldSeed = Math.floor(Math.random() * 1000000); // 刷新世界随机数
 
-    // 清空 Buff
-    player.buffs = [];
+    // 4. 覆盖全局对象
+    window.player = newPlayer;
 
-    // 4. 保存新状态 (覆盖旧档)
+    // 5. 保存新档
     saveGame();
 
-    // 5. 刷新界面并提示
-    // 兵解不需要重载页面，直接刷新UI即可
+    // 6. 刷新界面
     if(window.updateUI) window.updateUI();
-    if(window.enterGameScene) window.enterGameScene();
 
+    // 7. 写入日志
     if (window.LogManager) {
       window.LogManager.clear();
-      window.LogManager.add(`兵解成功！你开启了第 ${currentGen} 世轮回。`);
+      window.LogManager.add(`<span style="color:#d9534f; font-weight:bold; font-size:16px;">兵解轮回</span>`);
+      window.LogManager.add(`你开启了第 <span style="color:#b8860b; font-weight:bold;">${nextGen}</span> 世轮回。`);
+      window.LogManager.add("前尘往事如烟散，今朝再踏长生路。");
+    }
+
+    // 提示
+    if(window.showToast) window.showToast("兵解成功，轮回开启");
+  };
+
+  // 调用警告弹窗
+  if (window.showWarningModal) {
+    window.showWarningModal(
+      "兵解轮回",
+      `
+      <div style="text-align:center; padding:10px;">
+         <p class="text_red" style="font-weight:bold; font-size:18px; margin-bottom:15px;">警告：肉身将毁，修为尽失！</p>
+         <p style="color:#444; margin-bottom:5px;">此举将<b style="color:#d9534f">彻底重置</b>你的角色状态。</p>
+         <p style="color:#666; font-size:13px;">仅保留【转世次数】与【世界设定】。</p>
+         <br>
+         <p style="font-weight:bold;">道友道心已决，确定要开启来世吗？</p>
+      </div>
+      `,
+      executeDie // 传入回调函数
+    );
+  } else {
+    // 兼容代码：如果 UI 模块没加载
+    if(confirm("道友确定要兵解转世吗？")) {
+      executeDie();
     }
   }
 }

@@ -18,12 +18,7 @@ function enterGameScene() {
     // 进入后立即刷新一次界面
     updateUI();
 
-    // 打印欢迎日志
-    if (window.LogManager) {
-      window.LogManager.clear();
-      window.LogManager.add(`轮回开启，你出生于【${player.location}】...`);
-      window.LogManager.add("大道三千，祝道友早证混元。");
-    }
+
   }
 }
 

@@ -93,60 +93,60 @@ function bindMainMenuEvents() {
 
 /**
  * 初始化新游戏数据
- * (之前缺失的方法，现在补上)
+ * (修正版：动态读取地图信息)
  */
 function startNewGame() {
   console.log("正在构建新角色...");
 
-  // 初始化全新的 player 对象
-  window.player = {
-    name: "无名道友",
-    generation: 1,
-    age: 16,
-    money: 100,
+  if (typeof PLAYER_TEMPLATE === 'undefined') {
+    console.error("配置丢失：找不到 PLAYER_TEMPLATE");
+    alert("游戏配置缺失，无法初始化。");
+    return false;
+  }
 
-    // 初始位置：使用秦代咸阳作为新手村
-    location: "t_xianyang",
+  // 1. 深拷贝模板
+  const newPlayer = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
 
-    // 基础属性 (精气神)
-    attr: {
-      jing: 10,
-      qi: 10,
-      shen: 10
-    },
+  // 2. 覆盖动态属性
+  newPlayer.name = "无名道友";
+  newPlayer.generation = 1;
+  newPlayer.money = 100;
+  newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
 
-    // 动态状态
-    status: {
-      hp: 100,
-      mp: 50,
-      hunger: 100
-    },
+  // 设定初始位置
+  newPlayer.location = "t_xianyang"; // 默认咸阳
 
-    // 衍生属性 (updateUI 会计算具体数值，这里给个初始值防止报错)
-    derived: {
-      hpMax: 100,
-      mpMax: 50,
-      atk: 5,
-      def: 1,
-      speed: 10
-    },
+  // 3. 赋值给全局变量
+  window.player = newPlayer;
 
-    // 系统数据
-    inventory: [],    // 背包
-    skills: {},       // 技能
-    buffs: [],        // 状态
-    learnedRecipes: [], // 配方
-
-    // 世界记录
-    dayCount: 1,
-    worldSeed: Math.floor(Math.random() * 1000000)
-  };
-
-  // 立即保存，确保“继续游戏”按钮生效
+  // 4. 立即保存
   saveGame();
 
-  // 立即刷新一次 UI
+  // 5. 立即刷新 UI
   if(window.updateUI) window.updateUI();
+
+  // === 【动态日志逻辑】 ===
+  if (window.LogManager) {
+    window.LogManager.clear();
+
+    // 1. 获取位置信息
+    let locName = "未知之地";
+    let locDesc = "一片混沌...";
+
+    // 从 data_world.js 的 WORLD_TOWNS 数组中查找当前位置对象
+    if (typeof WORLD_TOWNS !== 'undefined') {
+      const startTown = WORLD_TOWNS.find(t => t.id === newPlayer.location);
+      if (startTown) {
+        locName = startTown.name;
+        // 优先使用 flavor (风味描述)，如果没有则使用 desc
+        locDesc = startTown.flavor || startTown.desc || "此地人杰地灵。";
+      }
+    }
+
+    // 2. 动态生成欢迎语
+    window.LogManager.add(`<span style="color:#b8860b; font-weight:bold;">轮回开启</span> 你出生于【${locName}】，${locDesc}`);
+    window.LogManager.add("大道三千，祝道友早证混元。");
+  }
 
   return true;
 }
