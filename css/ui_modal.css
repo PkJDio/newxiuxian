@@ -233,3 +233,20 @@
     border-color: #333;
     background-color: #f9f9f9;
 }
+
+/* 核心修复：当弹窗容器带有 .modal_bag 类时，重置 body 样式 */
+/* 注意：这里通过父级类名渗透修改子元素 */
+.ink_modal_box.modal_bag #modal_body {
+    padding: 0 !important;       /* 去掉内边距，让背包贴边显示 */
+    overflow: hidden !important; /* 禁止外层滚动，只允许背包内部滚动 */
+    display: flex;               /* 开启 Flex 布局 */
+    flex-direction: column;      /* 垂直排列 */
+}
+
+/* 修复弹窗头部和底部的层级，防止被遮挡 */
+.ink_modal_box.modal_bag #modal_header,
+.ink_modal_box.modal_bag #modal_footer {
+    flex-shrink: 0; /* 禁止被压缩 */
+    z-index: 10;
+    position: relative;
+}
