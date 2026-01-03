@@ -1,0 +1,81 @@
+/* css/ui_gallery.css - 万物图鉴专用样式 */
+
+/* 图鉴容器：限制最大高度，使用网格布局 */
+.pictorial_container {
+    display: grid;
+    /* 核心：自动填充，每列最小100px，最大1fr，保证整齐 */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px; /* 格子间距 */
+    padding: 15px;
+
+    /* 防止弹窗过长撑破屏幕，内容过多时内部滚动 */
+    max-height: 60vh;
+    overflow-y: auto;
+
+    background-color: #f9f9f9; /* 浅色底衬托卡片 */
+    border-radius: 8px;
+}
+
+/* 单个图鉴卡片 */
+.pictorial_card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1; /* 强制正方形 */
+
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: help; /* 鼠标放上去显示问号/帮助手势 */
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* 卡片悬停效果 */
+.pictorial_card:hover {
+    transform: translateY(-5px); /* 微微上浮 */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #b0b0b0;
+    z-index: 10;
+}
+
+/* 物品图标 */
+.pictorial_icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+/* 物品名称 */
+.pictorial_name {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+
+    /* 文本过长省略号 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+/* 物品类型标签 */
+.pictorial_type {
+    font-size: 12px;
+    color: #999;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 空状态提示 */
+.pictorial_empty {
+    grid-column: 1 / -1; /* 占满整行 */
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 16px;
+}
