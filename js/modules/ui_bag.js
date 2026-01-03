@@ -1,4 +1,4 @@
-// js/modules/ui_bag.js
+// js/modules/ui_bag.js - 背包与物品界面逻辑 (水墨弹窗适配版)
 
 const UIBag = {
     // 状态管理
@@ -6,7 +6,6 @@ const UIBag = {
     selectedIndices: new Set(),
 
     open: function() {
-        // 每次打开重置状态
         this.selectionMode = false;
         this.selectedIndices.clear();
         this.showModal();
@@ -30,87 +29,122 @@ const UIBag = {
                 </div>
             </div>
         `;
-        if (window.showGeneralModal) window.showGeneralModal(title, contentHtml, null, "modal_bag");
+        // 【关键修改】
+        // 参数说明: title, content, footer(null), extraClass("modal_bag"), width(85vw), height(80vh)
+        // 你可以随意修改 85 和 80 这两个数字来调整弹窗大小
+        if (window.showGeneralModal) {
+            window.showGeneralModal(title, contentHtml, null, "modal_bag", 85, 80);
+        }
         this.refresh();
     },
 
-    // 渲染工具栏 (根据当前模式)
     renderToolbar: function() {
         const container = document.getElementById('bag_toolbar_container');
         if (!container) return;
 
         let html = '';
         if (this.selectionMode) {
-            // 选择模式：显示确认和取消
+            // 选择模式
             const count = this.selectedIndices.size;
             html = `
-            <div style="flex:1; color:#d9534f; font-weight:bold; font-size:16px; align-self:center;">
-               已选择: ${count} 项
+            <div class="bag_text_info">
+               <span style="color:#a94442; margin-right:5px;">●</span> 
+               已选: ${count}
             </div>
-            <button class="ink_btn_small" onclick="UIBag.exitSelectionMode()">取消</button>
-            <button class="ink_btn_small btn_danger" onclick="UIBag.confirmBatchDiscard()">❌ 确认丢弃</button>
+            <button class="bag_btn_action" onclick="UIBag.exitSelectionMode()">取消</button>
+            <button class="bag_btn_danger" onclick="UIBag.confirmBatchDiscard()">确认丢弃</button>
           `;
         } else {
-            // 正常模式：显示整理和批量丢弃
+            // 正常模式
             html = `
-            <button class="ink_btn_small" onclick="UtilsItem.sortInventory()">🧹 整理行囊</button>
-            <button class="ink_btn_small" onclick="UIBag.enterSelectionMode()">🗑️ 批量丢弃</button>
+            <button class="bag_btn_action" onclick="UtilsItem.sortInventory()">整理</button>
+            <button class="bag_btn_action" onclick="UIBag.enterSelectionMode()">批量丢弃</button>
           `;
         }
         container.innerHTML = html;
     },
 
-    // 进入选择模式
     enterSelectionMode: function() {
         this.selectionMode = true;
         this.selectedIndices.clear();
         this.refresh();
 
-        // 清空详情页提示
         const detail = document.getElementById('bag_detail_panel');
-        if(detail) detail.innerHTML = '<div style="color:#d9534f; text-align:center; margin-top:50px; font-weight:bold;">请点击左侧物品勾选<br>再次点击取消勾选</div>';
+        if(detail) detail.innerHTML = '<div style="color:#a94442; text-align:center; margin-top:50px; font-weight:bold; font-family:Kaiti;">请点击左侧物品勾选<br>再次点击取消勾选</div>';
     },
 
-    // 退出选择模式
     exitSelectionMode: function() {
         this.selectionMode = false;
         this.selectedIndices.clear();
         this.refresh();
-        // 恢复详情页默认提示
         const detail = document.getElementById('bag_detail_panel');
         if(detail) detail.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">点击物品查看详情</div>';
     },
 
-    // 切换单个物品选中状态
     toggleItemSelection: function(index) {
         if (this.selectedIndices.has(index)) {
             this.selectedIndices.delete(index);
         } else {
             this.selectedIndices.add(index);
         }
-        this.refresh(); // 刷新以更新勾选UI和计数
+        this.refresh();
     },
 
-    // 确认批量删除
+    /**
+     * 【核心修改】批量丢弃确认
+     * 使用 UtilsModal.showInteractiveModal 替代 confirm
+     */
     confirmBatchDiscard: function() {
         if (this.selectedIndices.size === 0) {
             if(window.showToast) window.showToast("未选择任何物品");
             return;
         }
-        if (!confirm(`确定要永久丢弃这 ${this.selectedIndices.size} 件物品吗？`)) {
-            return;
-        }
 
-        // 调用 UtilsItem 执行删除
+        const count = this.selectedIndices.size;
+        const title = "批量丢弃";
+        // 内容使用 HTML 美化
+        const content = `
+        <div style="text-align:center; padding:20px 10px;">
+            <div style="font-size:18px; margin-bottom:10px;">
+                确定要丢弃这 <span style="color:#a94442; font-weight:bold; font-size:22px;">${count}</span> 件物品吗？
+            </div>
+            <div style="font-size:14px; color:#888;">( 丢弃后将无法找回，请三思 )</div>
+        </div>
+      `;
+
+        // 按钮：取消则重新打开背包，确认则执行删除
+        const footer = `
+        <button class="bag_btn_action" onclick="UIBag.open()">取消</button>
+        <button class="bag_btn_danger" onclick="UIBag._doBatchDiscard()">确认丢弃</button>
+      `;
+
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            window.UtilsModal.showInteractiveModal(title, content, footer);
+        } else {
+            // 降级兼容
+            if (confirm(`确定要永久丢弃这 ${count} 件物品吗？`)) {
+                this._doBatchDiscard();
+            }
+        }
+    },
+
+    // 【新增】实际执行批量删除逻辑
+    _doBatchDiscard: function() {
+        // 1. 关闭确认弹窗
+        if (window.UtilsModal) window.UtilsModal.closeModal();
+
+        // 2. 执行逻辑
         UtilsItem.discardMultipleItems(this.selectedIndices);
 
-        // 退出模式
-        this.exitSelectionMode();
+        // 3. 重置状态并恢复背包界面
+        this.selectionMode = false;
+        this.selectedIndices.clear();
+        this.open();
     },
 
     refresh: function() {
         this.renderEquipmentRow();
-        this.renderToolbar(); // 刷新工具栏
+        this.renderToolbar();
 
         const container = document.getElementById('bag_grid_content');
         if (!container) return;
@@ -123,11 +157,8 @@ const UIBag = {
             const rarityColor = (RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
 
             const div = document.createElement('div');
-
-            // 基础样式
             div.className = 'bag_grid_item';
 
-            // 如果在选择模式下，且被选中，添加 selected 类
             if (this.selectionMode && this.selectedIndices.has(index)) {
                 div.classList.add('selected');
             }
@@ -139,7 +170,6 @@ const UIBag = {
                 <div class="bag_check_mark">✓</div>
             `;
 
-            // 点击事件分流
             if (this.selectionMode) {
                 div.onclick = () => UIBag.toggleItemSelection(index);
             } else {
@@ -150,7 +180,6 @@ const UIBag = {
         });
     },
 
-    // ... (renderEquipmentRow, _renderEquipSlot, showEquippedDetail, renderDetail, handle... 等保持不变) ...
     renderEquipmentRow: function() {
         const container = document.getElementById('bag_equipment_row');
         if (!container) return;
@@ -296,6 +325,8 @@ const UIBag = {
         else if (context.type === 'equip') {
             const slotKey = context.key;
             btnsHtml += `<button class="ink_btn" onclick="UIBag.handleUnequipAction('${slotKey}')">卸下</button>`;
+
+            // 【核心修改】身上装备丢弃确认
             btnsHtml += `<button class="ink_btn_normal" onclick="UIBag.discardEquippedItem('${slotKey}')">丢弃</button>`;
         }
         btnsHtml += `</div>`;
@@ -332,14 +363,47 @@ const UIBag = {
         }
     },
 
+    /**
+     * 【核心修改】身上装备丢弃确认
+     * 使用 UtilsModal.showInteractiveModal 替代 confirm
+     */
     discardEquippedItem: function(slotKey) {
-        if(!confirm("确定要直接丢弃身上的这件装备吗？(不可恢复)")) return;
+        const title = "丢弃装备";
+        const content = `
+        <div style="text-align:center; padding:20px 10px;">
+            <div style="font-size:18px; margin-bottom:10px;">
+                确定要直接丢弃身上的这件装备吗？
+            </div>
+            <div style="font-size:14px; color:#a94442;">( 丢弃后将无法找回 )</div>
+        </div>
+    `;
+        const footer = `
+      <button class="bag_btn_action" onclick="UIBag.open()">取消</button>
+      <button class="bag_btn_danger" onclick="UIBag._doDiscardEquip('${slotKey}')">确认丢弃</button>
+    `;
+
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            window.UtilsModal.showInteractiveModal(
+                title,
+                content,
+                footer,
+                "",  // extraClass 为空
+                40,  // 宽度 40vw
+                "auto" // 高度自适应
+            );
+        }
+    },
+
+    // 【新增】实际执行身上装备删除逻辑
+    _doDiscardEquip: function(slotKey) {
+        if (window.UtilsModal) window.UtilsModal.closeModal();
+
         player.equipment[slotKey] = null;
         if(window.recalcStats) window.recalcStats();
-        if(window.refreshBagUI) window.refreshBagUI();
         if(window.updateUI) window.updateUI();
-        const container = document.getElementById('bag_detail_panel');
-        if(container) container.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">装备已丢弃</div>';
+
+        // 重新打开背包
+        this.open();
     }
 };
 

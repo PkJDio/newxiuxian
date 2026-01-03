@@ -2,10 +2,7 @@
 
 /* === 弹窗宽屏控制 === */
 /* 这个类名需要由 JS 在打开弹窗时传入 */
-.modal_bag {
-  width: 75vw !important; /* 占据屏幕 3/4 */
-  max-width: 95vw !important; /* 覆盖默认的最大限制 */
-}
+
 
 /* === 背包整体布局 === */
 .bag_container {
@@ -204,53 +201,126 @@
 /* css/ui_bag.css - 添加在文件末尾 */
 
 /* === 工具栏样式 (水墨风格化) === */
+/* === 工具栏容器 === */
 .bag_toolbar {
     display: flex;
-    justify-content: flex-end; /* 按钮靠右 */
-    gap: 12px; /* 按钮间距 */
-    padding: 8px 15px;
-    margin-bottom: 5px;
-    border-bottom: 1px dashed #ccc; /* 增加一条淡分割线 */
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px; /* 按钮间距 */
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0; /* 加粗分割线 */
+    background: rgba(255, 255, 255, 0.6); /* 微微透白 */
+    border-radius: 4px;
 }
 
-/* === 红色警告按钮 (复用样式) === */
-.btn_danger {
-    background-color: #a94442 !important; /* 深红 */
-    border-color: #8a3331 !important;
-    color: #fff !important;
-}
-.btn_danger:hover {
-    background-color: #c9302c !important;
-    filter: brightness(1.1);
+/* === 通用操作按钮 (黑白水墨风) === */
+.bag_btn_action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 20px; /* 宽敞一点 */
+
+    /* 核心字体设定：优先楷体，更有江湖气 */
+    font-family: "Kaiti", "STKaiti", "SimSun", serif;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px; /* 字间距 */
+
+    color: #333;
+    background-color: transparent; /* 透明底 */
+    border: 2px solid #333; /* 黑色粗边框 */
+    border-radius: 4px;
+
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: none;
 }
 
-/* === 选中状态的格子样式 === */
+/* 悬停效果：黑底白字，模拟墨块 */
+.bag_btn_action:hover {
+    background-color: #333;
+    color: #f5f5f5;
+    transform: translateY(-2px); /* 微微上浮 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* 点击效果 */
+.bag_btn_action:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* === 危险/强调按钮 (朱砂红风格) === */
+.bag_btn_danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 20px;
+
+    font-family: "Kaiti", "STKaiti", "SimSun", serif;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+
+    color: #a94442; /* 朱红文字 */
+    background-color: transparent;
+    border: 2px solid #a94442; /* 朱红边框 */
+    border-radius: 4px;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 悬停效果：红底白字 */
+.bag_btn_danger:hover {
+    background-color: #a94442;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(169, 68, 66, 0.3);
+}
+
+.bag_btn_danger:active {
+    transform: translateY(0);
+}
+
+/* === 提示文字样式 === */
+.bag_text_info {
+    flex: 1; /* 撑开左侧空间 */
+    color: #555;
+    font-family: "Kaiti", serif;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+/* === 选中状态的格子 (配套微调) === */
 .bag_grid_item.selected {
-    border-color: #d9534f; /* 红色边框 */
-    background-color: #fff5f5; /* 淡红背景 */
-    box-shadow: 0 0 5px rgba(217, 83, 79, 0.5);
+    border-color: #a94442; /* 选中变红框 */
+    background-color: #fffafaf0;
+    transform: scale(0.95); /* 微微缩小 */
 }
 
-/* 勾选标记 (默认隐藏) */
+/* 勾选标记 */
 .bag_check_mark {
     display: none;
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 20px;
-    height: 20px;
-    background-color: #d9534f;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    background-color: #a94442; /* 朱红底 */
     color: white;
-    border-radius: 50%;
+    border-radius: 4px; /* 方形圆角更像印章 */
     text-align: center;
-    line-height: 20px;
-    font-size: 14px;
+    line-height: 24px;
+    font-size: 16px;
     font-weight: bold;
     z-index: 5;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 
-/* 只有在 selected 状态下才显示勾选标记 */
 .bag_grid_item.selected .bag_check_mark {
     display: block;
 }
