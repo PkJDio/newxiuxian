@@ -1,227 +1,235 @@
-/* ================= 弹窗系统 (Windows & Modals) ================= */
+/* css/ui_modal.css - 弹窗系统样式 (适配自定义宽高) */
 
 /* --- 1. 全屏遮罩层 --- */
 .modal {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7); /* 深色遮罩 */
-  display: flex; justify-content: center; align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(2px); /* 稍微模糊背景 */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); /* 深色遮罩 */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px); /* 稍微模糊背景 */
 }
 .modal.hidden { display: none; }
 
 /* --- 2. 弹窗基础盒子 (水墨风) --- */
 .ink_modal_box {
-  background: #fdfdfd; /* 宣纸白 */
-  border: 3px double #333; /* 双线墨边 */
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-  border-radius: 2px;
-  position: relative;
-  /* 弹窗进入动画 */
-  animation: modalPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    background: #fdfdfd; /* 宣纸白 */
+    border: 3px double #333; /* 双线墨边 */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    border-radius: 2px;
+    position: relative;
+    /* 基础尺寸限制，防止过大爆屏 */
+    max-width: 98vw;
+    max-height: 98vh;
+    /* 弹窗进入动画 */
+    animation: modalPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 @keyframes modalPop {
-  from { transform: scale(0.95) translateY(10px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
+    from { transform: scale(0.95) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 /* 弹窗头部 */
 #modal_header {
-  background: #333;
-  color: #eee;
-  padding: 15px;
-  /* 【修改】标题加大 */
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-  letter-spacing: 4px;
-  border-bottom: 1px solid #000;
-  font-family: "Kaiti", serif;
+    background: #333;
+    color: #eee;
+    padding: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 4px;
+    border-bottom: 1px solid #000;
+    font-family: "Kaiti", serif;
+    flex-shrink: 0; /* 防止被挤压 */
 }
 
 /* 弹窗内容区 */
 #modal_body {
-  flex: 1;
-  padding: 25px;
-  overflow-y: auto;
-  /* 【修改】正文加大 */
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-  line-height: 1.6;
+    flex: 1; /* 占据剩余空间 */
+    padding: 25px;
+    overflow-y: auto; /* 内容溢出滚动 */
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.6;
 }
 
 /* 弹窗底部 (按钮区) */
 #modal_footer {
-  padding: 12px;
-  text-align: right;
-  border-top: 1px solid #ccc;
-  background: #f5f5f5;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+    padding: 12px;
+    text-align: right;
+    border-top: 1px solid #ccc;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0; /* 防止被挤压 */
+    flex-wrap: wrap; /* 允许按钮换行，防止窄屏挤出 */
 }
 
-/* --- 3. 不同类型的弹窗尺寸 --- */
+/* --- 3. 不同类型的弹窗尺寸 (作为默认值) --- */
 
-/* 类型A: 交互大弹窗 (背包/商店) - 占屏幕 75% */
+/* 类型A: 交互大弹窗 (背包/商店) */
 .ink_modal_box.modal_interactive {
-  width: 75vw;
-  height: 75vh;
-  min-width: 800px; /* 最小宽度限制 */
+    /* 移除固定的 width/height，让 JS 控制或自适应 */
+    width: auto;
+    height: auto;
+    /* 【关键修改】最小宽度设小一点，防止在窄屏或自定义小尺寸时无法缩小 */
+    min-width: 320px;
+    /* 如果 JS 没传参，这里给一个保底的推荐尺寸，但不再是强制 */
+    width: 75vw;
+    height: 75vh;
 }
 
-/* 类型B: 技能/功法弹窗 - 同样大，但可以有特殊边框色 */
+/* 类型B: 技能/功法弹窗 */
 .ink_modal_box.modal_skill {
-  width: 75vw;
-  height: 75vh;
-  border-color: #4a4a6a; /* 偏蓝黑的墨色 */
+    width: 75vw;
+    height: 75vh;
+    border-color: #4a4a6a; /* 偏蓝黑的墨色 */
 }
 
 /* 类型C: 历史大事件 (宽屏) */
 .ink_modal_box.modal_event {
-  width: 60vw;
-  height: 50vh;
-  background: #fffdf5; /* 泛黄旧纸 */
-  border: 2px solid #555;
+    width: 60vw;
+    height: 50vh;
+    background: #fffdf5; /* 泛黄旧纸 */
+    border: 2px solid #555;
 }
 
 /* 类型D: 警告/死亡 (红色调) */
 .ink_modal_box.modal_warning {
-  width: 400px;
-  height: auto; /* 高度自适应 */
-  border: 4px solid #8b0000;
-  background: #fff0f0;
+    width: 400px;
+    max-width: 90vw; /* 适配手机 */
+    height: auto;
+    border: 4px solid #8b0000;
+    background: #fff0f0;
 }
 .ink_modal_box.modal_warning #modal_header {
-  background: #8b0000;
-  color: #fff;
+    background: #8b0000;
+    color: #fff;
 }
 
 
 /* --- 4. Toast (自动消失的提示条) --- */
 .ink_toast {
-  position: fixed;
-  top: 15%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(20, 20, 20, 0.95);
-  color: #fff;
-  padding: 15px 30px;
-  border-radius: 4px;
-  /* 【修改】提示字加大 */
-  font-size: 20px;
-  font-weight: bold;
-  border: 1px solid #555;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
-  z-index: 2000;
-  pointer-events: none;
-  font-family: "Kaiti", serif;
-  white-space: nowrap;
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20, 20, 20, 0.95);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 4px;
+    font-size: 20px;
+    font-weight: bold;
+    border: 1px solid #555;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 2000;
+    pointer-events: none;
+    font-family: "Kaiti", serif;
+    white-space: nowrap;
 }
 .ink_toast.show {
-  opacity: 1;
-  transform: translate(-50%, -40%); /* 微微上浮 */
+    opacity: 1;
+    transform: translate(-50%, -40%);
 }
+
 /* === 新增：弹窗底部按钮组优化 === */
 .ink_modal_btn_group {
-  display: flex;
-  justify-content: center; /* 居中对齐 */
-  gap: 20px;               /* 按钮之间的间距 */
-  margin-top: 15px;        /* 与上方文字拉开距离 */
-  padding-top: 15px;
-  border-top: 1px dashed #ddd; /* 加一条淡淡的虚线分割 */
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ddd;
+    flex-wrap: wrap; /* 允许换行 */
 }
 
 /* 按钮基础增强 */
 .ink_modal_btn_group button {
-  min-width: 110px;        /* 保证按钮有一定宽度 */
-  padding: 8px 16px;       /* 增加内边距 */
-  font-size: 15px;         /* 字体稍大 */
-  border-radius: 4px;      /* 轻微圆角 */
-  transition: all 0.2s;    /* 动效 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;                /* 图标和文字间距 */
+    min-width: 110px;
+    padding: 8px 16px;
+    font-size: 15px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
-/* 悬浮效果 */
 .ink_modal_btn_group button:hover {
-  transform: translateY(-2px); /* 鼠标放上去微微上浮 */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* 针对不同按钮的微调 */
 .ink_modal_btn_group .ink_btn_medium {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
 }
 .ink_modal_btn_group .ink_btn_medium:hover {
-  background-color: #e0e0e0;
+    background-color: #e0e0e0;
 }
 
 .ink_modal_btn_group .ink_btn_danger {
-  background-color: #d9534f;
-  color: white;
-  border: 1px solid #d43f3a;
+    background-color: #d9534f;
+    color: white;
+    border: 1px solid #d43f3a;
 }
 .ink_modal_btn_group .ink_btn_danger:hover {
-  background-color: #c9302c;
+    background-color: #c9302c;
 }
-/* --- style.css 新增部分 --- */
 
-/* 1. 针对“选项列表”类型的弹窗 (天道/选择框) */
+/* 1. 针对“选项列表”类型的弹窗 */
 .modal_selection {
-  width: 25vw;          /* 核心需求：宽度设为视口宽度的 1/4 */
-  min-width: 380px;     /* 设置一个最小宽度，防止在手机上太窄 */
-  max-width: 600px;
+    width: 25vw;
+    min-width: 300px; /* 调小最小宽度以适配 */
+    max-width: 600px;
 }
 
 /* 2. 弹窗底部按钮栏优化 */
 .ink_modal_footer {
-  display: flex;
-  justify-content: flex-end; /* 按钮靠右排列，也可以改为 center 居中 */
-  gap: 15px;                 /* 按钮之间的间距 */
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-  margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+    flex-wrap: wrap; /* 关键：允许换行 */
 }
 
-/* 3. 美化按钮：通用主按钮 (确认) */
+/* 3. 美化按钮 */
 .ink_btn {
-  padding: 8px 20px;
-  background-color: #333; /* 墨色背景 */
-  color: #fff;
-  border: 1px solid #333;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+    padding: 8px 20px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
 }
 .ink_btn:hover {
-  background-color: #555;
-  border-color: #555;
+    background-color: #555;
+    border-color: #555;
 }
 
-/* 4. 美化按钮：次级按钮 (关闭/取消) */
 .ink_btn_normal {
-  padding: 8px 20px;
-  background-color: #fff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+    padding: 8px 20px;
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
 }
 .ink_btn_normal:hover {
-  border-color: #333;
-  background-color: #f9f9f9;
+    border-color: #333;
+    background-color: #f9f9f9;
 }

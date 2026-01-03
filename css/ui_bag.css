@@ -1,326 +1,231 @@
-/* css/ui_bag.css - 背包样式 (宽屏重构版) */
+/* css/ui_bag.css - 背包样式 (修复挤压问题版) */
 
-/* === 弹窗宽屏控制 === */
-/* 这个类名需要由 JS 在打开弹窗时传入 */
+/* === 1. 弹窗容器控制 === */
+.modal_bag {
+    padding: 0 !important; /* 清除默认内边距 */
+    background-color: #fdfdfd;
+}
 
-
-/* === 背包整体布局 === */
+/* === 2. 背包整体布局 === */
 .bag_container {
-  display: flex;
-  flex-direction: column;
-  height: 65vh; /* 稍微增加高度以适应更宽的布局 */
-  gap: 15px;
-  font-size: 18px; /* 【需求】最小文字 18px */
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* 占满弹窗高度 */
+    overflow: hidden;
+    font-family: "Kaiti", "STKaiti", "SimSun", serif;
 }
 
-/* === 顶部装备栏 === */
+/* === 3. 顶部装备栏 === */
 .bag_equipment_row {
-  display: flex;
-  justify-content: center;
-  gap: 30px; /* 增加间距 */
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 6px;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    flex-wrap: wrap; /* 允许换行 */
 }
 
-/* 装备单元包裹 (文字 + 框) */
 .bag_equip_wrapper {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
 }
 
-/* 装备标签文字 */
 .bag_equip_label {
-  margin-right: 10px;
-  font-size: 18px; /* 增大文字 */
-  font-weight: bold;
-  color: #555;
-  white-space: nowrap;
+    font-size: 16px;
+    color: #666;
+    font-weight: bold;
 }
 
-/* 装备槽方框 */
 .bag_equip_box {
-  width: 55px;  /* 稍微加大 */
-  height: 55px;
-  border: 2px dashed #999;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #fafafa;
-  transition: all 0.2s;
-  font-size: 32px; /* Emoji 变大 */
+    width: 50px;
+    height: 50px;
+    border: 2px dashed #aaa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #fafafa;
+    transition: all 0.2s;
+    font-size: 28px;
+    position: relative;
+    overflow: hidden; /* 确保图标不溢出 */
 }
 
 .bag_equip_box:hover {
-  border-color: #555;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #333;
+    background-color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .bag_equip_box.equipped {
-  border-style: solid;
-  border-color: #333;
-  background-color: #fff;
+    border-style: solid;
+    border-color: #333;
+    background-color: #fff;
 }
-
-/* === 中间主体区域 (网格 + 详情) === */
-.bag_main_area {
-  display: flex;
-  flex: 1;
-  overflow: hidden; /* 防止撑开父容器 */
-  gap: 15px;
-}
-
-/* 左侧网格滚动区 */
-.bag_grid_scroll {
-  flex: 5; /* 占比加大 */
-  overflow-y: auto; /* 仅垂直滚动 */
-  overflow-x: hidden; /* 禁止水平滚动 */
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 6px;
-  background-color: #fcfcfc;
-}
-
-/* 网格布局核心 */
-.bag_grid_content {
-  display: grid;
-  /* 【需求核心】自动填充，最小宽度90px，不够就换行，绝不出现横向滚动条 */
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
-}
+.bag_equip_icon { opacity: 0.3; filter: grayscale(100%); transition: all 0.3s; line-height: 1; }
+.bag_equip_box.equipped .bag_equip_icon { opacity: 1; filter: none; transform: scale(1.1); }
 
 
-
-/* 单个物品格子 */
-.bag_grid_item {
-  aspect-ratio: 1/1; /* 保持正方形 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  background-color: #fff;
-  transition: all 0.2s;
-  padding: 5px;
-}
-
-.bag_grid_item:hover {
-  border-color: #333;
-  background-color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.bag_grid_icon {
-  font-size: 36px; /* 物品图标加大 */
-  margin-bottom: 5px;
-}
-
-.bag_grid_name {
-  width: 100%;
-  text-align: center;
-  font-size: 14px; /* 名字稍微小一点点以免换行太严重，但整体UI是18px */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bag_item_count {
-  position: absolute;
-  right: 4px; bottom: 2px;
-  font-weight: bold;
-  font-size: 14px;
-  background: rgba(255,255,255,0.9);
-  padding: 0 4px;
-  border-radius: 4px;
-  color: #333;
-}
-
-/* === 右侧详情面板 === */
-.bag_detail_panel {
-  flex: 2; /* 详情页占比 */
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  border-left: 2px solid #eee;
-  background: #fff;
-  font-size: 18px; /* 详情文字统一 18px */
-}
-
-.bag_detail_header {
-  font-size: 24px;
-  font-weight: bold;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.bag_detail_type { font-size: 16px; color: #666; margin-bottom: 10px; }
-.bag_detail_desc { font-style: italic; color: #666; margin-bottom: 20px; line-height: 1.5; }
-.bag_detail_stats { font-size: 18px; color: #444; margin: 10px 0; line-height: 1.6; }
-.bag_detail_line { height: 1px; background: #eee; margin: 10px 0; }
-.bag_detail_actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
-/* === 修改：装备槽样式增强 === */
-
-.bag_equip_box {
-  /* ...保留你之前的原有属性... */
-  /* 确保 overflow hidden 或者是 flex 布局 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-/* 新增：包裹 emoji 的容器，用于控制透明度 */
-.bag_equip_icon {
-  transition: all 0.3s ease;
-  opacity: 0.25; /* 默认（没装备时）半透明 */
-  filter: grayscale(100%); /* 可选：变灰 */
-  font-size: 32px;
-  line-height: 1;
-}
-
-/* 当父级有 .equipped 类时，变清晰 */
-.bag_equip_box.equipped .bag_equip_icon {
-  opacity: 1;
-  filter: none;
-  transform: scale(1.1); /* 稍微放大一点表示激活 */
-}
-
-
-/* css/ui_bag.css - 添加在文件末尾 */
-
-/* === 工具栏样式 (水墨风格化) === */
-/* === 工具栏容器 === */
+/* === 4. 中间工具栏 (操作按钮) === */
 .bag_toolbar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-end; /* 按钮靠右 */
     align-items: center;
-    gap: 15px; /* 按钮间距 */
+    gap: 12px;
     padding: 10px 20px;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #e0e0e0; /* 加粗分割线 */
-    background: rgba(255, 255, 255, 0.6); /* 微微透白 */
-    border-radius: 4px;
+    background-color: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+    flex-wrap: wrap; /* 【核心修复】允许换行，防止窄屏挤出 */
 }
 
-/* === 通用操作按钮 (黑白水墨风) === */
+/* 左侧提示文字 */
+.bag_text_info {
+    margin-right: auto; /* 挤到左边 */
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* 防止文字换行太难看 */
+}
+
+/* --- 水墨风格按钮 --- */
 .bag_btn_action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 20px; /* 宽敞一点 */
-
-    /* 核心字体设定：优先楷体，更有江湖气 */
-    font-family: "Kaiti", "STKaiti", "SimSun", serif;
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 2px; /* 字间距 */
-
-    color: #333;
-    background-color: transparent; /* 透明底 */
-    border: 2px solid #333; /* 黑色粗边框 */
-    border-radius: 4px;
-
+    padding: 6px 18px !important;
+    font-family: "Kaiti", serif !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    background: transparent !important;
+    border: 2px solid #333 !important;
+    border-radius: 4px !important;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: none;
+    transition: all 0.2s;
+    text-decoration: none;
+    white-space: nowrap; /* 防止文字换行 */
 }
-
-/* 悬停效果：黑底白字，模拟墨块 */
 .bag_btn_action:hover {
-    background-color: #333;
-    color: #f5f5f5;
-    transform: translateY(-2px); /* 微微上浮 */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    background: #333 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
 }
 
-/* 点击效果 */
-.bag_btn_action:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-/* === 危险/强调按钮 (朱砂红风格) === */
 .bag_btn_danger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 20px;
-
-    font-family: "Kaiti", "STKaiti", "SimSun", serif;
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 1px;
-
-    color: #a94442; /* 朱红文字 */
-    background-color: transparent;
-    border: 2px solid #a94442; /* 朱红边框 */
-    border-radius: 4px;
-
+    padding: 6px 18px !important;
+    font-family: "Kaiti", serif !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #a94442 !important;
+    background: transparent !important;
+    border: 2px solid #a94442 !important;
+    border-radius: 4px !important;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
-
-/* 悬停效果：红底白字 */
 .bag_btn_danger:hover {
-    background-color: #a94442;
-    color: #fff;
+    background: #a94442 !important;
+    color: #fff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(169, 68, 66, 0.3);
 }
 
-.bag_btn_danger:active {
-    transform: translateY(0);
-}
 
-/* === 提示文字样式 === */
-.bag_text_info {
-    flex: 1; /* 撑开左侧空间 */
-    color: #555;
-    font-family: "Kaiti", serif;
-    font-size: 20px;
-    font-weight: bold;
+/* === 5. 主体区域 (左右分栏) === */
+.bag_main_area {
     display: flex;
+    flex: 1; /* 占满剩余高度 */
+    overflow: hidden;
+    background: #f5f5f5;
+    flex-wrap: wrap; /* 在极窄屏幕下允许变为上下布局 */
+}
+
+/* 左侧网格 */
+.bag_grid_scroll {
+    flex: 7;
+    min-width: 250px; /* 防止缩得太小 */
+    overflow-y: auto;
+    padding: 15px;
+    border-right: 1px solid #ddd;
+}
+
+.bag_grid_content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.bag_grid_item {
+    aspect-ratio: 1/1;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* === 选中状态的格子 (配套微调) === */
+.bag_grid_item:hover {
+    border-color: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 2;
+}
+
+/* 选中状态 */
 .bag_grid_item.selected {
-    border-color: #a94442; /* 选中变红框 */
-    background-color: #fffafaf0;
-    transform: scale(0.95); /* 微微缩小 */
+    border: 2px solid #a94442;
+    background-color: #fff5f5;
 }
-
-/* 勾选标记 */
 .bag_check_mark {
     display: none;
     position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 24px;
-    height: 24px;
-    background-color: #a94442; /* 朱红底 */
-    color: white;
-    border-radius: 4px; /* 方形圆角更像印章 */
+    top: 2px; right: 2px;
+    width: 20px; height: 20px;
+    background: #a94442;
+    color: #fff;
+    font-size: 14px;
     text-align: center;
-    line-height: 24px;
-    font-size: 16px;
-    font-weight: bold;
-    z-index: 5;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    line-height: 20px;
+    border-radius: 3px;
+}
+.bag_grid_item.selected .bag_check_mark { display: block; }
+
+.bag_grid_icon { font-size: 32px; margin-bottom: 4px; }
+.bag_grid_name { font-size: 13px; width: 90%; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.bag_item_count { position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; }
+
+
+/* 右侧详情 */
+.bag_detail_panel {
+    flex: 3;
+    min-width: 200px; /* 防止缩得太小 */
+    background: #fff;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-.bag_grid_item.selected .bag_check_mark {
-    display: block;
-}
+.bag_detail_header { font-size: 20px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
+.bag_detail_type { color: #888; margin-bottom: 15px; font-size: 14px; }
+.bag_detail_stats { font-size: 15px; line-height: 1.6; margin-bottom: 15px; }
+.bag_detail_desc { color: #666; font-style: italic; margin-bottom: 20px; line-height: 1.4; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 4px; }
+.bag_detail_actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
