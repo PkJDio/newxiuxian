@@ -105,7 +105,7 @@ const UtilsItem = {
 
     const oldEquipId = player.equipment[slot];
     if (oldEquipId) {
-      Utils.addToInventory(oldEquipId, 1);
+      UtilsAdd.addItem(oldEquipId, 1);
     }
 
     player.equipment[slot] = item.id;
@@ -130,7 +130,7 @@ const UtilsItem = {
     if (!player.equipment || !player.equipment[slotKey]) return;
 
     const itemId = player.equipment[slotKey];
-    Utils.addToInventory(itemId, 1);
+    UtilsAdd.addItem(itemId, 1);
     player.equipment[slotKey] = null;
 
     // 注释掉弹窗
