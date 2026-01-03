@@ -96,7 +96,7 @@ const TooltipManager = {
         html += `<div class="tt_row"><span>修习状态</span><span style="${isLearned ? 'color:#5cff5c' : 'color:#888'}">${isLearned ? '已研读' : '未研读'}</span></div>`;
       }
       if (item.price) {
-        html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.price} 灵石</span></div>`;
+        html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.price} 文</span></div>`;
       }
     }
     if (item.effects) {

@@ -2,61 +2,8 @@
 console.log("加载 成品食物");
 
 const foods = [
-  {
-    id: "foods_001",
-    name: "竹筒饭",
-    type: "food",
-    grade: 0,
-    rarity: 1,
-    obtain: "craft",
-    value: 5,
-    effects: { hunger: 18, hp: 8 },
-    desc: "竹筒饭。（制作获得）",
-    recipe: [
-      ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007"],
-      [
-        "foodMaterial_032",
-        "foodMaterial_002",
-        "foodMaterial_007",
-        "foodMaterial_005",
-      ],
-      [
-        "foodMaterial_032",
-        "foodMaterial_002",
-        "foodMaterial_007",
-        "foodMaterial_008",
-      ],
-      [
-        "foodMaterial_032",
-        "foodMaterial_002",
-        "foodMaterial_007",
-        "foodMaterial_005",
-        "foodMaterial_008",
-      ],
-    ],
-  },
-  {
-    id: "foods_002",
-    name: "树皮汤",
-    type: "food",
-    grade: 0,
-    rarity: 1,
-    obtain: "craft",
-    value: 1,
-    effects: { hunger: 5, hp: -1 },
-    desc: "应急的树皮汤。（制作获得）",
-    recipe: [
-      ["foodMaterial_010", "foodMaterial_007"],
-      ["foodMaterial_010", "foodMaterial_007", "foodMaterial_008"],
-      ["foodMaterial_010", "foodMaterial_007", "foodMaterial_006"],
-      [
-        "foodMaterial_010",
-        "foodMaterial_007",
-        "foodMaterial_008",
-        "foodMaterial_006",
-      ],
-    ],
-  },
+  { id: "foods_001", name: "竹筒饭", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 5, effects: { hunger: 18, hp: 8 }, desc: "竹筒饭。（制作获得）", recipe: [ ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007"], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
+  {id: "foods_002", name: "树皮汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 1, effects: { hunger: 5, hp: -1 }, desc: "应急的树皮汤。（制作获得）", recipe: [["foodMaterial_010", "foodMaterial_007"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_006"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_008", "foodMaterial_006",],],},
   {
     id: "foods_003",
     name: "炒豆角",
@@ -935,23 +882,7 @@ const foods = [
       ["foodMaterial_012", "foodMaterial_007", "foodMaterial_008"],
     ],
   },
-  {
-    id: "foods_045",
-    name: "烤虎肉",
-    type: "food",
-    grade: 0,
-    rarity: 3,
-    value: 75,
-    obtain: "craft",
-    effects: { hunger: 35, hp: 15, atk: 3, jing: 2 },
-    desc: "烤虎肉，大补之物，食之气力大增。（制作获得）",
-    recipe: [
-      ["foodMaterial_055"],
-      ["foodMaterial_055", "foodMaterial_008"],
-      ["foodMaterial_055", "foodMaterial_026"],
-      ["foodMaterial_055", "foodMaterial_008", "foodMaterial_020"],
-    ],
-  },
+  {id: "foods_045", name: "烤虎肉", type: "food", grade: 0, rarity: 3, value: 75, obtain: "craft", effects: { hunger: 35, hp: 15, atk: 3, jing: 2 }, desc: "烤虎肉，大补之物，食之气力大增。（制作获得）", recipe: [["foodMaterial_055"], ["foodMaterial_055", "foodMaterial_008"], ["foodMaterial_055", "foodMaterial_026"], ["foodMaterial_055", "foodMaterial_008", "foodMaterial_020"],],},
   {
     id: "foods_046",
     name: "西红柿汤",
@@ -1048,7 +979,7 @@ const foods = [
     rarity: 1,
     value: 9,
     obtain: "craft",
-    effects: { hunger: 25, hp: 5, atk: 2 },
+    effects: { hunger: 25, hp: 5 },
     desc: "烤狼肉，口感发酸但充满野性。（制作获得）",
     recipe: [
       ["foodMaterial_053"],
@@ -1324,14 +1255,8 @@ const foods = [
 ];
 
 const fishes = [
-  /* === A. 基础通用 (四季常在) 5种 === */
-  {
-    id: "fishes_base_01",
-    name: "草鱼",
-    type: "food",
-    rarity: 1,
-    obtain: "fish",
-    seasons: [0, 1, 2, 3],
+  { id: "fishes_base_01", name: "草鱼", type: "food", rarity: 1, obtain: "fish", seasons: [0, 1, 2, 3
+],
     region: "all",
     effects: { hunger: 10, hp: 2 },
     desc: "最常见的淡水鱼。",

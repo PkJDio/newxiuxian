@@ -37,6 +37,9 @@ const ATTR_MAPPING = {
   "critRate": "暴击率",
   "critDmg": "暴击伤害",
   "dodge": "闪避",
+  "toxicity": "毒性",
+  "space": "背包空间",
+  "catchRate":"钓鱼成功机率",
 
   // 生活/特殊
   "mining": "采矿效率",

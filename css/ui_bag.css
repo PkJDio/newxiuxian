@@ -79,7 +79,7 @@
 
 /* 左侧网格滚动区 */
 .bag_grid_scroll {
-  flex: 3; /* 占比加大 */
+  flex: 5; /* 占比加大 */
   overflow-y: auto; /* 仅垂直滚动 */
   overflow-x: hidden; /* 禁止水平滚动 */
   border: 1px solid #ddd;
@@ -95,6 +95,8 @@
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 8px;
 }
+
+
 
 /* 单个物品格子 */
 .bag_grid_item {
@@ -171,3 +173,29 @@
 .bag_detail_stats { font-size: 18px; color: #444; margin: 10px 0; line-height: 1.6; }
 .bag_detail_line { height: 1px; background: #eee; margin: 10px 0; }
 .bag_detail_actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+/* === 修改：装备槽样式增强 === */
+
+.bag_equip_box {
+  /* ...保留你之前的原有属性... */
+  /* 确保 overflow hidden 或者是 flex 布局 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 新增：包裹 emoji 的容器，用于控制透明度 */
+.bag_equip_icon {
+  transition: all 0.3s ease;
+  opacity: 0.25; /* 默认（没装备时）半透明 */
+  filter: grayscale(100%); /* 可选：变灰 */
+  font-size: 32px;
+  line-height: 1;
+}
+
+/* 当父级有 .equipped 类时，变清晰 */
+.bag_equip_box.equipped .bag_equip_icon {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.1); /* 稍微放大一点表示激活 */
+}

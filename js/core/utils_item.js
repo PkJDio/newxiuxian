@@ -1,47 +1,33 @@
 // js/core/utils_item.js
-console.log("加载 物品工具类");
 
-/* ================= 境界/等级 映射 ================= */
-const SKILL_REALMS = {
-  1: "入门",
-  2: "熟练",
-  3: "精通",
-  4: "小成",
-  5: "大成",
-  6: "圆满",
-  7: "化境",
-  8: "返璞归真",
-  9: "天道",
-  10: "大道"
-};
+console.log("加载 物品工具类");
 
 const UtilsItem = {
   /**
    * 获取书籍的研读状态文本
    */
   getBookStatus: function(itemId) {
-    // 1. 检查是否已学会（在 player.skills 里）
     if (player.skills && player.skills[itemId]) {
-      return { text: "已学会", color: "#4caf50", isLearned: true }; // 绿色
+      return { text: "已学会", color: "#4caf50", isLearned: true };
     }
-
-    // 2. 检查研读进度 (在 player.bookProgress 里，假设结构为 { itemId: currentExp })
-    // 这里我们需要知道书籍的总经验需求，假设在 itemData.requireExp
     const progress = (player.bookProgress && player.bookProgress[itemId]) || 0;
-
     if (progress > 0) {
-      // 如果你有总经验数据，可以算百分比，这里暂时直接显示数值
-      return { text: `研读中: ${progress}`, color: "#2196f3", isReading: true }; // 蓝色
+      return { text: `研读中: ${progress}`, color: "#2196f3", isReading: true };
     }
-
-    return { text: "未读", color: "#999", isUnread: true }; // 灰色
+    return { text: "未读", color: "#999", isUnread: true };
   },
 
   /**
-   * 获取功法上限描述 (例如：上限 入门)
+   * 【修改】获取功法上限描述
+   * 现在根据 data_config.js 里的 SKILL_CONFIG.levelNames 来获取
    */
   getSkillLimitName: function(level) {
-    return SKILL_REALMS[level] || `Lv.${level}`;
+    // 确保 SKILL_CONFIG 存在
+    if (window.SKILL_CONFIG && window.SKILL_CONFIG.levelNames) {
+      // 防止数组越界，如果找不到则显示 Lv.X
+      return window.SKILL_CONFIG.levelNames[level] || `Lv.${level}`;
+    }
+    return `Lv.${level}`;
   },
 
   /**
@@ -55,7 +41,7 @@ const UtilsItem = {
       case 'feet': return 'feet';
       case 'mount': return 'mount';
       case 'fishing_rod': return 'fishing_rod';
-      case 'tool': return 'weapon'; // 工具默认装备在主手（兵器栏），或者你可以加个 tool 栏
+      case 'tool': return 'weapon'; // 工具通常装备在主手
       default: return null;
     }
   },
@@ -74,33 +60,30 @@ const UtilsItem = {
 
     console.log(`使用物品: ${item.name}`);
 
-    // --- 简单的效果处理示例 ---
     let consumed = true;
 
-    if (item.type === 'food' || item.type === 'pill') {
-      // 加属性逻辑... (参考之前的 doEat)
-      if (window.showToast) window.showToast(`服用了 ${item.name}`);
-      // 这里应该调用具体的属性增加函数
-      // applyItemEffect(item);
-    } else if (item.type === 'book') {
-      // 书籍使用逻辑：增加研读进度 or 只有在研读按钮点击时才算？
-      // 通常书籍是“研读”而不是“吃掉”，所以可能不消耗，或者消耗精力
+    // 书籍特殊处理
+    if (item.type === 'book') {
       consumed = false;
       if (window.showToast) window.showToast(`请在主界面选择 [研读] 来阅读 ${item.name}`);
+    }
+    // 其他可消耗品（食物、丹药、材料等，只要配置了 param 或 buffs 都可以尝试使用）
+    else if (['food', 'pill', 'foodMaterial', 'herb'].includes(item.type)) {
+      if (window.showToast) window.showToast(`使用了 ${item.name}`);
+      // 这里应该有具体的使用效果逻辑 (applyEffect)
     } else {
       if (window.showToast) window.showToast("该物品无法直接使用");
       consumed = false;
     }
 
-    // 扣除数量
     if (consumed) {
       itemSlot.count--;
       if (itemSlot.count <= 0) {
         player.inventory.splice(inventoryIndex, 1);
       }
-      // 刷新UI
-      if (window.refreshBagUI) window.refreshBagUI();
-      if (window.updateUI) window.updateUI();
+
+      if (window.recalcStats) window.recalcStats();
+      this._refreshAllUI();
     }
   },
 
@@ -118,20 +101,15 @@ const UtilsItem = {
       return;
     }
 
-    // 初始化装备栏
     if (!player.equipment) player.equipment = {};
 
-    // 1. 取下旧装备 (如果有)
     const oldEquipId = player.equipment[slot];
     if (oldEquipId) {
-      // 放回背包
       Utils.addToInventory(oldEquipId, 1);
     }
 
-    // 2. 穿上新装备
     player.equipment[slot] = item.id;
 
-    // 3. 从背包移除 1 个
     itemSlot.count--;
     if (itemSlot.count <= 0) {
       player.inventory.splice(inventoryIndex, 1);
@@ -139,9 +117,10 @@ const UtilsItem = {
 
     if (window.showToast) window.showToast(`装备了 ${item.name}`);
 
-    // 刷新
-    if (window.refreshBagUI) window.refreshBagUI();
-    if (window.updateUI) window.updateUI(); // 重新计算属性
+    if (window.recalcStats) {
+      window.recalcStats();
+    }
+    this._refreshAllUI();
   },
 
   /**
@@ -151,18 +130,16 @@ const UtilsItem = {
     if (!player.equipment || !player.equipment[slotKey]) return;
 
     const itemId = player.equipment[slotKey];
-
-    // 放回背包
     Utils.addToInventory(itemId, 1);
-
-    // 清空插槽
     player.equipment[slotKey] = null;
 
-    if (window.showToast) window.showToast(`卸下了装备`);
+    // 注释掉弹窗
+    // if (window.showToast) window.showToast(`卸下了装备`);
 
-    // 刷新
-    if (window.refreshBagUI) window.refreshBagUI();
-    if (window.updateUI) window.updateUI();
+    if (window.recalcStats) {
+      window.recalcStats();
+    }
+    this._refreshAllUI();
   },
 
   /**
@@ -171,7 +148,12 @@ const UtilsItem = {
   discardItem: function(inventoryIndex) {
     if (!confirm("确定要丢弃该物品吗？")) return;
     player.inventory.splice(inventoryIndex, 1);
+    this._refreshAllUI();
+  },
+
+  _refreshAllUI: function() {
     if (window.refreshBagUI) window.refreshBagUI();
+    if (window.updateUI) window.updateUI();
   }
 };
 
