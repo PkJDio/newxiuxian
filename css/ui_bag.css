@@ -199,3 +199,58 @@
   filter: none;
   transform: scale(1.1); /* 稍微放大一点表示激活 */
 }
+
+
+/* css/ui_bag.css - 添加在文件末尾 */
+
+/* === 工具栏样式 (水墨风格化) === */
+.bag_toolbar {
+    display: flex;
+    justify-content: flex-end; /* 按钮靠右 */
+    gap: 12px; /* 按钮间距 */
+    padding: 8px 15px;
+    margin-bottom: 5px;
+    border-bottom: 1px dashed #ccc; /* 增加一条淡分割线 */
+}
+
+/* === 红色警告按钮 (复用样式) === */
+.btn_danger {
+    background-color: #a94442 !important; /* 深红 */
+    border-color: #8a3331 !important;
+    color: #fff !important;
+}
+.btn_danger:hover {
+    background-color: #c9302c !important;
+    filter: brightness(1.1);
+}
+
+/* === 选中状态的格子样式 === */
+.bag_grid_item.selected {
+    border-color: #d9534f; /* 红色边框 */
+    background-color: #fff5f5; /* 淡红背景 */
+    box-shadow: 0 0 5px rgba(217, 83, 79, 0.5);
+}
+
+/* 勾选标记 (默认隐藏) */
+.bag_check_mark {
+    display: none;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background-color: #d9534f;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 5;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+/* 只有在 selected 状态下才显示勾选标记 */
+.bag_grid_item.selected .bag_check_mark {
+    display: block;
+}
