@@ -155,36 +155,51 @@ function showChangelogModal() {
   if (window.showGeneralModal) window.showGeneralModal(title, content);
 }
 
+
 /**
  * 显示万物图鉴
  */
 function showGalleryModal() {
-  const title = "万物图鉴";
+    const title = "万物图鉴";
 
-  let html = `<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding: 10px;">`;
+    // 使用新的容器类名 pictorial_container
+    let html = `<div class="pictorial_container">`;
 
-  if (!GAME_DB.items || GAME_DB.items.length === 0) {
-    html += `<div style="padding:20px; color:#888;">暂无收录物品数据...</div>`;
-  } else {
-    GAME_DB.items.forEach(item => {
-      const color = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
-      html += `
-                <div class="ink_card"
-                     style="width:120px; height:120px; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:help; transition:transform 0.2s;"
-                     onmouseenter="showItemTooltip(event, '${item.id}', null, 'gallery')"
-                     onmouseleave="hideTooltip()"
-                     onmousemove="moveTooltip(event)">
-                    <div style="font-weight:bold; color:${color}; font-size:18px; text-align:center; margin-bottom:6px;">
-                        ${item.name}
-                    </div>
-                    <div style="color:#999; font-size:16px;">
-                        ${TYPE_MAPPING[item.type] || '未知'}
-                    </div>
+    if (!GAME_DB.items || GAME_DB.items.length === 0) {
+        html += `<div class="pictorial_empty">暂无收录物品数据...</div>`;
+    } else {
+        GAME_DB.items.forEach(item => {
+            // 获取颜色
+            const color = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
+
+            // 获取图标：优先使用 getItemIcon 函数，没有则用 item.icon，还没则用默认
+            const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+
+            // 获取类型名称
+            const typeName = (typeof TYPE_MAPPING !== 'undefined' ? TYPE_MAPPING[item.type] : item.type) || '未知';
+
+            // 生成卡片 HTML，使用 pictorial_ 开头的类
+            html += `
+            <div class="pictorial_card"
+                 onmouseenter="showItemTooltip(event, '${item.id}', null, 'gallery')"
+                 onmouseleave="hideTooltip()"
+                 onmousemove="moveTooltip(event)">
+                 
+                <div class="pictorial_icon">${icon}</div>
+                
+                <div class="pictorial_name" style="color:${color};">
+                    ${item.name}
                 </div>
-            `;
-    });
-  }
-  html += `</div>`;
+                
+                <div class="pictorial_type">
+                    ${typeName}
+                </div>
+            </div>
+        `;
+        });
+    }
+    html += `</div>`;
 
-  if (window.showGeneralModal) window.showGeneralModal(title, html);
+    // 第四个参数传入自定义类名(如果有的话)，这里主要依靠内部HTML的样式
+    if (window.showGeneralModal) window.showGeneralModal(title, html, null, "modal_gallery_box");
 }
