@@ -29,7 +29,7 @@ const UtilsDebug = {
 
     // 2. 特殊功能按钮
     options.push({
-      text: "💰 赐予：一万 文",
+      text: "💰 赐予：一万",
       style: "ink_btn_danger",
       autoClose: false,
       onClick: () => {

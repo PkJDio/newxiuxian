@@ -80,6 +80,16 @@
     font-size: 16px;
 }
 
-.modal_gallery_box{
-    width: 80%;
+/* css/ui_gallery.css - 补充 */
+
+/* 强制图鉴弹窗宽度为 80% */
+.modal_gallery_box {
+    width: 80vw !important;     /* 视口宽度的 80% */
+    max-width: 95vw !important; /* 允许最大更宽 */
+    height: auto !important;
+}
+
+/* 让内部的图鉴容器高度自适应，但保留滚动 */
+.modal_gallery_box .pictorial_container {
+    max-height: 70vh; /* 稍微调高一点内部滚动区域 */
 }

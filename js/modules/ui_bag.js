@@ -206,7 +206,7 @@ const UIBag = {
     let priceHtml = '';
     const price = (item.value !== undefined) ? item.value : item.price;
     if (price !== undefined) {
-      priceHtml = `<div style="margin-top:15px; text-align:right; color:#d4af37; font-weight:bold;">💰 价值: ${price} 灵石</div>`;
+      priceHtml = `<div style="margin-top:15px; text-align:right; color:#d4af37; font-weight:bold;">💰 价值: ${price}</div>`;
     }
 
     // === 按钮 ===

@@ -181,7 +181,7 @@ function showGalleryModal() {
             // 生成卡片 HTML，使用 pictorial_ 开头的类
             html += `
             <div class="pictorial_card"
-                 onmouseenter="showItemTooltip(event, '${item.id}', null, 'gallery')"
+                 onmouseenter="showGalleryTooltip(event, '${item.id}', null, 'gallery')"
                  onmouseleave="hideTooltip()"
                  onmousemove="moveTooltip(event)">
                  

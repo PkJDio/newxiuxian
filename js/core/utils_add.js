@@ -92,7 +92,7 @@ const UtilsAdd = {
    * 添加金钱 (灵石)
    */
   addMoney: function(amount) {
-    console.log(`[UtilsAdd] 尝试添加 文: ${amount}`);
+    console.log(`[UtilsAdd] 尝试添加钱: ${amount}`);
     if (typeof player === 'undefined') return;
 
     player.money = (player.money || 0) + amount;
@@ -100,7 +100,7 @@ const UtilsAdd = {
     if(window.updateUI) window.updateUI();
 
     if(window.showToast) {
-      const unit = "文";
+      const unit = "";
       const op = amount >= 0 ? "+" : "";
       window.showToast(`${unit} ${op}${amount}`);
     }
