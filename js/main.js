@@ -150,3 +150,46 @@ function startNewGame() {
 
   return true;
 }
+
+
+
+// js/main.js - 添加在文件最末尾
+
+// js/main.js 在文件最末尾添加
+
+// 确保在页面加载后执行
+window.addEventListener('load', function() {
+    console.log("========================================");
+    console.log(">>> [MAIN] 页面加载完成 (Window Loaded)");
+
+    // 1. 检查 UISkill 是否存在
+    if (window.UISkill) {
+        console.log(">>> [MAIN] 检测到 window.UISkill 存在 ✅");
+    } else {
+        console.error(">>> [MAIN] ❌ window.UISkill 不存在！请检查 index.html 是否引入了 ui_skill.js");
+    }
+
+    // 2. 尝试获取按钮
+    const btnId = 'btn_open_gongfa';
+    const btn = document.getElementById(btnId);
+
+    if (btn) {
+        console.log(`>>> [MAIN] 找到按钮 ID: ${btnId} ✅`);
+
+        // 3. 强制移除旧事件 (如果担心重复) 并绑定新事件
+        btn.onclick = function() {
+            console.log(`>>> [CLICK] 你点击了功法按钮!`);
+
+            if (window.UISkill) {
+                console.log(">>> [CLICK] 调用 UISkill.open()...");
+                UISkill.open();
+            } else {
+                alert("错误：UISkill 模块未加载，请查看控制台报错");
+            }
+        };
+        console.log(`>>> [MAIN] 按钮 ${btnId} 点击事件绑定成功 ✅`);
+    } else {
+        console.error(`>>> [MAIN] ❌ 找不到按钮 ID: ${btnId}！请检查 HTML 中按钮的 id 属性是否写错了`);
+    }
+    console.log("========================================");
+});

@@ -81,8 +81,10 @@
                 <button id="btn_open_map" class="ink_btn_tab">🗺️ 地图</button>
                 <button id="btn_open_bag" class="ink_btn_tab" onclick="openBag()">🎒 行囊</button>
                 <button id="btn_open_skill" class="ink_btn_tab">📚 技能</button>
-                <button id="btn_open_gongfa" class="ink_btn_tab"  onclick="UISkill.open()">🧘 功法</button>
-                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="openTiandao()">🔧 天道</button>
+                <button id="btn_open_gongfa" class="ink_btn_tab" onclick="console.log('HTML内联点击'); if(window.UISkill) UISkill.open(); else alert('UISkill未加载');">
+                    🧘 功法
+                </button>
+                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
             </div>
 
             <div id="center_map_container">
@@ -165,13 +167,13 @@
     <script src="js/core/utils_tip.js"></script>
     <script src="js/core/utils_skill.js"></script>
 
-    <script src="js/modules/ui_skill.js"></script>
+
     <script src="js/modules/map_camera.js"></script>
     <script src="js/modules/map_atlas.js"></script>
     <script src="js/modules/combat.js"></script>
     <script src="js/modules/ui.js"></script>
     <script src="js/modules/ui_bag.js"></script>
-
+    <script src="js/modules/ui_skill.js"></script>
     <script src="js/main.js"></script>
 
 </body>
