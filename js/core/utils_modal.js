@@ -1,5 +1,5 @@
 // js/core/utils_modal.js
-// 弹窗管理模块 (支持自定义宽高)
+// 弹窗管理模块 (修复类名丢失问题)
 
 const ModalManager = {
     // 1. Toast 提示
@@ -16,17 +16,9 @@ const ModalManager = {
     },
 
     /**
-     * 2. 通用交互弹窗 (核心)
-     * [新增] width/height 参数，单位默认为 vw/vh，也可以传 "500px" 字符串
-     * @param {string} title 标题
-     * @param {string} contentHtml 内容HTML
-     * @param {string|null} footerHtml 底部按钮HTML
-     * @param {string} extraClass 额外的CSS类名
-     * @param {number|string} width 宽度 (数字代表百分比，如 50 => 50vw)
-     * @param {number|string} height 高度 (数字代表百分比，如 30 => 30vh)
+     * 2. 通用交互弹窗
      */
     showInteractiveModal: function(title, contentHtml, footerHtml = null, extraClass = "", width = null, height = null) {
-        // 强制指定一个基础类名 'modal_interactive'
         this._showBaseModal('modal_interactive', title, contentHtml, footerHtml, extraClass, width, height);
     },
 
@@ -44,7 +36,6 @@ const ModalManager = {
     showWarningModal: function(title, contentHtml, callback) {
         this._createTempCallback(callback, (funcName) => {
             const footer = `<button class="ink_btn_danger" onclick="window['${funcName}']()">确认</button>`;
-            // 警告弹窗通常比较小，我们可以给个默认稍宽一点，比如 400px，或者由 CSS 控制
             this._showBaseModal('modal_warning', title, contentHtml, footer);
         });
     },
@@ -125,10 +116,6 @@ const ModalManager = {
         renderFn(tempName);
     },
 
-    /**
-     * 基础显示方法
-     * [修改] 增加 customWidth, customHeight 参数
-     */
     _showBaseModal: function(typeClass, title, content, footer, extraClass = "", customWidth = null, customHeight = null) {
         let overlay = document.getElementById('modal_overlay');
         let box = document.getElementById('modal_content');
@@ -139,26 +126,20 @@ const ModalManager = {
             box = document.getElementById('modal_content');
         }
 
-        // 1. 设置 CSS 类名 (作为基础样式)
-        box.className = `modal_content ink_card ${typeClass} ${extraClass || ''}`;
+        // 【核心修复】必须包含 ink_modal_box 类名，否则 CSS 选择器无法生效！
+        // 之前的代码漏掉了这个类，导致所有样式失效
+        box.className = `modal_content ink_modal_box ink_card ${typeClass} ${extraClass || ''}`;
 
-        // 2. [核心] 动态设置宽高
-        // 重置之前的样式，防止污染
+        // 动态设置宽高
         box.style.width = '';
         box.style.height = '';
-
-        // 应用自定义宽高
         if (customWidth) {
-            // 如果是数字，默认为 vw (视口宽度百分比)
-            // 如果是字符串 (如 "500px"), 直接使用
             box.style.width = (typeof customWidth === 'number') ? `${customWidth}vw` : customWidth;
         }
         if (customHeight) {
-            // 如果是数字，默认为 vh (视口高度百分比)
             box.style.height = (typeof customHeight === 'number') ? `${customHeight}vh` : customHeight;
         }
 
-        // 3. 填充内容
         const headerEl = document.getElementById('modal_header');
         if (headerEl) headerEl.innerHTML = title || '提示';
 
@@ -188,7 +169,7 @@ const ModalManager = {
         if(document.getElementById('modal_overlay')) return;
         const html = `
         <div id="modal_overlay" class="modal_overlay hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; justify-content:center; align-items:center;">
-            <div id="modal_content" class="ink_card" style="background:#fff; border-radius:8px; padding:20px; display:flex; flex-direction:column; max-height:95vh; min-width:300px;">
+            <div id="modal_content" class="ink_modal_box ink_card" style="background:#fff; border-radius:8px; padding:20px; display:flex; flex-direction:column; max-height:95vh; min-width:300px;">
                 <div id="modal_header" style="font-size:18px; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;"></div>
                 <div id="modal_body" style="overflow-y:auto; flex:1;"></div>
                 <div id="modal_footer" class="ink_modal_footer" style="margin-top:15px; padding-top:10px; border-top:1px solid #eee; text-align:right;"></div>
@@ -210,11 +191,9 @@ const ModalManager = {
     }
 };
 
-// ================= 全局暴露 =================
 window.UtilsModal = ModalManager;
-
 window.showToast = ModalManager.showToast.bind(ModalManager);
-window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager); // 保持别名
+window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager);
 window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager);
 window.showConfirmModal = ModalManager.showConfirmModal.bind(ModalManager);
 window.showSelectionModal = ModalManager.showSelectionModal.bind(ModalManager);
