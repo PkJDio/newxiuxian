@@ -86,7 +86,10 @@ const PLAYER_TEMPLATE = {
   isAlive: true,
   generation:1 ,
   money: 10,
-
+  //外功槽位
+  gongfa_ext: 1,
+  //内功槽位
+  gongfa_int: 1,
   // 基础进度
   age: 16,
   dayCount: 0,

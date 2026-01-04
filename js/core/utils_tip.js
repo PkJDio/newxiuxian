@@ -186,24 +186,96 @@ const TooltipManager = {
     },
 
     /* ================= 3. 技能详情 ================= */
+    /* ================= 3. 技能详情 (重构版) ================= */
     showSkill: function(e, skillId) {
         this._init();
+
+        // 1. 获取计算后的详细信息
+        const info = window.UtilsSkill ? UtilsSkill.getSkillInfo(skillId) : null;
         const item = GAME_DB.items.find(i => i.id === skillId);
-        const skillData = player.skills ? player.skills[skillId] : null;
 
-        let name = item ? item.name : skillId;
-        let desc = item ? item.desc : "未知技能";
-        let levelStr = "未入门";
+        if (!item || !info) return; // 数据错误
 
-        if (skillData && typeof SKILL_CONFIG !== 'undefined') {
-            levelStr = SKILL_CONFIG.levelNames[skillData.level] || `Lv.${skillData.level}`;
+        const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#ccc', name: '普通' };
+        const typeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
+        const typeName = typeMap[item.type] || "功法";
+        const attrMap = (typeof ATTR_MAPPING !== 'undefined') ? ATTR_MAPPING : {};
+
+        // 2. 构建头部
+        let html = `
+        <div class="tooltip_header" style="border-bottom:1px solid #555; padding-bottom:5px; margin-bottom:5px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <span style="color:${rarityConf.color}; font-weight:bold; font-size:18px;">${item.name}</span>
+                <span style="font-size:14px; color:#aaa;">${info.levelName}</span>
+            </div>
+            <div style="font-size:12px; color:#888; margin-top:2px;">
+                ${typeName} · 上限: ${info.limitLevelName}
+            </div>
+        </div>
+    `;
+
+        // 3. 熟练度显示 (进度条风格)
+        let expText = "已满级";
+        let progressPct = 100;
+
+        if (info.nextExp !== -1) {
+            expText = `${Math.floor(info.exp)} / ${Math.floor(info.nextExp)}`;
+            progressPct = Math.min(100, (info.exp / info.nextExp) * 100);
+        } else if (info.isCapped) {
+            expText = "已达瓶颈 (上限)";
         }
 
-        let html = `<div class="tt_header_skill">${name}</div>`;
-        html += `<div class="tt_sub">当前境界: ${levelStr}</div>`;
-        html += `<div class="tt_desc">${desc}</div>`;
+        html += `
+        <div style="margin-bottom:8px; font-size:12px; color:#ccc;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                <span>熟练度</span>
+                <span>${expText}</span>
+            </div>
+            <div style="width:100%; height:4px; background:#333; border-radius:2px;">
+                <div style="width:${progressPct}%; height:100%; background:${info.isCapped ? '#ff9800' : '#4caf50'}; border-radius:2px;"></div>
+            </div>
+        </div>
+    `;
+
+        // 4. 属性显示 (基础 vs 实际)
+        if (info.baseEffects) {
+            let statsHtml = "";
+            const rowStyle = `font-size:14px; margin-bottom:4px; display:flex; justify-content:space-between;`;
+
+            for (let key in info.baseEffects) {
+                const baseVal = info.baseEffects[key];
+                const finalVal = info.finalEffects[key];
+
+                // 跳过非数值
+                if (typeof baseVal !== 'number') continue;
+
+                const name = attrMap[key] || key;
+                const bonus = info.bonusRate * 100; // e.g. 20
+
+                // 如果有加成，显示黄色箭头
+                let valDisplay = `<span style="color:#eee">${baseVal}</span>`;
+                if (finalVal > baseVal) {
+                    valDisplay = `<span style="color:#999; font-size:12px;">${baseVal}</span> ➜ <span style="color:#ffeb3b; font-weight:bold;">${finalVal}</span>`;
+                }
+
+                statsHtml += `
+                <div style="${rowStyle}">
+                    <span style="color:#bbb;">${name}</span>
+                    <span>${valDisplay}</span>
+                </div>
+            `;
+            }
+
+            if (statsHtml) {
+                html += `<div style="border-top:1px dashed #444; padding-top:5px; margin-bottom:8px;">${statsHtml}</div>`;
+            }
+        }
+
+        // 5. 描述
+        html += `<div class="tt_desc" style="font-size:13px;">${item.desc || "暂无描述"}</div>`;
 
         this.el.className = 'ink_tooltip';
+        this.el.style.width = '240px';
         this.el.innerHTML = html;
         this.el.classList.remove('hidden');
         this._move(e);

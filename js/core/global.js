@@ -1,4 +1,4 @@
-// 全局核心：数据库, 属性计算, 常用常量
+// global.js全局核心：数据库, 属性计算, 常用常量
 console.log("加载 全局核心");
 
 /* ================= 1. 游戏数据库 (GAME_DB) ================= */
@@ -117,25 +117,34 @@ function recalcStats() {
       }
     });
 
-    // 5. 装备中的功法 (外功/内功)
-    // 这里的 gongfa_ext 是数组，存储 itemID
-    ['gongfa_ext', 'gongfa_int'].forEach(type => {
-      const list = player.equipment[type];
-      if (Array.isArray(list)) {
-        list.forEach(skillId => {
-          const skillItem = GAME_DB.items.find(i => i.id === skillId);
-          // 如果需要根据等级计算加成，可以在这里读取 player.skills[skillId].level
-          // 目前暂按书本基础数值计算
-          if (skillItem && skillItem.effects) {
-            for (let k in skillItem.effects) {
-              // 过滤掉非属性字段
-              if(k === 'max_skill_level' || k === 'map' || k === 'unlockRegion') continue;
-              add(k, skillItem.effects[k], skillItem.name);
-            }
+      // 5. 装备中的功法 (外功/内功) - 【核心修改】
+      ['gongfa_ext', 'gongfa_int'].forEach(type => {
+          const list = player.equipment[type];
+          if (Array.isArray(list)) {
+              list.forEach(skillId => {
+                  if (!skillId) return;
+
+                  // 使用 UtilsSkill 计算实际加成后的属性
+                  // 注意：要确保 UtilsSkill 已加载
+                  if (window.UtilsSkill) {
+                      const skillInfo = UtilsSkill.getSkillInfo(skillId);
+                      if (skillInfo && skillInfo.finalEffects) {
+                          for (let k in skillInfo.finalEffects) {
+                              add(k, skillInfo.finalEffects[k], skillInfo.name);
+                          }
+                      }
+                  } else {
+                      // 降级处理：如果没有 UtilsSkill，读基础值 (防止报错)
+                      const item = GAME_DB.items.find(i => i.id === skillId);
+                      if (item && item.effects) {
+                          for (let k in item.effects) {
+                              if(typeof item.effects[k] === 'number') add(k, item.effects[k], item.name);
+                          }
+                      }
+                  }
+              });
           }
-        });
-      }
-    });
+      });
   }
 
   // ================= C. 状态层 =================

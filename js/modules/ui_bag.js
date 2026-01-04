@@ -1,4 +1,4 @@
-// js/modules/ui_bag.js - 背包与物品界面逻辑 (水墨弹窗适配版)
+// js/modules/ui_bag.js - 背包界面 (适配装备要求显示)
 
 const UIBag = {
     // 状态管理
@@ -16,9 +16,7 @@ const UIBag = {
         const contentHtml = `
             <div class="bag_container">
                 <div id="bag_equipment_row" class="bag_equipment_row"></div>
-                
                 <div id="bag_toolbar_container" class="bag_toolbar"></div>
-
                 <div class="bag_main_area">
                     <div class="bag_grid_scroll">
                         <div id="bag_grid_content" class="bag_grid_content"></div>
@@ -29,12 +27,8 @@ const UIBag = {
                 </div>
             </div>
         `;
-        // 【关键修改】
-        // 参数说明: title, content, footer(null), extraClass("modal_bag"), width(85vw), height(80vh)
-        // 你可以随意修改 85 和 80 这两个数字来调整弹窗大小
-        if (window.showGeneralModal) {
-            window.showGeneralModal(title, contentHtml, null, "modal_bag", 85, 80);
-        }
+        // 弹窗大小控制 (85vw宽, 80vh高)
+        if (window.showGeneralModal) window.showGeneralModal(title, contentHtml, null, "modal_bag", 85, 80);
         this.refresh();
     },
 
@@ -44,7 +38,6 @@ const UIBag = {
 
         let html = '';
         if (this.selectionMode) {
-            // 选择模式
             const count = this.selectedIndices.size;
             html = `
             <div class="bag_text_info">
@@ -55,7 +48,6 @@ const UIBag = {
             <button class="bag_btn_danger" onclick="UIBag.confirmBatchDiscard()">确认丢弃</button>
           `;
         } else {
-            // 正常模式
             html = `
             <button class="bag_btn_action" onclick="UtilsItem.sortInventory()">整理</button>
             <button class="bag_btn_action" onclick="UIBag.enterSelectionMode()">批量丢弃</button>
@@ -68,7 +60,6 @@ const UIBag = {
         this.selectionMode = true;
         this.selectedIndices.clear();
         this.refresh();
-
         const detail = document.getElementById('bag_detail_panel');
         if(detail) detail.innerHTML = '<div style="color:#a94442; text-align:center; margin-top:50px; font-weight:bold; font-family:Kaiti;">请点击左侧物品勾选<br>再次点击取消勾选</div>';
     },
@@ -90,29 +81,21 @@ const UIBag = {
         this.refresh();
     },
 
-    /**
-     * 【核心修改】批量丢弃确认
-     * 使用 UtilsModal.showInteractiveModal 替代 confirm
-     */
     confirmBatchDiscard: function() {
         if (this.selectedIndices.size === 0) {
             if(window.showToast) window.showToast("未选择任何物品");
             return;
         }
-
         const count = this.selectedIndices.size;
         const title = "批量丢弃";
-        // 内容使用 HTML 美化
         const content = `
         <div style="text-align:center; padding:20px 10px;">
-            <div style="font-size:18px; margin-bottom:10px;">
+            <div style="font-size:18px; margin-bottom:10px; font-family:Kaiti;">
                 确定要丢弃这 <span style="color:#a94442; font-weight:bold; font-size:22px;">${count}</span> 件物品吗？
             </div>
             <div style="font-size:14px; color:#888;">( 丢弃后将无法找回，请三思 )</div>
         </div>
       `;
-
-        // 按钮：取消则重新打开背包，确认则执行删除
         const footer = `
         <button class="bag_btn_action" onclick="UIBag.open()">取消</button>
         <button class="bag_btn_danger" onclick="UIBag._doBatchDiscard()">确认丢弃</button>
@@ -120,23 +103,12 @@ const UIBag = {
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
             window.UtilsModal.showInteractiveModal(title, content, footer);
-        } else {
-            // 降级兼容
-            if (confirm(`确定要永久丢弃这 ${count} 件物品吗？`)) {
-                this._doBatchDiscard();
-            }
         }
     },
 
-    // 【新增】实际执行批量删除逻辑
     _doBatchDiscard: function() {
-        // 1. 关闭确认弹窗
         if (window.UtilsModal) window.UtilsModal.closeModal();
-
-        // 2. 执行逻辑
         UtilsItem.discardMultipleItems(this.selectedIndices);
-
-        // 3. 重置状态并恢复背包界面
         this.selectionMode = false;
         this.selectedIndices.clear();
         this.open();
@@ -213,6 +185,7 @@ const UIBag = {
             }
         }
         const clickAttr = onClickAction ? `onclick="${onClickAction}"` : "";
+
         return `
             <div class="bag_equip_wrapper">
                 <span class="bag_equip_label">${label}</span>
@@ -231,6 +204,10 @@ const UIBag = {
         this.renderDetail(item, { type: 'equip', key: slotKey });
     },
 
+    /**
+     * 【核心修改】渲染详情面板
+     * 增加了【装备要求】(Requirements) 的解析与显示
+     */
     renderDetail: function(item, context) {
         const container = document.getElementById('bag_detail_panel');
         if (!container) return;
@@ -241,18 +218,25 @@ const UIBag = {
         const mapping = window.ATTR_MAPPING || {};
 
         let statsRows = [];
+
+        // 1. 耐久度
         if (item.durability !== undefined) {
             statsRows.push(`<div style="color:#795548;">🛡 耐久: ${item.durability}</div>`);
         }
+
+        // 2. 书籍状态
         if (item.type === 'book') {
             const status = UtilsItem.getBookStatus(item.id);
             statsRows.push(`<div>📚 状态: <span style="color:${status.color}">${status.text}</span></div>`);
         }
+
+        // 3. 核心属性解析
         const effects = item.effects || item.stats || item.param;
         if (effects) {
             for (let key in effects) {
                 const val = effects[key];
                 if (!val && val !== 0) continue;
+
                 if (typeof val === 'object') {
                     if (val.attr && val.val) {
                         const name = mapping[val.attr] || val.attr;
@@ -262,26 +246,22 @@ const UIBag = {
                     }
                     continue;
                 }
+
                 const name = mapping[key] || key;
                 if (key === 'toxicity') {
                     statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
-                    continue;
-                }
-                if (key === 'hp' || key === 'mp') {
+                } else if (key === 'hp' || key === 'mp') {
                     const isPositive = val > 0;
                     const color = isPositive ? '#4caf50' : '#f44336';
                     const action = isPositive ? "恢复" : "减少";
                     const sign = isPositive ? "+" : "";
                     statsRows.push(`<div style="color:${color}">❤ ${action}${name}: ${sign}${val}</div>`);
-                }
-                else if (key === 'hunger') {
+                } else if (key === 'hunger') {
                     statsRows.push(`<div>🍖 ${name}: <span style="color:#4caf50">+${val}</span></div>`);
-                }
-                else if (key === 'max_skill_level') {
+                } else if (key === 'max_skill_level') {
                     const limitName = UtilsItem.getSkillLimitName(val);
                     statsRows.push(`<div>📈 ${name}: <span style="color:#ff9800">${limitName}</span></div>`);
-                }
-                else {
+                } else {
                     let icon = '✨';
                     if(['atk','critRate','critDmg'].includes(key)) icon = '⚔️';
                     if(['def','hpMax','dodge'].includes(key)) icon = '🛡';
@@ -292,6 +272,8 @@ const UIBag = {
                 }
             }
         }
+
+        // 4. Buffs 数组兼容
         if (item.buffs && Array.isArray(item.buffs)) {
             item.buffs.forEach(buff => {
                 const name = mapping[buff.attr] || buff.attr;
@@ -300,45 +282,85 @@ const UIBag = {
                 statsRows.push(`<div>🧪 ${name}: <span style="color:#2196f3">${sign}${buff.val}</span> ${dur}</div>`);
             });
         }
+
         const statsHtml = statsRows.length > 0
             ? `<div class="bag_detail_stats" style="margin-top:10px; padding-bottom:10px; border-bottom:1px dashed #eee;">${statsRows.join('')}</div>`
             : '';
+
+        // === 【修正】装备要求显示 ===
+        let reqHtml = '';
+        if (item.req) {
+            let reqList = [];
+            // 【核心修正】获取最终属性
+            const currentStats = player.derived || player.attr || {};
+
+            for (let key in item.req) {
+                const reqVal = item.req[key];
+                const myVal = currentStats[key] || 0; // 获取当前实际值
+                const isMet = myVal >= reqVal;
+                const attrName = mapping[key] || key;
+
+                // 样式：满足显示绿色对勾，不满足显示红色叉叉和当前值
+                const color = isMet ? '#4caf50' : '#f44336';
+                const icon = isMet ? '✅' : '🚫';
+                const text = isMet ? `已达标 (${reqVal})` : `需 ${reqVal} (当前 ${myVal})`;
+
+                reqList.push(
+                    `<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px; color:${isMet ? '#666' : '#d9534f'};">
+                    <span>${attrName}要求</span>
+                    <span>${text} ${icon}</span>
+                </div>`
+                );
+            }
+
+            if (reqList.length > 0) {
+                reqHtml = `<div class="bag_detail_req" style="margin:10px 0; padding:8px; background:#fffbfb; border:1px dashed #e0e0e0; border-radius:4px;">
+                <div style="font-weight:bold; color:#555; margin-bottom:5px; font-size:14px;">▼ 穿戴条件</div>
+                ${reqList.join('')}
+            </div>`;
+            }
+        }
+
         const descText = item.desc || "此物平平无奇。";
         const descHtml = `<div class="bag_detail_desc" style="margin-top:10px; color:#666; line-height:1.5;">${descText}</div>`;
+
         let priceHtml = '';
         const price = (item.value !== undefined) ? item.value : item.price;
         if (price !== undefined) {
             priceHtml = `<div style="margin-top:15px; text-align:right; color:#d4af37; font-weight:bold;">💰 价值: ${price}</div>`;
         }
+
+        // === 按钮生成 ===
         let btnsHtml = `<div class="bag_detail_actions">`;
         if (context.type === 'bag') {
             const idx = context.index;
             if (['weapon','head','body','feet','mount','fishing_rod','tool'].includes(item.type)) {
-                btnsHtml += `<button class="ink_btn" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
             }
             if (['food','pill','book','foodMaterial','herb'].includes(item.type)) {
                 const btnName = item.type === 'book' ? '研读' : '使用';
-                btnsHtml += `<button class="ink_btn" onclick="UtilsItem.useItem(${idx})">${btnName}</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">${btnName}</button>`;
             }
-            btnsHtml += `<button class="ink_btn_normal" onclick="UtilsItem.discardItem(${idx})">丢弃</button>`;
+            btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.discardItem(${idx})">丢弃</button>`;
         }
         else if (context.type === 'equip') {
             const slotKey = context.key;
-            btnsHtml += `<button class="ink_btn" onclick="UIBag.handleUnequipAction('${slotKey}')">卸下</button>`;
-
-            // 【核心修改】身上装备丢弃确认
-            btnsHtml += `<button class="ink_btn_normal" onclick="UIBag.discardEquippedItem('${slotKey}')">丢弃</button>`;
+            btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleUnequipAction('${slotKey}')">卸下</button>`;
+            btnsHtml += `<button class="bag_btn_danger" onclick="UIBag.discardEquippedItem('${slotKey}')">丢弃</button>`;
         }
         btnsHtml += `</div>`;
+
         container.innerHTML = `
             <div class="bag_detail_header" style="color:${rarityInfo.color};">
                 <span>${(typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon)} ${item.name}</span>
                 <span class="ink_tag" style="font-size:14px;">${rarityInfo.name}</span>
             </div>
             <div class="bag_detail_type">${typeName} ${context.type === 'equip' ? '(已装备)' : ''}</div>
+            
             ${statsHtml}
-            ${descHtml}
+            ${reqHtml}  ${descHtml}
             ${priceHtml}
+            
             ${btnsHtml}
         `;
     },
@@ -353,7 +375,9 @@ const UIBag = {
         const itemId = player.equipment[slotKey];
         if (!itemId) return;
         const item = GAME_DB.items.find(i => i.id === itemId);
+
         UtilsItem.unequipItem(slotKey);
+
         const newIndex = player.inventory.findIndex(slot => slot.id === itemId);
         if (newIndex !== -1 && item) {
             this.renderDetail(item, { type: 'bag', index: newIndex });
@@ -363,15 +387,11 @@ const UIBag = {
         }
     },
 
-    /**
-     * 【核心修改】身上装备丢弃确认
-     * 使用 UtilsModal.showInteractiveModal 替代 confirm
-     */
     discardEquippedItem: function(slotKey) {
         const title = "丢弃装备";
         const content = `
         <div style="text-align:center; padding:20px 10px;">
-            <div style="font-size:18px; margin-bottom:10px;">
+            <div style="font-size:18px; margin-bottom:10px; font-family:Kaiti;">
                 确定要直接丢弃身上的这件装备吗？
             </div>
             <div style="font-size:14px; color:#a94442;">( 丢弃后将无法找回 )</div>
@@ -383,18 +403,10 @@ const UIBag = {
     `;
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            window.UtilsModal.showInteractiveModal(
-                title,
-                content,
-                footer,
-                "",  // extraClass 为空
-                40,  // 宽度 40vw
-                "auto" // 高度自适应
-            );
+            window.UtilsModal.showInteractiveModal(title, content, footer);
         }
     },
 
-    // 【新增】实际执行身上装备删除逻辑
     _doDiscardEquip: function(slotKey) {
         if (window.UtilsModal) window.UtilsModal.closeModal();
 
@@ -402,7 +414,6 @@ const UIBag = {
         if(window.recalcStats) window.recalcStats();
         if(window.updateUI) window.updateUI();
 
-        // 重新打开背包
         this.open();
     }
 };
