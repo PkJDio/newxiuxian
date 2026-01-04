@@ -1,5 +1,5 @@
 // js/core/utils_debug.js
-// 调试系统 (天道) - 适配新的功法数据结构
+// 调试系统 (天道) - 全功能修复版
 console.log("加载 调试系统");
 
 const DebugSystem = {
@@ -11,6 +11,7 @@ const DebugSystem = {
             <div class="debug_title" style="font-weight:bold; border-bottom:1px solid #eee; margin-bottom:8px; padding-bottom:4px;">💰 资源与属性</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="ink_btn_small" onclick="DebugSystem.addMoney(10000)">+1万 灵石</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addMoney(100000)">+10万 灵石</button>
                 <button class="ink_btn_small" onclick="DebugSystem.fullState()">❤ 状态全满</button>
             </div>
         </div>
@@ -19,7 +20,11 @@ const DebugSystem = {
             <div class="debug_title" style="font-weight:bold; border-bottom:1px solid #eee; margin-bottom:8px; padding-bottom:4px;">📦 物品获取</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('weapon')">⚔️ 随机兵器</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('head')">🧢 随机头饰</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('body')">🥋 随机衣物</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('feet')">👢 随机鞋履</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('pill')">💊 随机丹药</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('material')">🪵 随机素材</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('book')">📘 随机书籍</button>
                 <button class="ink_btn_small btn_danger" onclick="DebugSystem.clearBag()">🗑️ 清空背包</button>
             </div>
@@ -45,7 +50,7 @@ const DebugSystem = {
     `;
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            window.UtilsModal.showInteractiveModal("天道 (调试模式)", html, null, "", 50, "auto");
+            window.UtilsModal.showInteractiveModal("天道 (调试模式)", html, null, "", 60, "auto");
         }
     },
 
@@ -55,6 +60,7 @@ const DebugSystem = {
         player.money = (player.money || 0) + val;
         if (window.updateUI) window.updateUI();
         if (window.showToast) window.showToast(`获得 ${val} 灵石`);
+        if (window.saveGame) window.saveGame();
     },
 
     fullState: function() {
@@ -64,19 +70,32 @@ const DebugSystem = {
         player.status.hunger = player.derived.hungerMax;
         if (window.updateUI) window.updateUI();
         if (window.showToast) window.showToast("状态已回满");
+        if (window.saveGame) window.saveGame();
     },
 
     // === 物品功能 ===
     addRandomItem: function(type) {
         if (!GAME_DB.items) return;
-        const list = GAME_DB.items.filter(i => i.type === type);
+
+        // 筛选对应类型的物品
+        const list = GAME_DB.items.filter(i => {
+            // 如果是书籍，不要把功法混进来（功法用 subType 区分）
+            if (type === 'book') return i.type === 'book';
+            // 装备类
+            if (['weapon', 'head', 'body', 'feet', 'mount', 'tool'].includes(type)) return i.type === type;
+            // 其他
+            return i.type === type;
+        });
+
         if (list.length === 0) {
-            if(window.showToast) window.showToast("未找到此类物品数据");
+            if(window.showToast) window.showToast(`未找到类型为 [${type}] 的物品`);
             return;
         }
+
         const item = list[Math.floor(Math.random() * list.length)];
         if (window.UtilsAdd && window.UtilsAdd.addItem) {
             window.UtilsAdd.addItem(item.id, 1);
+            if (window.saveGame) window.saveGame();
         }
     },
 
@@ -85,20 +104,18 @@ const DebugSystem = {
             player.inventory = [];
             if (window.refreshBagUI) window.refreshBagUI();
             if (window.showToast) window.showToast("背包已清空");
+            if (window.saveGame) window.saveGame();
         }
     },
 
-    /**
-     * 【核心修改】随机添加功法并增加熟练度
-     * @param {string} subType 'body' (外功) 或 'cultivation' (内功)
-     */
+    // === 功法功能 ===
     addRandomGongfa: function(subType) {
         if (!window.UtilsSkill) {
             console.error("UtilsSkill 未加载");
             return;
         }
 
-        // 1. 筛选逻辑更新：查找 type='book' 且 subType 符合要求的功法
+        // 筛选 type='book' 且 subType 符合要求的功法
         const candidates = GAME_DB.items.filter(i => i.type === 'book' && i.subType === subType);
 
         if (candidates.length === 0) {
@@ -106,13 +123,12 @@ const DebugSystem = {
             return;
         }
 
-        // 2. 随机选取一本
         const item = candidates[Math.floor(Math.random() * candidates.length)];
 
-        // 3. 随机熟练度 (100 ~ 600)
+        // 随机熟练度
         const expGain = Math.floor(Math.random() * 500) + 100;
 
-        // 4. 调用核心工具类进行学习
+        // 学习 (learnSkill 内部会自动存档)
         UtilsSkill.learnSkill(item.id, expGain);
     }
 };

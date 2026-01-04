@@ -91,47 +91,101 @@ function updateUI() {
   if(elMoney) elMoney.innerText = player.money;
 
   // 6. 刷新 Buff 列表
-  updateBuffs();
+    renderBuffs();
 }
 
 /**
  * 渲染左侧“当前状态”栏的 Buff 列表
  */
-function updateBuffs() {
-  const buffListEl = document.getElementById('left_buff_list');
-  if (!buffListEl) return;
+/**
+ * 渲染状态栏的所有 BUFF (包含临时丹药BUFF 和 装备的功法)
+ */
+function renderBuffs() {
+    // 【请确认】你的 index.html 里显示BUFF的容器 ID 是什么？
+    // 假设是 'ui_buffs' 或者 'buff_list'
+    // 你可以根据实际情况修改下面这一行：
+    const containerId = 'buff_list';
+    const container = document.getElementById(containerId);
 
-  buffListEl.innerHTML = '';
+    if (!container) return;
+    container.innerHTML = '';
 
-  if (!player.buffs || player.buffs.length === 0) {
-    const emptyTip = document.createElement('div');
-    emptyTip.style.color = '#999';
-    emptyTip.style.fontSize = '12px';
-    emptyTip.style.textAlign = 'center';
-    emptyTip.style.padding = '5px';
-    emptyTip.innerText = '暂无特殊状态';
-    buffListEl.appendChild(emptyTip);
-    return;
-  }
+    // ================= 1. 渲染临时 BUFF (丹药/事件) =================
+    if (player.buffs) {
+        for (let buffId in player.buffs) {
+            const buff = player.buffs[buffId];
+            if (buff.days > 0) {
+                // 尝试获取物品信息以便显示图标/名字
+                let name = "未知状态";
+                let icon = "💊";
+                let desc = `${buff.attr} +${buff.val}`;
 
-  Object.values(player.buffs || {}).forEach(buff => {
-    const div = document.createElement('div');
-    div.className = 'buff_item';
-    if (buff.type === 'bad' || buff.type === 'debuff') {
-      div.classList.add('text_red');
-    } else {
-      div.classList.add('text_green');
+                // 尝试从数据库查找源物品
+                const item = GAME_DB.items.find(i => i.id === buffId);
+                if (item) {
+                    name = item.name;
+                    icon = item.icon || "💊";
+                    desc = item.desc;
+                }
+
+                const div = document.createElement('div');
+                div.className = "buff_item"; // 请确保 css 有这个类，或者用内联样式
+                div.style.cssText = "display:inline-flex; align-items:center; background:rgba(0,0,0,0.05); padding:4px 8px; margin:2px; border-radius:4px; border:1px solid #eee; cursor:help;";
+                div.innerHTML = `
+                    <span style="font-size:16px; margin-right:4px;">${icon}</span>
+                    <div>
+                        <div style="font-size:12px; font-weight:bold;">${name}</div>
+                        <div style="font-size:10px; color:#666;">剩余 ${buff.days} 天</div>
+                    </div>
+                `;
+
+                // 悬浮显示详情
+                // 如果是物品BUFF，用物品Tooltip；如果是纯数值，用通用Tooltip
+                if (item) {
+                    div.onmouseenter = (e) => showItemTooltip(e, item.id);
+                } else {
+                    // 简单的文本提示
+                    div.title = desc;
+                }
+                div.onmouseleave = () => hideTooltip();
+
+                container.appendChild(div);
+            }
+        }
     }
 
-    let effectText = "";
-    if(buff.attr && buff.val) {
-      const op = buff.val > 0 ? "+" : "";
-      effectText = ` (${buff.attr} ${op}${buff.val})`;
-    }
+    // ================= 2. 渲染常驻 BUFF (已装备的功法) =================
+    // 遍历外功和内功槽位
+    ['gongfa_ext', 'gongfa_int'].forEach(slotType => {
+        const skills = player.equipment[slotType] || [];
 
-    div.innerText = `${buff.name}${effectText}`;
-    buffListEl.appendChild(div);
-  });
+        skills.forEach(skillId => {
+            if (!skillId) return; // 跳过空槽位
+
+            const item = GAME_DB.items.find(i => i.id === skillId);
+            if (!item) return;
+
+            const div = document.createElement('div');
+            // 样式：功法用金色边框区分
+            div.className = "buff_item skill_buff";
+            div.style.cssText = "display:inline-flex; align-items:center; background:#fffdf5; padding:4px 8px; margin:2px; border-radius:4px; border:1px solid #d4af37; cursor:help;";
+
+            div.innerHTML = `
+                <span style="font-size:16px; margin-right:4px;">${item.icon || '📘'}</span>
+                <div>
+                    <div style="font-size:12px; font-weight:bold; color:#a94442;">${item.name}</div>
+                    <div style="font-size:10px; color:#d4af37;">[运功中]</div>
+                </div>
+            `;
+
+            // 关键：悬浮显示【功法悬浮窗】
+            div.onmouseenter = (e) => showSkillTooltip(e, skillId);
+            div.onmouseleave = () => hideTooltip();
+            div.onmousemove = (e) => moveTooltip(e);
+
+            container.appendChild(div);
+        });
+    });
 }
 
 /* --- 通用弹窗逻辑 (保留) --- */

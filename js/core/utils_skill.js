@@ -1,5 +1,6 @@
 // js/core/utils_skill.js
-// 功法/技能核心逻辑工具箱 (修复境界上限读取 + 增加轮回加成计算)
+// 功法/技能核心逻辑工具箱
+// 【更新】引入 typeExpRate (外功/内功全局熟练度系数)
 console.log("加载 功法核心逻辑");
 
 const UtilsSkill = {
@@ -13,9 +14,14 @@ const UtilsSkill = {
 
         const cfg = window.SKILL_CONFIG;
         const rarity = item.rarity || 1;
-        const diffMult = cfg.difficulty[rarity] || 1.0;
 
-        // 获取境界上限
+        // 1. 获取各项系数
+        const diffMult = cfg.difficulty[rarity] || 1.0; // 稀有度难度
+        // 【新增】获取类型全局系数 (外功 0.85, 内功 1.0)
+        // item.subType 在数据库中对应 'body' 或 'cultivation'
+        const typeRate = (cfg.typeExpRate && cfg.typeExpRate[item.subType]) ? cfg.typeExpRate[item.subType] : 1.0;
+
+        // 2. 获取境界上限
         let limitLevel = 3;
         if (item.effects && item.effects.max_skill_level !== undefined) {
             limitLevel = item.effects.max_skill_level;
@@ -23,10 +29,13 @@ const UtilsSkill = {
             limitLevel = item.max_skill_level;
         }
 
-        // 计算当前境界
+        // 3. 计算当前境界
         let currentLevelIdx = 0;
         for (let i = 0; i < cfg.levels.length; i++) {
-            const reqExp = cfg.levels[i] * diffMult;
+            // 【修改】经验需求公式：基础 * 稀有度难度 * 类型系数
+            // 使用 Math.floor 向下取整，避免出现小数
+            const reqExp = Math.floor(cfg.levels[i] * diffMult * typeRate);
+
             if (currentExp >= reqExp) {
                 currentLevelIdx = i;
             } else {
@@ -41,34 +50,32 @@ const UtilsSkill = {
             isCapped = true;
         }
 
-        // 计算下一级经验
+        // 4. 计算下一级经验
         let nextLevelExp = -1;
         if (currentLevelIdx < limitLevel && currentLevelIdx < cfg.levels.length - 1) {
-            nextLevelExp = cfg.levels[currentLevelIdx + 1] * diffMult;
+            // 【修改】同理，下一级经验也乘上类型系数
+            nextLevelExp = Math.floor(cfg.levels[currentLevelIdx + 1] * diffMult * typeRate);
         }
 
-        // 计算属性加成
+        // 5. 计算属性加成 (保留之前的 Math.ceil 向上取整逻辑)
         const bonusRate = cfg.dmgBonus[currentLevelIdx] || 0;
         let computedEffects = {};
-
-        // 【新增】计算轮回参悟加成 (Mastery Bonus)
-        // 逻辑：找到数值最高的属性，加成值为 difficulty (diffMult)
         let masteryBonus = null;
+
         if (item.effects) {
             let bestAttr = null;
             let maxVal = -1;
 
             for (let key in item.effects) {
                 if (key === 'map' || key === 'unlockRegion') continue;
-                // 不计算 max_skill_level
                 if (key === 'max_skill_level') continue;
 
                 const baseVal = item.effects[key];
                 if (typeof baseVal === 'number') {
-                    // 常规计算
+                    // 属性计算保持向上取整
                     computedEffects[key] = Math.ceil(baseVal * (1 + bonusRate));
 
-                    // 寻找最高属性
+                    // 寻找最高属性用于参悟显示
                     if (baseVal > maxVal) {
                         maxVal = baseVal;
                         bestAttr = key;
@@ -81,7 +88,7 @@ const UtilsSkill = {
             if (bestAttr) {
                 masteryBonus = {
                     attr: bestAttr,
-                    val: diffMult // 加成值 = 难度系数
+                    val: diffMult
                 };
             }
         }
@@ -97,11 +104,11 @@ const UtilsSkill = {
             finalEffects: computedEffects,
             isCapped: isCapped,
             limitLevelName: cfg.levelNames[limitLevel] || "未知",
-            masteryBonus: masteryBonus // 【新增字段】
+            masteryBonus: masteryBonus
         };
     },
 
-    /* ================= 功法管理 ================= */
+    /* ================= 功法管理 (保持不变) ================= */
 
     learnSkill: function(skillId, expGain = 0, silent = false) {
         if (!player.skills) player.skills = {};

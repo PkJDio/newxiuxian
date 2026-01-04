@@ -17,9 +17,9 @@ function saveGame() {
 
     // 注意：这里会添加一条日志
     if (window.LogManager) {
-      window.LogManager.add("<span class='text_green'>存档成功！道心已固。</span>");
+      // window.LogManager.add("<span class='text_green'>存档成功！道心已固。</span>");
     } else {
-      if(window.showToast) window.showToast("存档成功");
+      // if(window.showToast) window.showToast("存档成功");
     }
     console.log("游戏已保存");
   } catch (e) {
