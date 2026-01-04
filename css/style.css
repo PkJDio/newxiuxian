@@ -8,3 +8,4 @@
 @import 'ui_tooltip.css';   /* 6. 悬浮窗系统 (新) */
 @import 'ui_bag.css';       /* 7. 背包系统 (新) */
 @import 'ui_gallery.css';   /* 8. 图鉴系统 (新) */
+@import "ui_skill.css";     /* 9. 技能系统 (新) */

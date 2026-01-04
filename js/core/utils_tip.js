@@ -127,27 +127,20 @@ const TooltipManager = {
         const typeName = typeMap[item.type] || "功法";
         const attrMap = (typeof ATTR_MAPPING !== 'undefined') ? ATTR_MAPPING : {};
 
+        // 是否已参悟 (从 player.skills 读取)
+        const isMastered = player.skills && player.skills[skillId] && player.skills[skillId].mastered;
+
         // 样式定义
-        const styleHeader = `font-size:22px; font-weight:bold; color:${rarityConf.color}; word-break: break-all;`;
+        const styleHeader = `font-size:22px; font-weight:bold; color:${rarityConf.color}; word-break: break-all;`; // 允许换行
         const styleSub = `font-size:15px; color:#aaa; margin-top:4px;`;
         const styleBarLabel = `font-size:14px; color:#ccc;`;
         const styleBarNum = `font-size:14px; color:#eee;`;
         const styleStatRow = `font-size:16px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;`;
         const styleDesc = `font-size:16px; color:#bbb; line-height:1.6; margin-top:10px; padding-top:10px; border-top:1px dashed #444;`;
 
-        // 境界标签样式 (修改：去掉 margin-left，改为 flex 控制间距，防止换行问题)
-        const tagStyle = `
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-            white-space: nowrap; /* 防止标签内部换行 */
-            flex-shrink: 0; /* 防止标签被挤压 */
-        `;
-        // 当前境界：金色背景黑字
+        // 境界标签样式 (flex布局，防止挤压)
+        const tagStyle = `display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; white-space: nowrap; flex-shrink: 0;`;
         const levelTag = `<span style="${tagStyle} background:#d4af37; color:#000;">${info.levelName}</span>`;
-        // 上限：灰色背景白字
         const limitTag = `<span style="${tagStyle} background:#444; color:#ccc;">上限: ${info.limitLevelName}</span>`;
 
         // 2. 头部 (使用 Flex 布局优化长名字显示)
@@ -155,12 +148,10 @@ const TooltipManager = {
         <div style="border-bottom:1px solid #555; padding-bottom:8px; margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
                 <span style="${styleHeader}; flex:1;">${item.name}</span>
-                <div>
-                    ${levelTag}
-                </div>
+                <div>${levelTag}</div>
             </div>
             <div style="${styleSub}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <span>${rarityConf.name} · 功法</span>
+                <span>${typeName} · ${rarityConf.name}</span>
                 ${limitTag}
             </div>
         </div>
@@ -200,6 +191,8 @@ const TooltipManager = {
                 const finalVal = info.finalEffects[key];
 
                 if (typeof baseVal !== 'number') continue;
+
+                // 【保留你原来的逻辑】数值为 0 则不显示
                 if (baseVal === 0 && finalVal === 0) continue;
 
                 console.log(`属性: ${key}, 基础: ${baseVal}, 实际: ${finalVal}`);
@@ -224,11 +217,25 @@ const TooltipManager = {
             }
         }
 
+        // 【新增】参悟加成显示
+        if (isMastered && info.masteryBonus) {
+            const mAttr = attrMap[info.masteryBonus.attr] || info.masteryBonus.attr;
+            const mVal = info.masteryBonus.val;
+
+            html += `
+            <div style="margin-top:10px; padding:8px; background:rgba(255, 235, 59, 0.1); border:1px solid rgba(255, 235, 59, 0.3); border-radius:4px;">
+                <div style="color:#ffeb3b; font-weight:bold; font-size:16px; margin-bottom:4px;">✨ 已参悟</div>
+                <div style="color:#ddd; font-size:14px;">
+                    轮回加成: <span style="color:#fff">${mAttr}</span> <span style="color:#ffeb3b">+${mVal}</span>
+                </div>
+            </div>
+            `;
+        }
+
         html += `<div style="${styleDesc}">${item.desc || "暂无描述"}</div>`;
 
         this.el.className = 'ink_tooltip';
-        // 【修改】宽度从 280px 增加到 320px
-        this.el.style.width = '320px';
+        this.el.style.width = '320px'; // 【修改】宽度增加到 320px
         this.el.innerHTML = html;
         this.el.classList.remove('hidden');
         this._move(e);

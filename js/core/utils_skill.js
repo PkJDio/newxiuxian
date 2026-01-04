@@ -1,5 +1,5 @@
 // js/core/utils_skill.js
-// 功法/技能核心逻辑工具箱 (修复境界上限读取)
+// 功法/技能核心逻辑工具箱 (修复境界上限读取 + 增加轮回加成计算)
 console.log("加载 功法核心逻辑");
 
 const UtilsSkill = {
@@ -15,8 +15,7 @@ const UtilsSkill = {
         const rarity = item.rarity || 1;
         const diffMult = cfg.difficulty[rarity] || 1.0;
 
-        // 【核心修复】获取境界上限 (max_skill_level)
-        // 优先从 effects 中读取，如果没有再看 item 根属性，最后默认 3 (大成)
+        // 获取境界上限
         let limitLevel = 3;
         if (item.effects && item.effects.max_skill_level !== undefined) {
             limitLevel = item.effects.max_skill_level;
@@ -51,25 +50,45 @@ const UtilsSkill = {
         // 计算属性加成
         const bonusRate = cfg.dmgBonus[currentLevelIdx] || 0;
         let computedEffects = {};
+
+        // 【新增】计算轮回参悟加成 (Mastery Bonus)
+        // 逻辑：找到数值最高的属性，加成值为 difficulty (diffMult)
+        let masteryBonus = null;
         if (item.effects) {
+            let bestAttr = null;
+            let maxVal = -1;
+
             for (let key in item.effects) {
                 if (key === 'map' || key === 'unlockRegion') continue;
-                // 【新增】max_skill_level 不是加成属性，不参与计算，也不放入 finalEffects
+                // 不计算 max_skill_level
                 if (key === 'max_skill_level') continue;
 
                 const baseVal = item.effects[key];
                 if (typeof baseVal === 'number') {
-                    // 向下取整
-                    computedEffects[key] = Math.floor(baseVal * (1 + bonusRate));
+                    // 常规计算
+                    computedEffects[key] = Math.ceil(baseVal * (1 + bonusRate));
+
+                    // 寻找最高属性
+                    if (baseVal > maxVal) {
+                        maxVal = baseVal;
+                        bestAttr = key;
+                    }
                 } else {
                     computedEffects[key] = baseVal;
                 }
+            }
+
+            if (bestAttr) {
+                masteryBonus = {
+                    attr: bestAttr,
+                    val: diffMult // 加成值 = 难度系数
+                };
             }
         }
 
         return {
             name: item.name,
-            levelName: cfg.levelNames[currentLevelIdx], // 当前中文境界
+            levelName: cfg.levelNames[currentLevelIdx],
             levelIdx: currentLevelIdx,
             exp: currentExp,
             nextExp: nextLevelExp,
@@ -77,7 +96,8 @@ const UtilsSkill = {
             baseEffects: item.effects || {},
             finalEffects: computedEffects,
             isCapped: isCapped,
-            limitLevelName: cfg.levelNames[limitLevel] || "未知" // 【核心】上限中文名称
+            limitLevelName: cfg.levelNames[limitLevel] || "未知",
+            masteryBonus: masteryBonus // 【新增字段】
         };
     },
 
