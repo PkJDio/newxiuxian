@@ -80,49 +80,54 @@ function attemptDie() {
     let legacyStats = player.bonus_stats || {};
 
     if (player.skills) {
-      for (let skillId in player.skills) {
-        const oldSkill = player.skills[skillId];
-        const itemData = GAME_DB.items.find(i => i.id === skillId);
+        for (let skillId in player.skills) {
+            const oldSkill = player.skills[skillId];
+            const itemData = GAME_DB.items.find(i => i.id === skillId);
+            if (!itemData) continue;
 
-        if (!itemData) continue;
+            let newSkillEntry = {
+                level: 0,
+                exp: 0,
+                mastered: oldSkill.mastered || false
+            };
 
-        let newSkillEntry = {
-          level: 0,
-          exp: 0,
-          mastered: oldSkill.mastered || false
-        };
+            // 判断是否满足参悟条件 (满级或高熟练度)
+            const isMaxLevel = oldSkill.level >= 3 || oldSkill.exp >= 999; // 根据你的配置调整阈值
 
-        // 判定参悟
-        const isMaxLevel = oldSkill.level >= 3 || oldSkill.exp >= 999;
-
-        if (isMaxLevel && !oldSkill.mastered) {
-          newSkillEntry.mastered = true;
-          // 计算属性加成
-          const rarity = itemData.rarity || 1;
-          const difficulty = (SKILL_CONFIG.difficulty && SKILL_CONFIG.difficulty[rarity]) ? SKILL_CONFIG.difficulty[rarity] : 1.0;
-
-          let bestAttr = null;
-          let maxVal = -1;
-
-          if (itemData.effects) {
-            for (let key in itemData.effects) {
-              if (key === 'max_skill_level' || key === 'map' || key === 'unlockRegion') continue;
-              const val = itemData.effects[key];
-              if (typeof val === 'number' && val > maxVal) {
-                maxVal = val;
-                bestAttr = key;
-              }
+            // 如果满足条件，标记为参悟
+            if (isMaxLevel) {
+                newSkillEntry.mastered = true;
             }
-          }
 
-          if (bestAttr) {
-            if (!legacyStats[bestAttr]) legacyStats[bestAttr] = 0;
-            legacyStats[bestAttr] += difficulty;
-            console.log(`【Debug】参悟成功: ${itemData.name} -> ${bestAttr} +${difficulty}`);
-          }
+            // 【核心修正】只要是参悟状态（不管是以前参悟的，还是刚刚参悟的），都计算属性加成
+            if (newSkillEntry.mastered) {
+                const rarity = itemData.rarity || 1;
+                // 获取难度系数作为属性加成值
+                const difficulty = (SKILL_CONFIG.difficulty && SKILL_CONFIG.difficulty[rarity]) ? SKILL_CONFIG.difficulty[rarity] : 1.0;
+
+                // 简单的属性转化逻辑：找该功法加成最高的那个属性，加到永久属性里
+                let bestAttr = null;
+                let maxVal = -1;
+                if (itemData.effects) {
+                    for (let key in itemData.effects) {
+                        if (key === 'max_skill_level' || key === 'map' || key === 'unlockRegion') continue;
+                        const val = itemData.effects[key];
+                        if (typeof val === 'number' && val > maxVal) {
+                            maxVal = val;
+                            bestAttr = key;
+                        }
+                    }
+                }
+
+                if (bestAttr) {
+                    if (!legacyStats[bestAttr]) legacyStats[bestAttr] = 0;
+                    legacyStats[bestAttr] += difficulty; // 累加属性
+                    console.log(`【Debug】功法[${itemData.name}]提供轮回加成: ${bestAttr} +${difficulty}`);
+                }
+            }
+
+            newPlayer.skills[skillId] = newSkillEntry;
         }
-        newPlayer.skills[skillId] = newSkillEntry;
-      }
     }
 
     if (player.lifeSkills) {
