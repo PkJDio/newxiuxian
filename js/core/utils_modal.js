@@ -2,16 +2,35 @@
 // 弹窗管理模块 (修复类名丢失问题 + 新增地图弹窗)
 
 const ModalManager = {
-    // 1. Toast 提示
+    // 1. Toast 提示 (已优化：立即清除旧提示)
     showToast: function(msg, duration = 2000) {
+        // 【核心修改】检测并立即移除所有旧的 toast
+        const existingToasts = document.querySelectorAll('.ink_toast');
+        if (existingToasts.length > 0) {
+            existingToasts.forEach(el => el.remove());
+        }
+
+        // 创建新 toast
         const toast = document.createElement('div');
         toast.className = 'ink_toast';
         toast.innerHTML = msg;
         document.body.appendChild(toast);
+
+        // 动画进入
         requestAnimationFrame(() => toast.classList.add('show'));
+
+        // 定时销毁
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
+            // 只有当这个 toast 还在 DOM 树里时才执行淡出
+            // (防止因为新的 toast 进来，已经把它暴力移除了，导致这里报错)
+            if (document.body.contains(toast)) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        toast.remove();
+                    }
+                }, 300); // 这里的300ms对应CSS transition时间
+            }
         }, duration);
     },
 

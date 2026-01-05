@@ -6,48 +6,6 @@ console.log("加载 状态管理");
 // 1. 定义玩家标准模板 (Schema)
 // 所有新字段必须在这里定义，读档时才能自动补全
 // ==========================================
-window.PLAYER_TEMPLATE = {
-    name: "无名道友",
-    generation: 1,
-    age: 16,
-    money: 0,
-    worldSeed: 0, // 世界随机种子
-    location: "t_xianyang", // 默认出生地
-
-    // 时间系统
-    time: { year: 37, month: 1, day: 1, hour: 0 },
-
-    // 基础属性 (先天)
-    attr: { jing: 10, qi: 10, shen: 10 },
-
-    // 当前状态 (动态变化)
-    status: {
-        hp: 100,
-        mp: 50,
-        hunger: 100,
-        fatigue: 0  // 【新增】确保模板里有这个字段！
-    },
-
-    // 衍生属性 (计算得出，这里只需占位)
-    derived: {
-        hpMax: 100, mpMax: 50,
-        hungerMax: 100, fatigueMax: 100,
-        atk: 0, def: 0, speed: 10
-    },
-
-    // 容器与集合
-    inventory: [], // 背包
-    equipment: {   // 装备槽
-        weapon: null, head: null, body: null, feet: null,
-        mount: null, tool: null, fishing_rod: null,
-        gongfa_ext: [], gongfa_int: []
-    },
-    skills: {},     // 已学技能
-    lifeSkills: {}, // 生活技能
-    buffs: {},      // Buff状态
-    bonus_stats: {}, // 轮回属性加成
-    exAttr: {}      // 永久属性加成
-};
 
 // 全局玩家对象初始化
 var player = null;
@@ -147,4 +105,5 @@ function backToMenu() {
 // 暴露接口
 window.attemptDie = attemptDie;
 window.backToMenu = backToMenu;
+
 // 注意：saveGame 和 loadGame 现在由 archive.js 提供

@@ -1,0 +1,36 @@
+/* === 寻幽按钮专用样式 === */
+
+/* 剩余次数 (金色/墨色) */
+.gather_count_val {
+    font-size: 10px;
+    color: #5d4037; /* 深棕色，像干枯的墨迹 */
+    margin-top: 2px;
+    font-family: "Kaiti", serif;
+    opacity: 0.8;
+}
+
+/* 无资源 (灰色) */
+.gather_count_empty {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+    font-family: "Kaiti", serif;
+}
+
+/* 水墨风禁用状态 */
+/* 相比普通的 disabled，这个更像“墨色淡去” */
+.ink_disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(100%) !important;
+    background-color: rgba(0,0,0,0.05) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+    color: #aaa !important;
+    box-shadow: none !important;
+}
+
+/* 覆盖可能存在的 hover 效果 */
+.ink_disabled:hover {
+    transform: none !important;
+    background-color: rgba(0,0,0,0.05) !important;
+}

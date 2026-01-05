@@ -79,8 +79,8 @@ const PLAYER_TEMPLATE = {
 
     // 动态状态
     status: {hp: 200, mp: 100, hunger: 100, mood: 100, toxicity: 0, fatigue: 0},
-
-
+    //寻幽记录
+    gatherRecords:{},
     // 经济与经验
     money: 0, levelIndex: 0, exp: 0, maxExp: 100, cultivation_base: 0,
 

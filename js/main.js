@@ -8,7 +8,7 @@ window.onload = function() {
 
   if (typeof initGameDB === 'function') initGameDB();
   if (window.LogManager) window.LogManager.init();
-
+  loadGame();
   checkSaveFile();
   bindMainMenuEvents();
 };

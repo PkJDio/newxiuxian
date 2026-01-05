@@ -30,8 +30,10 @@ const MapCamera = {
 
         // 游戏加载时，立即计算一次当前脚下的地形BUFF
         if (window.player) {
-            this._updateTerrainBuffs(player.x, player.y);
+            this._updateTerrainBuffs(player.coord.x, player.coord.y);
         }
+        // 【新增】初始化寻幽按钮
+        if (window.GatherSystem) GatherSystem.updateButtonState();
 
         window.addEventListener('resize', () => this._resize());
         this._loop();
@@ -39,16 +41,16 @@ const MapCamera = {
 
     _initPlayerPos: function() {
         if (!window.player) return;
-        if (player.x === undefined) {
-            player.x = 1330;
-            player.y = 1350;
+        if (player.coord.x === undefined) {
+            player.coord.x = 1330;
+            player.coord.y = 1350;
             if (typeof WORLD_TOWNS !== 'undefined') {
                 const t = WORLD_TOWNS.find(x => x.name === "咸阳");
-                if (t) { player.x = Math.floor(t.x + t.w/2); player.y = Math.floor(t.y + t.h/2); }
+                if (t) { player.coord.x = Math.floor(t.x + t.w/2); player.coord.y = Math.floor(t.y + t.h/2); }
             }
         }
-        this.x = player.x;
-        this.y = player.y;
+        this.x = player.coord.x;
+        this.y = player.coord.y;
         this._checkRegion(this.x, this.y);
     },
 
@@ -65,8 +67,8 @@ const MapCamera = {
 
     _loop: function() {
         if (window.player) {
-            this.x = player.x;
-            this.y = player.y;
+            this.x = player.coord.x;
+            this.y = player.coord.y;
         }
         if (window.MapAtlas) {
             MapAtlas.render(this.ctx, this);
@@ -152,10 +154,10 @@ const MapCamera = {
         tx = Math.max(0, Math.min(MAX, tx));
         ty = Math.max(0, Math.min(MAX, ty));
 
-        if (tx === player.x && ty === player.y) return;
+        if (tx === player.coord.x && ty === player.coord.y) return;
 
         // 1. 计算距离
-        const dist = Math.abs(player.x - tx) + Math.abs(player.y - ty);
+        const dist = Math.abs(player.coord.x - tx) + Math.abs(player.coord.y - ty);
 
         // 2. 游泳熟练度逻辑
         // 如果当前脚下有"水行"buff，说明是从水里开始移动的，加熟练度
@@ -182,12 +184,17 @@ const MapCamera = {
         }
 
         // 6. 执行移动
-        player.x = tx;
-        player.y = ty;
+        player.coord.x = tx;
+        player.coord.y = ty;
         this._checkRegion(tx, ty);
 
         // 7. 移动到达后，立即更新脚下的地形BUFF
         this._updateTerrainBuffs(tx, ty);
+
+        // 【新增】移动后，刷新寻幽按钮的资源显示
+        if (window.GatherSystem) {
+            GatherSystem.updateButtonState();
+        }
 
         // 提示信息
         let toastMsg = `行进 ${Math.floor(dist)} 里`;
@@ -292,7 +299,7 @@ const MapCamera = {
             if (oldExp < threshold && currentExp >= threshold) {
                 if (window.showToast) window.showToast(`[游泳] 境界提升至【${name}】！水行速度提升。`);
                 // 境界提升后，立即刷新一下 Buff 状态
-                this._updateTerrainBuffs(player.x, player.y);
+                this._updateTerrainBuffs(player.coord.x, player.coord.y);
             }
         };
 

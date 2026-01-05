@@ -17,7 +17,19 @@ const RandomSystem = {
     },
     get: function(...args) {
         const seed = (typeof player !== 'undefined' && player.worldSeed) ? player.worldSeed : 12345;
-        const key = `${seed}_${args.join('_')}`;
+        // 遍历 args，如果是对象且不是 null，就序列化为字符串
+        const processedArgs = args.map(arg => {
+            if (typeof arg === 'object' && arg !== null) {
+                return JSON.stringify(arg);
+            }
+            return arg;
+        });
+
+        const key = `${seed}_${processedArgs.join('_')}`;
+
+        // 调试用：你可以打开控制台看现在的 key 是否正确
+        // console.log("Hash Key:", key);
+
         return this._hash(key);
     },
     getByWeekAndCoord: function(x, y, extraKey = "") {
@@ -27,6 +39,10 @@ const RandomSystem = {
     getByMonthAndTown: function(townId, extraKey = "") {
         const month = typeof player !== 'undefined' ? Math.floor(player.dayCount / 30) : 0;
         return this.get("month", month, "town", townId, extraKey);
+    },
+    getByMonth: function(extraKey = {}) {
+        const month = typeof player !== 'undefined' ? Math.floor(player.dayCount / 30) : 0;
+        return this.get("month", month, "town",   extraKey);
     },
     getByTownFixed: function(townId, extraKey = "") {
         return this.get("fixed", "town", townId, extraKey);
