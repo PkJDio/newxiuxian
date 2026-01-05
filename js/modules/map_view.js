@@ -1,62 +1,60 @@
 // js/modules/map_view.js
-// 全屏地图阅览控制器：支持点击查看详情
+// 全屏地图阅览控制器 (支持新地形：草原/沙漠/海洋，区分城镇村样式)
 console.log("加载 地图阅览模块 (独立版)");
 
 const MapView = {
     canvas: null,
     ctx: null,
     tooltip: null,
-    sidebar: null, // 新增侧边栏引用
+    sidebar: null,
     animationId: null,
 
-    // 布局状态
-    layout: {
-        size: 0,
-        offX: 0,
-        offY: 0
-    },
+    layout: { size: 0, offX: 0, offY: 0 },
 
-    // 摄像机状态
-    camera: {
-        x: 1350,
-        y: 1350,
-        level: "world"
-    },
+    // 摄像机默认居中 (1350, 1350)
+    camera: { x: 1350, y: 1350, level: "world" },
 
-    // 交互状态
     isDragging: false,
-    dragStartX: 0, // 记录拖拽起点，用于判断是否是点击
-    dragStartY: 0,
-    lastMouseX: 0,
-    lastMouseY: 0,
+    dragStartX: 0, dragStartY: 0,
+    lastMouseX: 0, lastMouseY: 0,
 
+    // 配置：新增了 grass, desert, ocean 颜色
     config: {
         colors: {
             bg: "#f4f4f4",
             gridWorld: "rgba(169, 68, 66, 0.6)",
             gridNation: "rgba(0, 0, 0, 0.15)",
+
             road: "#a1887f",
             river: "#81d4fa",
             mountainBg: "rgba(121, 85, 72, 0.3)",
             mountainBorder: "#5d4037",
-            townBg: "#fffdf5",
-            townBorder: "#333",
-            bridge: "#5d4037"
+
+            grass: "#aed581",   // 草原绿
+            desert: "#ffe082",  // 沙漠黄
+            ocean: "#29b6f6",   // 海洋蓝
+
+            // 城镇基础色
+            cityBg: "#e3f2fd",    // 城市：淡蓝
+            townBg: "#fff3e0",    // 城镇：淡橙
+            villageBg: "#f1f8e9", // 村落：淡绿
+
+            cityBorder: "#1565c0",
+            townBorder: "#e65100",
+            villageBorder: "#33691e"
         }
     },
 
     open: function() {
         if (!window.UtilsModal) return;
-        UtilsModal.showMapModal(() => {
-            this.init();
-        });
+        UtilsModal.showMapModal(() => { this.init(); });
     },
 
     init: function() {
         const container = document.getElementById('full_map_container');
         this.canvas = document.getElementById('full_map_canvas');
         this.tooltip = document.getElementById('map_view_tooltip');
-        this.sidebar = document.getElementById('map_sidebar'); // 获取侧边栏
+        this.sidebar = document.getElementById('map_sidebar');
 
         if (!this.canvas || !container) return;
 
@@ -87,7 +85,6 @@ const MapView = {
 
         const w = container.clientWidth;
         const h = container.clientHeight;
-
         this.canvas.width = w;
         this.canvas.height = h;
 
@@ -100,11 +97,8 @@ const MapView = {
     },
 
     _getScale: function() {
-        if (this.camera.level === 'world') {
-            return this.layout.size / 2700;
-        } else {
-            return this.layout.size / 900;
-        }
+        if (this.camera.level === 'world') return this.layout.size / 2700;
+        else return this.layout.size / 900;
     },
 
     _screenToWorld: function(sx, sy) {
@@ -113,16 +107,13 @@ const MapView = {
         const scale = this._getScale();
         const centerX = this.layout.size / 2;
         const centerY = this.layout.size / 2;
-
         const worldX = this.camera.x + (mapX - centerX) / scale;
         const worldY = this.camera.y + (mapY - centerY) / scale;
-
         return { x: worldX, y: worldY };
     },
 
     _bindEvents: function() {
         this.canvas.onmousedown = (e) => {
-            // 记录起点，用于区分点击和拖拽
             this.dragStartX = e.clientX;
             this.dragStartY = e.clientY;
 
@@ -133,9 +124,7 @@ const MapView = {
             const my = e.clientY - rect.top;
 
             if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-                my < this.layout.offY || my > this.layout.offY + this.layout.size) {
-                return;
-            }
+                my < this.layout.offY || my > this.layout.offY + this.layout.size) return;
 
             this.isDragging = true;
             this.lastMouseX = e.clientX;
@@ -146,67 +135,47 @@ const MapView = {
         window.onmouseup = (e) => {
             this.isDragging = false;
             if(this.canvas) this.canvas.style.cursor = 'default';
-
-            // 【核心】检测是否为点击事件 (位移很小)
             const dist = Math.sqrt(Math.pow(e.clientX - this.dragStartX, 2) + Math.pow(e.clientY - this.dragStartY, 2));
-            if (dist < 5) {
-                this._handleMapClick(e);
-            }
+            if (dist < 5) this._handleMapClick(e);
         };
 
         this.canvas.onmousemove = (e) => {
-            // 悬停提示
             this._handleHover(e);
-
-            // 拖拽
             if (this.isDragging && this.camera.level === 'nation') {
                 const dx = e.clientX - this.lastMouseX;
                 const dy = e.clientY - this.lastMouseY;
                 const scale = this._getScale();
-
                 this.camera.x -= dx / scale;
                 this.camera.y -= dy / scale;
-
                 this._clampCamera();
-
                 this.lastMouseX = e.clientX;
                 this.lastMouseY = e.clientY;
-
                 this._updateMouseCoord(e);
             }
         };
 
-        // 滚轮缩放
         this.canvas.onwheel = (e) => {
             e.preventDefault();
-
-            if (e.deltaY > 0) { // 缩小 -> World
+            if (e.deltaY > 0) {
                 if (this.camera.level !== 'world') {
                     this.camera.level = 'world';
                     this.camera.x = 1350;
                     this.camera.y = 1350;
                     this._updateUI();
                 }
-            } else { // 放大 -> Nation
+            } else {
                 if (this.camera.level !== 'nation') {
                     this.camera.level = 'nation';
-
                     const rect = this.canvas.getBoundingClientRect();
                     const mx = e.clientX - rect.left;
                     const my = e.clientY - rect.top;
-
                     if (mx >= this.layout.offX && mx <= this.layout.offX + this.layout.size &&
                         my >= this.layout.offY && my <= this.layout.offY + this.layout.size) {
-
                         const worldScale = this.layout.size / 2700;
                         const relX = mx - this.layout.offX;
                         const relY = my - this.layout.offY;
-
-                        const targetX = relX / worldScale;
-                        const targetY = relY / worldScale;
-
-                        this.camera.x = targetX;
-                        this.camera.y = targetY;
+                        this.camera.x = relX / worldScale;
+                        this.camera.y = relY / worldScale;
                         this._clampCamera();
                     }
                     this._updateUI();
@@ -215,27 +184,18 @@ const MapView = {
         };
     },
 
-    // 【新增】处理点击，更新侧边栏
     _handleMapClick: function(e) {
         if (!this.sidebar) return;
-
         const rect = this.canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
-
-        // 如果点在留白处，忽略
         if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-            my < this.layout.offY || my > this.layout.offY + this.layout.size) {
-            return;
-        }
-
+            my < this.layout.offY || my > this.layout.offY + this.layout.size) return;
         const worldPos = this._screenToWorld(mx, my);
         const info = this._hitTest(worldPos.x, worldPos.y);
-
         this._renderSidebar(info);
     },
 
-    // 渲染侧边栏内容
     _renderSidebar: function(info) {
         if (!info) {
             this.sidebar.innerHTML = `
@@ -248,13 +208,12 @@ const MapView = {
 
         const typeLabels = {
             'city': '主城', 'town': '重镇', 'village': '村落',
-            'mountain': '名山', 'river': '水系', 'road': '官道', 'bridge': '渡口'
+            'mountain': '名山', 'river': '水系', 'road': '官道',
+            'grass': '草原', 'desert': '荒漠', 'ocean': '海域'
         };
         const typeName = typeLabels[info.type] || '地理';
         const desc = info.desc || "暂无详细记载。";
 
-        // 注意：移除了内联的 font-size，改用 class 控制
-        // 坐标区域也增大了字号，或者你可以保持小一点
         let contentHtml = `
             <div class="map_sidebar_header">
                 <div class="map_sidebar_title">${info.name}</div>
@@ -262,7 +221,6 @@ const MapView = {
             </div>
             <div class="map_sidebar_content">
                 <p style="margin-bottom: 30px;">${desc}</p>
-                
                 <div style="padding-top:20px; border-top:2px dashed #eee; color:#666;">
                     <p style="font-size: 0.9em; font-weight:bold;">地理范围：</p>
                     <p style="font-size: 0.8em; font-family:monospace;">X: ${info.xRange[0]} - ${info.xRange[1]}</p>
@@ -270,42 +228,28 @@ const MapView = {
                 </div>
             </div>
         `;
-
         this.sidebar.innerHTML = contentHtml;
     },
 
-    // 修改 _hitTest 返回完整对象
     _hitTest: function(x, y) {
         if (typeof WORLD_TOWNS !== 'undefined') {
             const town = WORLD_TOWNS.find(t => x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h);
             if (town) return {
-                type: town.level,
-                name: town.name,
-                desc: town.desc,
-                xRange: [town.x, town.x+town.w],
-                yRange: [town.y, town.y+town.h]
+                type: town.level, name: town.name, desc: town.desc,
+                xRange: [town.x, town.x+town.w], yRange: [town.y, town.y+town.h]
             };
         }
         if (typeof TERRAIN_ZONES !== 'undefined') {
             for (let i = TERRAIN_ZONES.length - 1; i >= 0; i--) {
                 const z = TERRAIN_ZONES[i];
                 if (x >= z.x[0] && x <= z.x[1] && y >= z.y[0] && y <= z.y[1]) {
-                    return {
-                        type: z.type,
-                        name: z.name,
-                        desc: z.desc,
-                        xRange: z.x,
-                        yRange: z.y
-                    };
+                    return { type: z.type, name: z.name, desc: z.desc, xRange: z.x, yRange: z.y };
                 }
             }
         }
         return null;
     },
 
-    // ... (_startLoop, _render 等渲染逻辑保持不变，为了节省篇幅略去，请保留原有的 _render 及相关绘图函数)
-
-    // ================== 渲染循环 (独立逻辑) ==================
     _startLoop: function() {
         if (this.animationId) cancelAnimationFrame(this.animationId);
         const loop = () => {
@@ -339,8 +283,8 @@ const MapView = {
 
         this._drawGrids(ctx);
         this._drawRegionNames(ctx);
-        this._drawTerrain(ctx);
-        this._drawTowns(ctx);
+        this._drawTerrain(ctx); // 画地形 (含新类型)
+        this._drawTowns(ctx);   // 画城镇 (区分样式)
         this._drawPlayer(ctx);
 
         ctx.strokeStyle = "#000";
@@ -396,22 +340,26 @@ const MapView = {
         } else {
             ctx.font = `bold 60px Kaiti`;
             ctx.fillStyle = "rgba(0,0,0,0.15)";
-            if (typeof SUB_REGION_NAMES !== 'undefined') {
-                for (let x = 0; x < 9; x++) {
-                    for (let y = 0; y < 9; y++) {
-                        const rx = Math.floor(x/3); const ry = Math.floor(y/3);
-                        const rObj = REGION_LAYOUT.find(r => r.x[0]/900 === rx && r.y[0]/900 === ry);
-                        if (rObj) {
-                            const key = `${rObj.id}_${x%3}_${y%3}`;
-                            const name = SUB_REGION_NAMES[key];
-                            if (name) ctx.fillText(name, x*300 + 150, y*300 + 150);
+            if (typeof SUB_REGIONS !== 'undefined') {
+                // 直接遍历 REGION_LAYOUT 找大区，再拼 3x3
+                REGION_LAYOUT.forEach((r, idx) => {
+                    for(let gx=0; gx<3; gx++) {
+                        for(let gy=0; gy<3; gy++) {
+                            const key = `${r.id}_${gx}_${gy}`;
+                            if(SUB_REGIONS[key]) {
+                                // 计算中心坐标
+                                const cx = r.x[0] + gx*300 + 150;
+                                const cy = r.y[0] + gy*300 + 150;
+                                ctx.fillText(SUB_REGIONS[key].name, cx, cy);
+                            }
                         }
                     }
-                }
+                });
             }
         }
     },
 
+    // 绘制地形 (包含新类型)
     _drawTerrain: function(ctx) {
         if (typeof TERRAIN_ZONES === 'undefined') return;
         const c = this.config.colors;
@@ -420,12 +368,12 @@ const MapView = {
         TERRAIN_ZONES.forEach(z => {
             const w = z.x[1] - z.x[0];
             const h = z.y[1] - z.y[0];
+
             if (z.type === 'road') {
                 ctx.fillStyle = c.road; ctx.fillRect(z.x[0], z.y[0], w, h);
             } else if (z.type === 'river') {
-                ctx.fillStyle = c.river; ctx.globalAlpha = 0.5; ctx.fillRect(z.x[0], z.y[0], w, h); ctx.globalAlpha = 1.0;
-            } else if (z.type === 'bridge') {
-                ctx.fillStyle = c.bridge; ctx.fillRect(z.x[0], z.y[0], w, h);
+                ctx.fillStyle = c.river; ctx.globalAlpha = 0.5;
+                ctx.fillRect(z.x[0], z.y[0], w, h); ctx.globalAlpha = 1.0;
             } else if (z.type === 'mountain') {
                 ctx.fillStyle = c.mountainBg; ctx.fillRect(z.x[0], z.y[0], w, h);
                 ctx.strokeStyle = c.mountainBorder; ctx.lineWidth = 2 / scale;
@@ -436,9 +384,34 @@ const MapView = {
                     ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
                 }
             }
+            // === 新增地形绘制 ===
+            else if (z.type === 'grass') {
+                ctx.fillStyle = c.grass;
+                ctx.fillRect(z.x[0], z.y[0], w, h);
+                // 绘制名字
+                if (this.camera.level === 'nation') {
+                    ctx.fillStyle = "rgba(0,0,0,0.3)";
+                    ctx.font = `bold 20px Kaiti`;
+                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
+                }
+            } else if (z.type === 'desert') {
+                ctx.fillStyle = c.desert;
+                ctx.fillRect(z.x[0], z.y[0], w, h);
+            } else if (z.type === 'ocean') {
+                ctx.fillStyle = c.ocean;
+                ctx.fillRect(z.x[0], z.y[0], w, h);
+                if (this.camera.level === 'world') {
+                    ctx.fillStyle = "rgba(255,255,255,0.3)";
+                    ctx.font = `bold 60px Kaiti`;
+                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
+                }
+            }
         });
     },
 
+    // 绘制城镇 (区分 City, Town, Village)
     _drawTowns: function(ctx) {
         if (typeof WORLD_TOWNS === 'undefined') return;
         const c = this.config.colors;
@@ -446,12 +419,47 @@ const MapView = {
 
         WORLD_TOWNS.forEach(t => {
             if (this.camera.level === 'world' && t.level !== 'city') return;
-            ctx.fillStyle = c.townBg; ctx.fillRect(t.x, t.y, t.w, t.h);
-            ctx.strokeStyle = c.townBorder; ctx.lineWidth = 2 / scale; ctx.strokeRect(t.x, t.y, t.w, t.h);
+
+            // 1. 设置颜色和样式
+            let bg, border, shape = 'rect';
+            if (t.level === 'city') {
+                bg = c.cityBg; border = c.cityBorder; shape = 'rect_large';
+            } else if (t.level === 'town') {
+                bg = c.townBg; border = c.townBorder; shape = 'rect_mid';
+            } else { // village
+                bg = c.villageBg; border = c.villageBorder; shape = 'circle';
+            }
+
+            ctx.fillStyle = bg;
+            ctx.strokeStyle = border;
+            ctx.lineWidth = 2 / scale;
+
+            // 2. 绘制形状
+            if (shape === 'circle') {
+                ctx.beginPath();
+                // 用 width 的一半作为半径
+                ctx.arc(t.x + t.w/2, t.y + t.h/2, t.w/2, 0, Math.PI*2);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.fillRect(t.x, t.y, t.w, t.h);
+                // City 用双线边框
+                if (t.level === 'city') {
+                    ctx.lineWidth = 4 / scale;
+                    ctx.strokeRect(t.x, t.y, t.w, t.h);
+                    ctx.lineWidth = 1 / scale; // 内线
+                    ctx.strokeRect(t.x + 2/scale, t.y + 2/scale, t.w - 4/scale, t.h - 4/scale);
+                } else {
+                    ctx.strokeRect(t.x, t.y, t.w, t.h);
+                }
+            }
+
+            // 3. 绘制文字
             ctx.fillStyle = "#000";
-            const fontSize = this.camera.level === 'world' ? 40 : 20;
+            const fontSize = this.camera.level === 'world' ? 40 : (t.level === 'village' ? 16 : 24);
             ctx.font = `bold ${fontSize}px Kaiti`;
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
             ctx.fillText(t.name, t.x + t.w/2, t.y + t.h/2);
         });
     },
