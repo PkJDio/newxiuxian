@@ -211,8 +211,15 @@ const MapAtlas = {
         ctx.restore();
 
         // 3. 城镇大字 (固定中心)
-        let fontSize = sw * 0.3;
-        fontSize = Math.max(24, Math.min(120, fontSize));
+        // 新逻辑: 根据名字长度，让字撑满宽度的 80%
+        // 假设名字是 "咸阳" (2字)，我们希望它占宽度的 80%，那么每个字的大小 ≈ (sw * 0.8) / 2
+        let fontSize = (sw * 0.8) / Math.max(1, town.name.length);
+
+        // 同时稍微限制一下高度，防止字比城墙还高 (虽然一般宽度才是瓶颈)
+        fontSize = Math.min(fontSize, sh * 0.8);
+
+        // 无论如何保留一个最小值，防止缩得太小看不见
+        fontSize = Math.max(20, fontSize);
 
         ctx.save();
         ctx.fillStyle = "rgba(62, 39, 35, 0.2)";

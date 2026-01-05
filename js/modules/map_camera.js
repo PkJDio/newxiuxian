@@ -144,25 +144,66 @@ const MapCamera = {
         }
     },
 
+    // 只修改 moveTo 函数
     moveTo: function(tx, ty) {
-        const MAX = 2700;
+        const MAX = 2700; // 地图边界
         tx = Math.max(0, Math.min(MAX, tx));
         ty = Math.max(0, Math.min(MAX, ty));
 
         if (tx === player.x && ty === player.y) return;
 
+        // 1. 计算距离 (曼哈顿距离)
         const dist = Math.abs(player.x - tx) + Math.abs(player.y - ty);
-        const speed = 20;
-        const costHours = dist / speed;
 
-        if (window.TimeSystem) TimeSystem.passTime(costHours);
+        // 2. 获取玩家基础速度 (如果没有则默认为10)
+        // 注意：这里不再是写死的 20，而是从 player.derived.speed 读取
+        let currentSpeed = player.derived.speed || 2;
+        if (currentSpeed <= 0) currentSpeed = 1; // 防止除以0
 
+        // 2. 计算效率乘区 (核心修改)
+        let efficiency = 1.0;
+
+        // 检查疲劳 Buff
+        if (player.buffs && player.buffs['debuff_fatigue']) {
+            efficiency *= 0.5;
+        }
+        // 检查饥饿 Buff
+        if (player.buffs && player.buffs['debuff_hunger']) {
+            efficiency *= 0.5;
+        }
+
+        // 应用效率
+        currentSpeed = currentSpeed * efficiency;
+
+        // 防止速度过慢变成0 (至少保留1点速度)
+        if (currentSpeed < 1) currentSpeed = 1;
+
+        // 4. 计算耗时
+        // 时间 = 距离 / 速度
+        const costHours = dist / currentSpeed;
+
+        // 5. 执行时间流逝
+        // 这里会自动触发 TimeSystem 里的代谢 (自动扣饱食、加疲劳)
+        // 如果你想让"走路"比"发呆"更累，可以传第三个参数 extraFatigueCost
+        // 例如：每走100里额外多累1点 -> TimeSystem.passTime(costHours, 0, dist/100);
+        // 目前先按你的需求，只传时间：
+        if (window.TimeSystem) {
+            TimeSystem.passTime(costHours);
+        }
+
+        // 6. 移动并更新
         player.x = tx;
         player.y = ty;
 
         this._checkRegion(tx, ty);
 
-        if(window.showToast && dist > 5) window.showToast(`行进 ${Math.floor(dist)} 里`);
+        // 提示信息
+        let toastMsg = `行进 ${Math.floor(dist)} 里`;
+        if (isTired) {
+            toastMsg += ` (疲劳过度，行路缓慢)`;
+        }
+        if(window.showToast && dist > 5) window.showToast(toastMsg);
+
         if(window.saveGame) window.saveGame();
     },
 
