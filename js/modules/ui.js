@@ -12,6 +12,8 @@ function enterGameScene() {
         game.classList.add('active');
         updateUI();
     }
+
+    if (window.initMap) window.initMap();
 }
 
 function updateUI() {

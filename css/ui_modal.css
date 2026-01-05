@@ -1,4 +1,4 @@
-/* css/ui_modal.css - 弹窗系统样式 (适配自定义宽高) */
+/* css/ui_modal.css - 弹窗系统样式 (适配自定义宽高 + 大地图优化) */
 
 /* --- 1. 全屏遮罩层 --- */
 .modal {
@@ -73,12 +73,10 @@
 
 /* 类型A: 交互大弹窗 (背包/商店) */
 .ink_modal_box.modal_interactive {
-    /* 移除固定的 width/height，让 JS 控制或自适应 */
     width: auto;
     height: auto;
-    /* 【关键修改】最小宽度设小一点，防止在窄屏或自定义小尺寸时无法缩小 */
     min-width: 320px;
-    /* 如果 JS 没传参，这里给一个保底的推荐尺寸，但不再是强制 */
+    /* 推荐尺寸 */
     width: 75vw;
     height: 75vh;
 }
@@ -188,7 +186,7 @@
 /* 1. 针对“选项列表”类型的弹窗 */
 .modal_selection {
     width: 25vw;
-    min-width: 300px; /* 调小最小宽度以适配 */
+    min-width: 300px;
     max-width: 600px;
 }
 
@@ -200,7 +198,7 @@
     padding-top: 15px;
     border-top: 1px solid #eee;
     margin-top: 10px;
-    flex-wrap: wrap; /* 关键：允许换行 */
+    flex-wrap: wrap;
 }
 
 /* 3. 美化按钮 */
@@ -234,19 +232,160 @@
     background-color: #f9f9f9;
 }
 
-/* 核心修复：当弹窗容器带有 .modal_bag 类时，重置 body 样式 */
-/* 注意：这里通过父级类名渗透修改子元素 */
+/* 修复弹窗容器带有 .modal_bag 类时的样式 */
 .ink_modal_box.modal_bag #modal_body {
-    padding: 0 !important;       /* 去掉内边距，让背包贴边显示 */
-    overflow: hidden !important; /* 禁止外层滚动，只允许背包内部滚动 */
-    display: flex;               /* 开启 Flex 布局 */
-    flex-direction: column;      /* 垂直排列 */
+    padding: 0 !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
 }
 
-/* 修复弹窗头部和底部的层级，防止被遮挡 */
 .ink_modal_box.modal_bag #modal_header,
 .ink_modal_box.modal_bag #modal_footer {
-    flex-shrink: 0; /* 禁止被压缩 */
+    flex-shrink: 0;
     z-index: 10;
     position: relative;
+}
+
+
+/* === 大地图全屏弹窗专用样式 === */
+
+/* 大地图外框 */
+.modal_map_box {
+    width: 90vw !important;
+    height: 90vh !important;
+    max-width: none !important;
+    padding: 0 !important;
+    background: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 地图画布容器 */
+#full_map_canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 地图悬浮提示 */
+#map_view_tooltip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    white-space: pre-line;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.map_tooltip_title {
+    font-weight: bold;
+    color: #ffb74d;
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+
+.map_tooltip_desc {
+    color: #ddd;
+    font-size: 12px;
+}
+
+/* 地图布局包裹层 */
+.map_layout_wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+    /* 去除背景色，避免透出缝隙 */
+    background: #fff;
+}
+
+/* 左侧地图操作区 */
+.map_view_container {
+    flex: 1;
+    position: relative;
+    background: #f4f4f4;
+    overflow: hidden;
+    cursor: grab;
+}
+.map_view_container:active {
+    cursor: grabbing;
+}
+
+/* 右侧详情栏 (填满高度，无留白) */
+.map_sidebar {
+    width: 360px; /* 宽度适应大字体 */
+    margin: 0; /* 【关键】去除 Margin，填满右侧 */
+    background: #fff;
+    border-left: 1px solid #ccc; /* 仅保留左边框 */
+    border-radius: 0; /* 去除圆角 */
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: none; /* 去除阴影，因为是平铺 */
+
+    /* 大字体设置 */
+    font-size: 26px;
+    line-height: 1.5;
+    color: #333;
+}
+
+/* 侧边栏头部 */
+.map_sidebar_header {
+    padding: 20px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+}
+
+.map_sidebar_title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-family: Kaiti, serif;
+}
+
+.map_sidebar_type {
+    font-size: 24px;
+    color: #fff;
+    background: #8d6e63;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* 内容区域 */
+.map_sidebar_content {
+    padding: 25px;
+    flex: 1;
+    overflow-y: auto;
+    font-size: 26px;
+    color: #444;
+}
+
+/* 空状态 */
+.map_empty_state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #aaa;
+    text-align: center;
+    padding: 20px;
+}
+
+.map_empty_icon {
+    font-size: 60px;
+    margin-bottom: 20px;
 }
