@@ -1,8 +1,9 @@
 // js/core/utils_item.js
-
+// 物品核心逻辑工具箱 (修复物品使用效果：恢复/永久属性/Buff)
 console.log("加载 物品工具类");
 
 const UtilsItem = {
+    // 获取书籍状态
     getBookStatus: function(itemId) {
         if (player.skills && player.skills[itemId]) {
             return { text: "已学会", color: "#4caf50", isLearned: true };
@@ -14,6 +15,7 @@ const UtilsItem = {
         return { text: "未读", color: "#999", isUnread: true };
     },
 
+    // 获取技能等级名称
     getSkillLimitName: function(level) {
         if (window.SKILL_CONFIG && window.SKILL_CONFIG.levelNames) {
             return window.SKILL_CONFIG.levelNames[level] || `Lv.${level}`;
@@ -21,6 +23,7 @@ const UtilsItem = {
         return `Lv.${level}`;
     },
 
+    // 物品类型 -> 装备槽位
     getEquipSlot: function(itemType) {
         switch (itemType) {
             case 'weapon': return 'weapon';
@@ -29,46 +32,126 @@ const UtilsItem = {
             case 'feet': return 'feet';
             case 'mount': return 'mount';
             case 'fishing_rod': return 'fishing_rod';
-            case 'tool': return 'weapon';
+            case 'tool': return 'weapon'; // 工具暂用武器槽
             default: return null;
         }
     },
 
     /* ================= 动作逻辑 ================= */
 
+    /**
+     * 使用物品 (吃丹药/食物)
+     * 【核心修复】实现恢复、永久加成、临时Buff
+     */
     useItem: function(inventoryIndex) {
         const itemSlot = player.inventory[inventoryIndex];
         if (!itemSlot) return;
+
         const item = GAME_DB.items.find(i => i.id === itemSlot.id);
         if (!item) return;
-        console.log(`使用物品: ${item.name}`);
-        let consumed = true;
+
+        console.log(`尝试使用物品: ${item.name}`);
+
+        // 1. 类型检查
         if (item.type === 'book') {
-            consumed = false;
             if (window.showToast) window.showToast(`请在主界面选择 [研读] 来阅读 ${item.name}`);
-        } else if (['food', 'pill', 'foodMaterial', 'herb'].includes(item.type)) {
-            if (window.showToast) window.showToast(`使用了 ${item.name}`);
-        } else {
-            if (window.showToast) window.showToast("该物品无法直接使用");
-            consumed = false;
+            return;
         }
-        if (consumed) {
+
+        if (!['food', 'pill', 'foodMaterial', 'herb'].includes(item.type)) {
+            if (window.showToast) window.showToast("该物品无法直接使用");
+            return;
+        }
+
+        // 2. 应用效果
+        let applied = false;
+        let msg = `使用了 ${item.name}`;
+
+        if (item.effects) {
+            // A. 基础恢复 (HP/MP/饱食度)
+            if (item.effects.hp) {
+                player.status.hp = Math.min(player.derived.hpMax, player.status.hp + item.effects.hp);
+                applied = true;
+            }
+            if (item.effects.mp) {
+                player.status.mp = Math.min(player.derived.mpMax, player.status.mp + item.effects.mp);
+                applied = true;
+            }
+            if (item.effects.hunger) {
+                player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + item.effects.hunger);
+                applied = true;
+            }
+
+            // B. 丹毒 (Toxicity)
+            if (item.effects.toxicity) {
+                // 确保 toxicity 存在
+                if(player.status.toxicity === undefined) player.status.toxicity = 0;
+                player.status.toxicity += item.effects.toxicity;
+                if(player.status.toxicity < 0) player.status.toxicity = 0;
+                applied = true;
+            }
+
+            // C. 永久属性加成 (exAttr)
+            // 遍历 effects，如果是 jing/qi/shen/atk/def 等属性，则视为永久加成
+            const permAttrs = ['jing', 'qi', 'shen', 'atk', 'def', 'speed', 'hpMax', 'mpMax'];
+            permAttrs.forEach(key => {
+                if (item.effects[key]) {
+                    if (!player.exAttr) player.exAttr = {};
+                    if (!player.exAttr[key]) player.exAttr[key] = 0;
+
+                    player.exAttr[key] += item.effects[key];
+                    applied = true;
+                    // msg += ` (${key}+${item.effects[key]})`;
+                }
+            });
+
+            // D. 临时 Buff (buff)
+            // 假设数据结构: item.effects.buff = { attr: "atk", val: 10, days: 3 }
+            if (item.effects.buff) {
+                const b = item.effects.buff;
+                if (b.attr && b.val && b.days) {
+                    if (!player.buffs) player.buffs = {};
+
+                    // 以物品ID作为 Key，防止同种药叠加出无限个条目
+                    // 或者允许覆盖刷新
+                    player.buffs[item.id] = {
+                        attr: b.attr,
+                        val: b.val,
+                        days: b.days,
+                        name: item.name // 存入名字，方便 UI 显示
+                    };
+
+                    applied = true;
+                    // msg += ` (获得状态: ${item.name})`;
+                }
+            }
+        }
+
+        // 3. 消耗物品
+        if (applied || item.type === 'food') { // 食物即使没加属性也算吃掉了
             itemSlot.count--;
             if (itemSlot.count <= 0) {
                 player.inventory.splice(inventoryIndex, 1);
             }
+
+            if (window.showToast) window.showToast(msg);
+
+            // 4. 刷新系统
             if (window.recalcStats) window.recalcStats();
             this._refreshAllUI();
+
+            // 5. 【关键】自动保存 (防止刷新丢失 Buff)
+            if (window.saveGame) {
+                window.saveGame();
+                console.log("[UtilsItem] 物品使用完毕，已存档");
+            }
+        } else {
+            if (window.showToast) window.showToast("使用了，但似乎没什么效果");
         }
     },
 
     /**
      * 装备物品
-     * 【新增】装备要求检查
-     */
-    /**
-     * 装备物品
-     * 【修正】装备要求检查 (使用 player.derived 最终属性)
      */
     equipItem: function(inventoryIndex) {
         const itemSlot = player.inventory[inventoryIndex];
@@ -82,21 +165,17 @@ const UtilsItem = {
             return;
         }
 
-        // 2. 【核心修正】检查属性要求
+        // 2. 检查属性要求 (使用 derived)
         if (item.req) {
-            // 使用最终计算后的属性 (derived)，而非基础属性 (attr)
-            // 如果 derived 还没计算过，兜底用 attr
             const currentStats = player.derived || player.attr || {};
-
             for (let key in item.req) {
                 const reqVal = item.req[key];
                 const myVal = currentStats[key] || 0;
 
                 if (myVal < reqVal) {
-                    // 获取中文属性名
                     const attrName = (typeof ATTR_MAPPING !== 'undefined' ? ATTR_MAPPING[key] : key);
                     if(window.showToast) window.showToast(`修为不足：${attrName}需达到 ${reqVal}`);
-                    return; // 属性不足，中止装备
+                    return;
                 }
             }
         }
@@ -104,32 +183,50 @@ const UtilsItem = {
         // 3. 执行装备逻辑
         if (!player.equipment) player.equipment = {};
         const oldEquipId = player.equipment[slot];
+
+        // 卸下旧的 (自动回包)
         if (oldEquipId) {
-            UtilsAdd.addItem(oldEquipId, 1);
+            if (window.UtilsAdd) window.UtilsAdd.addItem(oldEquipId, 1);
         }
+
         player.equipment[slot] = item.id;
+
+        // 扣除新的
         itemSlot.count--;
         if (itemSlot.count <= 0) {
             player.inventory.splice(inventoryIndex, 1);
         }
+
         if (window.showToast) window.showToast(`装备了 ${item.name}`);
         if (window.recalcStats) window.recalcStats();
+
         this._refreshAllUI();
+
+        // 存档
+        if (window.saveGame) window.saveGame();
     },
 
+    /**
+     * 卸下物品
+     */
     unequipItem: function(slotKey) {
         if (!player.equipment || !player.equipment[slotKey]) return;
         const itemId = player.equipment[slotKey];
-        UtilsAdd.addItem(itemId, 1);
+
+        if (window.UtilsAdd) window.UtilsAdd.addItem(itemId, 1);
         player.equipment[slotKey] = null;
+
         if (window.recalcStats) window.recalcStats();
         this._refreshAllUI();
+
+        if (window.saveGame) window.saveGame();
     },
 
     discardItem: function(inventoryIndex) {
         if (!confirm("确定要丢弃该物品吗？")) return;
         player.inventory.splice(inventoryIndex, 1);
         this._refreshAllUI();
+        if (window.saveGame) window.saveGame();
     },
 
     /* ================= 批量操作逻辑 ================= */
@@ -159,6 +256,7 @@ const UtilsItem = {
         });
         if(window.showToast) window.showToast("行囊已整备完毕");
         this._refreshAllUI();
+        if (window.saveGame) window.saveGame();
     },
 
     discardMultipleItems: function(indices) {
@@ -171,6 +269,7 @@ const UtilsItem = {
         if (deletedCount > 0) {
             if(window.showToast) window.showToast(`已批量丢弃 ${deletedCount} 样物品`);
             this._refreshAllUI();
+            if (window.saveGame) window.saveGame();
         }
     },
 

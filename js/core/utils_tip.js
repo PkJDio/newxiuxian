@@ -1,7 +1,7 @@
 // js/core/utils_tip.js
 // 悬浮窗专用管理器 (Tooltip System)
 // 优化版：自动隐藏数值为 0 的属性，隐藏 max_skill_level 属性(头部已显示)
-// 【新增】功法境界显示增强，宽度自适应长名字
+// 【新增】属性详情中显示 Buff 剩余时间
 console.log("加载 悬浮窗系统");
 
 const TooltipManager = {
@@ -53,23 +53,44 @@ const TooltipManager = {
         const breakdown = window.player && window.player.statBreakdown ? window.player.statBreakdown[key] : [];
         let html = `<div class="tt_title">${label}详情</div>`;
         let hasContent = false;
+
         if (breakdown && breakdown.length > 0) {
             breakdown.forEach(b => {
+                // 【优化】如果数值是 0，不显示
                 if (b.val === 0) return;
+
                 const valStr = b.val > 0 ? `+${b.val}` : `${b.val}`;
                 const colorClass = b.val > 0 ? 'tt_pos' : 'tt_neg';
-                html += `<div class="tt_row"><span>${b.label}</span><span class="${colorClass}">${valStr}</span></div>`;
+
+                // 【新增】显示剩余天数
+                let extraHtml = '';
+                if (b.days) {
+                    extraHtml = `<span style="font-size:12px; color:#888; margin-left:4px;">(${b.days}天)</span>`;
+                }
+
+                html += `
+                  <div class="tt_row">
+                    <span>${b.label}</span>
+                    <div>
+                        <span class="${colorClass}">${valStr}</span>
+                        ${extraHtml}
+                    </div>
+                  </div>`;
                 hasContent = true;
             });
         }
-        if (!hasContent) html += `<div class="tt_desc">暂无加成来源</div>`;
-        this.el.className = 'ink_tooltip';
+
+        if (!hasContent) {
+            html += `<div class="tt_desc">暂无加成来源</div>`;
+        }
+
+        this.el.className = 'ink_tooltip'; // 基础样式
         this.el.innerHTML = html;
         this.el.classList.remove('hidden');
         this._move(e);
     },
 
-    /* ================= 2. 普通物品 ================= */
+    /* ================= 2. 普通物品 (背包/地图) ================= */
     showItem: function(e, itemId, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, itemId); return; }
         this._init();
