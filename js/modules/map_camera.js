@@ -160,23 +160,7 @@ const MapCamera = {
         let currentSpeed = player.derived.speed || 2;
         if (currentSpeed <= 0) currentSpeed = 1; // 防止除以0
 
-        // 2. 计算效率乘区 (核心修改)
-        let efficiency = 1.0;
 
-        // 检查疲劳 Buff
-        if (player.buffs && player.buffs['debuff_fatigue']) {
-            efficiency *= 0.5;
-        }
-        // 检查饥饿 Buff
-        if (player.buffs && player.buffs['debuff_hunger']) {
-            efficiency *= 0.5;
-        }
-
-        // 应用效率
-        currentSpeed = currentSpeed * efficiency;
-
-        // 防止速度过慢变成0 (至少保留1点速度)
-        if (currentSpeed < 1) currentSpeed = 1;
 
         // 4. 计算耗时
         // 时间 = 距离 / 速度

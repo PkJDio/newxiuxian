@@ -54,57 +54,49 @@ function initGameDB() {
 
 /**
  * 重新计算玩家所有属性 (Derived Stats)
- * 逻辑：基础 -> 转世 -> 装备 -> 功法 -> Buff -> 转化
+ * 逻辑：基础 -> 转世 -> 装备 -> 功法 -> Buff -> 转化 -> 【惩罚扣减】 -> 收尾
  */
 function recalcStats() {
     if (!player) return;
 
     // 1. 初始化 derived (最终属性) 和 breakdown (数值构成详情)
-    // 必须清零，否则会重复累加
     player.derived = {
         jing: 0, qi: 0, shen: 0,
         atk: 0, def: 0, speed: 0,
         hpMax: 0, mpMax: 0, hungerMax: 100,
-        space: 200, // 基础背包空间
-        fatigueMax: 100, // 新增：疲劳上限
+        space: 200,
+        fatigueMax: 100, // 疲劳上限
     };
 
-    // 初始化统计详情 (用于悬浮窗显示：攻击由什么构成)
+    // 初始化统计详情
     player.statBreakdown = {};
 
     // --- 内部辅助函数：累加属性并记录来源 ---
-    // key: 属性名 (如 'atk'), val: 数值, source: 来源名称 (如 '铁剑')
-    // 【新增】extra参数，用于传递额外信息（如剩余天数）
+    // 支持传入负数（用于扣减属性）
     const add = (key, val, source, extra = null) => {
-        if (!val || val === 0) return;
+        if (val === 0) return; // 0不处理，但允许负数
 
         // 确保 derived 中有这个字段
         if (player.derived[key] === undefined) player.derived[key] = 0;
 
-        // 累加数值
+        // 累加数值 (如果是负数，这里自然就是减法)
         player.derived[key] += val;
 
-        // 记录详情 (用于 Tooltip)
+        // 记录详情
         if (!player.statBreakdown[key]) player.statBreakdown[key] = [];
 
-        // 构建详情条目
         let entry = { label: source, val: val };
-        // 如果有额外信息，合并进去
-        if (extra) {
-            Object.assign(entry, extra);
-        }
+        if (extra) Object.assign(entry, extra);
         player.statBreakdown[key].push(entry);
     };
 
     // ================= A. 基础层 =================
-
-    // 2. 基础属性 (player.attr)
-    // 包含了：初始随机值 + 吃丹药/食物永久增加的值
+    // 2. 基础属性
     for (let k in player.attr) {
         add(k, player.attr[k], "基础属性");
     }
 
-    // 3. 转世/参悟加成 (player.bonus_stats)
+    // 3. 转世/参悟加成
     if (player.bonus_stats) {
         for (let k in player.bonus_stats) {
             add(k, player.bonus_stats[k], "转世参悟");
@@ -112,7 +104,6 @@ function recalcStats() {
     }
 
     // ================= B. 装备层 =================
-
     // 4. 装备加成
     if (player.equipment) {
         const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'fishing_rod'];
@@ -128,15 +119,12 @@ function recalcStats() {
             }
         });
 
-        // 5. 装备中的功法 (外功/内功) - 【核心修改】
+        // 5. 装备中的功法
         ['gongfa_ext', 'gongfa_int'].forEach(type => {
             const list = player.equipment[type];
             if (Array.isArray(list)) {
                 list.forEach(skillId => {
                     if (!skillId) return;
-
-                    // 使用 UtilsSkill 计算实际加成后的属性
-                    // 注意：要确保 UtilsSkill 已加载
                     if (window.UtilsSkill) {
                         const skillInfo = UtilsSkill.getSkillInfo(skillId);
                         if (skillInfo && skillInfo.finalEffects) {
@@ -145,7 +133,6 @@ function recalcStats() {
                             }
                         }
                     } else {
-                        // 降级处理：如果没有 UtilsSkill，读基础值 (防止报错)
                         const item = GAME_DB.items.find(i => i.id === skillId);
                         if (item && item.effects) {
                             for (let k in item.effects) {
@@ -158,31 +145,22 @@ function recalcStats() {
         });
     }
 
-    // ================= C. 状态层 =================
-
-    // 6. 临时 Buff (Buffs)
+    // ================= C. 状态层 (加成类) =================
+    // 6. 临时 Buff (增加属性的Buff)
     if (player.buffs) {
-        // 兼容对象遍历 (如果你的 buffs 结构是 {id: {attr, val, days}})
         for (let buffId in player.buffs) {
             const buff = player.buffs[buffId];
-            // 确保有属性且未过期
-            if (buff.days > 0 && buff.attr && buff.val) {
-                let buffName = buff.name || "状态"; // 优先用存的名字
-
-                // 如果名字是默认的"状态"，尝试反查物品名
+            if (buff.days > 0 && buff.attr && buff.val && typeof buff.val === 'number') { // 确保 val 是数字
+                let buffName = buff.name || "状态";
                 if (buffName === "状态") {
                     const srcItem = GAME_DB.items.find(i => i.id === buffId);
                     if (srcItem) buffName = srcItem.name;
                 }
-
-                // 【关键修改】传入 days 信息
                 add(buff.attr, buff.val, buffName, { days: buff.days });
             }
         }
-        // 如果你的 buffs 是数组结构 (Array)，需要额外的逻辑，但目前看你的 utils_item.js 是用的对象结构
     }
 
-    // 永久属性 exAttr (如果有的话，虽然通常合并进 attr 了，但如果有独立字段也加上)
     if (player.exAttr) {
         for (let k in player.exAttr) {
             add(k, player.exAttr[k], "永久加成");
@@ -190,35 +168,71 @@ function recalcStats() {
     }
 
     // ================= D. 转化层 (精气神 -> 二级属性) =================
-
-    // 7. 属性转化规则 (Xianxia 设定)
-    // 获取当前已计算出的精气神总值
+    // 7. 属性转化规则
     const totalJing = player.derived.jing || 0;
     const totalQi   = player.derived.qi || 0;
     const totalShen = player.derived.shen || 0;
 
-    // 转化公式：
-    // 1 精 = 10 HP上限 + 0.5 防御
     add('hpMax', totalJing * 10, "精 转化 ");
     add('def',   Math.floor(totalJing * 0.5), "精 转化");
-
-    // 1 气 = 5 MP上限
     add('mpMax', totalQi * 5, "气 转化");
-
-    // 1 神 = 1 攻击 + 0.2 速度
     add('atk',   totalShen * 1, "神 转化");
     add('speed', Math.floor(totalShen * 0.2), "神 转化");
 
-    // ================= E. 收尾 =================
 
-    // 8. 状态修正 (防止当前血量超过新上限)
+    // ================= E. 状态惩罚 (疲劳/饥饿) 【新增部分】 =================
+    // 在计算完所有增加项后，最后进行乘法惩罚
+    // 我们通过计算出“损失值”，以负数的形式 add 进去
+    // 这样 UI 上就会显示： 攻击力 100 ...  身体状态 -50 = 最终 50
+
+    let efficiency = 1.0;
+
+    // 检查是否有 Debuff (根据我们在 time.js 里定义的 ID)
+    const hasFatigue = player.buffs && player.buffs['debuff_fatigue'];
+    const hasHunger = player.buffs && player.buffs['debuff_hunger'];
+
+    // 叠加乘法效率
+    if (hasFatigue) efficiency *= 0.5;
+    if (hasHunger) efficiency *= 0.5;
+
+    // 如果效率小于 100%，则计算并应用扣除
+    if (efficiency < 1.0) {
+        // 计算损失比例 (例如 efficiency 0.25, lossRatio 就是 0.75)
+        const lossRatio = 1.0 - efficiency;
+
+        // 获取当前已累计的属性值
+        const currentAtk = player.derived.atk || 0;
+        const currentDef = player.derived.def || 0;
+        const currentSpeed = player.derived.speed || 0;
+
+        // 计算损失的具体数值 (向下取整)
+        // 使用负数传入 add 函数
+        const lostAtk = Math.floor(currentAtk * lossRatio);
+        const lostDef = Math.floor(currentDef * lossRatio);
+        const lostSpeed = Math.floor(currentSpeed * lossRatio);
+
+        // 如果数值大于0，则添加一条负数记录
+        // 来源显示为 "身体状态" 或 "虚弱"
+        if (lostAtk > 0) add('atk', -lostAtk, "身体状态(虚弱)");
+        if (lostDef > 0) add('def', -lostDef, "身体状态(虚弱)");
+        if (lostSpeed > 0) add('speed', -lostSpeed, "身体状态(虚弱)");
+    }
+
+    // ================= F. 收尾 =================
+
+    // 8. 状态修正 (Clamp)
+    // 确保当前值不超过上限
     if (player.status.hp > player.derived.hpMax) player.status.hp = player.derived.hpMax;
     if (player.status.mp > player.derived.mpMax) player.status.mp = player.derived.mpMax;
-    // 饥饿度上限通常固定，但也可以被功法加成
     if (player.status.hunger > player.derived.hungerMax) player.status.hunger = player.derived.hungerMax;
-    // 疲劳度不需要限制最小值，但不能超过最大值 (虽然通常是0开始增加)
-    if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
+
+    // 疲劳值逻辑：不锁最大值(允许溢出触发Debuff)，但不能小于0
+    // if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
     if (player.status.fatigue < 0) player.status.fatigue = 0;
+
+    // 兜底：防止速度被扣成0导致无法移动
+    if (player.derived.speed < 1) player.derived.speed = 1;
+    if (player.derived.atk < 1) player.derived.atk = 1;
 }
 
 // 暴露给全局
