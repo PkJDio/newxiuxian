@@ -65,7 +65,8 @@ function recalcStats() {
         jing: 0, qi: 0, shen: 0,
         atk: 0, def: 0, speed: 0,
         hpMax: 0, mpMax: 0, hungerMax: 100,
-        space: 20 // 基础背包空间
+        space: 200, // 基础背包空间
+        fatigueMax: 100, // 新增：疲劳上限
     };
 
     // 初始化统计详情 (用于悬浮窗显示：攻击由什么构成)
@@ -215,6 +216,9 @@ function recalcStats() {
     if (player.status.mp > player.derived.mpMax) player.status.mp = player.derived.mpMax;
     // 饥饿度上限通常固定，但也可以被功法加成
     if (player.status.hunger > player.derived.hungerMax) player.status.hunger = player.derived.hungerMax;
+    // 疲劳度不需要限制最小值，但不能超过最大值 (虽然通常是0开始增加)
+    if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
+    if (player.status.fatigue < 0) player.status.fatigue = 0;
 }
 
 // 暴露给全局

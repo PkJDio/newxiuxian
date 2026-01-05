@@ -57,6 +57,7 @@
                 <div class="bar_row"><span>💧 法力</span> <span id="val_mp">50/50</span></div>
                 <div class="bar_row"><span>🍖 饱食</span> <span id="val_hunger">100/100</span></div>
                 <div class="separator_line"></div>
+
                 <div class="attr_row"><span>⚔️ 攻击</span> <span id="val_atk">5</span></div>
                 <div class="attr_row"><span>🛡️ 防御</span> <span id="val_def">1</span></div>
                 <div class="attr_row"><span>🦶 速度</span> <span id="val_speed">10</span></div>
@@ -79,9 +80,8 @@
             <div id="center_toolbar">
                 <button id="btn_open_map" class="ink_btn_tab">🗺️ 地图</button>
                 <button id="btn_open_bag" class="ink_btn_tab" onclick="openBag()">🎒 行囊</button>
-                <button id="btn_open_skill" class="ink_btn_tab">📚 技能</button>
                 <button id="btn_open_gongfa" class="ink_btn_tab" onclick="console.log('HTML内联点击'); if(window.UISkill) UISkill.open(); else alert('UISkill未加载');">
-                    🧘 功法
+                    🎨 技艺
                 </button>
                 <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
             </div>
@@ -118,8 +118,6 @@
                     <button class="act_btn" onclick="doEat()">🍖 进食</button>
                     <button class="act_btn" onclick="doWater()">💧 打水</button>
                     <button class="act_btn" onclick="doShop()">⚖️ 集市</button>
-                    <button class="act_btn btn_locked">🔒</button>
-                    <button class="act_btn btn_locked">🔒</button>
                 </div>
             </div>
         </div>
@@ -175,5 +173,16 @@
     <script src="js/modules/ui_skill.js"></script>
     <script src="js/main.js"></script>
 
+    <script src="js/action/util_gather.js"></script>
+    <script src="js/action/util_study.js"></script>
+    <script src="js/action/util_train.js"></script>
+    <script src="js/action/util_rest.js"></script>
+    <script src="js/action/util_cook.js"></script>
+    <script src="js/action/util_fish.js"></script>
+    <script src="js/action/util_eat.js"></script>
+    <script src="js/action/util_water.js"></script>
+    <script src="js/action/util_shop.js"></script>
+
+    <script src="js/action/time.js"></script>
 </body>
 </html>

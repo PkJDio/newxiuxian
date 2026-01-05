@@ -53,6 +53,18 @@ function updateUI() {
     setBar('val_mp', player.status.mp, player.derived.mpMax, 'mpMax');
     setBar('val_hunger', player.status.hunger, player.derived.hungerMax, 'hungerMax');
 
+    // 更新疲劳度 (新增)
+    const fatigue = player.status.fatigue || 0;
+    const maxFatigue = player.derived.fatigueMax || 100;
+    setBar('val_fatigue', fatigue, maxFatigue, 'fatigueMax');
+
+    // 【核心修改】更新时间显示
+    const elDate = document.getElementById('profile_date');
+    if (elDate && window.TimeSystem) {
+        elDate.innerText = TimeSystem.getTimeString();
+    }
+
+
     if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
 
     renderBuffs();

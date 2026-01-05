@@ -9,3 +9,12 @@
 @import 'ui_bag.css';       /* 7. 背包系统 (新) */
 @import 'ui_gallery.css';   /* 8. 图鉴系统 (新) */
 @import "ui_skill.css";     /* 9. 技能系统 (新) */
+@import "ui_shop.css";
+@import "ui_cook.css";
+@import "ui_eat.css";
+@import "ui_fish.css";
+@import "ui_gather.css";
+@import "ui_rest.css";
+@import "ui_study.css";
+@import "ui_train.css";
+@import "ui_water.css";

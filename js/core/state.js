@@ -70,7 +70,7 @@ function attemptDie() {
       newPlayer = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
     } else {
       console.error("【Debug】错误：找不到 PLAYER_TEMPLATE");
-      newPlayer = { attr:{jing:10,qi:10,shen:10}, status:{hp:100,mp:100}, money:0, inventory:[], skills:{}, lifeSkills:{}, bonus_stats:{} };
+      newPlayer = { attr:{jing:5,qi:5,shen:5}, status:{hp:100,mp:100}, money:0, inventory:[], skills:{}, lifeSkills:{}, bonus_stats:{} };
     }
 
     const nextGen = (player.generation || 1) + 1;
