@@ -1,217 +1,150 @@
-// 存档管理：player对象, globalMeta, save/load
-console.log("加载 存档管理")
+// js/core/state.js
+// 核心状态管理：定义玩家模板、兵解逻辑
+console.log("加载 状态管理");
 
-/* ================= 状态与存档管理 ================= */
+// ==========================================
+// 1. 定义玩家标准模板 (Schema)
+// 所有新字段必须在这里定义，读档时才能自动补全
+// ==========================================
+window.PLAYER_TEMPLATE = {
+    name: "无名道友",
+    generation: 1,
+    age: 16,
+    money: 0,
+    worldSeed: 0, // 世界随机种子
+    location: "t_xianyang", // 默认出生地
 
-// 全局玩家对象
+    // 时间系统
+    time: { year: 37, month: 1, day: 1, hour: 0 },
+
+    // 基础属性 (先天)
+    attr: { jing: 10, qi: 10, shen: 10 },
+
+    // 当前状态 (动态变化)
+    status: {
+        hp: 100,
+        mp: 50,
+        hunger: 100,
+        fatigue: 0  // 【新增】确保模板里有这个字段！
+    },
+
+    // 衍生属性 (计算得出，这里只需占位)
+    derived: {
+        hpMax: 100, mpMax: 50,
+        hungerMax: 100, fatigueMax: 100,
+        atk: 0, def: 0, speed: 10
+    },
+
+    // 容器与集合
+    inventory: [], // 背包
+    equipment: {   // 装备槽
+        weapon: null, head: null, body: null, feet: null,
+        mount: null, tool: null, fishing_rod: null,
+        gongfa_ext: [], gongfa_int: []
+    },
+    skills: {},     // 已学技能
+    lifeSkills: {}, // 生活技能
+    buffs: {},      // Buff状态
+    bonus_stats: {}, // 轮回属性加成
+    exAttr: {}      // 永久属性加成
+};
+
+// 全局玩家对象初始化
 var player = null;
 
-/**
- * 保存游戏
- */
-function saveGame() {
-  if (!player) return;
-  try {
-    const dataStr = JSON.stringify(player);
-    localStorage.setItem(SAVE_KEY, dataStr);
 
-    // 注意：这里会添加一条日志
-    if (window.LogManager) {
-      // window.LogManager.add("<span class='text_green'>存档成功！道心已固。</span>");
-    } else {
-      // if(window.showToast) window.showToast("存档成功");
-    }
-    console.log("游戏已保存");
-  } catch (e) {
-    console.error("存档失败", e);
-    alert("存档失败，空间不足或权限受限");
-  }
-}
-
-/**
- * 读取游戏
- */
-function loadGame() {
-  try {
-    const dataStr = localStorage.getItem(SAVE_KEY);
-    if (!dataStr) return false;
-    const data = JSON.parse(dataStr);
-    if (!data || typeof data !== 'object') throw new Error("存档数据格式错误");
-
-    window.player = data;
-    console.log("读取存档成功");
-    return true;
-  } catch (e) {
-    console.error("读取存档失败（坏档）:", e);
-    localStorage.removeItem(SAVE_KEY);
-    window.player = null;
-    if (window.showWarningModal) {
-      window.showWarningModal("天地大劫", "存档数据异常，需重置世界。", function() { window.location.reload(); });
-    } else {
-      alert("存档已损坏，系统将自动重置。");
-      window.location.reload();
-    }
-    return false;
-  }
-}
-
-/**
- * 兵解 (重置/转世)
- * 核心逻辑：继承技能 -> 保存新档 -> 清空日志 -> 返回主页
- */
+// ==========================================
+// 2. 兵解 (轮回) 逻辑
+// ==========================================
 function attemptDie() {
-  // 定义兵解的具体执行逻辑 (点击弹窗"确定"后执行)
-  const executeDie = function() {
-    console.log("【Debug】=== 开始执行兵解逻辑 ===");
+    // 定义具体的执行逻辑
+    const executeDie = function() {
+        console.log("【Debug】=== 执行兵解 ===");
 
-    // 1. 准备新身体
-    let newPlayer;
-    if (typeof PLAYER_TEMPLATE !== 'undefined') {
-      newPlayer = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
-    } else {
-      console.error("【Debug】错误：找不到 PLAYER_TEMPLATE");
-      newPlayer = { attr:{jing:5,qi:5,shen:5}, status:{hp:100,mp:100}, money:0, inventory:[], skills:{}, lifeSkills:{}, bonus_stats:{} };
-    }
+        // 1. 基于模板创建新身体
+        let newPlayer = JSON.parse(JSON.stringify(window.PLAYER_TEMPLATE));
 
-    const nextGen = (player.generation || 1) + 1;
-    console.log("【Debug】新世数:", nextGen);
+        // 2. 计算继承数据
+        const nextGen = (player.generation || 1) + 1;
+        let legacyStats = player.bonus_stats || {};
 
-    // 2. === 核心继承逻辑 (保留功法加成) ===
-    let legacyStats = player.bonus_stats || {};
-
-    if (player.skills) {
-        for (let skillId in player.skills) {
-            const oldSkill = player.skills[skillId];
-            const itemData = GAME_DB.items.find(i => i.id === skillId);
-            if (!itemData) continue;
-
-            let newSkillEntry = {
-                level: 0,
-                exp: 0,
-                mastered: oldSkill.mastered || false
-            };
-
-            // 判断是否满足参悟条件 (满级或高熟练度)
-            const isMaxLevel = oldSkill.level >= 3 || oldSkill.exp >= 999; // 根据你的配置调整阈值
-
-            // 如果满足条件，标记为参悟
-            if (isMaxLevel) {
-                newSkillEntry.mastered = true;
-            }
-
-            // 【核心修正】只要是参悟状态（不管是以前参悟的，还是刚刚参悟的），都计算属性加成
-            if (newSkillEntry.mastered) {
-                const rarity = itemData.rarity || 1;
-                // 获取难度系数作为属性加成值
-                const difficulty = (SKILL_CONFIG.difficulty && SKILL_CONFIG.difficulty[rarity]) ? SKILL_CONFIG.difficulty[rarity] : 1.0;
-
-                // 简单的属性转化逻辑：找该功法加成最高的那个属性，加到永久属性里
-                let bestAttr = null;
-                let maxVal = -1;
-                if (itemData.effects) {
-                    for (let key in itemData.effects) {
-                        if (key === 'max_skill_level' || key === 'map' || key === 'unlockRegion') continue;
-                        const val = itemData.effects[key];
-                        if (typeof val === 'number' && val > maxVal) {
-                            maxVal = val;
-                            bestAttr = key;
-                        }
+        // 功法继承逻辑 (保留大成属性)
+        if (player.skills) {
+            for (let skillId in player.skills) {
+                const oldSkill = player.skills[skillId];
+                // 只有大成(mastered)的功法才提供属性加成
+                if (oldSkill.mastered) {
+                    const itemData = GAME_DB.items.find(i => i.id === skillId);
+                    if (itemData) {
+                        // 简单处理：稀有度越高加成越多
+                        const bonusVal = (itemData.rarity || 1) * 1;
+                        // 假设加成到 'shen' (或者根据功法类型判断)
+                        if(!legacyStats.shen) legacyStats.shen = 0;
+                        legacyStats.shen += bonusVal;
                     }
                 }
-
-                if (bestAttr) {
-                    if (!legacyStats[bestAttr]) legacyStats[bestAttr] = 0;
-                    legacyStats[bestAttr] += difficulty; // 累加属性
-                    console.log(`【Debug】功法[${itemData.name}]提供轮回加成: ${bestAttr} +${difficulty}`);
-                }
             }
+        }
 
-            newPlayer.skills[skillId] = newSkillEntry;
+        // 3. 应用新属性
+        newPlayer.bonus_stats = legacyStats;
+        newPlayer.generation = nextGen;
+        newPlayer.name = "道友" + nextGen + "世";
+        newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
+
+        // 4. 覆盖全局
+        window.player = newPlayer;
+
+        // 5. 保存并刷新
+        if(window.saveGame) window.saveGame();
+
+        // 清理日志
+        if (window.LogManager) window.LogManager.clear();
+
+        // 刷新UI
+        if(window.recalcStats) window.recalcStats();
+        if(window.updateUI) window.updateUI();
+
+        // 回主页
+        backToMenu();
+        if (typeof checkSaveFile === 'function') checkSaveFile();
+        if(window.showToast) window.showToast("兵解成功，开启第 " + nextGen + " 世");
+    };
+
+    // 【UI 恢复】调用 ModalManager 的 showConfirmModal
+    // 优先检查 window.showConfirmModal，如果不存在则使用原生 confirm 兜底
+    if (window.showConfirmModal) {
+        window.showConfirmModal(
+            "兵解轮回",
+            `
+            <div style="text-align:center; padding:10px;">
+                <p class="text_red" style="font-weight:bold; font-size:18px; margin-bottom:15px;">警告：肉身将毁，修为尽失！</p>
+                <p style="color:#444; margin-bottom:5px;">你将保留所有<b style="color:#2b58a6">已学会的功法</b>（需重新修炼）。</p>
+                <p style="color:#444; margin-bottom:5px;">已<b style="color:#ceae04">大成</b>的功法将化为永久属性加成。</p>
+                <br>
+                <p style="font-weight:bold;">道友道心已决，确定要开启来世吗？</p>
+            </div>
+            `,
+            executeDie // 点击"确定"后执行的回调
+        );
+    } else {
+        // 兜底：防止 util_modal.js 没加载时报错
+        if(confirm("确定要兵解轮回吗？(保留大成功法加成，重置其他进度)")) {
+            executeDie();
         }
     }
-
-    if (player.lifeSkills) {
-      newPlayer.lifeSkills = JSON.parse(JSON.stringify(player.lifeSkills));
-    }
-
-    newPlayer.bonus_stats = legacyStats;
-    newPlayer.generation = nextGen;
-    newPlayer.name = "道友" + nextGen + "世";
-    newPlayer.location = "t_xianyang";
-    newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
-    console.log(newPlayer)
-    // 3. 覆盖全局对象
-    window.player = newPlayer;
-    console.log("【Debug】全局 player 对象已更新");
-
-    // 4. 保存新档 (这里会触发 LogManager.add("存档成功..."))
-    saveGame();
-    console.log("【Debug】新档已保存 (此时日志中应有'存档成功')");
-
-    // 5. === 关键步骤：清空日志 ===
-    // 我们在 saveGame 之后清空，确保把“存档成功”这条也删掉，保证干净
-    if (window.LogManager) {
-      console.log("【Debug】正在调用 LogManager.clear()...");
-      window.LogManager.clear();
-      console.log("【Debug】日志已清空");
-    } else {
-      console.error("【Debug】LogManager 未定义！");
-    }
-
-    // 6. 刷新界面数据 (虽然要回主页，但防止后台报错)
-    if(window.recalcStats) window.recalcStats();
-    if(window.updateUI) window.updateUI();
-
-    // 7. 返回主页
-    console.log("【Debug】正在返回主页...");
-    backToMenu();
-
-    // 8. 检查按钮状态 (确保主页按钮变成"继续道途")
-    // 因为这是异步的，可能需要一点延迟，或者直接假设 backToMenu 切换了 DIV，
-    // 而 main.js 里的 checkSaveFile() 需要被调用来更新按钮文字
-    if (typeof checkSaveFile === 'function') {
-      checkSaveFile();
-      console.log("【Debug】主页按钮状态已更新");
-    }
-
-    if(window.showToast) window.showToast("兵解成功，轮回开启");
-    console.log("【Debug】=== 兵解逻辑执行完毕 ===");
-  };
-
-  // 调用新的双选弹窗
-  if (window.showConfirmModal) {
-    window.showConfirmModal(
-      "兵解轮回",
-      `
-      <div style="text-align:center; padding:10px;">
-         <p class="text_red" style="font-weight:bold; font-size:18px; margin-bottom:15px;">警告：肉身将毁，修为尽失！</p>
-         <p style="color:#444; margin-bottom:5px;">你将保留所有<b style="color:#2b58a6">已学会的功法</b>（需重新修炼）。</p>
-         <p style="color:#444; margin-bottom:5px;">已<b style="color:#ceae04">大成</b>的功法将化为永久属性加成。</p>
-         <br>
-         <p style="font-weight:bold;">道友道心已决，确定要开启来世吗？</p>
-      </div>
-      `,
-      executeDie
-    );
-  } else {
-    if(confirm("确定兵解？")) executeDie();
-  }
 }
 
-/**
- * 返回主页
- */
 function backToMenu() {
-  const game = document.getElementById('scene_game');
-  const menu = document.getElementById('scene_menu');
-  if (game && menu) {
-    game.classList.remove('active');
-    menu.classList.add('active');
-  }
+    const game = document.getElementById('scene_game');
+    const menu = document.getElementById('scene_menu');
+    if (game && menu) {
+        game.classList.remove('active');
+        menu.classList.add('active');
+    }
 }
 
-// 暴露给全局
-window.saveGame = saveGame;
-window.loadGame = loadGame;
+// 暴露接口
 window.attemptDie = attemptDie;
 window.backToMenu = backToMenu;
+// 注意：saveGame 和 loadGame 现在由 archive.js 提供

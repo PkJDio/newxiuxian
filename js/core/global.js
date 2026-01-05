@@ -227,7 +227,7 @@ function recalcStats() {
     if (player.status.hunger > player.derived.hungerMax) player.status.hunger = player.derived.hungerMax;
 
     // 疲劳值逻辑：不锁最大值(允许溢出触发Debuff)，但不能小于0
-    // if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
+    if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
     if (player.status.fatigue < 0) player.status.fatigue = 0;
 
     // 兜底：防止速度被扣成0导致无法移动

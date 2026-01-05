@@ -98,7 +98,7 @@
 
 /* 类型D: 警告/死亡 (红色调) */
 .ink_modal_box.modal_warning {
-    width: 400px;
+    width: 30%;
     max-width: 90vw; /* 适配手机 */
     height: auto;
     border: 4px solid #8b0000;
@@ -388,4 +388,82 @@
 .map_empty_icon {
     font-size: 60px;
     margin-bottom: 20px;
+}
+
+/* === 弹窗底部按钮容器 === */
+.ink_modal_footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px; /* 拉开间距，更有呼吸感 */
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分隔线 */
+}
+
+/* === 左侧：取消按钮 (清淡水墨风) === */
+.ink_btn_cancel {
+    background: transparent;
+    border: 2px solid #5d5d5d; /* 墨灰色描边 */
+    color: #444;
+    font-family: "Kaiti", "STKaiti", "KaiTi_GB2312", serif; /* 强制楷体 */
+    font-size: 18px;
+    padding: 6px 20px;
+    border-radius: 4px; /* 微圆角，仿纸张 */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ink_btn_cancel:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* 淡淡的墨晕 */
+    border-color: #222;
+    color: #000;
+    transform: translateY(-1px);
+}
+
+/* === 右侧：兵解按钮 (朱砂印章风) === */
+.ink_btn_destruct {
+    /* 核心：朱砂红背景，模拟印章 */
+    background-color: #8b0000; /* 深红/朱砂色 */
+    background-image: linear-gradient(135deg, #a92323 0%, #8b0000 100%);
+    border: none;
+    color: #f0e6d2; /* 米白色文字，比纯白更柔和 */
+
+    font-family: "Kaiti", "STKaiti", "KaiTi_GB2312", serif; /* 楷体 */
+    font-weight: bold;
+    font-size: 20px; /* 字体加大，凸显重要性 */
+
+    padding: 8px 30px;
+    border-radius: 2px; /* 印章通常是方正的，圆角很小 */
+    cursor: pointer;
+
+    /* 关键：阴影模拟印泥的立体感和晕染 */
+    box-shadow: 0 4px 6px rgba(139, 0, 0, 0.3), inset 0 0 5px rgba(0,0,0,0.2);
+
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ink_btn_destruct:hover {
+    background-color: #b71c1c;
+    background-image: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+    box-shadow: 0 6px 12px rgba(183, 28, 28, 0.5); /* 悬浮时晕染扩散 */
+    transform: translateY(-2px) scale(1.02);
+    color: #fff;
+}
+
+.ink_btn_destruct:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(139, 0, 0, 0.4);
+}
+
+/* 图标微调 */
+.btn_icon {
+    font-size: 1.2em; /* 图标稍微大一点 */
+    opacity: 0.8;
 }

@@ -164,37 +164,34 @@ function renderBuffs() {
 
     // 3. 临时 Buff (详细调试)
     if (player.buffs) {
-        console.log("检测到 player.buffs 数据:", player.buffs);
+        // 兼容对象结构 { "buff_id": { attr, val, days, name... } }
+        for (let id in player.buffs) {
+            const b = player.buffs[id];
 
-        // 兼容数组或对象
-        if (Array.isArray(player.buffs)) {
-            player.buffs.forEach((b, index) => {
-                console.log(`检查 Buff [数组索引 ${index}]:`, b);
-                if (b.days > 0 && b.val !== 0) {
-                    let name = b.name || "临时状态"; // 优先读取 buff 对象里的 name
-                    addEntry(name, b.attr, b.val, '#4caf50');
-                    console.log(`=> 已添加显示: ${name} ${b.attr} ${b.val}`);
-                } else {
-                    console.log(`=> 跳过: days=${b.days}, val=${b.val}`);
-                }
-            });
-        } else {
-            // 对象结构 { "item_id": { attr, val, days } }
-            for(let id in player.buffs) {
-                const b = player.buffs[id];
-                console.log(`检查 Buff [Key ${id}]:`, b);
+            // 过滤无效Buff
+            if (b.days > 0 && b.val) {
 
-                if(b.days > 0 && b.val !== 0) {
-                    let name = "状态";
-                    // 尝试从 ID 反查物品名
+                // 【核心修改】优先读取 buff 对象自带的 name，如果没有才显示 "状态"
+                let name = b.name || "状态";
+
+                // 如果名字是默认的"状态"，尝试通过ID反查物品名（兼容旧逻辑：吃丹药产生的buff）
+                if (name === "状态") {
                     const item = GAME_DB.items.find(i => i.id === id);
-                    if(item) name = item.name;
-
-                    addEntry(name, b.attr, b.val, '#4caf50', id);
-                    console.log(`=> 已添加显示: ${name} ${b.attr} ${b.val}`);
-                } else {
-                    console.log(`=> 跳过: days=${b.days}, val=${b.val}`);
+                    if (item) name = item.name;
                 }
+
+                // 定义颜色：优先用 buff 自带颜色，否则根据正负值决定 (绿/红)
+                // 疲劳/饥饿 Buff 在 time.js 里我们定义了 color: "#d32f2f"
+                let color = b.color;
+                if (!color) {
+                    // 简单的自动颜色逻辑：字符串包含'-'或者是负数显示红色，否则绿色
+                    const isNegative = typeof b.val === 'number' ? b.val < 0 : String(b.val).includes('-');
+                    color = isNegative ? '#d32f2f' : '#4caf50';
+                }
+
+                // 渲染条目
+                // 注意：这里把 id 传进去，方便鼠标悬浮看详情
+                addEntry(name, b.attr, b.val, color, id);
             }
         }
     } else {

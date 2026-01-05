@@ -19,6 +19,11 @@ const MapCamera = {
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
 
+        // 【新增】在这里初始化素材！
+        if (window.MapAtlas && window.MapAtlas.init) {
+            window.MapAtlas.init();
+        }
+
         this._initPlayerPos();
         this._bindEvents();
         this._resize();
@@ -146,36 +151,37 @@ const MapCamera = {
 
     // 只修改 moveTo 函数
     moveTo: function(tx, ty) {
-        const MAX = 2700; // 地图边界
+        const MAX = 2700;
         tx = Math.max(0, Math.min(MAX, tx));
         ty = Math.max(0, Math.min(MAX, ty));
 
         if (tx === player.x && ty === player.y) return;
 
-        // 1. 计算距离 (曼哈顿距离)
+        // 1. 计算距离
         const dist = Math.abs(player.x - tx) + Math.abs(player.y - ty);
 
-        // 2. 获取玩家基础速度 (如果没有则默认为10)
-        // 注意：这里不再是写死的 20，而是从 player.derived.speed 读取
-        let currentSpeed = player.derived.speed || 2;
-        if (currentSpeed <= 0) currentSpeed = 1; // 防止除以0
+        // 2. 获取基础速度 (从 derived 读取)
+        // 注意：这里的 speed 已经是被 recalcStats 减半过的了（如果你按之前的步骤改了 recalcStats）
+        // 所以我们不需要在这里再除以 2，只需要判断需不需要提示玩家“你很累”
+        let currentSpeed = player.derived.speed || 10;
+        if (currentSpeed < 1) currentSpeed = 1;
 
-
+        // 【修复】定义 isTired 变量，用于决定是否弹出提示
+        // 判断标准：身上是否有疲劳Buff 或 饥饿Buff
+        let isTired = false;
+        if (player.buffs && (player.buffs['debuff_fatigue'] || player.buffs['debuff_hunger'])) {
+            isTired = true;
+        }
 
         // 4. 计算耗时
-        // 时间 = 距离 / 速度
         const costHours = dist / currentSpeed;
 
-        // 5. 执行时间流逝
-        // 这里会自动触发 TimeSystem 里的代谢 (自动扣饱食、加疲劳)
-        // 如果你想让"走路"比"发呆"更累，可以传第三个参数 extraFatigueCost
-        // 例如：每走100里额外多累1点 -> TimeSystem.passTime(costHours, 0, dist/100);
-        // 目前先按你的需求，只传时间：
+        // 5. 时间流逝
         if (window.TimeSystem) {
             TimeSystem.passTime(costHours);
         }
 
-        // 6. 移动并更新
+        // 6. 移动
         player.x = tx;
         player.y = ty;
 
@@ -183,8 +189,9 @@ const MapCamera = {
 
         // 提示信息
         let toastMsg = `行进 ${Math.floor(dist)} 里`;
+        // 现在 isTired 已经定义了，不会报错了
         if (isTired) {
-            toastMsg += ` (疲劳过度，行路缓慢)`;
+            toastMsg += ` (身体不适，行路缓慢)`;
         }
         if(window.showToast && dist > 5) window.showToast(toastMsg);
 

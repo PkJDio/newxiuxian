@@ -104,6 +104,9 @@ const TimeSystem = {
         this._checkBuffs(daysPassed);
 
         if (window.updateUI) window.updateUI();
+
+        // 【新增】自动保存
+        if (window.saveGame) window.saveGame();
     },
 
     /**
@@ -123,7 +126,7 @@ const TimeSystem = {
             if (!player.buffs[FATIGUE_KEY]) {
                 player.buffs[FATIGUE_KEY] = {
                     name: "疲惫",
-                    attr: "效率",
+                    attr: "全属性",
                     val: "减半",       // UI显示文字
                     color: "#d32f2f", // 红色警示
                     days: 9999,       // 持续直到状态恢复
@@ -146,7 +149,7 @@ const TimeSystem = {
             if (!player.buffs[HUNGER_KEY]) {
                 player.buffs[HUNGER_KEY] = {
                     name: "饥饿",
-                    attr: "效率",
+                    attr: "全属性",
                     val: "减半",
                     color: "#d32f2f",
                     days: 9999,

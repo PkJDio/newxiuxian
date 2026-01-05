@@ -43,16 +43,20 @@ const ModalManager = {
     // 6. 确认/取消弹窗
     showConfirmModal: function(title, contentHtml, onConfirm) {
         this._createTempCallback(onConfirm, (funcName) => {
+            // 使用专门的类名 ink_modal_footer 和 ink_btn_...
             const footer = `
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button class="ink_btn_normal" onclick="window.closeModal()">
-                    <span>↩</span> 尘缘未了
-                </button>
-                <button class="ink_btn_danger" onclick="window['${funcName}']()">
-                    <span>⚔</span> 兵解转世
-                </button>
-            </div>
-        `;
+        <div class="ink_modal_footer">
+            <button class="ink_btn_cancel" onclick="window.closeModal()">
+                <span class="btn_icon">↩</span>
+                <span class="btn_text">尘缘未了</span>
+            </button>
+            
+            <button class="ink_btn_destruct" onclick="window['${funcName}']()">
+                <span class="btn_icon">⚔</span> 
+                <span class="btn_text">兵解转世</span>
+            </button>
+        </div>
+    `;
             this._showBaseModal('modal_warning', title, contentHtml, footer);
         });
     },
