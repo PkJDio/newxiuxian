@@ -1,34 +1,41 @@
 // js/modules/map_camera.js
-// 控制器 v4.0：调用 getLocationChain
+// 主界面地图交互模块 v9.0 (适配散落店铺的点击判定)
 console.log("加载 主界面地图控制");
 
 const MapCamera = {
-    // ... (保留 init, _initPlayerPos, _resize, _loop, _bindEvents, _onClick, _openShopModal, moveTo 等方法不变)
     canvas: null,
     ctx: null,
-    x: 0, y: 0, scale: 1.0, width: 0, height: 0,
+
+    x: 1330,
+    y: 1350,
+    scale: 1.5,
+    width: 0,
+    height: 0,
+
+    animationId: null,
 
     init: function() {
         this.canvas = document.getElementById('big_map_canvas');
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
+
         this._initPlayerPos();
         this._bindEvents();
         this._resize();
+
         window.addEventListener('resize', () => this._resize());
         this._loop();
     },
 
     _initPlayerPos: function() {
-        if (!player) return;
-        if (player.x === undefined || player.y === undefined) {
-            player.x = 1350; player.y = 1350;
-            if (typeof WORLD_TOWNS !== 'undefined' && player.location) {
-                const town = WORLD_TOWNS.find(t => t.id === player.location);
-                if (town) {
-                    player.x = Math.floor(town.x + town.w / 2);
-                    player.y = Math.floor(town.y + town.h / 2);
-                }
+        if (!window.player) return;
+        if (player.x === undefined) {
+            player.x = 1330;
+            player.y = 1350;
+            // 尝试定位到咸阳
+            if (typeof WORLD_TOWNS !== 'undefined') {
+                const t = WORLD_TOWNS.find(x => x.name === "咸阳");
+                if (t) { player.x = Math.floor(t.x + t.w/2); player.y = Math.floor(t.y + t.h/2); }
             }
         }
         this.x = player.x;
@@ -39,20 +46,25 @@ const MapCamera = {
     _resize: function() {
         if (!this.canvas) return;
         const container = this.canvas.parentElement;
-        this.canvas.width = container.clientWidth;
-        this.canvas.height = container.clientHeight;
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
+        if (container) {
+            this.canvas.width = container.clientWidth;
+            this.canvas.height = container.clientHeight;
+            this.width = this.canvas.width;
+            this.height = this.canvas.height;
+        }
     },
 
     _loop: function() {
-        requestAnimationFrame(() => this._loop());
-        if (!player) return;
-        this.x = player.x;
-        this.y = player.y;
-        if (window.MapAtlas) MapAtlas.render(this.ctx, this);
+        if (window.player) {
+            this.x = player.x;
+            this.y = player.y;
+        }
+        if (window.MapAtlas) {
+            MapAtlas.render(this.ctx, this);
+        }
         const coordEl = document.getElementById('overlay_coord');
-        if (coordEl) coordEl.innerText = `(${player.x}, ${player.y})`;
+        if (coordEl) coordEl.innerText = `(${Math.floor(this.x)}, ${Math.floor(this.y)})`;
+        this.animationId = requestAnimationFrame(() => this._loop());
     },
 
     _bindEvents: function() {
@@ -61,89 +73,106 @@ const MapCamera = {
 
     _onClick: function(e) {
         if (!player || !window.MapAtlas) return;
+
         const rect = this.canvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
+
         const ts = MapAtlas.tileSize * this.scale;
         const centerX = this.width / 2;
         const centerY = this.height / 2;
 
+        let hitShop = false;
+
+        // 1. 城镇店铺检测
         if (typeof WORLD_TOWNS !== 'undefined') {
             for (let i = WORLD_TOWNS.length - 1; i >= 0; i--) {
                 const town = WORLD_TOWNS[i];
-                const townScreenX = (town.x - this.x) * ts + centerX;
-                const townScreenY = (town.y - this.y) * ts + centerY;
-                const townScreenW = town.w * ts;
-                const townScreenH = town.h * ts;
+                const tx = (town.x - this.x) * ts + centerX;
+                const ty = (town.y - this.y) * ts + centerY;
+                const tw = town.w * ts;
+                const th = town.h * ts;
 
-                if (clickX < townScreenX || clickX > townScreenX + townScreenW ||
-                    clickY < townScreenY || clickY > townScreenY + townScreenH) continue;
+                // 粗略判断是否在城镇范围内
+                if (clickX >= tx && clickX <= tx + tw && clickY >= ty && clickY <= ty + th) {
 
-                const layout = MapAtlas.getShopLayout(town, ts);
-                for (let item of layout) {
-                    const absX = townScreenX + item.x;
-                    const absY = townScreenY + item.y;
-                    if (clickX >= absX && clickX <= absX + item.w &&
-                        clickY >= absY && clickY <= absY + item.h) {
-                        this._openShopModal(town, item.name);
-                        return;
+                    // 获取散落布局
+                    const shops = MapAtlas.getShopLayout(town, ts);
+                    for (let shop of shops) {
+                        const sx = tx + shop.x;
+                        const sy = ty + shop.y;
+
+                        // 精确判定建筑点击 (注意：shop.w, shop.h 已经是渲染尺寸，不需要乘 scale)
+                        if (clickX >= sx && clickX <= sx + shop.w &&
+                            clickY >= sy && clickY <= sy + shop.h) { // 考虑到屋顶，点击区域可以适当大一点
+
+                            this._enterShop(town, shop.name);
+                            hitShop = true;
+                            break;
+                        }
                     }
                 }
+                if (hitShop) break;
             }
         }
 
-        const worldX = this.x + (clickX - centerX) / ts;
-        const worldY = this.y + (clickY - centerY) / ts;
-        this.moveTo(Math.floor(worldX), Math.floor(worldY));
+        // 2. 没点中店铺，走过去
+        if (!hitShop) {
+            const worldX = this.x + (clickX - centerX) / ts;
+            const worldY = this.y + (clickY - centerY) / ts;
+            this.moveTo(Math.floor(worldX), Math.floor(worldY));
+        }
     },
 
-    _openShopModal: function(town, shopName) {
+    _enterShop: function(town, shopName) {
+        // 先把人移过去 (可选)
+        // player.x = ...
+
         if (window.showGeneralModal) {
             window.showGeneralModal(
                 `${town.name} - ${shopName}`,
-                `<div style="padding:30px; text-align:center;">
-                    <div style="font-size:40px; margin-bottom:10px;">🏠</div>
-                    <p>欢迎光临 ${shopName}！</p>
-                    <p style="color:#999; font-size:12px; margin-top:10px;">(店铺功能正在装修中...)</p>
-                </div>`
+                `<div style="padding:40px; text-align:center;">
+                    <div style="font-size:60px; margin-bottom:20px;">🏠</div>
+                    <p style="font-size:24px; font-family:Kaiti; margin-bottom:20px;">欢迎光临 <span style="color:#d32f2f;">${shopName}</span></p>
+                    <div class="ink_modal_btn_group">
+                        <button class="ink_btn" onclick="closeModal()">进入</button>
+                        <button class="ink_btn_normal" onclick="closeModal()">离开</button>
+                    </div>
+                </div>`,
+                null
             );
         }
     },
 
     moveTo: function(tx, ty) {
-        const MAP_SIZE = (typeof window.MAP_SIZE !== 'undefined') ? window.MAP_SIZE : 2700;
-        if (tx < 0 || tx > MAP_SIZE || ty < 0 || ty > MAP_SIZE) {
-            if(window.showToast) window.showToast("前方是无尽虚空，无法通行。");
-            return;
-        }
+        const MAX = 2700;
+        tx = Math.max(0, Math.min(MAX, tx));
+        ty = Math.max(0, Math.min(MAX, ty));
+
         if (tx === player.x && ty === player.y) return;
 
         const dist = Math.abs(player.x - tx) + Math.abs(player.y - ty);
-        const speed = (player.derived && player.derived.speed) ? player.derived.speed : 10;
-        const costHours = (dist / speed);
-        const costHunger = Math.floor(costHours * 0.5);
-        const costFatigue = Math.floor(costHours * 1);
+        const speed = 20;
+        const costHours = dist / speed;
 
-        if (window.TimeSystem) TimeSystem.passTime(costHours, costHunger, costFatigue);
+        if (window.TimeSystem) TimeSystem.passTime(costHours);
 
         player.x = tx;
         player.y = ty;
+
         this._checkRegion(tx, ty);
 
-        if(window.showToast) window.showToast(`跋涉 ${dist} 里，耗时 ${(costHours/2).toFixed(1)} 时辰`);
+        if(window.showToast && dist > 5) window.showToast(`行进 ${Math.floor(dist)} 里`);
         if(window.saveGame) window.saveGame();
     },
 
-    // 【核心修改】调用 getLocationChain
     _checkRegion: function(x, y) {
         const el = document.getElementById('overlay_terrain_info');
         if (!el) return;
-
         let chain = "未知领域";
         if (window.getLocationChain) {
             chain = window.getLocationChain(x, y);
         }
-
         el.innerHTML = `当前: <span class="text_gold">${chain}</span>`;
     }
 };
