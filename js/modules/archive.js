@@ -4,7 +4,7 @@ console.log("加载 存档系统");
 
 const ArchiveSystem = {
     // 默认存档键名（如果 global.js 没定义则用这个兜底）
-    DEFAULT_KEY: "xiuxian_save_data",
+    DEFAULT_KEY: "xiuxian_save_data_v1",
 
     /**
      * 获取存档键
