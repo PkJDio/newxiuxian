@@ -23,6 +23,7 @@ const DebugSystem = {
                 <hr style="width:100%; border:none; border-top:1px dashed #ddd; margin:5px 0;">
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('weapon')">⚔️ 随机兵器</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('pill')">💊 随机丹药</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('food')">🍱 随机食物</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('material')">🪵 随机素材</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('book')">📘 随机书籍</button>
                 <button class="ink_btn_small btn_danger" onclick="DebugSystem.clearBag()">🗑️ 清空背包</button>
@@ -67,8 +68,18 @@ const DebugSystem = {
         player.status.hp = player.derived.hpMax;
         player.status.mp = player.derived.mpMax;
         player.status.hunger = player.derived.hungerMax;
+        // 疲劳值清零，而不是回满
+        player.status.fatigue = 0;
+
+        // 顺便清除疲劳和饥饿的Debuff
+        if (player.buffs) {
+            if (player.buffs['debuff_fatigue']) delete player.buffs['debuff_fatigue'];
+            if (player.buffs['debuff_hunger']) delete player.buffs['debuff_hunger'];
+        }
+
+        if (window.recalcStats) window.recalcStats(); // 重新计算属性以移除debuff带来的影响
         if (window.updateUI) window.updateUI();
-        if (window.showToast) window.showToast("状态已回满");
+        if (window.showToast) window.showToast("状态已回满，神清气爽");
         if (window.saveGame) window.saveGame();
     },
 
@@ -86,7 +97,10 @@ const DebugSystem = {
     addRandomItem: function(type) {
         if (!GAME_DB.items) return;
         const list = GAME_DB.items.filter(i => i.type === type);
-        if (list.length === 0) return;
+        if (list.length === 0) {
+            if(window.showToast) window.showToast(`未找到类型为 [${type}] 的物品`);
+            return;
+        }
         const item = list[Math.floor(Math.random() * list.length)];
         if (window.UtilsAdd && window.UtilsAdd.addItem) {
             window.UtilsAdd.addItem(item.id, 1, false);

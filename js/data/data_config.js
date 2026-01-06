@@ -67,7 +67,8 @@ const PLAYER_TEMPLATE = {
     gongfa_int: 1, // 基础进度
     age      : 16, dayCount: 0, timeHours: 7, // 辰时
     worldSeed: 20251227, // 默认种子，开始游戏时会随机覆盖
-
+    //当前时间阶段
+    timeStart: 0,
     // 位置
     coord   : {x: 1350, y: 1350}, // 对应新地图关中区域
     location: 'guanzhong', mapUnlocked: false,

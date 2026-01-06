@@ -1,6 +1,6 @@
 // js/core/global.js
 // 全局核心：数据库, 属性计算, 常用常量
-// 【更新】recalcStats 支持记录 Buff 持续时间
+// 【更新】recalcStats 支持记录 Buff 持续时间，并在 derived 中包含实时状态
 console.log("加载 全局核心");
 
 /* ================= 1. 游戏数据库 (GAME_DB) ================= */
@@ -44,7 +44,7 @@ function initGameDB() {
     if (typeof enemies !== 'undefined') GAME_DB.enemies = enemies;
 
     // 收集地图数据
-    if (typeof REGION_BOUNDS !== 'undefined') GAME_DB.maps = REGION_BOUNDS; // 注意这里是直接赋值
+    if (typeof SUB_REGIONS !== 'undefined') GAME_DB.maps = SUB_REGIONS; // 注意这里是直接赋值
 
     console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
 }
@@ -66,6 +66,7 @@ function recalcStats() {
         hpMax: 0, mpMax: 0, hungerMax: 100,
         space: 200,
         fatigueMax: 100, // 疲劳上限
+        // 实时属性将在最后同步进来
     };
 
     // 初始化统计详情
@@ -233,6 +234,12 @@ function recalcStats() {
     // 兜底：防止速度被扣成0导致无法移动
     if (player.derived.speed < 1) player.derived.speed = 1;
     if (player.derived.atk < 1) player.derived.atk = 1;
+
+    // 【新增】将实时状态同步到 derived 中，方便 UI 统一读取
+    player.derived.hp = player.status.hp;
+    player.derived.mp = player.status.mp;
+    player.derived.hunger = player.status.hunger;
+    player.derived.fatigue = player.status.fatigue;
 }
 
 // 暴露给全局

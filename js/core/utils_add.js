@@ -89,7 +89,7 @@ const UtilsAdd = {
   },
 
   /**
-   * 添加金钱 (灵石)
+   * 添加金钱
    */
   addMoney: function(amount) {
     console.log(`[UtilsAdd] 尝试添加钱: ${amount}`);
@@ -102,7 +102,10 @@ const UtilsAdd = {
     if(window.showToast) {
       const unit = "";
       const op = amount >= 0 ? "+" : "";
-      window.showToast(`${unit} ${op}${amount}`);
+      if(amount!=0){
+          window.showToast(`钱财 ${unit} ${op}${amount} `);
+      }
+
     }
 
     // 自动保存

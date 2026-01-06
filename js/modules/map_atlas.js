@@ -177,10 +177,10 @@ const MapAtlas = {
             if (v.color === '#fff' || v.color === '#ffffff') {
                 ctx.strokeStyle = "#000";
                 ctx.lineWidth = 2;
-                ctx.strokeText(v.displayName, sx, sy - size * 0.8);
+                ctx.strokeText(v.displayName, sx, sy - size * 0.9);
             }
 
-            ctx.fillText(v.displayName, sx, sy - size * 0.8);
+            ctx.fillText(v.displayName, sx, sy - size * 0.9);
             ctx.restore();
         });
     },

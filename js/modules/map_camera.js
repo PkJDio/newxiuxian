@@ -154,23 +154,196 @@ const MapCamera = {
         }
     },
 
+    // 处理点击怪物 (对接 combat.js)
+    // 【核心修改】构建紧凑型水墨战斗面板
+    // 【核心修改】构建紧凑型水墨战斗面板 + 动态ID绑定
+    // 【核心修改】构建 UI + 绑定回调 + 修正阶级显示与颜色
     _handleEnemyClick: function(enemy) {
-        if (!window.UtilsEnemy) {
-            console.error("缺少 UtilsEnemy 模块");
+        console.log(">>> [MapCamera] 点击敌人:", enemy);
+
+        if (!window.Combat || !window.UtilsEnemy || !window.UtilsModal) {
+            console.error("缺少必要模块");
             return;
         }
 
-        const cleanName = enemy.name || "未知敌人";
-        if (confirm(`遭遇【${cleanName}】(HP:${enemy.hp})，是否将其斩杀？\n(斩杀后本月此处不再刷新)`)) {
-            // 使用 enemy 对象里自带的 gx, gy 进行精确击杀记录
-            UtilsEnemy.markDefeated(enemy.x, enemy.y);
+        // 1. 刷新并获取玩家实时数据
+        if (window.recalcStats) window.recalcStats();
 
-            // 移除
-            window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
+        const pDerived = window.player.derived || {};
+        const pName = window.player.name || "少侠";
 
-            if(window.showToast) window.showToast(`已斩杀 ${cleanName}！`);
-            if(window.saveGame) window.saveGame();
-        }
+        const pStats = {
+            hp: pDerived.hp !== undefined ? pDerived.hp : 100,
+            maxHp: pDerived.hpMax || 100,
+            atk: pDerived.atk || 10,
+            def: pDerived.def || 0,
+            speed: pDerived.speed || 10
+        };
+
+        // 2. 准备敌人显示数据
+        const eName = enemy.name || "未知敌人";
+        const eStats = {
+            hp: enemy.hp,
+            maxHp: enemy.maxHp || enemy.hp,
+            atk: enemy.atk || "?",
+            def: enemy.def || "?",
+            speed: enemy.speed || "?"
+        };
+        const eDesc = enemy.desc || "这家伙看起来不怀好意...";
+        const eIcon = (enemy.visual && enemy.visual.icon) ? enemy.visual.icon : "💀";
+        // 获取敌人颜色 (精英蓝, 头目紫, 领主红, 普通深灰)
+        const eColor =  "#333";
+        const nameColor = (enemy.visual && enemy.visual.color) ? enemy.visual.color : "#333";
+        // 阶级名称映射
+        const rankMap = {
+            "minion": "普通",
+            "elite": "【精英】",
+            "boss": "【头目】",
+            "lord": "【领主】"
+        };
+        const rankKey = enemy.template || "minion";
+        const displayRank = rankMap[rankKey] || enemy.levelType || "普通";
+
+        // 3. 构建布局 HTML
+        // 【关键修改】品级 span 的样式：颜色匹配 eColor，背景白色，加描边，像一个印章
+        const contentHtml = `
+            <div class="combat-wrapper" style="display:flex; flex-direction:column; height:100%; min-height:400px; font-family: Kaiti, 'KaiTi', serif;">
+                
+                <div class="combat-header" style="
+                    display:flex; justify-content:space-between; align-items:center; 
+                    padding:10px 15px; 
+                    background:#fdfbf7; 
+                    border-bottom:3px double #aaa; 
+                    margin-bottom:0; 
+                    gap: 15px;
+                    flex-shrink: 0;
+                ">
+                    
+                    <div class="fighter-card enemy" style="flex:1; text-align:center;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:5px;">
+                            <div style="font-size:36px; animation: float 2s infinite ease-in-out;">${eIcon}</div>
+                            <div style="text-align:left;">
+                                <div style="font-size:20px; color:${eColor}; font-weight:bold; line-height:1;">${eName}</div>
+                                <span style="font-size:16px; color:${nameColor}; border:2px solid ${nameColor}; background:#fff; padding:2px 8px; border-radius:4px; font-weight:bold;">${displayRank}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ink-stats-row" style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.03); padding:4px 0; border-radius:4px; font-size:14px; font-family:Arial, sans-serif;">
+                            <div title="生命"><span style="color:#d32f2f;">♥血量</span> <b id="combat_e_hp">${eStats.hp}</b><span style="font-size:0.8em;color:#999">/${eStats.maxHp}</span></div>
+                            <div title="攻击"><span style="color:#f57f17;">⚔攻击</span> ${eStats.atk}</div>
+                            <div title="防御"><span style="color:#1976d2;">🛡防御</span> ${eStats.def}</div>
+                            <div title="速度"><span style="color:#388e3c;">🦶速度</span> ${eStats.speed}</div>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider" style="width:50px; text-align:center;">
+                        <div style="font-size:32px; font-weight:bold; color:#a94442; font-family: 'Brush Script MT', cursive; transform: rotate(-10deg);">VS</div>
+                    </div>
+
+                    <div class="fighter-card player" style="flex:1; text-align:center;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:5px;">
+                            <div style="text-align:right;">
+                                <div style="font-size:20px; color:#333; font-weight:bold; line-height:1;">${pName}</div>
+                                <span style="font-size:12px; background:#1976d2; color:#fff; padding:1px 4px; border-radius:2px;">修仙者</span>
+                            </div>
+                            <div style="font-size:36px;">🧘</div>
+                        </div>
+
+                        <div class="ink-stats-row" style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.03); padding:4px 0; border-radius:4px; font-size:14px; font-family:Arial, sans-serif;">
+                            <div title="生命"><span style="color:#d32f2f;">♥血量</span> <b id="combat_p_hp">${pStats.hp}</b><span style="font-size:0.8em;color:#999">/${pStats.maxHp}</span></div>
+                            <div title="攻击"><span style="color:#f57f17;">⚔攻击</span> ${pStats.atk}</div>
+                            <div title="防御"><span style="color:#1976d2;">🛡防御</span> ${pStats.def}</div>
+                            <div title="速度"><span style="color:#388e3c;">🦶速度</span> ${pStats.speed}</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="combat_log_container_embed" style="flex:1; background:#fffbf0; padding:15px; overflow-y:auto; position:relative; border-top:1px solid #d4a76a;">
+                    
+                    <div id="combat_desc_initial" style="text-align:center; padding-top: 40px;">
+                        <div style="font-size:22px; line-height:1.5; color:#5d4037; font-weight:bold; margin-bottom: 20px;">
+                            “${eDesc}”
+                        </div>
+                        <div style="margin-top:30px; font-size:14px; color:#999;">
+                            (点击下方“拔剑迎敌”开始战斗)
+                        </div>
+                    </div>
+
+                    <div id="combat_logs_realtime" style="font-family: 'Courier New', monospace; font-size:14px; line-height:1.6; color:#333;"></div>
+                </div>
+
+            </div>
+            
+            <style>
+                @keyframes float { 0% {transform: translateY(0px);} 50% {transform: translateY(-4px);} 100% {transform: translateY(0px);} }
+                .ink-stats-row div { white-space: nowrap; margin: 0 2px; }
+            </style>
+        `;
+
+        // 4. 回调逻辑
+        const combatCallbackName = 'cb_start_combat_' + Date.now();
+        const escapeCallbackName = 'cb_stop_combat_' + Date.now(); // 逃跑回调
+
+        // 逃跑回调
+        window[escapeCallbackName] = () => {
+            console.log(">>> [MapCamera] 尝试逃跑...");
+            if (window.Combat && window.Combat.stop) {
+                window.Combat.stop(); // 调用 Combat 的 stop 方法中断循环
+            }
+        };
+
+        // 开战回调
+        window[combatCallbackName] = () => {
+            console.log(">>> [MapCamera] 触发开战！");
+
+            // 1. 切换中间区域
+            const descEl = document.getElementById('combat_desc_initial');
+            const logEl = document.getElementById('combat_logs_realtime');
+            if(descEl) descEl.style.display = 'none';
+            if(logEl) {
+                logEl.innerHTML = '<div style="color:#888; text-align:center; padding:10px; border-bottom:1px dashed #ccc; margin-bottom:10px;">--- 战斗开始 ---</div>';
+            }
+
+            // 2. 动态修改底部按钮
+            const footerDiv = document.getElementById('map_combat_footer');
+            if (footerDiv) {
+                footerDiv.innerHTML = `
+                    <button class="ink_btn_normal" style="width:100%; height:40px; border-color:#d32f2f; color:#d32f2f; font-weight:bold;" onclick="window['${escapeCallbackName}']()">
+                        🏃 拼死逃跑
+                    </button>
+                `;
+            }
+
+            // 3. 开始战斗
+            Combat.start(enemy, () => {
+                // 胜利回调
+                window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
+                if (this.ctx) MapAtlas.render(this.ctx, this, window.GlobalEnemies);
+                console.log(`[MapCamera] 怪物 ${eName} 清除完成`);
+
+                // 胜利后恢复按钮
+                if (footerDiv) {
+                    footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:16px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
+                }
+
+            }, 'combat_logs_realtime');
+        };
+
+        // 5. 底部按钮容器
+        const footerHtml = `
+            <div id="map_combat_footer" style="display:flex; justify-content:space-between; width:100%; gap:15px;">
+                <button class="ink_btn_normal" style="flex:1; height:40px;" onclick="window.closeModal(); delete window['${combatCallbackName}']; delete window['${escapeCallbackName}']">
+                    🏃 撤退
+                </button>
+                <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold;" onclick="window['${combatCallbackName}']()">
+                    ⚔️ 拔剑迎敌
+                </button>
+            </div>
+        `;
+
+        // 6. 显示
+        UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 80, null);
     },
 
     moveTo: function(tx, ty) {
