@@ -297,6 +297,24 @@ const enemies_r_c_1_1 = [
         stats: {hp: 130, atk: 35, def: 5, speed: 15}, money: [40, 90],
         drops: [{id: "weapons_040", rate: 0.2},], // 掉落袖箭
         desc : "【精英】以击筑为掩护，乐器中藏着致命的武器，类似高渐离。"
+    },
+    {
+        id   : "rc11_lord_01", template: "lord", name: "始皇陵守灵人", region: "r_c_1_1", spawnType: "mountain", timeStart: 0,
+        stats: {hp: 400, atk: 60, def: 40, speed: 8}, money: [500, 1000],
+        drops: [{id: "weapons_090", rate: 0.05}, {id: "booksCultivation_r3_01_upper", rate: 0.1}],
+        desc : "【领主】活了不知多少岁月的守陵人，掌握着秦皇扫六合的恐怖武学。"
+    },
+    {
+        id   : "rc11_lord_02", template: "lord", name: "堕落的蒙恬英灵", region: "r_c_1_1", spawnType: "road", timeStart: 1,
+        stats: {hp: 450, atk: 70, def: 35, speed: 12}, money: [600, 1200],
+        drops: [{id: "weapons_053", rate: 0.05}, {id: "head_012", rate: 0.1}],
+        desc : "【领主】被奸臣害死的大将怨气不散，率领幽冥鬼军徘徊在长城脚下。"
+    },
+    {
+        id   : "rc11_lord_03", template: "lord", name: "楚霸王(分身)", region: "r_c_1_1", spawnType: "city", timeStart: 2,
+        stats: {hp: 600, atk: 90, def: 30, speed: 15}, money: [1000, 2000],
+        drops: [{id: "weapons_065", rate: 0.05}, {id: "mounts_005", rate: 0.05}], // 掉霸王枪、乌骓马
+        desc : "【领主】力拔山兮气盖世，即使只是霸王留下的一道战意分身，也足以横扫千军。"
     }
 ];
 
@@ -400,6 +418,25 @@ const enemies_r_c_2_1 = [
 
             {id: "weapons_055", rate: 0.1}],
         desc : "【头目】云梦山上下来的纵横家弃徒，精通剑术与权谋。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rc21_lord_01", template: "lord", name: "鬼谷子(幻影)", region: "r_c_2_1", spawnType: "mountain", timeStart: 0,
+        stats: {hp: 350, atk: 80, def: 20, speed: 20}, money: [500, 1000],
+        drops: [{id: "booksCultivation_r3_20_upper", rate: 0.1}, {id: "pills_071", rate: 0.2}],
+        desc : "【领主】纵横家的鼻祖，在此地留下的一道考验后人的神念。"
+    },
+    {
+        id   : "rc21_lord_02", template: "lord", name: "信陵君食客首领", region: "r_c_2_1", spawnType: "city", timeStart: 1,
+        stats: {hp: 420, atk: 65, def: 30, speed: 10}, money: [600, 1200],
+        drops: [{id: "weapons_055", rate: 0.05}, {id: "materials_026", rate: 0.2}],
+        desc : "【领主】曾窃符救赵的义士首领，如今聚集在魏地试图恢复旧秩序。"
+    },
+    {
+        id   : "rc21_lord_03", template: "lord", name: "黄河巨龟", region: "r_c_2_1", spawnType: "river", timeStart: 2,
+        stats: {hp: 800, atk: 50, def: 80, speed: 4}, money: [0, 0],
+        drops: [{id: "materials_019", rate: 1.0}, {id: "materials_026", rate: 0.5}], // 必掉玄武甲
+        desc : "【领主】背负洛书的神龟后裔，体型如小岛，兴风作浪。"
     }
 ];
 
@@ -497,6 +534,25 @@ const enemies_r_e_0_1 = [
         stats: {hp: 60, atk: 20, def: 20, speed: 4}, money: [0, 0],
         drops: [{id: "foodMaterial_005", rate: 0.6}, {id: "materials_017", rate: 0.2}],
         desc : "海边沙滩上的大螃蟹，横行霸道。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "re01_lord_01", template: "lord", name: "东海蛟龙", region: "r_e_0_1", spawnType: "ocean", timeStart: 0,
+        stats: {hp: 600, atk: 70, def: 40, speed: 15}, money: [0, 0],
+        drops: [{id: "materials_025", rate: 0.5}, {id: "weapons_075", rate: 0.05}],
+        desc : "【领主】深海中的恶蛟，传说是龙的远亲，能呼风唤雨。"
+    },
+    {
+        id   : "re01_lord_02", template: "lord", name: "孔门弃徒(狂)", region: "r_e_0_1", spawnType: "city", timeStart: 1,
+        stats: {hp: 400, atk: 60, def: 30, speed: 12}, money: [500, 1000],
+        drops: [{id: "weapons_050", rate: 0.05}, {id: "booksCultivation_r2_05_upper", rate: 0.1}],
+        desc : "【领主】修习儒家六艺走火入魔的狂人，力大无穷，以力服人。"
+    },
+    {
+        id   : "re01_lord_03", template: "lord", name: "泰山石敢当(灵)", region: "r_e_0_1", spawnType: "mountain", timeStart: 2,
+        stats: {hp: 1000, atk: 40, def: 100, speed: 2}, money: [0, 0],
+        drops: [{id: "materials_023", rate: 0.5}, {id: "materials_012", rate: 0.5}],
+        desc : "【领主】泰山灵石化成的精怪，坚不可摧，镇压一切邪祟。"
     }
 ];
 
@@ -578,6 +634,25 @@ const enemies_r_c_1_2 = [
         stats: {hp: 140, atk: 30, def: 5, speed: 12}, money: [0, 0],
         drops: [{id: "materials_024", rate: 0.05}, {id: "foodMaterial_002", rate: 0.5}], // 极低掉熊猫皮(毛皮)
         desc : "深山中直立行走的红毛野兽，力大无穷。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rc12_lord_01", template: "lord", name: "云梦龙君", region: "r_c_1_2", spawnType: "river", timeStart: 0,
+        stats: {hp: 550, atk: 65, def: 30, speed: 14}, money: [0, 0],
+        drops: [{id: "materials_025", rate: 0.3}, {id: "materials_026", rate: 0.3}],
+        desc : "【领主】云梦泽中修行的千年白蛇，已化为半龙之躯。"
+    },
+    {
+        id   : "rc12_lord_02", template: "lord", name: "巫神代言人", region: "r_c_1_2", spawnType: "mountain", timeStart: 1,
+        stats: {hp: 300, atk: 85, def: 10, speed: 10}, money: [400, 800],
+        drops: [{id: "pills_097", rate: 0.5}, {id: "booksCultivation_r3_21_upper", rate: 0.1}],
+        desc : "【领主】楚地大巫，能沟通鬼神，施展恐怖的即死诅咒。"
+    },
+    {
+        id   : "rc12_lord_03", template: "lord", name: "九头神鸟(完全体)", region: "r_c_1_2", spawnType: "mountain", timeStart: 2,
+        stats: {hp: 500, atk: 80, def: 20, speed: 25}, money: [0, 0],
+        drops: [{id: "materials_015", rate: 0.5}, {id: "materials_020", rate: 0.5}],
+        desc : "【领主】展开羽翼遮天蔽日的上古凶兽，九个头颅能喷吐九种灾厄。"
     }
 ];
 
@@ -660,6 +735,25 @@ const enemies_r_c_0_2 = [
         stats: {hp: 50, atk: 5, def: 0, speed: 4}, money: [0, 5],
         drops: [{id: "weapons_001", rate: 0.2}],
         desc : "为了躲避中原战乱，翻越秦岭逃入巴蜀的难民。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rc02_lord_01", template: "lord", name: "蚕丛王尸", region: "r_c_0_2", spawnType: "mountain", timeStart: 0,
+        stats: {hp: 500, atk: 50, def: 40, speed: 6}, money: [500, 1500],
+        drops: [{id: "materials_019", rate: 0.3}, {id: "materials_021", rate: 0.3}],
+        desc : "【领主】古蜀国第一代王，纵目面具下是一双看透阴阳的眼睛。"
+    },
+    {
+        id   : "rc02_lord_02", template: "lord", name: "食铁兽之王", region: "r_c_0_2", spawnType: "mountain", timeStart: 1,
+        stats: {hp: 800, atk: 70, def: 50, speed: 8}, money: [0, 0],
+        drops: [{id: "materials_024", rate: 1.0}, {id: "weapons_018", rate: 0.05}],
+        desc : "【领主】体型如象的巨型熊猫，一巴掌能拍碎城墙。"
+    },
+    {
+        id   : "rc02_lord_03", template: "lord", name: "唐门老祖(伪)", region: "r_c_0_2", spawnType: "city", timeStart: 2,
+        stats: {hp: 350, atk: 100, def: 10, speed: 20}, money: [1000, 2000],
+        drops: [{id: "weapons_062", rate: 0.1}, {id: "pills_053", rate: 0.5}],
+        desc : "【领主】巴蜀暗器名家的开创者，全身藏有千种暗器，令人防不胜防。"
     }
 ];
 
@@ -736,6 +830,25 @@ const enemies_r_ne = [
         stats: {hp: 600, atk: 65, def: 25, speed: 8}, money: [0, 0],
         drops: [{id: "materials_023", rate: 0.5}, {id: "herbs_030", rate: 0.5}], // 掉金胆、大人参
         desc : "【头目】传说中守护圣山的白色巨兽，浑身长满白毛。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rne_lord_01", template: "lord", name: "长白山龙脉守护", region: "r_ne", spawnType: "mountain", timeStart: 0,
+        stats: {hp: 600, atk: 60, def: 40, speed: 10}, money: [0, 0],
+        drops: [{id: "herbs_030", rate: 1.0}, {id: "materials_023", rate: 0.5}],
+        desc : "【领主】由万年冰雪凝聚而成的元素生物，守护着龙脉禁地。"
+    },
+    {
+        id   : "rne_lord_02", template: "lord", name: "东胡战神", region: "r_ne", spawnType: "grass", timeStart: 1,
+        stats: {hp: 500, atk: 75, def: 25, speed: 16}, money: [500, 1500],
+        drops: [{id: "weapons_049", rate: 0.1}, {id: "mounts_004", rate: 0.1}],
+        desc : "【领主】东胡部落传说中的勇士，手持千斤重的狼牙棒。"
+    },
+    {
+        id   : "rne_lord_03", template: "lord", name: "北冥巨鲲(幼)", region: "r_ne", spawnType: "ocean", timeStart: 2,
+        stats: {hp: 1200, atk: 80, def: 60, speed: 5}, money: [0, 0],
+        drops: [{id: "materials_025", rate: 0.5}, {id: "materials_026", rate: 0.5}],
+        desc : "【领主】北冥有鱼，其名为鲲。虽然是幼体，但已有吞天之志。"
     }
 ];
 
@@ -777,6 +890,25 @@ const enemies_r_n = [
         stats: {hp: 60, atk: 10, def: 2, speed: 6}, money: [5, 20],
         drops: [{id: "weapons_002", rate: 0.3}, {id: "foodMaterial_053", rate: 0.5}],
         desc : "在极北苦寒之地放牧的流亡者，性格孤僻。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rn_lord_01", template: "lord", name: "冒顿单于", region: "r_n", spawnType: "grass", timeStart: 0,
+        stats: {hp: 550, atk: 70, def: 30, speed: 18}, money: [1000, 3000],
+        drops: [{id: "weapons_048", rate: 0.1}, {id: "mounts_005", rate: 0.1}],
+        desc : "【领主】统一草原的匈奴霸主，鸣镝所指，万骑冲锋。"
+    },
+    {
+        id   : "rn_lord_02", template: "lord", name: "长生天大祭司", region: "r_n", spawnType: "mountain", timeStart: 1,
+        stats: {hp: 400, atk: 80, def: 20, speed: 12}, money: [500, 1000],
+        drops: [{id: "pills_041", rate: 0.5}, {id: "booksCultivation_r3_01_upper", rate: 0.1}],
+        desc : "【领主】能召唤雷霆与风暴的萨满教主，法力无边。"
+    },
+    {
+        id   : "rn_lord_03", template: "lord", name: "瀚海沙虫王", region: "r_n", spawnType: "desert", timeStart: 2,
+        stats: {hp: 800, atk: 65, def: 40, speed: 10}, money: [0, 0],
+        drops: [{id: "materials_018", rate: 0.8}],
+        desc : "【领主】潜伏在戈壁深处的远古生物，每一次翻身都会引发沙尘暴。"
     }
 ];
 
@@ -838,6 +970,25 @@ const enemies_r_w = [
         stats: {hp: 150, atk: 25, def: 20, speed: 10}, money: [40, 100],
         drops: [{id: "weapons_044", rate: 0.1}],
         desc : "【精英】守护汗血宝马的精锐士兵，装备精良。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rw_lord_01", template: "lord", name: "楼兰女王(怨灵)", region: "r_w", spawnType: "city", timeStart: 0,
+        stats: {hp: 450, atk: 85, def: 10, speed: 15}, money: [800, 2000],
+        drops: [{id: "materials_026", rate: 0.3}, {id: "booksCultivation_r2_25_upper", rate: 0.1}],
+        desc : "【领主】国破家亡的楼兰女王，用倾国倾城的容貌掩盖致命的诅咒。"
+    },
+    {
+        id   : "rw_lord_02", template: "lord", name: "天山雪莲妖", region: "r_w", spawnType: "mountain", timeStart: 1,
+        stats: {hp: 500, atk: 50, def: 50, speed: 12}, money: [0, 0],
+        drops: [{id: "herbs_025", rate: 1.0}, {id: "pills_071", rate: 0.2}],
+        desc : "【领主】生长在天山之巅的万年雪莲修炼成精，浑身是宝。"
+    },
+    {
+        id   : "rw_lord_03", template: "lord", name: "火焰山牛魔", region: "r_w", spawnType: "mountain", timeStart: 2,
+        stats: {hp: 900, atk: 80, def: 60, speed: 8}, money: [0, 0],
+        drops: [{id: "weapons_029", rate: 0.1}, {id: "materials_023", rate: 0.3}],
+        desc : "【领主】从火焰山中走出的火焰巨牛，所过之处寸草不生。"
     }
 ];
 
@@ -885,6 +1036,25 @@ const enemies_r_s = [
         stats: {hp: 900, atk: 70, def: 20, speed: 8}, money: [0, 0],
         drops: [{id: "materials_026", rate: 1}, {id: "weapons_075", rate: 0.1}], // 掉珍珠、寒冰手套
         desc : "【头目】多条触手的海怪，能轻易掀翻楼船。"
+    },
+    // --- 领主级 (Lord) ---
+    {
+        id   : "rs_lord_01", template: "lord", name: "南越武王(赵佗)", region: "r_s", spawnType: "city", timeStart: 0,
+        stats: {hp: 500, atk: 65, def: 35, speed: 14}, money: [1000, 3000],
+        drops: [{id: "weapons_038", rate: 0.1}, {id: "booksBody_r1_16_upper", rate: 0.1}],
+        desc : "【领主】割据岭南的秦朝将领，虽已年迈，但帝王霸气犹存。"
+    },
+    {
+        id   : "rs_lord_02", template: "lord", name: "万蛊之王", region: "r_s", spawnType: "mountain", timeStart: 1,
+        stats: {hp: 350, atk: 90, def: 20, speed: 18}, money: [0, 0],
+        drops: [{id: "pills_053", rate: 1.0}, {id: "materials_010", rate: 0.5}],
+        desc : "【领主】吞噬了无数毒虫后诞生的蛊王，剧毒无比，触之即死。"
+    },
+    {
+        id   : "rs_lord_03", template: "lord", name: "南海龙王(伪)", region: "r_se", spawnType: "ocean", timeStart: 2,
+        stats: {hp: 800, atk: 75, def: 40, speed: 10}, money: [0, 0],
+        drops: [{id: "materials_026", rate: 0.8}, {id: "weapons_075", rate: 0.1}],
+        desc : "【领主】统御南海水族的一头巨型鲸鲵，自封为王。"
     }
 ];
 

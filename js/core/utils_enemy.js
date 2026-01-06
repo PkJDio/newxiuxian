@@ -5,9 +5,9 @@ console.log("加载 敌人生成系统 (UtilsEnemy v13 - Region Fix)");
 // 1. 阶级生成权重
 const RANK_PROBS = {
     "minion": 0.60,
-    "elite":  0.25,
+    "elite":  0.29,
     "boss":   0.10,
-    "lord":   0.05
+    "lord":   0.01
 };
 
 // 2. 视觉表现配置
