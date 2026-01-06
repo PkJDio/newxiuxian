@@ -1,121 +1,256 @@
 // js/core/utils_enemy.js
-// 敌人生成工具类 v2.1 (带缓存记录 + 调试日志)
-console.log("加载 敌人生成系统 (Debug版)");
+// 敌人生成工具类 v13.0 (修复：区域ID变量名修正 REGION_LAYOUT)
+console.log("加载 敌人生成系统 (UtilsEnemy v13 - Region Fix)");
+
+// 1. 阶级生成权重
+const RANK_PROBS = {
+    "minion": 0.60,
+    "elite":  0.25,
+    "boss":   0.10,
+    "lord":   0.05
+};
+
+// 2. 视觉表现配置
+const TEMPLATE_STYLES = {
+    "minion": {
+        scale: 1.0,
+        shadowBlur: 5,
+        shadowColor: "rgba(0, 0, 0, 0.2)",
+        prefix: "",
+        zIndex: 1
+    },
+    "elite": {
+        scale: 1.3,
+        shadowBlur: 15,
+        shadowColor: "rgba(74, 144, 226, 0.7)",
+        prefix: "【精英】",
+        zIndex: 2
+    },
+    "boss": {
+        scale: 1.6,
+        shadowBlur: 25,
+        shadowColor: "rgba(144, 19, 254, 0.8)",
+        prefix: "【头目】",
+        zIndex: 3
+    },
+    "lord": {
+        scale: 2.2,
+        shadowBlur: 40,
+        shadowColor: "rgba(208, 2, 27, 0.9)",
+        prefix: "【领主】",
+        zIndex: 4
+    }
+};
 
 const UtilsEnemy = {
-    // 基础生成率 (0.05 代表 5%，你可以调高这个数值测试，比如 0.5)
-    SPAWN_RATE: 0.05,
+    SPAWN_RATE: 0.5,
 
     /**
-     * 在指定网格尝试生成敌人
+     * 【核心】在大地图指定网格生成一个确定性的敌人
      */
-    generate: function(gx, gy, inTown, hasWater, terrainType = 'wild') {
-        // 0. 安全检查
-        if (!window.player || !window.RandomSystem || !window.enemies) {
-            // console.warn("UtilsEnemy: 缺少必要依赖 (player/RandomSystem/enemies)");
+    createRandomEnemy: function(x, y) {
+        const gx = Math.floor(x / 10);
+        const gy = Math.floor(y / 10);
+
+        // 1. 检查击杀
+        if (this.isDefeated(gx, gy)) return null;
+
+        const timeKey = this._getTimeKey();
+        if (typeof RandomSystem === 'undefined') {
+            console.error("缺少 RandomSystem");
             return null;
         }
 
-        // 1. 获取当前时间 (月份)
-        const currentMonth = (player.time.year * 12 + player.time.month) || 0;
-
-        // 【新增】2. 检查缓存：该位置本月是否已击杀过？
-        if (this.isDefeated(gx, gy, currentMonth)) {
-            // console.log(`[Enemy] ${gx},${gy} 本月已击杀，跳过`);
-            return null;
-        }
-
-        // 3. 概率检查
-        const spawnRng = RandomSystem.get(gx, gy, currentMonth, "enemy_spawn");
-
-        // 调试：只打印极少数日志防止刷屏，或者当你修改概率时可以取消注释
-        // if (gx === 135 && gy === 135) console.log("中心点概率:", spawnRng, "阈值:", this.SPAWN_RATE);
-
+        // 2. 生成判定
+        const spawnRng = RandomSystem.get(gx, gy, timeKey, "spawn_chance");
         if (spawnRng > this.SPAWN_RATE) return null;
 
-        // 4. 区域判定与筛选
-        const worldX = gx * 10;
-        const worldY = gy * 10;
-        const regionId = this._getRegionId(worldX, worldY);
+        if (!window.enemies || window.enemies.length === 0) return null;
 
-        const candidates = this._filterEnemies(regionId, inTown, hasWater, terrainType, currentMonth);
+        // 计算网格中心点用于环境检测
+        const checkX = gx * 10 + 5;
+        const checkY = gy * 10 + 5;
 
-        if (candidates.length === 0) {
-            // console.log(`[Enemy] ${gx},${gy} 触发生成但无匹配敌人 (Region: ${regionId})`);
+        // ================= 安全区检测 =================
+        if (this._isInTown(checkX, checkY)) return null;
+
+        // ================= 环境检测 =================
+        // 【核心修复】这里现在会正确返回如 "r_c_1_1"
+        const regionId = this._getRegionId(checkX, checkY);
+        const isWater = this._isWater(checkX, checkY);
+
+        console.log(`[Enemy] 生成检测 @${checkX},${checkY} -> 区域:${regionId} 水域:${isWater}`);
+
+        // ================= 环境筛选 =================
+        const envCandidates = window.enemies.filter(e => {
+            // A. 区域匹配 (怪物的region是'all' 或 匹配当前id)
+            if (e.region !== 'all' && !e.region.startsWith(regionId)) return false;
+
+            // B. 水陆匹配
+            const isWaterMob = (e.spawnType === 'river' || e.spawnType === 'ocean');
+            if (isWater) {
+                return isWaterMob;
+            } else {
+                // 陆地不刷水怪 (spawnType='all'的默认视为陆地怪)
+                return !isWaterMob;
+            }
+        });
+        console.log(envCandidates)
+        if (envCandidates.length === 0) {
+            // console.log(`[Enemy] ${regionId} 无匹配怪物`);
             return null;
         }
 
-        // 5. 抽取结果
-        const pickRng = RandomSystem.get(gx, gy, currentMonth, "enemy_pick");
-        const index = Math.floor(pickRng * candidates.length);
-        const enemy = candidates[index];
+        // 3. 决定阶级
+        const rankRoll = RandomSystem.get(gx, gy, timeKey, "rank_roll");
+        let targetRank = "minion";
+        let cumulative = 0;
+        for (let rank in RANK_PROBS) {
+            cumulative += RANK_PROBS[rank];
+            if (rankRoll < cumulative) {
+                targetRank = rank;
+                break;
+            }
+        }
 
-        // console.log(`[Enemy] 生成成功: ${enemy.name} at [${gx},${gy}]`);
-        return enemy;
+        // 4. 筛选对应阶级
+        const candidates = envCandidates.filter(e => (e.template || "minion") === targetRank);
+        const pool = candidates.length > 0 ? candidates : envCandidates;
+
+        // 5. 具体抽取
+        const indexRng = RandomSystem.get(gx, gy, timeKey, "enemy_select");
+        const template = pool[Math.floor(indexRng * pool.length)];
+
+        // 6. 网格内偏移
+        const offX = Math.floor(RandomSystem.get(gx, gy, timeKey, "pos_off_x") * 10);
+        const offY = Math.floor(RandomSystem.get(gx, gy, timeKey, "pos_off_y") * 10);
+        const finalX = gx * 10 + offX;
+        const finalY = gy * 10 + offY;
+
+        // 7. 视觉属性
+        const type = template.template || "minion";
+        const style = TEMPLATE_STYLES[type] || TEMPLATE_STYLES["minion"];
+
+        let displayColor = template.color || "#333";
+        if (displayColor.toLowerCase() === "#fff" || displayColor.toLowerCase() === "#ffffff") {
+            displayColor = "#444";
+        }
+
+        return {
+            instanceId: `mob_${timeKey}_${gx}_${gy}`,
+            id: template.id,
+            name: template.name,
+            template: type,
+            x: finalX,
+            y: finalY,
+            gx: gx,
+            gy: gy,
+            hp: template.stats.hp,
+            maxHp: template.stats.hp,
+            atk: template.stats.atk,
+            def: template.stats.def,
+            speed: template.stats.speed,
+            exp: template.exp,
+            money: template.money,
+            drops: template.drops,
+            desc: template.desc,
+            visual: {
+                icon: template.icon || "💀",
+                color: displayColor,
+                scale: style.scale,
+                shadowBlur: style.shadowBlur,
+                shadowColor: style.shadowColor,
+                displayName: style.prefix + template.name,
+                zIndex: style.zIndex
+            }
+        };
     },
 
     /**
-     * 【新增】检查是否已击杀
+     * 【核心修复】获取区域ID (格式: r_c_0_0)
+     * 使用 REGION_LAYOUT 替代 REGION_BOUNDS
      */
-    isDefeated: function(gx, gy, month) {
-        if (!player.defeatedEnemies) return false;
-        const key = `${gx}_${gy}_${month}`;
-        return !!player.defeatedEnemies[key];
+    _getRegionId: function(x, y) {
+        // 优先检查 REGION_LAYOUT，兼容旧代码可能的 REGION_BOUNDS
+        const layout = (typeof REGION_LAYOUT !== 'undefined') ? REGION_LAYOUT :
+            ((typeof REGION_BOUNDS !== 'undefined') ? REGION_BOUNDS : null);
+
+        if (!layout) return "r_c"; // 如果什么都找不到，只能兜底
+
+        // 1. 找到所属的大区域
+        const region = layout.find(r =>
+            x >= r.x[0] && x < r.x[1] && y >= r.y[0] && y < r.y[1]
+        );
+        //
+        // if (!region) return "unknown";
+        //
+        // // 2. 计算子分区 (300x300)
+        // const localX = x - region.x[0];
+        // const localY = y - region.y[0];
+        // const subX = Math.floor(localX / 300);
+        // const subY = Math.floor(localY / 300);
+        //
+        // return `${region.id}_${subX}_${subY}`;
+        // 1. 找到所属的大区域
+
+
+        return `${region.id}`;
     },
 
-    /**
-     * 【新增】标记为已击杀 (战斗胜利后调用)
-     * 调用方式: UtilsEnemy.markDefeated(gx, gy);
-     */
-    markDefeated: function(gx, gy) {
-        if (!player) return;
-        if (!player.defeatedEnemies) player.defeatedEnemies = {};
+    _isInTown: function(x, y) {
+        if (typeof WORLD_TOWNS === 'undefined') return false;
+        return WORLD_TOWNS.some(t =>
+            x >= t.x && x < t.x + t.w &&
+            y >= t.y && y < t.y + t.h
+        );
+    },
 
-        const currentMonth = (player.time.year * 12 + player.time.month) || 0;
-        const key = `${gx}_${gy}_${currentMonth}`;
+    _isWater: function(x, y) {
+        if (typeof TERRAIN_ZONES === 'undefined') return false;
+        const zone = TERRAIN_ZONES.find(z =>
+            (z.type === 'river' || z.type === 'ocean') &&
+            x >= z.x[0] && x < z.x[1] &&
+            y >= z.y[0] && y < z.y[1]
+        );
+        return !!zone;
+    },
 
-        player.defeatedEnemies[key] = true;
-        console.log(`[Enemy] 标记击杀: ${key}`);
+    isDefeated: function(gx, gy) {
+        if (!window.player || !window.player.defeatedEnemies) return false;
+        const timeKey = this._getTimeKey();
+        const key = `kill_${timeKey}_${gx}_${gy}`;
+        return !!window.player.defeatedEnemies[key];
+    },
 
-        // 触发保存防止SL大法
+    markDefeated: function(x, y) {
+        if (!window.player) return;
+        if (!window.player.defeatedEnemies) window.player.defeatedEnemies = {};
+
+        const gx = Math.floor(x / 10);
+        const gy = Math.floor(y / 10);
+        const timeKey = this._getTimeKey();
+        const key = `kill_${timeKey}_${gx}_${gy}`;
+
+        window.player.defeatedEnemies[key] = true;
+        console.log(`[UtilsEnemy] ✅ 记录击杀: ${key}`);
+
+        this._cleanOldCache(timeKey);
         if(window.saveGame) window.saveGame();
     },
 
-    /**
-     * 内部筛选逻辑
-     */
-    _filterEnemies: function(regionId, inTown, hasWater, terrainType, currentMonth) {
-        let spawnTypeCheck = terrainType;
-        if (inTown) spawnTypeCheck = 'city';
-        if (hasWater && spawnTypeCheck !== 'ocean') spawnTypeCheck = 'river';
-
-        return window.enemies.filter(e => {
-            // 简单阶段检查 (这里默认全部开放，你可以加逻辑)
-            // if (e.timeStart > currentMonth / 12) return false;
-
-            // 区域匹配
-            if (e.region !== 'all' && e.region !== regionId) return false;
-
-            // 地形匹配
-            if (e.spawnType === 'all') return true;
-            if (inTown) return e.spawnType === 'city' || e.spawnType === 'village';
-            if (hasWater) return e.spawnType === 'river' || e.spawnType === 'ocean';
-            return e.spawnType === spawnTypeCheck;
+    _cleanOldCache: function(currentTimeKey) {
+        if (!window.player.defeatedEnemies) return;
+        const keys = Object.keys(window.player.defeatedEnemies);
+        keys.forEach(k => {
+            if (!k.startsWith("kill_" + currentTimeKey)) delete window.player.defeatedEnemies[k];
         });
     },
 
-    _getRegionId: function(x, y) {
-        if (typeof REGION_LAYOUT === 'undefined') return "r_c";
-        const region = REGION_LAYOUT.find(r =>
-            x >= r.x[0] && x < r.x[1] && y >= r.y[0] && y < r.y[1]
-        );
-        if (!region) return "r_c";
-
-        const localX = x - region.x[0];
-        const localY = y - region.y[0];
-        const sX = Math.floor(localX / 300);
-        const sY = Math.floor(localY / 300);
-        return `${region.id}_${sX}_${sY}`;
+    _getTimeKey: function() {
+        if (window.player && window.player.time) {
+            return `${window.player.time.year}_${window.player.time.month}`;
+        }
+        return "1_1";
     }
 };
 
