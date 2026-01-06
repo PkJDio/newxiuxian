@@ -1,4 +1,4 @@
-// js/modules/ui_bag.js - 背包界面 (适配装备要求显示)
+// js/modules/ui_bag.js - 背包界面 (v2.3: 消耗品交互优化 - 详情页操作)
 
 const UIBag = {
     // 状态管理
@@ -27,7 +27,6 @@ const UIBag = {
                 </div>
             </div>
         `;
-        // 弹窗大小控制 (85vw宽, 80vh高)
         if (window.showGeneralModal) window.showGeneralModal(title, contentHtml, null, "modal_bag", 85, 80);
         this.refresh();
     },
@@ -115,87 +114,147 @@ const UIBag = {
     },
 
     refresh: function() {
-        this.renderEquipmentRow();
+        const p = window.player;
+        if (!p) return;
+
         this.renderToolbar();
 
-        const container = document.getElementById('bag_grid_content');
-        if (!container) return;
-        container.innerHTML = '';
+        const equipRow = document.getElementById('bag_equipment_row');
+        if (equipRow) {
+            // A. 常规装备
+            const slots = [
+                { key: 'weapon', label: '兵器', defaultIcon: '⚔️' },
+                { key: 'head',   label: '头部', defaultIcon: '🧢' },
+                { key: 'body',   label: '身体', defaultIcon: '👕' },
+                { key: 'feet',   label: '足部', defaultIcon: '👢' },
+                { key: 'mount',  label: '坐骑', defaultIcon: '🐎' },
+                { key: 'fishing_rod', label: '钓具', defaultIcon: '🎣' }
+            ];
 
-        player.inventory.forEach((slot, index) => {
-            const item = GAME_DB.items.find(i => i.id === slot.id);
-            if (!item) return;
-            const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
-            const rarityColor = (RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
+            let html = slots.map(slot => {
+                const itemId = p.equipment[slot.key];
+                const item = itemId ? GAME_DB.items.find(i => i.id === itemId) : null;
 
-            const div = document.createElement('div');
-            div.className = 'bag_grid_item';
+                let icon = slot.defaultIcon;
+                let borderColor = '#ccc';
+                let activeClass = '';
 
-            if (this.selectionMode && this.selectedIndices.has(index)) {
-                div.classList.add('selected');
-            }
+                if (item) {
+                    icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || icon;
+                    const qualityColor = (item && window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#ddd';
+                    borderColor = qualityColor;
+                    activeClass = 'active';
+                }
 
-            div.innerHTML = `
-                <div class="bag_grid_icon">${icon}</div>
-                <div class="bag_grid_name" style="color:${rarityColor};">${item.name}</div>
-                ${slot.count > 1 ? `<div class="bag_item_count">x${slot.count}</div>` : ''}
-                <div class="bag_check_mark">✓</div>
-            `;
+                const name = item ? item.name : slot.label;
+                // 装备栏点击查看详情
+                const clickAction = item ? `UIBag.showEquippedDetail('${slot.key}')` : '';
 
-            if (this.selectionMode) {
-                div.onclick = () => UIBag.toggleItemSelection(index);
-            } else {
-                div.onclick = () => UIBag.renderDetail(item, { type: 'bag', index: index });
-            }
+                return `
+                    <div class="bag_equip_wrapper" onclick="${clickAction}">
+                        <div class="bag_equip_slot ${activeClass}" style="border-color:${borderColor}">
+                            <div class="bag_equip_icon">${icon}</div>
+                        </div>
+                        <div class="bag_equip_label" style="color:${item ? borderColor : '#999'}">${name}</div>
+                    </div>
+                `;
+            }).join('');
 
-            container.appendChild(div);
-        });
+            // B. 插入间隔
+            html += `<div class="bag_equip_spacer"></div>`;
+
+            // C. 渲染 3 个消耗品栏
+            if (!p.consumables) p.consumables = [null, null, null];
+
+            p.consumables.forEach((itemId, idx) => {
+                const item = itemId ? GAME_DB.items.find(i => i.id === itemId) : null;
+
+                let icon = '';
+                let activeClass = '';
+                let name = `快捷${idx + 1}`;
+                let clickAction = ''; // 默认为空，点击无反应
+
+                if (item) {
+                    icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '💊';
+                    activeClass = 'has_item';
+                    name = item.name;
+                    // 【关键修改】点击不再直接卸下，而是查看详情
+                    clickAction = `UIBag.showConsumableDetail(${idx})`;
+                } else {
+                    icon = '<span style="opacity:0.2; font-size:24px;">💊</span>';
+                }
+
+                html += `
+                    <div class="bag_equip_wrapper" onclick="${clickAction}">
+                        <div class="bag_equip_slot slot_consumable ${activeClass}">
+                            <div class="bag_equip_icon">${icon}</div>
+                        </div>
+                        <div class="bag_equip_label">${name}</div>
+                    </div>
+                `;
+            });
+
+            equipRow.innerHTML = html;
+        }
+
+        this.renderGrid();
     },
 
-    renderEquipmentRow: function() {
-        const container = document.getElementById('bag_equipment_row');
+    renderGrid: function() {
+        const container = document.getElementById('bag_grid_content');
         if (!container) return;
-        const slots = [
-            {key: 'weapon', name: '兵器', defaultIcon: '⚔️'},
-            {key: 'head', name: '头盔', defaultIcon: '🧢'},
-            {key: 'body', name: '衣服', defaultIcon: '👕'},
-            {key: 'feet', name: '鞋子', defaultIcon: '👞'},
-            {key: 'mount', name: '坐骑', defaultIcon: '🐎'},
-            {key: 'fishing_rod', name: '钓具', defaultIcon: '🎣'}
-        ];
+
         let html = '';
-        slots.forEach(slot => { html += this._renderEquipSlot(slot.key, slot.name, slot.defaultIcon); });
+        if (!player.inventory || player.inventory.length === 0) {
+            html = `<div style="width:100%; text-align:center; color:#999; padding-top:50px;">行囊空空如也</div>`;
+        } else {
+            player.inventory.forEach((slot, index) => {
+                const item = GAME_DB.items.find(i => i.id === slot.id);
+                if (!item) return;
+
+                const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+                const rarityColor = (window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
+                const isSelected = this.selectedIndices.has(index) ? 'selected' : '';
+
+                // 检查是否已装备为消耗品
+                const isConsumableEquipped = player.consumables && player.consumables.includes(item.id);
+                const markHtml = isConsumableEquipped ? `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>` : '';
+
+                if (this.selectionMode) {
+                    html += `
+                    <div class="bag_grid_item ${isSelected}" onclick="UIBag.toggleItemSelection(${index})" style="border-color:${rarityColor}">
+                        <div class="bag_check_mark">✔</div>
+                        <div class="bag_grid_icon">${icon}</div>
+                        <div class="bag_grid_name" style="color:${rarityColor}">${item.name}</div>
+                        <div class="bag_item_count">${slot.count}</div>
+                        ${markHtml}
+                    </div>
+                    `;
+                } else {
+                    html += `
+                    <div class="bag_grid_item" onclick="UIBag.renderDetailFromBag(${index})" style="border-color:${rarityColor}">
+                        <div class="bag_grid_icon">${icon}</div>
+                        <div class="bag_grid_name" style="color:${rarityColor}">${item.name}</div>
+                        <div class="bag_item_count">${slot.count}</div>
+                        ${markHtml}
+                    </div>
+                    `;
+                }
+            });
+        }
         container.innerHTML = html;
     },
 
-    _renderEquipSlot: function(slotKey, label, defaultIcon) {
-        const equipId = (player.equipment && player.equipment[slotKey]) ? player.equipment[slotKey] : null;
-        let icon = defaultIcon || '📦';
-        let activeClass = "";
-        let tooltipTitle = label + " (空)";
-        let onClickAction = "";
-
-        if (equipId) {
-            const item = GAME_DB.items.find(i => i.id === equipId);
-            if (item) {
-                icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || icon;
-                activeClass = "equipped";
-                tooltipTitle = `${item.name} (点击查看)`;
-                onClickAction = `UIBag.showEquippedDetail('${slotKey}')`;
-            }
+    renderDetailFromBag: function(index) {
+        const slot = player.inventory[index];
+        if(!slot) return;
+        const item = GAME_DB.items.find(i => i.id === slot.id);
+        if(item) {
+            this.renderDetail(item, { type: 'bag', index: index });
         }
-        const clickAttr = onClickAction ? `onclick="${onClickAction}"` : "";
-
-        return `
-            <div class="bag_equip_wrapper">
-                <span class="bag_equip_label">${label}</span>
-                <div class="bag_equip_box ${activeClass}" ${clickAttr} title="${tooltipTitle}">
-                    <span class="bag_equip_icon">${icon}</span>
-                </div>
-            </div>
-        `;
     },
 
+    // 显示装备详情
     showEquippedDetail: function(slotKey) {
         const itemId = player.equipment[slotKey];
         if (!itemId) return;
@@ -204,10 +263,17 @@ const UIBag = {
         this.renderDetail(item, { type: 'equip', key: slotKey });
     },
 
-    /**
-     * 【核心修改】渲染详情面板
-     * 增加了【装备要求】(Requirements) 的解析与显示
-     */
+    // 【新增】显示消耗品详情
+    showConsumableDetail: function(index) {
+        const itemId = player.consumables[index];
+        if (!itemId) return;
+        const item = GAME_DB.items.find(i => i.id === itemId);
+        if (!item) return;
+        // 传入上下文：类型为 consumable，索引为快捷栏索引
+        this.renderDetail(item, { type: 'consumable', index: index });
+    },
+
+    // 统一渲染详情页
     renderDetail: function(item, context) {
         const container = document.getElementById('bag_detail_panel');
         if (!container) return;
@@ -216,27 +282,27 @@ const UIBag = {
         const typeName = globalTypeMap[item.type] || item.type || "物品";
         const rarityInfo = (typeof RARITY_CONFIG !== 'undefined' ? RARITY_CONFIG[item.rarity] : null) || {color:'#333', name:'普通'};
         const mapping = window.ATTR_MAPPING || {};
+        const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+
+        // 详情页类型标记后缀
+        let typeSuffix = '';
+        if (context.type === 'equip') typeSuffix = '(已装备)';
+        if (context.type === 'consumable') typeSuffix = '(已携带)';
 
         let statsRows = [];
-
-        // 1. 耐久度
         if (item.durability !== undefined) {
             statsRows.push(`<div style="color:#795548;">🛡 耐久: ${item.durability}</div>`);
         }
-
-        // 2. 书籍状态
         if (item.type === 'book') {
             const status = UtilsItem.getBookStatus(item.id);
             statsRows.push(`<div>📚 状态: <span style="color:${status.color}">${status.text}</span></div>`);
         }
 
-        // 3. 核心属性解析
         const effects = item.effects || item.stats || item.param;
         if (effects) {
             for (let key in effects) {
                 const val = effects[key];
                 if (!val && val !== 0) continue;
-
                 if (typeof val === 'object') {
                     if (val.attr && val.val) {
                         const name = mapping[val.attr] || val.attr;
@@ -246,7 +312,6 @@ const UIBag = {
                     }
                     continue;
                 }
-
                 const name = mapping[key] || key;
                 if (key === 'toxicity') {
                     statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
@@ -273,7 +338,6 @@ const UIBag = {
             }
         }
 
-        // 4. Buffs 数组兼容
         if (item.buffs && Array.isArray(item.buffs)) {
             item.buffs.forEach(buff => {
                 const name = mapping[buff.attr] || buff.attr;
@@ -287,37 +351,22 @@ const UIBag = {
             ? `<div class="bag_detail_stats" style="margin-top:10px; padding-bottom:10px; border-bottom:1px dashed #eee;">${statsRows.join('')}</div>`
             : '';
 
-        // === 【修正】装备要求显示 ===
         let reqHtml = '';
         if (item.req) {
             let reqList = [];
-            // 【核心修正】获取最终属性
             const currentStats = player.derived || player.attr || {};
-
             for (let key in item.req) {
                 const reqVal = item.req[key];
-                const myVal = currentStats[key] || 0; // 获取当前实际值
+                const myVal = currentStats[key] || 0;
                 const isMet = myVal >= reqVal;
                 const attrName = mapping[key] || key;
-
-                // 样式：满足显示绿色对勾，不满足显示红色叉叉和当前值
                 const color = isMet ? '#4caf50' : '#f44336';
                 const icon = isMet ? '✅' : '🚫';
                 const text = isMet ? `已达标 (${reqVal})` : `需 ${reqVal} (当前 ${myVal})`;
-
-                reqList.push(
-                    `<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px; color:${isMet ? '#666' : '#d9534f'};">
-                    <span>${attrName}要求</span>
-                    <span>${text} ${icon}</span>
-                </div>`
-                );
+                reqList.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px; color:${isMet ? '#666' : '#d9534f'};"><span>${attrName}要求</span><span>${text} ${icon}</span></div>`);
             }
-
             if (reqList.length > 0) {
-                reqHtml = `<div class="bag_detail_req" style="margin:10px 0; padding:8px; background:#fffbfb; border:1px dashed #e0e0e0; border-radius:4px;">
-                <div style="font-weight:bold; color:#555; margin-bottom:5px; font-size:14px;">▼ 穿戴条件</div>
-                ${reqList.join('')}
-            </div>`;
+                reqHtml = `<div class="bag_detail_req" style="margin:10px 0; padding:8px; background:#fffbfb; border:1px dashed #e0e0e0; border-radius:4px;"><div style="font-weight:bold; color:#555; margin-bottom:5px; font-size:14px;">▼ 穿戴条件</div>${reqList.join('')}</div>`;
             }
         }
 
@@ -332,37 +381,112 @@ const UIBag = {
 
         // === 按钮生成 ===
         let btnsHtml = `<div class="bag_detail_actions">`;
+
+        // 1. 在背包中查看
         if (context.type === 'bag') {
             const idx = context.index;
             if (['weapon','head','body','feet','mount','fishing_rod','tool'].includes(item.type)) {
                 btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
             }
-            if (['food','pill','book','foodMaterial','herb'].includes(item.type)) {
+
+            else if (item.type === 'pill') {
+                const isCarried = window.player.consumables && window.player.consumables.includes(item.id);
+                if (isCarried) {
+                    btnsHtml += `<button class="bag_btn_action disabled" style="background:#eee;color:#999;border:none;">已携带</button>`;
+                } else {
+                    btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${item.id}')">随身携带</button>`;
+                }
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">服用</button>`;
+            }
+
+            else if (['food','book','foodMaterial','herb'].includes(item.type)) {
                 const btnName = item.type === 'book' ? '研读' : '使用';
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">${btnName}</button>`;
             }
             btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.discardItem(${idx})">丢弃</button>`;
         }
+
+        // 2. 在装备栏中查看
         else if (context.type === 'equip') {
             const slotKey = context.key;
             btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleUnequipAction('${slotKey}')">卸下</button>`;
             btnsHtml += `<button class="bag_btn_danger" onclick="UIBag.discardEquippedItem('${slotKey}')">丢弃</button>`;
         }
+
+        // 3. 【新增】在消耗品栏中查看
+        else if (context.type === 'consumable') {
+            const slotIdx = context.index;
+            // 解除携带
+            btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${slotIdx})">解除携带</button>`;
+
+            // 尝试添加“服用”按钮 (需找到背包索引)
+            const bagIdx = player.inventory.findIndex(s => s.id === item.id);
+            if (bagIdx !== -1) {
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${bagIdx})">服用</button>`;
+            }
+        }
+
         btnsHtml += `</div>`;
 
         container.innerHTML = `
             <div class="bag_detail_header" style="color:${rarityInfo.color};">
-                <span>${(typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon)} ${item.name}</span>
+                <span>${icon} ${item.name}</span>
                 <span class="ink_tag" style="font-size:14px;">${rarityInfo.name}</span>
             </div>
-            <div class="bag_detail_type">${typeName} ${context.type === 'equip' ? '(已装备)' : ''}</div>
-            
+            <div class="bag_detail_type">${typeName} ${typeSuffix}</div>
             ${statsHtml}
             ${reqHtml}  ${descHtml}
             ${priceHtml}
-            
             ${btnsHtml}
         `;
+    },
+
+    // === 功能函数 ===
+
+    equipConsumable: function(itemId) {
+        const p = window.player;
+        if (!p.consumables) p.consumables = [null, null, null];
+
+        const emptyIdx = p.consumables.indexOf(null);
+        if (emptyIdx === -1) {
+            if(window.showToast) window.showToast("随身位已满，请先取下其他丹药");
+            return;
+        }
+
+        p.consumables[emptyIdx] = itemId;
+
+        if(window.showToast) window.showToast("已放入随身快捷栏");
+        if(window.saveGame) window.saveGame();
+
+        this.refresh();
+
+        const slotIdx = p.inventory.findIndex(s => s.id === itemId);
+        if(slotIdx !== -1) {
+            this.renderDetailFromBag(slotIdx);
+        }
+    },
+
+    unequipConsumable: function(slotIndex) {
+        const p = window.player;
+        if (!p.consumables || !p.consumables[slotIndex]) return;
+
+        const itemId = p.consumables[slotIndex];
+        p.consumables[slotIndex] = null;
+
+        if(window.showToast) window.showToast("已取消携带");
+        if(window.saveGame) window.saveGame();
+
+        this.refresh();
+
+        // 卸下后，尝试切回“背包视角”详情页，这样按钮会变回“随身携带”
+        const bagIdx = p.inventory.findIndex(s => s.id === itemId);
+        if(bagIdx !== -1) {
+            this.renderDetailFromBag(bagIdx);
+        } else {
+            // 如果背包里都没了（比如用光了），就显示空状态
+            const container = document.getElementById('bag_detail_panel');
+            if(container) container.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">已移除快捷栏</div>';
+        }
     },
 
     handleEquipAction: function(inventoryIndex, itemType) {
