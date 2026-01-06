@@ -13,7 +13,6 @@ const ArchiveSystem = {
         try {
             const dataStr = JSON.stringify(window.player);
             localStorage.setItem(SAVE_KEY, dataStr);
-            console.log("游戏已自动保存");
         } catch (e) {
             console.error("保存失败 (可能是空间不足):", e);
         }

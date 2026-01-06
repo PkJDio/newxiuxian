@@ -111,7 +111,7 @@ function renderBuffs() {
         });
     };
 
-    console.groupCollapsed("[UI] 开始渲染 Buff");
+
 
     // 1. 装备
     if (player.equipment) {
@@ -212,8 +212,7 @@ function renderBuffs() {
         }
     }
 
-    console.log("最终生成的列表项:", entries);
-    console.groupEnd();
+
 
     if (entries.length === 0) {
         container.innerHTML = '<div style="color:#ccc; font-size:12px; padding:5px;">暂无加成</div>';

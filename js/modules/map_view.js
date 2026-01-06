@@ -1,547 +1,174 @@
-// js/modules/map_view.js
-// 全屏地图阅览控制器 (支持新地形：草原/沙漠/海洋，区分城镇村样式)
-console.log("加载 地图阅览模块 (独立版)");
+/**
+ * map_view.js
+ * 负责地图的渲染、UI更新以及调试信息的输出
+ */
 
 const MapView = {
-    canvas: null,
-    ctx: null,
-    tooltip: null,
-    sidebar: null,
-    animationId: null,
+    container: null,
 
-    layout: { size: 0, offX: 0, offY: 0 },
+    // 缓存当前的地图数据和玩家位置，用于重绘
+    currentMapData: null,
+    currentPlayerPos: null,
 
-    // 摄像机默认居中 (1350, 1350)
-    camera: { x: 1350, y: 1350, level: "world" },
-
-    isDragging: false,
-    dragStartX: 0, dragStartY: 0,
-    lastMouseX: 0, lastMouseY: 0,
-
-    // 配置：新增了 grass, desert, ocean 颜色
-    config: {
-        colors: {
-            bg: "#f4f4f4",
-            gridWorld: "rgba(169, 68, 66, 0.6)",
-            gridNation: "rgba(0, 0, 0, 0.15)",
-
-            road: "#a1887f",
-            river: "#81d4fa",
-            mountainBg: "rgba(121, 85, 72, 0.3)",
-            mountainBorder: "#5d4037",
-
-            grass: "#aed581",   // 草原绿
-            desert: "#ffe082",  // 沙漠黄
-            ocean: "#29b6f6",   // 海洋蓝
-
-            // 城镇基础色
-            cityBg: "#e3f2fd",    // 城市：淡蓝
-            townBg: "#fff3e0",    // 城镇：淡橙
-            villageBg: "#f1f8e9", // 村落：淡绿
-
-            cityBorder: "#1565c0",
-            townBorder: "#e65100",
-            villageBorder: "#33691e"
+    /**
+     * 初始化地图视图
+     * @param {string} containerId - 地图容器的DOM ID
+     */
+    init: function(containerId) {
+        this.container = document.getElementById(containerId);
+        if (!this.container) {
+            console.error(`[MapError] 找不到地图容器: ${containerId}`);
+            return;
         }
+        console.log(`[MapSystem] 地图视图初始化完成，容器ID: ${containerId}`);
     },
 
-    open: function() {
-        if (!window.UtilsModal) return;
-        UtilsModal.showMapModal(() => { this.init(); });
-    },
+    /**
+     * 核心渲染方法
+     * @param {Object} mapData - 地图数据对象 (包含 grid, width, height, enemies 等)
+     * @param {Object} playerPos - 玩家位置 {x, y}
+     */
+    render: function(mapData, playerPos) {
+        console.group("==== 开始渲染地图 ===="); // 开始折叠日志
+        console.log("接收到的地图数据:", mapData);
+        console.log("接收到的玩家位置:", playerPos);
 
-    init: function() {
-        const container = document.getElementById('full_map_container');
-        this.canvas = document.getElementById('full_map_canvas');
-        this.tooltip = document.getElementById('map_view_tooltip');
-        this.sidebar = document.getElementById('map_sidebar');
+        if (!this.container) return;
 
-        if (!this.canvas || !container) return;
+        this.currentMapData = mapData;
+        this.currentPlayerPos = playerPos;
+        this.container.innerHTML = ''; // 清空旧地图
 
-        this.ctx = this.canvas.getContext('2d');
-
-        if (window.player && player.x) {
-            this.camera.x = player.x;
-            this.camera.y = player.y;
-        } else {
-            this.camera.x = 1350;
-            this.camera.y = 1350;
-        }
-
-        this.camera.level = "world";
-
-        this._bindEvents();
-        this._resize();
-        this._resizeHandler = () => this._resize();
-        window.addEventListener('resize', this._resizeHandler);
-
-        this._startLoop();
-        this._updateUI();
-    },
-
-    _resize: function() {
-        const container = document.getElementById('full_map_container');
-        if (!container || !this.canvas) return;
-
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        this.canvas.width = w;
-        this.canvas.height = h;
-
-        const margin = 20;
-        const size = Math.min(w, h) - (margin * 2);
-
-        this.layout.size = size;
-        this.layout.offX = (w - size) / 2;
-        this.layout.offY = (h - size) / 2;
-    },
-
-    _getScale: function() {
-        if (this.camera.level === 'world') return this.layout.size / 2700;
-        else return this.layout.size / 900;
-    },
-
-    _screenToWorld: function(sx, sy) {
-        const mapX = sx - this.layout.offX;
-        const mapY = sy - this.layout.offY;
-        const scale = this._getScale();
-        const centerX = this.layout.size / 2;
-        const centerY = this.layout.size / 2;
-        const worldX = this.camera.x + (mapX - centerX) / scale;
-        const worldY = this.camera.y + (mapY - centerY) / scale;
-        return { x: worldX, y: worldY };
-    },
-
-    _bindEvents: function() {
-        this.canvas.onmousedown = (e) => {
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-
-            if (this.camera.level === 'world') return;
-
-            const rect = this.canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-
-            if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-                my < this.layout.offY || my > this.layout.offY + this.layout.size) return;
-
-            this.isDragging = true;
-            this.lastMouseX = e.clientX;
-            this.lastMouseY = e.clientY;
-            this.canvas.style.cursor = 'grabbing';
-        };
-
-        window.onmouseup = (e) => {
-            this.isDragging = false;
-            if(this.canvas) this.canvas.style.cursor = 'default';
-            const dist = Math.sqrt(Math.pow(e.clientX - this.dragStartX, 2) + Math.pow(e.clientY - this.dragStartY, 2));
-            if (dist < 5) this._handleMapClick(e);
-        };
-
-        this.canvas.onmousemove = (e) => {
-            this._handleHover(e);
-            if (this.isDragging && this.camera.level === 'nation') {
-                const dx = e.clientX - this.lastMouseX;
-                const dy = e.clientY - this.lastMouseY;
-                const scale = this._getScale();
-                this.camera.x -= dx / scale;
-                this.camera.y -= dy / scale;
-                this._clampCamera();
-                this.lastMouseX = e.clientX;
-                this.lastMouseY = e.clientY;
-                this._updateMouseCoord(e);
-            }
-        };
-
-        this.canvas.onwheel = (e) => {
-            e.preventDefault();
-            if (e.deltaY > 0) {
-                if (this.camera.level !== 'world') {
-                    this.camera.level = 'world';
-                    this.camera.x = 1350;
-                    this.camera.y = 1350;
-                    this._updateUI();
-                }
-            } else {
-                if (this.camera.level !== 'nation') {
-                    this.camera.level = 'nation';
-                    const rect = this.canvas.getBoundingClientRect();
-                    const mx = e.clientX - rect.left;
-                    const my = e.clientY - rect.top;
-                    if (mx >= this.layout.offX && mx <= this.layout.offX + this.layout.size &&
-                        my >= this.layout.offY && my <= this.layout.offY + this.layout.size) {
-                        const worldScale = this.layout.size / 2700;
-                        const relX = mx - this.layout.offX;
-                        const relY = my - this.layout.offY;
-                        this.camera.x = relX / worldScale;
-                        this.camera.y = relY / worldScale;
-                        this._clampCamera();
-                    }
-                    this._updateUI();
-                }
-            }
-        };
-    },
-
-    _handleMapClick: function(e) {
-        if (!this.sidebar) return;
-        const rect = this.canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-            my < this.layout.offY || my > this.layout.offY + this.layout.size) return;
-        const worldPos = this._screenToWorld(mx, my);
-        const info = this._hitTest(worldPos.x, worldPos.y);
-        this._renderSidebar(info);
-    },
-
-    _renderSidebar: function(info) {
-        if (!info) {
-            this.sidebar.innerHTML = `
-                <div class="map_empty_state">
-                    <div class="map_empty_icon">🗺️</div>
-                    <p>点击地点<br>查看详情</p>
-                </div>`;
+        // 1. 安全检查：如果地图数据为空
+        if (!mapData || !mapData.width || !mapData.height) {
+            console.error("[MapError] 地图数据无效!", mapData);
+            this.container.innerHTML = '<div class="error-msg">地图数据缺失</div>';
+            console.groupEnd();
             return;
         }
 
-        const typeLabels = {
-            'city': '主城', 'town': '重镇', 'village': '村落',
-            'mountain': '名山', 'river': '水系', 'road': '官道',
-            'grass': '草原', 'desert': '荒漠', 'ocean': '海域'
-        };
-        const typeName = typeLabels[info.type] || '地理';
-        const desc = info.desc || "暂无详细记载。";
+        // 2. 设置容器样式的网格布局 (CSS Grid)
+        // 动态计算 CSS grid-template-columns，确保格子排列正确
+        this.container.style.display = 'grid';
+        this.container.style.gridTemplateColumns = `repeat(${mapData.width}, 1fr)`;
+        this.container.style.gap = '2px'; // 格子间距
 
-        let contentHtml = `
-            <div class="map_sidebar_header">
-                <div class="map_sidebar_title">${info.name}</div>
-                <div class="map_sidebar_type">${typeName}</div>
-            </div>
-            <div class="map_sidebar_content">
-                <p style="margin-bottom: 30px;">${desc}</p>
-                <div style="padding-top:20px; border-top:2px dashed #eee; color:#666;">
-                    <p style="font-size: 0.9em; font-weight:bold;">地理范围：</p>
-                    <p style="font-size: 0.8em; font-family:monospace;">X: ${info.xRange[0]} - ${info.xRange[1]}</p>
-                    <p style="font-size: 0.8em; font-family:monospace;">Y: ${info.yRange[0]} - ${info.yRange[1]}</p>
-                </div>
-            </div>
-        `;
-        this.sidebar.innerHTML = contentHtml;
-    },
-
-    _hitTest: function(x, y) {
-        if (typeof WORLD_TOWNS !== 'undefined') {
-            const town = WORLD_TOWNS.find(t => x >= t.x && x <= t.x + t.w && y >= t.y && y <= t.y + t.h);
-            if (town) return {
-                type: town.level, name: town.name, desc: town.desc,
-                xRange: [town.x, town.x+town.w], yRange: [town.y, town.y+town.h]
-            };
+        // 3. 敌人数据检查与兜底生成
+        // 如果数据里没有 enemies 数组，或者数组为空，我们强制生成一些用于测试
+        if (!mapData.enemies || !Array.isArray(mapData.enemies) || mapData.enemies.length === 0) {
+            console.warn("[MapWarning] 当前地图没有敌人数据，正在生成测试敌人...");
+            // 注意：这里修改的是传入的 mapData 对象引用
+            mapData.enemies = this.generateTestEnemies(mapData.width, mapData.height, playerPos);
         }
-        if (typeof TERRAIN_ZONES !== 'undefined') {
-            for (let i = TERRAIN_ZONES.length - 1; i >= 0; i--) {
-                const z = TERRAIN_ZONES[i];
-                if (x >= z.x[0] && x <= z.x[1] && y >= z.y[0] && y <= z.y[1]) {
-                    return { type: z.type, name: z.name, desc: z.desc, xRange: z.x, yRange: z.y };
+
+        console.log(`[MapSystem] 当前地图敌人总数: ${mapData.enemies.length}`);
+        console.table(mapData.enemies); // 以表格形式打印敌人列表
+
+        // 4. 遍历网格进行绘制
+        for (let y = 0; y < mapData.height; y++) {
+            for (let x = 0; x < mapData.width; x++) {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'map-cell';
+                cellDiv.dataset.x = x;
+                cellDiv.dataset.y = y;
+
+                // --- 逻辑判断优先级 ---
+
+                // A. 判断是否是玩家
+                const isPlayer = (x === playerPos.x && y === playerPos.y);
+
+                // B. 判断是否是敌人
+                // find 查找当前坐标是否有敌人
+                const enemy = mapData.enemies.find(e => e.x === x && e.y === y);
+
+                // C. 获取地形/地点名称
+                // 假设 mapData.grid 是一个二维数组或一维数组，这里兼容处理
+                let locationName = "荒野";
+                if (mapData.grid && mapData.grid[y] && mapData.grid[y][x]) {
+                    locationName = mapData.grid[y][x].name || mapData.grid[y][x];
                 }
+
+                // --- 渲染内容 ---
+
+                if (isPlayer) {
+                    cellDiv.classList.add('map-cell-player');
+                    cellDiv.innerHTML = '<span class="icon">🧘</span><span class="name">你</span>';
+                    // console.log(`[Render] 绘制玩家 @ (${x}, ${y})`);
+                }
+                else if (enemy) {
+                    cellDiv.classList.add('map-cell-enemy');
+                    // 根据敌人类型显示不同图标 (这里简化处理)
+                    const enemyIcon = enemy.type === 'boss' ? '👹' : '💀';
+                    cellDiv.innerHTML = `<span class="icon">${enemyIcon}</span><span class="name">${enemy.name}</span>`;
+                    console.log(`[Render] 绘制敌人 [${enemy.name}] @ (${x}, ${y})`);
+                }
+                else {
+                    // 普通地形
+                    cellDiv.classList.add('map-cell-ground');
+                    // 如果是特殊地点（如城市），加特殊样式
+                    if (locationName !== "荒野" && locationName !== "山林") {
+                        cellDiv.classList.add('map-cell-city');
+                    }
+                    cellDiv.innerHTML = `<span class="name">${locationName}</span>`;
+                }
+
+                // 添加点击事件（用于移动或交互）
+                cellDiv.onclick = () => {
+                    console.log(`[Click] 点击了格子: ${x}, ${y}, 地点: ${locationName}`);
+                    if (window.Game && window.Game.handleMapClick) {
+                        window.Game.handleMapClick(x, y);
+                    }
+                };
+
+                this.container.appendChild(cellDiv);
             }
         }
-        return null;
+        console.groupEnd(); // 结束日志折叠
     },
 
-    _startLoop: function() {
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        const loop = () => {
-            this._render();
-            this.animationId = requestAnimationFrame(loop);
-        };
-        loop();
-    },
+    /**
+     * 辅助方法：生成测试敌人
+     * 当地图数据里没有敌人时调用，防止空荡荡的
+     */
+    generateTestEnemies: function(width, height, playerPos) {
+        const testEnemies = [];
+        const count = 3; // 生成3个敌人
 
-    _render: function() {
-        if (!this.ctx) return;
-        const ctx = this.ctx;
-        const W = this.canvas.width;
-        const H = this.canvas.height;
+        for (let i = 0; i < count; i++) {
+            // 简单的随机坐标
+            let ex = Math.floor(Math.random() * width);
+            let ey = Math.floor(Math.random() * height);
 
-        ctx.fillStyle = "#e0e0e0";
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(this.layout.offX, this.layout.offY, this.layout.size, this.layout.size);
-        ctx.clip();
-
-        ctx.fillStyle = this.config.colors.bg;
-        ctx.fillRect(this.layout.offX, this.layout.offY, this.layout.size, this.layout.size);
-
-        const scale = this._getScale();
-        ctx.translate(this.layout.offX + this.layout.size/2, this.layout.offY + this.layout.size/2);
-        ctx.scale(scale, scale);
-        ctx.translate(-this.camera.x, -this.camera.y);
-
-        this._drawGrids(ctx);
-        this._drawRegionNames(ctx);
-        this._drawTerrain(ctx); // 画地形 (含新类型)
-        this._drawTowns(ctx);   // 画城镇 (区分样式)
-        this._drawPlayer(ctx);
-
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 2 / scale;
-        ctx.strokeRect(0, 0, 2700, 2700);
-
-        ctx.restore();
-
-        ctx.strokeStyle = "#666";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(this.layout.offX, this.layout.offY, this.layout.size, this.layout.size);
-    },
-
-    _drawGrids: function(ctx) {
-        const c = this.config.colors;
-        const scale = this._getScale();
-
-        ctx.beginPath();
-        ctx.strokeStyle = c.gridWorld;
-        ctx.lineWidth = 2 / scale;
-        for (let i = 0; i <= 2700; i += 900) {
-            ctx.moveTo(i, 0); ctx.lineTo(i, 2700);
-            ctx.moveTo(0, i); ctx.lineTo(2700, i);
-        }
-        ctx.stroke();
-
-        if (this.camera.level === 'nation') {
-            ctx.beginPath();
-            ctx.strokeStyle = c.gridNation;
-            ctx.lineWidth = 1 / scale;
-            for (let i = 0; i <= 2700; i += 300) {
-                if (i % 900 === 0) continue;
-                ctx.moveTo(i, 0); ctx.lineTo(i, 2700);
-                ctx.moveTo(0, i); ctx.lineTo(2700, i);
+            // 防止生成在玩家头上
+            while (ex === playerPos.x && ey === playerPos.y) {
+                ex = Math.floor(Math.random() * width);
+                ey = Math.floor(Math.random() * height);
             }
-            ctx.stroke();
-        }
-    },
 
-    _drawRegionNames: function(ctx) {
-        if (typeof REGION_LAYOUT === 'undefined') return;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        if (this.camera.level === 'world') {
-            ctx.font = `bold 120px Kaiti`;
-            ctx.fillStyle = "rgba(0,0,0,0.1)";
-            REGION_LAYOUT.forEach(r => {
-                const cx = (r.x[0] + r.x[1]) / 2;
-                const cy = (r.y[0] + r.y[1]) / 2;
-                ctx.fillText(r.name, cx, cy);
+            testEnemies.push({
+                id: `test_enemy_${i}`,
+                name: i === 0 ? "秦岭匪徒" : "野狼",
+                x: ex,
+                y: ey,
+                hp: 100,
+                type: 'normal'
             });
-        } else {
-            ctx.font = `bold 60px Kaiti`;
-            ctx.fillStyle = "rgba(0,0,0,0.15)";
-            if (typeof SUB_REGIONS !== 'undefined') {
-                // 直接遍历 REGION_LAYOUT 找大区，再拼 3x3
-                REGION_LAYOUT.forEach((r, idx) => {
-                    for(let gx=0; gx<3; gx++) {
-                        for(let gy=0; gy<3; gy++) {
-                            const key = `${r.id}_${gx}_${gy}`;
-                            if(SUB_REGIONS[key]) {
-                                // 计算中心坐标
-                                const cx = r.x[0] + gx*300 + 150;
-                                const cy = r.y[0] + gy*300 + 150;
-                                ctx.fillText(SUB_REGIONS[key].name, cx, cy);
-                            }
-                        }
-                    }
-                });
-            }
         }
+        console.log("[MapSystem] 已生成测试敌人数据:", testEnemies);
+        return testEnemies;
     },
 
-    // 绘制地形 (包含新类型)
-    _drawTerrain: function(ctx) {
-        if (typeof TERRAIN_ZONES === 'undefined') return;
-        const c = this.config.colors;
-        const scale = this._getScale();
-
-        TERRAIN_ZONES.forEach(z => {
-            const w = z.x[1] - z.x[0];
-            const h = z.y[1] - z.y[0];
-
-            if (z.type === 'road') {
-                ctx.fillStyle = c.road; ctx.fillRect(z.x[0], z.y[0], w, h);
-            } else if (z.type === 'river') {
-                ctx.fillStyle = c.river; ctx.globalAlpha = 0.5;
-                ctx.fillRect(z.x[0], z.y[0], w, h); ctx.globalAlpha = 1.0;
-            } else if (z.type === 'mountain') {
-                ctx.fillStyle = c.mountainBg; ctx.fillRect(z.x[0], z.y[0], w, h);
-                ctx.strokeStyle = c.mountainBorder; ctx.lineWidth = 2 / scale;
-                ctx.setLineDash([10/scale, 10/scale]); ctx.strokeRect(z.x[0], z.y[0], w, h); ctx.setLineDash([]);
-                if (this.camera.level === 'nation') {
-                    ctx.fillStyle = c.mountainBorder; ctx.font = `bold 24px Kaiti`;
-                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                    ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
-                }
-            }
-            // === 新增地形绘制 ===
-            else if (z.type === 'grass') {
-                ctx.fillStyle = c.grass;
-                ctx.fillRect(z.x[0], z.y[0], w, h);
-                // 绘制名字
-                if (this.camera.level === 'nation') {
-                    ctx.fillStyle = "rgba(0,0,0,0.3)";
-                    ctx.font = `bold 20px Kaiti`;
-                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                    ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
-                }
-            } else if (z.type === 'desert') {
-                ctx.fillStyle = c.desert;
-                ctx.fillRect(z.x[0], z.y[0], w, h);
-            } else if (z.type === 'ocean') {
-                ctx.fillStyle = c.ocean;
-                ctx.fillRect(z.x[0], z.y[0], w, h);
-                if (this.camera.level === 'world') {
-                    ctx.fillStyle = "rgba(255,255,255,0.3)";
-                    ctx.font = `bold 60px Kaiti`;
-                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                    ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
-                }
-            }
-        });
-    },
-
-    // 绘制城镇 (区分 City, Town, Village)
-    _drawTowns: function(ctx) {
-        if (typeof WORLD_TOWNS === 'undefined') return;
-        const c = this.config.colors;
-        const scale = this._getScale();
-
-        WORLD_TOWNS.forEach(t => {
-            if (this.camera.level === 'world' && t.level !== 'city') return;
-
-            // 1. 设置颜色和样式
-            let bg, border, shape = 'rect';
-            if (t.level === 'city') {
-                bg = c.cityBg; border = c.cityBorder; shape = 'rect_large';
-            } else if (t.level === 'town') {
-                bg = c.townBg; border = c.townBorder; shape = 'rect_mid';
-            } else { // village
-                bg = c.villageBg; border = c.villageBorder; shape = 'circle';
-            }
-
-            ctx.fillStyle = bg;
-            ctx.strokeStyle = border;
-            ctx.lineWidth = 2 / scale;
-
-            // 2. 绘制形状
-            if (shape === 'circle') {
-                ctx.beginPath();
-                // 用 width 的一半作为半径
-                ctx.arc(t.x + t.w/2, t.y + t.h/2, t.w/2, 0, Math.PI*2);
-                ctx.fill();
-                ctx.stroke();
-            } else {
-                ctx.fillRect(t.x, t.y, t.w, t.h);
-                // City 用双线边框
-                if (t.level === 'city') {
-                    ctx.lineWidth = 4 / scale;
-                    ctx.strokeRect(t.x, t.y, t.w, t.h);
-                    ctx.lineWidth = 1 / scale; // 内线
-                    ctx.strokeRect(t.x + 2/scale, t.y + 2/scale, t.w - 4/scale, t.h - 4/scale);
-                } else {
-                    ctx.strokeRect(t.x, t.y, t.w, t.h);
-                }
-            }
-
-            // 3. 绘制文字
-            ctx.fillStyle = "#000";
-            const fontSize = this.camera.level === 'world' ? 40 : (t.level === 'village' ? 16 : 24);
-            ctx.font = `bold ${fontSize}px Kaiti`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(t.name, t.x + t.w/2, t.y + t.h/2);
-        });
-    },
-
-    _drawPlayer: function(ctx) {
-        if (!window.player) return;
-        const scale = this._getScale();
-        ctx.beginPath();
-        const radius = this.camera.level === 'world' ? 15 : 8;
-        ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
-        ctx.fillStyle = "#d50000"; ctx.fill();
-        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2 / scale; ctx.stroke();
-    },
-
-    _clampCamera: function() {
-        const half = 450;
-        this.camera.x = Math.max(half, Math.min(2700 - half, this.camera.x));
-        this.camera.y = Math.max(half, Math.min(2700 - half, this.camera.y));
-    },
-
-    _updateUI: function() {
-        const el = document.getElementById('map_level_indicator');
-        if (el) {
-            if (this.camera.level === 'world') {
-                el.innerText = "世界级 (全览)";
-                el.style.background = "#e65100";
-            } else {
-                el.innerText = "国家级 (900里)";
-                el.style.background = "#2e7d32";
-            }
+    /**
+     * 更新视图（当玩家移动时调用此方法即可，不必完全重置）
+     */
+    update: function() {
+        if (this.currentMapData && this.currentPlayerPos) {
+            this.render(this.currentMapData, this.currentPlayerPos);
         }
-    },
-
-    _handleHover: function(e) {
-        this._updateMouseCoord(e);
-        const rect = this.canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-            my < this.layout.offY || my > this.layout.offY + this.layout.size) {
-            this.tooltip.style.display = 'none';
-            return;
-        }
-        const worldPos = this._screenToWorld(mx, my);
-        const hit = this._hitTest(worldPos.x, worldPos.y);
-        if (hit) {
-            this.tooltip.style.display = 'block';
-            this.tooltip.style.left = (mx + 15) + 'px';
-            this.tooltip.style.top = (my + 15) + 'px';
-            this.tooltip.innerHTML = `<div class="map_tooltip_title">${hit.name}</div>`;
-        } else {
-            this.tooltip.style.display = 'none';
-        }
-    },
-
-    _updateMouseCoord: function(e) {
-        const el = document.getElementById('map_mouse_coord');
-        if (!el) return;
-        const rect = this.canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-        if (mx < this.layout.offX || mx > this.layout.offX + this.layout.size ||
-            my < this.layout.offY || my > this.layout.offY + this.layout.size) {
-            el.innerText = "(--, --)";
-            return;
-        }
-        const wp = this._screenToWorld(mx, my);
-        const dx = Math.floor(Math.max(0, Math.min(2700, wp.x)));
-        const dy = Math.floor(Math.max(0, Math.min(2700, wp.y)));
-        el.innerText = `(${dx}, ${dy})`;
-    },
-
-    stopLoop: function() {
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
-        if(this.canvas) {
-            this.canvas.onmousedown = null;
-            this.canvas.onmousemove = null;
-            this.canvas.onwheel = null;
-        }
-        window.onmouseup = null;
     }
 };
 
-window.MapView = MapView;
+// 导出 (如果使用了模块系统，否则直接挂载到 window)
+if (typeof window !== 'undefined') {
+    window.MapView = MapView;
+}
