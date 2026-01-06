@@ -210,8 +210,7 @@ const MapCamera = {
     },
 
     /**
-     * 【核心逻辑】网格扫描刷怪
-     * 不再随机猜点，而是遍历周围的网格
+     * 【核心修改】刷怪逻辑
      */
     _updateEnemies: function() {
         if (!window.GlobalEnemies) window.GlobalEnemies = [];
@@ -221,37 +220,43 @@ const MapCamera = {
         const py = this.y;
         const cfg = this.spawnConfig;
 
-        // 1. 清理过远的怪
+        // 1. 【新增】清理过期(非当前月份)的怪物
+        // 这样当月份变化时，旧怪会被立刻清除，空出位置给新怪
+        if (window.player && window.player.time) {
+            const currentTag = `${window.player.time.year}_${window.player.time.month}`;
+            const prefix = `mob_${currentTag}_`;
+
+            window.GlobalEnemies = window.GlobalEnemies.filter(e => {
+                // 如果是生成的野怪(ID以mob_开头)，必须匹配当前年月
+                if (e.instanceId && e.instanceId.startsWith("mob_")) {
+                    return e.instanceId.startsWith(prefix);
+                }
+                return true; // 其他(如剧情怪)保留
+            });
+        }
+
+        // 2. 清理过远的怪
         window.GlobalEnemies = window.GlobalEnemies.filter(e => {
             const dist = Math.abs(e.x - px) + Math.abs(e.y - py);
             return dist < cfg.despawnDist;
         });
 
-        // 2. 扫描周围网格
-        // 算出玩家所在的网格坐标
+        // 3. 扫描并生成
         const pGx = Math.floor(px / 10);
         const pGy = Math.floor(py / 10);
-
-        const r = cfg.scanRadius; // 扫描半径（格）
+        const r = cfg.scanRadius;
 
         for (let gx = pGx - r; gx <= pGx + r; gx++) {
             for (let gy = pGy - r; gy <= pGy + r; gy++) {
-
-                // 排除距离太远的网格（可选，优化性能）
+                // 距离优化
                 if (Math.abs(gx - pGx) + Math.abs(gy - pGy) > r * 1.5) continue;
 
-                // 检查该网格是否已经有怪在内存里了
-                // 注意：这里用 UtilsEnemy 生成的 ID 规则来匹配
-                // 假设 ID 是 mob_年_月_gx_gy
-                // 但为了通用，我们直接遍历 GlobalEnemies 检查 gx/gy 属性
+                // 检查该网格是否已有怪 (gx, gy是网格坐标)
                 const alreadyExists = window.GlobalEnemies.some(e => e.gx === gx && e.gy === gy);
-
                 if (alreadyExists) continue;
 
-                // 如果内存里没有，尝试生成
-                // 传入 gx*10, gy*10 只是为了让 UtilsEnemy 能反算出 gx, gy
+                // 尝试生成
                 const newEnemy = UtilsEnemy.createRandomEnemy(gx * 10, gy * 10);
-
                 if (newEnemy) {
                     window.GlobalEnemies.push(newEnemy);
                 }
