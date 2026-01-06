@@ -185,9 +185,9 @@ const MapCamera = {
         const eStats = {
             hp: enemy.hp,
             maxHp: enemy.maxHp || enemy.hp,
-            atk: enemy.atk || "?",
-            def: enemy.def || "?",
-            speed: enemy.speed || "?"
+            atk: enemy.atk || 0,
+            def: enemy.def || 0,
+            speed: enemy.speed || 0
         };
         const eDesc = enemy.desc || "这家伙看起来不怀好意...";
         const eIcon = (enemy.visual && enemy.visual.icon) ? enemy.visual.icon : "💀";
