@@ -13,6 +13,16 @@ const TooltipManager = {
         "liaodong": "辽东雪原", "xiyu": "西域大漠", "nanman": "南蛮丛林", "lingnan": "岭南山越"
     },
 
+
+    // 属性名称映射
+    _attrMap: {
+        "atk": "攻击力", "def": "防御力", "speed": "速度",
+        "hp": "生命", "hpMax": "生命上限","hp_max": "生命上限",
+        "mp": "内力", "mpMax": "内力上限","mp_max": "内力上限",
+        "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
+        "toxicity": "丹毒"
+    },
+
     _init: function() {
         if (!this.el) {
             this.el = document.getElementById('global_tooltip');
@@ -113,22 +123,66 @@ const TooltipManager = {
         if (item.price || item.value) {
             html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.value || item.price} </span></div>`;
         }
+        let statsHtml = '';
         if (item.effects) {
             let hasEffects = false;
             let effectRows = "";
-            for (let k in item.effects) {
-                const val = item.effects[k];
-                if (typeof val === 'number' && val === 0) continue;
-                if (val === null || val === undefined) continue;
-                const attrName = attrMap[k] || k;
-                let displayVal = val > 0 ? `+${val}` : `${val}`;
-                let colorClass = val > 0 ? 'tt_pos' : 'tt_neg';
-                if (k === 'map') { displayVal = "全图视野"; colorClass = "tt_pos"; }
-                if (k === 'unlockRegion') { displayVal = this._regionMap[val] || val; colorClass = "tt_pos"; }
-                effectRows += `<div class="tt_row"><span style="color:#aaa">${attrName}</span><span class="${colorClass}">${displayVal}</span></div>`;
-                hasEffects = true;
+            const effects = item.stats || item.effects || {};
+            for (let k in effects) {
+                let val = effects[k];
+                // 【核心修改】处理嵌套的 buff 对象 (如 pills_042)
+                if (k === 'buff' && typeof val === 'object') {
+                    const buffAttr = this._attrMap[val.attr] || val.attr;
+                    const buffVal = val.val > 0 ? `+${val.val}` : `${val.val}`;
+
+                    // 默认显示配置表里的天数
+                    let durationText = `${val.days} 天`;
+
+                    // 【新增】检查玩家是否已激活该Buff，如果激活则显示实际剩余时间
+                    if (window.player && window.player.buffs && window.player.buffs[itemId]) {
+                        const activeBuff = window.player.buffs[itemId];
+                        if (activeBuff.days > 0) {
+                            // 保留1位小数
+                            const realDays = typeof activeBuff.days === 'number' ? activeBuff.days.toFixed(1) : activeBuff.days;
+                            durationText = `<span style="color:#ffd700;">${realDays} 天 (剩余)</span>`;
+                        }
+                    }
+
+                    // 使用紫色显示临时Buff效果
+                    statsHtml += `
+                    <div class="tt_row">
+                        <span style="color:#ba68c8;">💫 临时${buffAttr}</span>
+                        <span style="color:#ba68c8; font-weight:bold;">${buffVal}</span>
+                    </div>
+                    <div class="tt_row" style="padding-left:10px; font-size:12px; color:#aaa;">
+                        └ 持续时间: ${durationText}
+                    </div>
+                `;
+                    continue; // 跳过常规处理
+                }
+
+                // 处理常规数值属性
+                if (typeof val === 'number' && val !== 0) {
+                    // 不显示 max_skill_level
+                    if (k === 'max_skill_level') continue;
+
+                    let label = this._attrMap[k] || k;
+                    let c = '#fff';
+
+                    if (k === 'hp') c = '#4caf50';
+                    else if (k === 'mp') c = '#2196f3';
+                    else if (k === 'atk') c = '#ff9800';
+                    else if (k === 'def') c = '#9e9e9e';
+                    else if (k === 'toxicity') {
+                        label = '☠️ 丹毒'; c = '#9c27b0';
+                    }
+
+                    statsHtml += `<div class="tt_row"><span style="color:#ccc;">${label}</span><span style="color:${c}; font-weight:bold;">${val > 0 ? '+' : ''}${val}</span></div>`;
+                }
             }
-            if (hasEffects) { html += `<div class="tt_sep"></div>`; html += effectRows; }
+            if (statsHtml) {
+                html += `<div style="margin:8px 0; padding-bottom:8px; border-bottom:1px dashed #444;">${statsHtml}</div>`;
+            }
         }
         this.el.className = 'ink_tooltip';
         this.el.innerHTML = html;

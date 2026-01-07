@@ -108,7 +108,7 @@ const MapCamera = {
                 const th = town.h * ts;
 
                 if (clickX >= tx && clickX <= tx + tw && clickY >= ty && clickY <= ty + th) {
-                    const shops = MapAtlas.getShopLayout(town, ts);
+                    const shops = TownShops.getLayout(town, ts);
                     for (let shop of shops) {
                         const sx = tx + shop.x;
                         const sy = ty + shop.y;
