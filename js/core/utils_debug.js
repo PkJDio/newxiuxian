@@ -59,7 +59,7 @@ const DebugSystem = {
         if (!player) return;
         player.money = (player.money || 0) + val;
         if (window.updateUI) window.updateUI();
-        if (window.showToast) window.showToast(`获得 ${val} 灵石`);
+        if (window.showToast) window.showToast(`获得 ${val} 金钱`);
         if (window.saveGame) window.saveGame();
     },
 
@@ -70,6 +70,7 @@ const DebugSystem = {
         player.status.hunger = player.derived.hungerMax;
         // 疲劳值清零，而不是回满
         player.status.fatigue = 0;
+        player.toxicity=0;
 
         // 顺便清除疲劳和饥饿的Debuff
         if (player.buffs) {
@@ -88,7 +89,7 @@ const DebugSystem = {
         if (!GAME_DB.items || GAME_DB.items.length === 0) return;
         const item = GAME_DB.items[Math.floor(Math.random() * GAME_DB.items.length)];
         if (window.UtilsAdd && window.UtilsAdd.addItem) {
-            window.UtilsAdd.addItem(item.id, 1, false);
+            window.UtilsAdd.addItem(item.id, 10, false);
             if(window.showToast) window.showToast(`天降机缘：获得 [${item.name}]`);
             if (window.saveGame) window.saveGame();
         }
@@ -103,7 +104,7 @@ const DebugSystem = {
         }
         const item = list[Math.floor(Math.random() * list.length)];
         if (window.UtilsAdd && window.UtilsAdd.addItem) {
-            window.UtilsAdd.addItem(item.id, 1, false);
+            window.UtilsAdd.addItem(item.id, 10, false);
             if (window.saveGame) window.saveGame();
         }
     },

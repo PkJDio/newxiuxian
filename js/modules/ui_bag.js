@@ -313,9 +313,18 @@ const UIBag = {
                     continue;
                 }
                 const name = mapping[key] || key;
+                // 【修改开始】针对 toxicity 的特殊显示逻辑
                 if (key === 'toxicity') {
-                    statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
-                } else if (key === 'hp' || key === 'mp') {
+                    if (val > 0) {
+                        // 正数：丹毒 (增加中毒值)
+                        statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
+                    } else {
+                        // 负数：解毒 (减少中毒值)
+                        // 用户要求显示 "解毒 -30" (或者你想要 "解毒 30"？通常显示数值变化保留符号比较清晰，这里按你要求的 "-30")
+                        statsRows.push(`<div>🌿 解毒: <span style="color:#4caf50">${val}</span></div>`);
+                    }
+                }
+                else if (key === 'hp' || key === 'mp') {
                     const isPositive = val > 0;
                     const color = isPositive ? '#4caf50' : '#f44336';
                     const action = isPositive ? "恢复" : "减少";

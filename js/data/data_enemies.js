@@ -44,7 +44,7 @@ const enemies_all = [
     },
     {
         id   : "global_003", template: "minion", name: "草丛毒蛇", region: "all", spawnType: "grass", timeStart: 0,
-        stats: {hp: 25, atk: 20, def: 0, speed: 12}, money: [0, 0],
+        stats: {hp: 25, atk: 20, def: 0, speed: 12, toxicity :40}, money: [0, 0],
         drops: [{id: "materials_010", rate: 0.2}, {id: "materials_005", rate: 0.4}, {id: "materials_006", rate: 0.4}],
         desc : "潜伏在草丛深处，攻击带有剧毒，咬一口可能致命。"
     },
@@ -141,7 +141,7 @@ const enemies_all = [
     },
     {
         id   : "global_014", template: "elite", name: "蒙面杀手", region: "all", spawnType: "road", timeStart: 1,
-        stats: {hp: 140, atk: 40, def: 5, speed: 15}, money: [80, 150],
+        stats: {hp: 140, atk: 40, def: 5, speed: 15,toxicity: 10}, money: [80, 150],
         drops: [{id: "weapons_039", rate: 0.2}, {id: "pills_053", rate: 0.3}], // 掉匕首、毒药
         desc : "【精英】不知受何人指使的刺客，招招直奔要害。"
     },
@@ -588,7 +588,7 @@ const enemies_r_c_1_2 = [
     // 2. 楚国遗民与巫蛊
     {
         id   : "rc12_004", template: "minion", name: "楚地巫祝", region: "r_c_1_2", spawnType: "mountain", timeStart: 0,
-        stats: {hp: 60, atk: 25, def: 0, speed: 8}, money: [10, 40],
+        stats: {hp: 60, atk: 25, def: 0, speed: 8, toxicity : 10}, money: [10, 40],
         drops: [{id: "pills_097", rate: 0.3}, {id: "materials_006", rate: 0.3}],
         desc : "戴着狰狞面具，擅长使用毒虫和诅咒。"
     },
@@ -614,7 +614,7 @@ const enemies_r_c_1_2 = [
     },
     {
         id   : "rc12_008", template: "minion", name: "剧毒蟾蜍", region: "r_c_1_2", spawnType: "grass", timeStart: 0,
-        stats: {hp: 40, atk: 15, def: 10, speed: 4}, money: [0, 0],
+        stats: {hp: 40, atk: 15, def: 10, speed: 4, toxicity : 30}, money: [0, 0],
         drops: [{id: "pills_053", rate: 0.4}], // 掉毒药原料
         desc : "浑身长满脓包，碰到就会中毒。"
     },
@@ -682,7 +682,7 @@ const enemies_r_c_0_2 = [
     // 2. 蛮荒与毒物
     {
         id   : "rc02_004", template: "minion", name: "竹林花斑蛇", region: "r_c_0_2", spawnType: "grass", timeStart: 0,
-        stats: {hp: 40, atk: 25, def: 1, speed: 12}, money: [0, 0],
+        stats: {hp: 40, atk: 25, def: 1, speed: 12, toxicity : 40}, money: [0, 0],
         drops: [{id: "materials_010", rate: 0.3}, {id: "pills_097", rate: 0.1}], // 掉蛇胆
         desc : "隐藏在翠绿竹林中的毒蛇，保护色极好，令人防不胜防。"
     },
@@ -917,7 +917,7 @@ const enemies_r_n = [
 const enemies_r_w = [
     {
         id   : "rw_001", template: "minion", name: "沙暴巨蝎", region: "r_w", spawnType: "desert", timeStart: 0,
-        stats: {hp: 90, atk: 25, def: 12, speed: 8}, money: [0, 0],
+        stats: {hp: 90, atk: 25, def: 12, speed: 8, toxicity : 40}, money: [0, 0],
         drops: [{id: "materials_018", rate: 0.5}, {id: "materials_017", rate: 0.4}],
         desc : "隐藏在黄沙之下，尾针有剧毒，甲壳坚硬。"
     },
@@ -1003,7 +1003,7 @@ const enemies_r_s = [
     },
     {
         id   : "rs_002", template: "minion", name: "五彩瘴气蛛", region: "r_s", spawnType: "grass", timeStart: 0,
-        stats: {hp: 50, atk: 30, def: 5, speed: 10}, money: [0, 0],
+        stats: {hp: 50, atk: 30, def: 5, speed: 10, toxicity : 40}, money: [0, 0],
         drops: [{id: "pills_053", rate: 0.3}, {id: "materials_006", rate: 0.3}],
         desc : "生活在瘴气弥漫的丛林中，颜色越鲜艳毒性越强。"
     },
@@ -1015,7 +1015,7 @@ const enemies_r_s = [
     },
     {
         id   : "rs_004", template: "elite", name: "蛊术师", region: "r_s", spawnType: "village", timeStart: 0,
-        stats: {hp: 100, atk: 20, def: 5, speed: 8}, money: [30, 80],
+        stats: {hp: 100, atk: 20, def: 5, speed: 8, toxicity : 20}, money: [30, 80],
         drops: [{id: "pills_097", rate: 0.4}],
         desc : "【精英】操控毒虫作为武器，令人防不胜防。"
     },
@@ -1046,7 +1046,7 @@ const enemies_r_s = [
     },
     {
         id   : "rs_lord_02", template: "lord", name: "万蛊之王", region: "r_s", spawnType: "mountain", timeStart: 1,
-        stats: {hp: 350, atk: 90, def: 20, speed: 18}, money: [0, 0],
+        stats: {hp: 350, atk: 90, def: 20, speed: 18, toxicity : 30}, money: [0, 0],
         drops: [{id: "pills_053", rate: 1.0}, {id: "materials_010", rate: 0.5}],
         desc : "【领主】吞噬了无数毒虫后诞生的蛊王，剧毒无比，触之即死。"
     },

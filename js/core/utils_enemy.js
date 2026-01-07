@@ -1,6 +1,6 @@
 // js/core/utils_enemy.js
-// 敌人生成工具类 v15.0 (环境感知 + 进度控制 timeStart)
-console.log("加载 敌人生成系统 (UtilsEnemy v15 - Progression)");
+// 敌人生成工具类 v15.2 (修复：正确传递 toxicity 属性，保留源码注释)
+console.log("加载 敌人生成系统 (UtilsEnemy v15.2)");
 
 // 1. 阶级生成权重
 const RANK_PROBS = {
@@ -53,8 +53,7 @@ const UtilsEnemy = {
         const regionId = this._getRegionId(checkX, checkY);
         const isWater = this._isWater(checkX, checkY);
 
-        // 5. 【新增】获取玩家当前的时间进度 (timeStart)
-        // 从 player 对象中读取，如果没有则默认为 0 (游戏初期)
+        // 5. 进度检测
         const playerTimeStart = (window.player && window.player.timeStart !== undefined) ? window.player.timeStart : 0;
 
         // 6. 筛选候选怪物
@@ -70,9 +69,7 @@ const UtilsEnemy = {
                 if (isWaterMob) return false; // 陆地不能是水怪
             }
 
-            // C. 【核心修改】时间/进度匹配
-            // 怪物的 timeStart 必须 <= 玩家的 timeStart 才能生成
-            // 例如：玩家处于阶段0，不能刷出阶段1的怪
+            // C. 时间/进度匹配
             const enemyTime = e.timeStart || 0;
             if (enemyTime > playerTimeStart) return false;
 
@@ -117,14 +114,15 @@ const UtilsEnemy = {
         //     displayColor = "#444";
         // }
         // console.log("生成怪物:", template)
-        let displayColor = template.template? ENEMY_TEMPLATES[template.template].color:"#333";
+
+        // 注意：这里使用了外部定义的 ENEMY_TEMPLATES，请确保它存在
+        let displayColor = template.template ? ENEMY_TEMPLATES[template.template].color : "#333";
 
         return {
             instanceId: `mob_${timeKey}_${gx}_${gy}`,
             id: template.id,
             name: template.name,
             template: type,
-            // 传递怪物配置里的 timeStart，供 MapCamera 刷新逻辑使用(如果需要)
             timeStart: template.timeStart || 0,
 
             x: finalX,
@@ -137,6 +135,9 @@ const UtilsEnemy = {
             atk: template.stats.atk,
             def: template.stats.def,
             speed: template.stats.speed,
+
+            // 【关键修复】 将 toxicity 属性从模板复制到实例中
+            toxicity: template.stats.toxicity || 0,
 
             exp: template.exp,
             money: template.money,
