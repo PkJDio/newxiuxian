@@ -2,22 +2,22 @@
 const ENEMY_TEMPLATES = {
     "minion": {
         name       : "杂鱼",
-        color      : "#fff",
+        color      : "#212121",
         multipliers: {hp: 1.0, atk: 1.0, def: 1.0, speed: 1.0, exp: 1.0, money: 1.0}
     },
     "elite" : {
         name       : "精英",
-        color      : "#4a90e2",
+        color      : "#1e5faf",
         multipliers: {hp: 2.5, atk: 1.5, def: 1.2, speed: 1.1, exp: 2.5, money: 2.0}
     },
     "boss"  : {
         name       : "头目",
-        color      : "#9013fe",
+        color      : "#56059f",
         multipliers: {hp: 8.0, atk: 2.0, def: 1.5, speed: 1.2, exp: 8.0, money: 10.0}
     },
     "lord"  : {
         name       : "领主",
-        color      : "#d0021b",
+        color      : "#a60518",
         multipliers: {hp: 20.0, atk: 3.5, def: 2.5, speed: 1.3, exp: 50.0, money: 50.0}
     }
 };

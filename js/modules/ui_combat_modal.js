@@ -1,40 +1,37 @@
 // js/modules/ui_combat_modal.js
-// 战斗弹窗UI管理器 v1.1 (修复：弹窗初始显示时玩家中毒值未同步)
-console.log("加载 战斗弹窗UI模块 (UICombatModal v1.1)");
+// 战斗弹窗UI管理器 v1.6 (修复：悬浮框背景色丢失问题)
+console.log("加载 战斗弹窗UI模块 (UICombatModal v1.6)");
 
 const UICombatModal = {
-    // 之前 MapCamera 中的补丁逻辑移到这里
+    // 修复旧数据: 映射 stats.toxicity -> instance.toxAtk
     _patchEnemyData: function(enemy) {
-        if (enemy.toxicity === undefined) {
-            console.warn(`[UICombatModal] ⚠️ 怪物 ${enemy.name} (id:${enemy.id}) 缺少 toxicity 属性，尝试修复...`);
+        if (enemy.toxAtk === undefined) {
             const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
+
             if (db && db.length > 0) {
                 const template = db.find(e => e.id === enemy.id);
                 if (template && template.stats && template.stats.toxicity) {
-                    enemy.toxicity = template.stats.toxicity;
+                    enemy.toxAtk = template.stats.toxicity;
+                    if (enemy.toxicity === undefined) enemy.toxicity = 0;
                     if (!enemy.stats) enemy.stats = {};
-                    enemy.stats.toxicity = template.stats.toxicity;
-                    console.log(`[UICombatModal] ✅ 修复成功! 补全毒性: ${enemy.toxicity}`);
+                    enemy.stats.toxAtk = template.stats.toxicity;
                 } else {
-                    console.log(`[UICombatModal] ❌ 修复失败: 数据库中未找到毒性配置`);
+                    enemy.toxAtk = 0;
+                    if (enemy.toxicity === undefined) enemy.toxicity = 0;
                 }
             }
         }
     },
 
-    // 核心方法：显示战斗弹窗
     show: function(enemy) {
         if (!window.Combat || !window.UtilsModal) return;
 
-        // 1. 修复旧数据
         this._patchEnemyData(enemy);
 
-        // 2. 准备显示数据
         if (window.recalcStats) window.recalcStats();
 
         const pDerived = window.player.derived || {};
         const pName = window.player.name || "少侠";
-        // 确保获取玩家当前的中毒值
         const currentPTox = window.player.toxicity || 0;
 
         const pStats = {
@@ -43,11 +40,10 @@ const UICombatModal = {
             atk: pDerived.atk,
             def: pDerived.def,
             speed: pDerived.speed,
-            toxicity: currentPTox // 记录下来，虽然下面直接用变量也行
+            toxicity: currentPTox
         };
 
         const eName = enemy.name || "未知敌人";
-        // 敌人的中毒值通常初始为 0 (除非有偷袭机制，暂定为0)
         const currentETox = enemy.toxicity || 0;
 
         const eStats = {
@@ -69,11 +65,9 @@ const UICombatModal = {
         const eHpPct = Math.max(0, Math.min(100, (eStats.hp / eStats.maxHp) * 100));
         const pHpPct = Math.max(0, Math.min(100, (pStats.hp / pStats.maxHp) * 100));
 
-        // 计算初始中毒条宽度 (最大100)
         const pToxPct = Math.min(100, currentPTox);
         const eToxPct = Math.min(100, currentETox);
 
-        // 3. 构建 HTML
         const contentHtml = `
             <div class="combat-wrapper">
                 <div class="combat-header">
@@ -195,45 +189,127 @@ const UICombatModal = {
                 #combat_logs_realtime { font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.6; color: #333; }
                 .combat-sidebar { width: 120px; background: #f8f1e0; padding: 8px; display: flex; flex-direction: column; gap: 10px; align-items: center; box-shadow: -4px 0 10px rgba(0,0,0,0.05); z-index: 10; }
                 .sidebar-title { font-size: 20px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; padding-bottom: 4px; margin-bottom: 4px; }
-                .c-slot-wrapper { width: 90px; height: 105px; background: #fff; border: 2px solid #d7ccc8; border-radius: 6px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-                .c-slot-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa; border: 1px dashed #ddd; border-radius: 2px; overflow: hidden; position: relative; }
-                .c-icon { font-size: 32px; line-height: 1; }
-                .c-name { font-size: 14px; color: #333; margin-top: 2px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; font-weight: bold; }
-                .c-count { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; padding: 0 3px; border-radius: 2px; }
-                .c-slot-empty { font-size: 16px; color: #ccc; }
-                .c-use-btn { width: 100%; font-size: 14px; padding: 2px 0; margin-top: 4px; }
-                .c-use-btn:disabled { background: #e0e0e0; color: #aaa; border-color: #ccc; cursor: not-allowed; }
-                .c-cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #333; z-index: 5; cursor: not-allowed; }
                 
-                /* Tooltip 样式 */
+                /* 消耗品栏样式 */
+                .c-slot-wrapper { 
+                    width: 80px; height: 90px; 
+                    background: #fff; border: 2px solid #d7ccc8; border-radius: 6px; padding: 4px; 
+                    display: flex; flex-direction: column; justify-content: space-between; 
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; 
+                }
+                .c-slot-box { 
+                    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+                    background: #fafafa; border: 1px dashed #ddd; border-radius: 2px; overflow: hidden; position: relative; 
+                }
+                .c-icon { 
+                    display: flex; justify-content: center; align-items: center; 
+                    width: 100%; height: 100%;
+                    font-size: 30px; line-height: 1; 
+                    transform: translateY(-2px);
+                }
+                .c-name-label {
+                    font-size: 12px; color: #333; font-weight: bold; text-align: center;
+                    margin-top: 2px;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                    width: 100%;
+                }
+                .c-count { position: absolute; top: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #fff; font-size: 9px; padding: 0 3px; border-radius: 2px; }
+                .c-slot-empty { font-size: 14px; color: #ccc; }
+                .c-use-btn { width: 100%; font-size: 12px; padding: 2px 0; margin-top: 2px; }
+                .c-use-btn:disabled { background: #e0e0e0; color: #aaa; border-color: #ccc; cursor: not-allowed; }
+                .c-cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #333; z-index: 5; cursor: not-allowed; }
+                
+                /* Tooltip 样式 - 侧边栏物品 */
                 .c-item-tooltip {
                     display: none; position: absolute; right: 100%; top: 0; 
-                    width: 200px; background: rgba(0,0,0,0.9); color: #fff; 
-                    padding: 10px; border-radius: 4px; font-size: 20px; z-index: 100;
+                    width: 200px; background: rgba(0,0,0,0.9) !important; color: #fff; 
+                    padding: 10px; border-radius: 4px; font-size: 20px; z-index: 2100;
                     margin-right: 8px; text-align: left; line-height: 1.4;
+                    border: 1px solid #444;
                 }
                 .c-item-tooltip::after {
                     content: ""; position: absolute; left: 100%; top: 20px; 
                     border-width: 5px; border-style: solid; border-color: transparent transparent transparent rgba(0,0,0,0.9);
                 }
                 .c-slot-wrapper:hover .c-item-tooltip { display: block; }
-
-                /* 修复遮挡 */
                 .c-slot-wrapper:last-child .c-item-tooltip { top: auto; bottom: 0; }
                 .c-slot-wrapper:last-child .c-item-tooltip::after { top: auto; bottom: 20px; }
 
+              /* --- Combat Log Tooltip (数字悬浮窗) 样式修复 --- */
+                /* --- 修复悬浮框位置：改为右侧显示，避免上下被遮挡 --- */
+/* --- 修复悬浮框：右侧显示 + 顶部对齐 + 修复背景不全 --- */
+/* --- 悬浮框修复：高度完全自适应内容 --- */
+.combat-tooltip-content {
+    visibility: hidden; 
+    opacity: 0; 
+    position: absolute; 
+    
+    /* 定位：显示在触发文字的右侧 */
+    left: 100%; 
+    top: -10px;        /* 顶部稍微上提，与文字对齐 */
+    margin-left: 12px; /* 左右间距 */
+    bottom: auto;      /* 禁用 bottom，防止被拉伸 */
+    transform: none;   /* 禁用垂直居中，让其向下自然生长 */
+    
+    /* 尺寸核心：让高度包裹内容 */
+    box-sizing: border-box !important;
+    width: 210px !important;
+    height: fit-content !important; /* 【关键】高度紧贴内容 */
+    min-height: 0 !important;       /* 清除最小高度限制 */
+    
+    /* 布局改为 block，比 flex 更适合文本流 */
+    display: block !important;
+    
+    /* 外观 */
+    background-color: rgba(0, 0, 0, 0.95) !important;
+    color: #fff !important;
+    padding: 8px 10px !important;
+    border-radius: 5px;
+    border: 1px solid #666;
+    z-index: 999999;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    
+    pointer-events: none; 
+    text-align: left; 
+    line-height: 1.5 !important;
+    white-space: normal !important;
+}
+
+/* 箭头样式（无需修改，保持指向左侧） */
+.combat-tooltip-content::after {
+    content: ""; 
+    position: absolute; 
+    top: 15px; 
+    right: 100%; 
+    left: auto;
+    margin-top: 0; 
+    border-width: 6px; 
+    border-style: solid; 
+    border-color: transparent rgba(0, 0, 0, 0.95) transparent transparent; 
+}
+
+/* 额外修复：确保内部的每一行都有间距 */
+.combat-tooltip-content .tip-row {
+    margin-bottom: 3px;
+}
+.combat-tooltip-content .tip-row:last-child {
+    margin-bottom: 0;
+}
+.combat-tooltip-content .tip-divider {
+    margin: 6px 0;
+    border-top: 1px solid #555;
+}
+                
                 @keyframes liquid-move { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
                 @keyframes float { 0% {transform: translateY(0px);} 50% {transform: translateY(-6px);} 100% {transform: translateY(0px);} }
             </style>
         `;
 
-        // 4. 绑定回调
         const combatCallbackName = 'cb_start_combat_' + Date.now();
         const escapeCallbackName = 'cb_stop_combat_' + Date.now();
         const pauseCallbackName = 'cb_pause_combat_' + Date.now();
 
         window[escapeCallbackName] = () => {
-            console.log(">>> [UICombatModal] 尝试逃跑...");
             if (window.Combat && window.Combat.stop) window.Combat.stop();
         };
 
@@ -242,7 +318,6 @@ const UICombatModal = {
         };
 
         window[combatCallbackName] = () => {
-            console.log(">>> [UICombatModal] 触发开战！");
             const descEl = document.getElementById('combat_desc_initial');
             const logEl = document.getElementById('combat_logs_realtime');
             if(descEl) descEl.style.display = 'none';
@@ -261,18 +336,15 @@ const UICombatModal = {
             }
 
             Combat.start(enemy, () => {
-                // 战斗胜利回调：清理地图怪
                 if (window.GlobalEnemies) {
                     window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
                 }
-                // 刷新地图
                 if (window.MapCamera && window.MapCamera.renderMap) {
                     window.MapCamera.renderMap();
                 } else if(window.MapCamera && window.MapCamera.ctx && window.MapAtlas) {
                     MapAtlas.render(window.MapCamera.ctx, window.MapCamera, window.GlobalEnemies);
                 }
 
-                console.log(`[UICombatModal] 怪物 ${eName} 清除完成`);
                 if (footerDiv) footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
             }, 'combat_logs_realtime', 'combat_e_tox_bar', 'combat_e_tox_val', 'combat_p_tox_bar', 'combat_p_tox_val');
         };
@@ -286,11 +358,9 @@ const UICombatModal = {
 
         UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, null);
 
-        // 5. 初始化侧边栏
         this.updateSidebar();
     },
 
-    // 更新侧边栏（消耗品）
     updateSidebar: function() {
         const container = document.getElementById('combat_sidebar_content');
         if (!container) return;
@@ -318,9 +388,9 @@ const UICombatModal = {
                     inner = `
                         <div class="c-slot-item">
                             <div class="c-icon">${icon}</div>
-                            <div class="c-name">${item.name}</div>
                             <div class="c-count" id="combat_item_count_${idx}">x${this._getItemCount(itemId)}</div>
                         </div>
+                        <div class="c-name-label">${item.name}</div>
                     `;
                     onclick = `Combat.useConsumable(${idx})`;
                     btnClassAdd = '';

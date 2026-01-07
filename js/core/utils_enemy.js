@@ -1,6 +1,6 @@
 // js/core/utils_enemy.js
-// 敌人生成工具类 v15.2 (修复：正确传递 toxicity 属性，保留源码注释)
-console.log("加载 敌人生成系统 (UtilsEnemy v15.2)");
+// 敌人生成工具类 v15.3 (修复：分离中毒状态(toxicity)与毒性攻击(toxAtk))
+console.log("加载 敌人生成系统 (UtilsEnemy v15.3 - Field Separation)");
 
 // 1. 阶级生成权重
 const RANK_PROBS = {
@@ -21,14 +21,10 @@ const TEMPLATE_STYLES = {
 const UtilsEnemy = {
     SPAWN_RATE: 0.3,
 
-    /**
-     * 【核心】在大地图指定网格生成一个确定性的敌人
-     */
     createRandomEnemy: function(x, y) {
         const gx = Math.floor(x / 10);
         const gy = Math.floor(y / 10);
 
-        // 1. 检查击杀记录
         if (this.isDefeated(gx, gy)) return null;
 
         const timeKey = this._getTimeKey();
@@ -37,7 +33,6 @@ const UtilsEnemy = {
             return null;
         }
 
-        // 2. 随机生成判定
         const spawnRng = RandomSystem.get(gx, gy, timeKey, "spawn_chance");
         if (spawnRng > this.SPAWN_RATE) return null;
 
@@ -46,40 +41,23 @@ const UtilsEnemy = {
         const checkX = gx * 10 + 5;
         const checkY = gy * 10 + 5;
 
-        // 3. 安全区检测
         if (this._isInTown(checkX, checkY)) return null;
 
-        // 4. 环境检测
         const regionId = this._getRegionId(checkX, checkY);
         const isWater = this._isWater(checkX, checkY);
-
-        // 5. 进度检测
         const playerTimeStart = (window.player && window.player.timeStart !== undefined) ? window.player.timeStart : 0;
 
-        // 6. 筛选候选怪物
         const envCandidates = window.enemies.filter(e => {
-            // A. 区域匹配
             if (e.region !== 'all' && e.region !== regionId) return false;
-
-            // B. 水陆匹配
             const isWaterMob = (e.spawnType === 'river' || e.spawnType === 'ocean');
-            if (isWater) {
-                if (!isWaterMob) return false; // 水里必须是水怪
-            } else {
-                if (isWaterMob) return false; // 陆地不能是水怪
-            }
-
-            // C. 时间/进度匹配
+            if (isWater) { if (!isWaterMob) return false; } else { if (isWaterMob) return false; }
             const enemyTime = e.timeStart || 0;
             if (enemyTime > playerTimeStart) return false;
-
             return true;
         });
 
-        // 如果没有符合条件的怪，直接返回
         if (envCandidates.length === 0) return null;
 
-        // 7. 决定阶级 (Rank)
         const rankRoll = RandomSystem.get(gx, gy, timeKey, "rank_roll");
         let targetRank = "minion";
         let cumulative = 0;
@@ -91,31 +69,19 @@ const UtilsEnemy = {
             }
         }
 
-        // 8. 筛选对应阶级
         const candidates = envCandidates.filter(e => (e.template || "minion") === targetRank);
-        const pool = candidates.length > 0 ? candidates : envCandidates; // 兜底
+        const pool = candidates.length > 0 ? candidates : envCandidates;
 
-        // 9. 具体抽取
         const indexRng = RandomSystem.get(gx, gy, timeKey, "enemy_select");
         const template = pool[Math.floor(indexRng * pool.length)];
 
-        // 10. 网格内偏移
         const offX = Math.floor(RandomSystem.get(gx, gy, timeKey, "pos_off_x") * 10);
         const offY = Math.floor(RandomSystem.get(gx, gy, timeKey, "pos_off_y") * 10);
         const finalX = gx * 10 + offX;
         const finalY = gy * 10 + offY;
 
-        // 11. 视觉属性
         const type = template.template || "minion";
         const style = TEMPLATE_STYLES[type] || TEMPLATE_STYLES["minion"];
-
-        // let displayColor = template.color || "#333";
-        // if (displayColor.toLowerCase() === "#fff" || displayColor.toLowerCase() === "#ffffff") {
-        //     displayColor = "#444";
-        // }
-        // console.log("生成怪物:", template)
-
-        // 注意：这里使用了外部定义的 ENEMY_TEMPLATES，请确保它存在
         let displayColor = template.template ? ENEMY_TEMPLATES[template.template].color : "#333";
 
         return {
@@ -136,8 +102,11 @@ const UtilsEnemy = {
             def: template.stats.def,
             speed: template.stats.speed,
 
-            // 【关键修复】 将 toxicity 属性从模板复制到实例中
-            toxicity: template.stats.toxicity || 0,
+            // 【核心修复】分离字段
+            // toxAtk: 攻击附带的毒性 (固定属性)
+            toxAtk: template.stats.toxicity || 0,
+            // toxicity: 当前已中毒深度 (状态值，初始为0)
+            toxicity: 0,
 
             exp: template.exp,
             money: template.money,
@@ -157,41 +126,26 @@ const UtilsEnemy = {
     },
 
     _getRegionId: function(x, y) {
-        // 优先使用 REGION_LAYOUT (data_world.js 常用命名)
         const layout = (typeof REGION_LAYOUT !== 'undefined') ? REGION_LAYOUT :
             ((typeof SUB_REGIONS !== 'undefined') ? SUB_REGIONS : null);
-
         if (!layout) return "r_c";
-
-        const region = layout.find(r =>
-            x >= r.x[0] && x < r.x[1] && y >= r.y[0] && y < r.y[1]
-        );
-
+        const region = layout.find(r => x >= r.x[0] && x < r.x[1] && y >= r.y[0] && y < r.y[1]);
         if (!region) return "unknown";
-
         const localX = x - region.x[0];
         const localY = y - region.y[0];
         const subX = Math.floor(localX / 300);
         const subY = Math.floor(localY / 300);
-
         return `${region.id}_${subX}_${subY}`;
     },
 
     _isInTown: function(x, y) {
         if (typeof WORLD_TOWNS === 'undefined') return false;
-        return WORLD_TOWNS.some(t =>
-            x >= t.x && x < t.x + t.w &&
-            y >= t.y && y < t.y + t.h
-        );
+        return WORLD_TOWNS.some(t => x >= t.x && x < t.x + t.w && y >= t.y && y < t.y + t.h);
     },
 
     _isWater: function(x, y) {
         if (typeof TERRAIN_ZONES === 'undefined') return false;
-        const zone = TERRAIN_ZONES.find(z =>
-            (z.type === 'river' || z.type === 'ocean') &&
-            x >= z.x[0] && x < z.x[1] &&
-            y >= z.y[0] && y < z.y[1]
-        );
+        const zone = TERRAIN_ZONES.find(z => (z.type === 'river' || z.type === 'ocean') && x >= z.x[0] && x < z.x[1] && y >= z.y[0] && y < z.y[1]);
         return !!zone;
     },
 
@@ -205,15 +159,12 @@ const UtilsEnemy = {
     markDefeated: function(x, y) {
         if (!window.player) return;
         if (!window.player.defeatedEnemies) window.player.defeatedEnemies = {};
-
         const gx = Math.floor(x / 10);
         const gy = Math.floor(y / 10);
         const timeKey = this._getTimeKey();
         const key = `kill_${timeKey}_${gx}_${gy}`;
-
         window.player.defeatedEnemies[key] = true;
         console.log(`[UtilsEnemy] ✅ 记录击杀: ${key}`);
-
         this._cleanOldCache(timeKey);
         if(window.saveGame) window.saveGame();
     },
