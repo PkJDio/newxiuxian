@@ -1,5 +1,5 @@
-// js/modules/ui.js - 核心界面交互 (带详细调试日志)
-console.log("加载 界面交互")
+// js/modules/ui.js - 核心界面交互 (修复：Buff小数位与详情显示)
+console.log("加载 界面交互 (Fix Buff Display)")
 
 /* ================= 界面交互逻辑 ================= */
 
@@ -18,6 +18,18 @@ function enterGameScene() {
 
 function updateUI() {
     if (!player) return;
+
+    // 【修复1】数据源清洗：强制将 Buff 的剩余天数保留1位小数
+    // 这能解决首页属性悬浮框里显示 "剩余 0.6546415477 天" 的问题
+    if (player.buffs) {
+        for (let id in player.buffs) {
+            let b = player.buffs[id];
+            if (typeof b.days === 'number') {
+                // 使用 parseFloat 避免变成字符串影响计算，保留1位小数
+                b.days = parseFloat(b.days.toFixed(1));
+            }
+        }
+    }
 
     if (typeof recalcStats === 'function') {
         recalcStats();
@@ -55,21 +67,55 @@ function updateUI() {
     setBar('val_mp', player.status.mp, player.derived.mpMax, 'mpMax');
     setBar('val_hunger', player.status.hunger, player.derived.hungerMax, 'hungerMax');
 
-    // 更新疲劳度 (新增)
     const fatigue = player.status.fatigue || 0;
     const maxFatigue = player.derived.fatigueMax || 100;
     setBar('val_fatigue', fatigue, maxFatigue, 'fatigueMax');
 
-    // 【核心修改】更新时间显示
     const elDate = document.getElementById('profile_date');
     if (elDate && window.TimeSystem) {
         elDate.innerText = TimeSystem.getTimeString();
     }
 
-
     if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
 
     renderBuffs();
+}
+
+/**
+ * 【新增】自定义 Buff 悬浮窗显示函数
+ * 用于显示系统自带的 Buff（如疲劳、剧毒），因为它们没有物品 ID
+ */
+function showLocalBuffTooltip(e, buffData) {
+    if (!window.UtilsTip || !window.UtilsTip.showTooltip) return;
+
+    // 构建提示内容
+    const color = buffData.isDebuff ? "#ff5252" : "#69f0ae";
+    let html = `<div style="padding:4px;">`;
+    html += `<div style="font-weight:bold; color:${color}; font-size:14px; margin-bottom:4px;">${buffData.name}</div>`;
+    html += `<div style="font-size:12px; color:#ccc;">剩余时间: <span style="color:#fff">${buffData.days}</span> 天</div>`;
+    html += `<div style="margin-top:4px; font-size:12px;">影响: <span style="color:${color}">${buffData.attr} ${buffData.val}</span></div>`;
+
+    if (buffData.desc) {
+        html += `<div style="margin-top:6px; font-size:12px; color:#aaa; font-style:italic; border-top:1px dashed #555; padding-top:4px;">${buffData.desc}</div>`;
+    }
+    html += `</div>`;
+
+    // 调用通用的显示函数 (假设 UtilsTip.showTooltip 接受 HTML 内容)
+    // 如果 UtilsTip 没有暴露，我们尝试直接调用全局挂载的
+    if (window.showSimpleTooltip) {
+        window.showSimpleTooltip(e, html);
+    } else if (window.showTooltipContent) { // 兼容旧版
+        window.showTooltipContent(e, html);
+    } else {
+        // 兜底：直接构建一个临时的
+        const tooltip = document.getElementById('tooltip') || document.createElement('div');
+        tooltip.id = 'tooltip';
+        tooltip.innerHTML = html;
+        tooltip.style.display = 'block';
+        tooltip.style.left = e.pageX + 10 + 'px';
+        tooltip.style.top = e.pageY + 10 + 'px';
+        if(!document.getElementById('tooltip')) document.body.appendChild(tooltip);
+    }
 }
 
 /**
@@ -78,10 +124,7 @@ function updateUI() {
 function renderBuffs() {
     const containerId = 'buff_list';
     const container = document.getElementById(containerId);
-    if (!container) {
-        console.warn(`[UI] 未找到容器 #${containerId}，无法渲染 Buff 列表`);
-        return;
-    }
+    if (!container) return;
 
     container.innerHTML = '';
 
@@ -97,7 +140,8 @@ function renderBuffs() {
 
     const entries = [];
 
-    const addEntry = (sourceName, attrKey, val, colorHex, itemId = null) => {
+    // 辅助函数：添加条目
+    const addEntry = (sourceName, attrKey, val, colorHex, itemId = null, customBuffData = null) => {
         if (!val || val === 0) return;
         const attrName = (window.ATTR_MAPPING && window.ATTR_MAPPING[attrKey]) ? window.ATTR_MAPPING[attrKey] : attrKey;
         const valStr = val > 0 ? `+${val}` : `${val}`;
@@ -107,11 +151,10 @@ function renderBuffs() {
             attr: attrName,
             val: valStr,
             color: colorHex,
-            itemId: itemId
+            itemId: itemId,
+            buffData: customBuffData // 【新增】携带原始Buff数据
         });
     };
-
-
 
     // 1. 装备
     if (player.equipment) {
@@ -138,7 +181,6 @@ function renderBuffs() {
         if (Array.isArray(list)) {
             list.forEach(skillId => {
                 if (!skillId) return;
-
                 if (window.UtilsSkill) {
                     const info = UtilsSkill.getSkillInfo(skillId);
                     if (info && info.finalEffects) {
@@ -162,40 +204,31 @@ function renderBuffs() {
         }
     });
 
-    // 3. 临时 Buff (详细调试)
+    // 3. 临时 Buff (修复显示问题)
     if (player.buffs) {
-        // 兼容对象结构 { "buff_id": { attr, val, days, name... } }
         for (let id in player.buffs) {
             const b = player.buffs[id];
-
-            // 过滤无效Buff
             if (b.days > 0 && b.val) {
-
-                // 【核心修改】优先读取 buff 对象自带的 name，如果没有才显示 "状态"
                 let name = b.name || "状态";
+                let itemId = null;
 
-                // 如果名字是默认的"状态"，尝试通过ID反查物品名（兼容旧逻辑：吃丹药产生的buff）
-                if (name === "状态") {
-                    const item = GAME_DB.items.find(i => i.id === id);
-                    if (item) name = item.name;
+                // 尝试关联物品
+                const item = GAME_DB.items.find(i => i.id === id);
+                if (item) {
+                    name = item.name;
+                    itemId = id;
                 }
 
-                // 定义颜色：优先用 buff 自带颜色，否则根据正负值决定 (绿/红)
-                // 疲劳/饥饿 Buff 在 time.js 里我们定义了 color: "#d32f2f"
                 let color = b.color;
                 if (!color) {
-                    // 简单的自动颜色逻辑：字符串包含'-'或者是负数显示红色，否则绿色
                     const isNegative = typeof b.val === 'number' ? b.val < 0 : String(b.val).includes('-');
                     color = isNegative ? '#d32f2f' : '#4caf50';
                 }
 
-                // 渲染条目
-                // 注意：这里把 id 传进去，方便鼠标悬浮看详情
-                addEntry(name, b.attr, b.val, color, id);
+                // 传递整个 buff 对象，以便后续显示详情
+                addEntry(name, b.attr, b.val, color, itemId, b);
             }
         }
-    } else {
-        console.log("player.buffs 为空或 undefined");
     }
 
     // 4. 永久属性
@@ -211,8 +244,6 @@ function renderBuffs() {
             addEntry("轮回底蕴", key, player.bonus_stats[key], '#e91e63');
         }
     }
-
-
 
     if (entries.length === 0) {
         container.innerHTML = '<div style="color:#ccc; font-size:12px; padding:5px;">暂无加成</div>';
@@ -234,15 +265,23 @@ function renderBuffs() {
         row.innerHTML = `
             <span style="font-weight:bold; color:${item.color}; margin-right:6px; min-width:60px;">${item.source}</span>
             <span style="color:#666;">${item.attr}</span>
-            <span style="font-weight:bold; color:#333; margin-left: auto;">${item.val}</span>
+            <span style="font-weight:bold; color:${item.color}; margin-left: auto;">${item.val}</span>
         `;
 
+        // 【核心修复】Tooltips 绑定逻辑
         if (item.itemId) {
+            // 如果是物品/技能，显示对应的 Tooltip
             if (player.skills && player.skills[item.itemId]) {
                 row.onmouseenter = (e) => showSkillTooltip(e, item.itemId);
             } else {
                 row.onmouseenter = (e) => showItemTooltip(e, item.itemId);
             }
+        } else if (item.buffData) {
+            // 【新增】如果是纯状态Buff（无物品ID），显示自定义 Tooltip
+            row.onmouseenter = (e) => showLocalBuffTooltip(e, item.buffData);
+        }
+
+        if (item.itemId || item.buffData) {
             row.onmouseleave = () => hideTooltip();
             row.onmousemove = (e) => moveTooltip(e);
             row.style.cursor = "help";
