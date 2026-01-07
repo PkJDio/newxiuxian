@@ -1,6 +1,6 @@
 // js/modules/map_camera.js
-// 主界面地图交互模块 v34.0 (重构：逻辑抽离)
-console.log("加载 主界面地图控制 (Refactored Core)");
+// 主界面地图交互模块 v34.1 (修复：完整接入 ShopSystem)
+console.log("加载 主界面地图控制 (Shop System Integrated)");
 
 const MapCamera = {
     canvas: null,
@@ -99,33 +99,37 @@ const MapCamera = {
         let hitShop = false;
 
         // 1. 检查城镇/商店点击
-        if (typeof WORLD_TOWNS !== 'undefined') {
+        // 【修改】将点击逻辑全权委托给 TownShops.handleClick
+        if (typeof WORLD_TOWNS !== 'undefined' && window.TownShops) {
             for (let i = WORLD_TOWNS.length - 1; i >= 0; i--) {
                 const town = WORLD_TOWNS[i];
+
+                // 计算城镇在屏幕上的位置
                 const tx = (town.x - this.x) * ts + centerX;
                 const ty = (town.y - this.y) * ts + centerY;
                 const tw = town.w * ts;
                 const th = town.h * ts;
 
+                // 粗略范围判断：如果鼠标确实在这个城镇的矩形范围内
                 if (clickX >= tx && clickX <= tx + tw && clickY >= ty && clickY <= ty + th) {
-                    const shops = TownShops.getLayout(town, ts);
-                    for (let shop of shops) {
-                        const sx = tx + shop.x;
-                        const sy = ty + shop.y;
-                        if (clickX >= sx && clickX <= sx + shop.w &&
-                            clickY >= sy && clickY <= sy + shop.h) {
-                            this._enterShop(town, shop.name);
-                            hitShop = true;
-                            break;
-                        }
+
+                    // 调用 TownShops 模块检测具体点到了哪个店铺
+                    // 参数：鼠标X, 鼠标Y, 城镇对象, 摄像机(this), 图块大小, 屏幕中心X, 屏幕中心Y
+                    const handled = TownShops.handleClick(clickX, clickY, town, this, ts, centerX, centerY);
+
+                    if (handled) {
+                        hitShop = true;
+                        break; // 点中店铺了，停止后续判断
                     }
                 }
-                if (hitShop) break;
             }
         }
 
+        // 如果点中了店铺，直接返回，不再执行后续的打怪或移动逻辑
+        if (hitShop) return;
+
         // 2. 检查敌人点击 (调用 MapEnemyManager)
-        if (!hitShop && window.MapEnemyManager && window.UICombatModal) {
+        if (window.MapEnemyManager && window.UICombatModal) {
             const clickedEnemy = MapEnemyManager.checkClick(
                 clickX, clickY,
                 this.x, this.y,
@@ -141,11 +145,9 @@ const MapCamera = {
         }
 
         // 3. 移动逻辑
-        if (!hitShop) {
-            const worldX = this.x + (clickX - centerX) / ts;
-            const worldY = this.y + (clickY - centerY) / ts;
-            this.moveTo(Math.floor(worldX), Math.floor(worldY));
-        }
+        const worldX = this.x + (clickX - centerX) / ts;
+        const worldY = this.y + (clickY - centerY) / ts;
+        this.moveTo(Math.floor(worldX), Math.floor(worldY));
     },
 
     moveTo: function(tx, ty) {
@@ -177,7 +179,6 @@ const MapCamera = {
     },
 
     // 辅助方法：为了兼容 Combat.js 可能会调用 MapCamera.updateSidebar
-    // 我们做一个代理，指向新的 UI 模块
     updateSidebar: function() {
         if (window.UICombatModal) UICombatModal.updateSidebar();
     },
@@ -189,7 +190,8 @@ const MapCamera = {
         }
     },
 
-    _enterShop: function(town, shopName) { if (window.showGeneralModal) window.showGeneralModal(`${town.name} - ${shopName}`, `<div style="padding:40px; text-align:center;">🏠<p>欢迎光临 ${shopName}</p><button class="ink_btn" onclick="closeModal()">离开</button></div>`); },
+    // 【修改】移除了旧的 _enterShop 方法，因为现在由 ShopSystem 接管了
+
     _updateTerrainBuffs: function(x, y) {
         if (!player.buffs) player.buffs = {};
         const terrainKeys = ['t_town', 't_road', 't_grass', 't_mountain', 't_water', 't_desert'];

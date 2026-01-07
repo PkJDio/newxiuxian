@@ -1,6 +1,6 @@
 // js/modules/town_shops.js
-// 城镇店铺渲染与交互模块 v3.1 (精简版：直接读取全局时间)
-console.log("加载 店铺渲染子模块 (精简版)");
+// 城镇店铺渲染与交互模块 v3.2 (自适应散列布局版)
+console.log("加载 店铺渲染子模块 (自适应散列版)");
 
 const TownShops = {
     defaultConfig: {
@@ -34,12 +34,12 @@ const TownShops = {
     },
 
     /**
-     * 计算布局
-     * 【修改】不再需要传入 timeData，直接读全局 player
+     * 计算布局 (核心修改：自适应铺满全图)
      */
     getLayout: function(town, ts) {
         const potentialShops = this._getAllPotentialShops(town);
-        if (potentialShops.length === 0) return [];
+        const totalShops = potentialShops.length;
+        if (totalShops === 0) return [];
 
         // 1. 获取全局时间
         const t = (window.player && window.player.time) ? window.player.time : { hour: 12, month: 1 };
@@ -47,54 +47,97 @@ const TownShops = {
         const month = t.month;
         const isNight = (hour >= 18 || hour < 6);
 
+        // 2. 城镇实际像素尺寸
         const townW = town.w * ts;
-        // const townH = town.h * ts; // 暂时用不到
-        let baseW = 240; let baseH = 120;
+        const townH = town.h * ts;
+
+        // 3. 确定店铺基础尺寸
+        let baseW = 240;
+        let baseH = 120;
+        // 如果城镇太小，强制缩小店铺
         if (townW < 600) { baseW = 120; baseH = 60; }
 
+        // 4. 【核心修改】动态计算网格列数 (Slots X)
+        // 逻辑：每 350px 宽度容纳一列，最少2列，最多4列
+        let slotsX = Math.floor(townW / 350);
+        if (slotsX < 2) slotsX = 2;
+        if (slotsX > 4) slotsX = 4;
+
+        // 5. 【核心修改】根据总数算行数 (Slots Y)
+        const slotsY = Math.ceil(totalShops / slotsX);
+
+        // 6. 计算每个格子的宽高 (铺满整个城镇)
+        const slotW = townW / slotsX;
+        const slotH = townH / slotsY;
+
         const results = [];
+        // 随机种子：保证布局固定，不随刷新跳变
         let seed = town.x + town.y * 1000;
         const random = () => { var x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
 
         potentialShops.forEach((shopConf, i) => {
-            // 布局逻辑 (固定位置)
-            const slotsX = 2;
-            const slotW = townW / slotsX;
-            const slotH = 150;
-            const sx = i % slotsX;
-            const sy = Math.floor(i / slotsX);
-            const offsetX = random() * (slotW - baseW - 20) + 10;
-            const offsetY = random() * (slotH - baseH - 20) + 10;
+            // 计算行列索引
+            const row = Math.floor(i / slotsX);
+            const col = i % slotsX;
 
-            // 可见性逻辑 (基于读取到的全局时间)
-            let isVisible = false;
-            if (shopConf.type === 'normal') {
-                isVisible = true;
-            } else if (shopConf.type === 'night') {
-                isVisible = isNight;
-            } else if (shopConf.type === 'seasonal') {
-                isVisible = (month === shopConf.month) && isNight;
+            // --- 智能居中逻辑 ---
+            // 如果是最后一行，且最后一行没填满，计算偏移量让它们居中显示
+            let extraOffsetX = 0;
+            if (row === slotsY - 1) {
+                const itemsInLastRow = totalShops % slotsX || slotsX; // 最后一行有几个
+                if (itemsInLastRow < slotsX) {
+                    // 剩余空间的宽度 / 2
+                    const emptySlots = slotsX - itemsInLastRow;
+                    extraOffsetX = (emptySlots * slotW) / 2;
+                }
             }
 
+            // 在格子内部随机偏移 (Margin 20px)
+            // 确保偏移量不会让店铺跑出格子
+            // Math.max(0, ...) 是防止 slotW 比 baseW 还小导致负数
+            const maxRandomX = Math.max(0, slotW - baseW - 40);
+            const maxRandomY = Math.max(0, slotH - baseH - 40);
+
+            const randX = random() * maxRandomX + 20;
+            const randY = random() * maxRandomY + 20;
+
+            // 最终坐标
+            const finalX = (col * slotW) + randX + extraOffsetX;
+            const finalY = (row * slotH) + randY;
+
+            // 可见性判断
+            let isVisible = false;
+            if (shopConf.type === 'normal') isVisible = true;
+            else if (shopConf.type === 'night') isVisible = isNight;
+            else if (shopConf.type === 'seasonal') isVisible = (month === shopConf.month) && isNight;
+
             results.push({
-                name: shopConf.name, type: shopConf.type, isVisible: isVisible,
-                x: sx * slotW + offsetX, y: sy * slotH + offsetY, w: baseW, h: baseH
+                name: shopConf.name,
+                type: shopConf.type,
+                isVisible: isVisible,
+                x: finalX,
+                y: finalY,
+                w: baseW,
+                h: baseH
             });
         });
+
         return results;
     },
 
     // 渲染
     render: function(ctx, town, sx, sy, ts) {
-        // 不需要传参了
         const shops = this.getLayout(town, ts);
         const c = this.colors;
 
         shops.forEach(shop => {
-            if (!shop.isVisible) return; // 没到时间的不画
+            if (!shop.isVisible) return;
 
             const hx = sx + shop.x;
             const hy = sy + shop.y;
+
+            // 越界保护：如果随机偏移导致超出城镇范围，就不画或者修正
+            // 这里的简单做法是直接画，因为上面的计算逻辑理论上是安全的
 
             ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(hx + 6, hy + 6, shop.w, shop.h);
             ctx.fillStyle = c.houseWall; ctx.fillRect(hx, hy, shop.w, shop.h);
@@ -123,12 +166,10 @@ const TownShops = {
     handleClick: function(mouseX, mouseY, town, camera, ts, centerX, centerY) {
         const townScreenX = (town.x - camera.x) * ts + centerX;
         const townScreenY = (town.y - camera.y) * ts + centerY;
-
-        // 直接获取布局 (内部已处理时间可见性)
         const shops = this.getLayout(town, ts);
 
         for (let shop of shops) {
-            if (!shop.isVisible) continue; // 看不见的店点不了
+            if (!shop.isVisible) continue;
 
             const shopScreenX = townScreenX + shop.x;
             const shopScreenY = townScreenY + shop.y;

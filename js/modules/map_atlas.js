@@ -1,6 +1,7 @@
 // js/modules/map_atlas.js
-// 主地图渲染模块 v18.1 (修复版：兼容旧引用，防止报错)
-console.log("加载 地图渲染模块 (Visual Enhanced - Ink Night Fixed)");
+// 主地图渲染模块 v19.1 (夜视增强优化版)
+// 基于 v18.1 修改，增加了夜间敌人文字描边和发光效果
+console.log("加载 地图渲染模块 (Visual Enhanced - Night Vision)");
 
 const MapAtlas = {
     tileSize: 20,
@@ -10,7 +11,6 @@ const MapAtlas = {
 
     // ==========================================
     // 【修复】保留 colors 对象，防止外部文件(如 main.js) 调用报错
-    // 这里放一套默认颜色（白天风格），作为兼容
     // ==========================================
     colors: {
         bg: "#f4f4f4",
@@ -21,7 +21,7 @@ const MapAtlas = {
         townBorder: "#5d4037"
     },
 
-    // 昼夜主题配置 (新逻辑)
+    // 昼夜主题配置
     themes: {
         day: {
             bg: "#f4f4f4", gridSmall: "rgba(0, 0, 0, 0.03)", gridBig: "rgba(0, 0, 0, 0.08)",
@@ -86,7 +86,7 @@ const MapAtlas = {
             isNight = (h >= 18 || h < 6);
         }
 
-        // 2. 选取主题 (容错处理：如果 theme 不存在则用 day)
+        // 2. 选取主题
         const theme = isNight ? (this.themes.night || this.themes.day) : this.themes.day;
 
         // 3. 绘制背景
@@ -130,7 +130,8 @@ const MapAtlas = {
             WORLD_TOWNS.forEach(town => {
                 const townRect = { x: [town.x, town.x + town.w], y: [town.y, town.y + town.h] };
                 if (!this._checkOverlap(townRect, viewRect)) return;
-                this._drawTownWithShops(ctx, town, camera, ts, centerX, centerY, isNight, theme);
+                // 注意：TownShops v3.1 已经不需要传 isNight 了
+                this._drawTownWithShops(ctx, town, camera, ts, centerX, centerY, theme);
             });
         }
 
@@ -141,14 +142,16 @@ const MapAtlas = {
                 const zB = b.visual ? b.visual.zIndex : 0;
                 return zA - zB;
             });
-            this._drawEnemies(ctx, sortedEnemies, camera, ts, centerX, centerY, viewRect);
+            // 【修改】传入 isNight 参数，用于夜视渲染
+            this._drawEnemies(ctx, sortedEnemies, camera, ts, centerX, centerY, viewRect, isNight);
         }
 
-        // 9. 玩家 (最后绘制，确保在最上层)
+        // 9. 玩家
         this._drawPlayer(ctx, centerX, centerY, ts);
     },
 
-    _drawEnemies: function(ctx, enemies, camera, ts, cx, cy, viewRect) {
+    // 【修改】新增 isNight 参数，处理夜间渲染逻辑
+    _drawEnemies: function(ctx, enemies, camera, ts, cx, cy, viewRect, isNight) {
         enemies.forEach(enemy => {
             if (enemy.x < viewRect.x || enemy.x > viewRect.x + viewRect.w ||
                 enemy.y < viewRect.y || enemy.y > viewRect.y + viewRect.h) return;
@@ -158,22 +161,136 @@ const MapAtlas = {
             const v = enemy.visual || { icon: "💀", color: "#333", scale: 1.0, shadowBlur: 0, shadowColor: null, displayName: enemy.name };
             const size = ts * v.scale;
 
-            if (v.shadowBlur > 0 && v.shadowColor) {
-                ctx.save(); ctx.shadowBlur = v.shadowBlur; ctx.shadowColor = v.shadowColor; ctx.fillStyle = v.shadowColor;
-                ctx.beginPath(); const pulse = 1 + Math.sin(Date.now() / 200) * 0.1;
-                ctx.arc(sx, sy, size * 0.8 * pulse, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            // --- 1. 底座光环/阴影 ---
+            ctx.beginPath();
+            if (isNight) {
+                // 【晚上】发光效果：解决黑色阴影在深色背景看不清的问题
+                ctx.save();
+                ctx.shadowBlur = 30; // 稍微发光
+                ctx.shadowColor = v.color; // 用怪物自己的颜色作为光晕
+                ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; // 核心微亮
+                ctx.arc(sx, sy, size * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
             } else {
-                ctx.beginPath(); ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; ctx.arc(sx, sy, size * 0.4, 0, Math.PI * 2); ctx.fill();
+                // 【白天】普通阴影
+                if (v.shadowBlur > 0 && v.shadowColor) {
+                    ctx.save(); ctx.shadowBlur = v.shadowBlur; ctx.shadowColor = v.shadowColor; ctx.fillStyle = v.shadowColor;
+                    ctx.arc(sx, sy, size * 0.8, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+                } else {
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+                    ctx.arc(sx, sy, size * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
-            ctx.save(); ctx.font = `${size}px Arial`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText(v.icon, sx, sy); ctx.restore();
+            // --- 2. 图标 ---
+            ctx.save();
+            ctx.font = `${size}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(v.icon, sx, sy);
+            ctx.restore();
 
-            ctx.save(); const nameSize = Math.max(10, ts * 0.5 * v.scale);
-            ctx.font = `bold ${nameSize}px Kaiti`; ctx.textAlign = "center"; ctx.fillStyle = v.color;
-            if (v.color === '#fff' || v.color === '#ffffff') { ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeText(v.displayName, sx, sy - size * 0.9); }
-            ctx.fillText(v.displayName, sx, sy - size * 0.9); ctx.restore();
+            // --- 3. 名字 (文字描边处理) ---
+            ctx.save();
+            const nameSize = Math.max(10, ts * 0.5 * v.scale);
+            ctx.font = `bold ${nameSize}px Kaiti`;
+            ctx.textAlign = "center";
+
+            // 默认文字颜色
+            ctx.fillStyle = v.color;
+
+            if (isNight) {
+                // 【晚上】强力白色描边，确保文字在深色背景上清晰可见
+                ctx.strokeStyle = "rgba(230, 230, 230, 0.95)";
+                ctx.lineWidth = 3;
+                ctx.strokeText(v.displayName, sx, sy - size * 0.9);
+
+                // 如果文字本身就是纯黑，晚上稍微提亮一点点
+                if (v.color === '#212121' || v.color === '#000000' || v.color === '#333') {
+                    ctx.fillStyle = "#222";
+                }
+            } else {
+                // 【白天】如果文字是白色的，加黑色描边 (保持原有逻辑)
+                if (v.color === '#fff' || v.color === '#ffffff') {
+                    ctx.strokeStyle = "#000";
+                    ctx.lineWidth = 2;
+                    ctx.strokeText(v.displayName, sx, sy - size * 0.9);
+                }
+            }
+
+            ctx.fillText(v.displayName, sx, sy - size * 0.9);
+            ctx.restore();
         });
+    },
+
+    _drawTownWithShops: function(ctx, town, camera, ts, cx, cy, theme) {
+        const sx = (town.x - camera.x) * ts + cx;
+        const sy = (town.y - camera.y) * ts + cy;
+        const sw = town.w * ts; const sh = town.h * ts;
+
+        ctx.fillStyle = theme.townBg;
+        ctx.fillRect(sx, sy, sw, sh);
+
+        ctx.save();
+        const borderColor = theme.townBorder;
+        if (town.level === 'city') {
+            const wallWidth = Math.max(6, 12 * camera.scale);
+            ctx.lineWidth = wallWidth; ctx.strokeStyle = borderColor; ctx.strokeRect(sx, sy, sw, sh);
+            ctx.lineWidth = wallWidth * 0.6; ctx.strokeStyle = "#8d6e63"; ctx.setLineDash([wallWidth * 1.5, wallWidth * 0.8]); ctx.strokeRect(sx, sy, sw, sh);
+        } else if (town.level === 'town') {
+            const wallWidth = Math.max(4, 8 * camera.scale);
+            ctx.lineWidth = wallWidth; ctx.strokeStyle = borderColor; ctx.strokeRect(sx, sy, sw, sh);
+            ctx.lineWidth = 1; ctx.strokeStyle = "#3e2723"; ctx.strokeRect(sx + wallWidth/2, sy + wallWidth/2, sw - wallWidth, sh - wallWidth);
+        } else {
+            const fenceWidth = Math.max(2, 4 * camera.scale);
+            ctx.lineWidth = fenceWidth; ctx.strokeStyle = "#795548"; ctx.setLineDash([fenceWidth, fenceWidth * 1.5]); ctx.strokeRect(sx, sy, sw, sh);
+        }
+        ctx.restore();
+
+        let fontSize = (sw * 0.8) / Math.max(1, town.name.length);
+        fontSize = Math.min(fontSize, sh * 0.8); fontSize = Math.max(20, fontSize);
+        ctx.save();
+        ctx.fillStyle = theme.textDim || "rgba(62, 39, 35, 0.2)";
+        ctx.font = `bold ${fontSize}px Kaiti`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(town.name, sx + sw/2, sy + sh/2); ctx.restore();
+
+        if (typeof TownShops !== 'undefined') {
+            // v3.1 已经精简参数
+            TownShops.render(ctx, town, sx, sy, ts);
+        }
+    },
+
+    _drawGrid: function(ctx, camera, ts, theme) {
+        const startX = Math.floor(camera.x - (camera.width/2)/ts);
+        const startY = Math.floor(camera.y - (camera.height/2)/ts);
+        const endX = startX + (camera.width)/ts + 1; const endY = startY + (camera.height)/ts + 1;
+
+        ctx.lineWidth = 1; ctx.strokeStyle = theme.gridSmall; ctx.beginPath();
+        for (let x = Math.floor(startX); x <= endX; x++) { if (x % 10 === 0) continue; let sx = (x - camera.x) * ts + camera.width/2; ctx.moveTo(sx, 0); ctx.lineTo(sx, camera.height); }
+        for (let y = Math.floor(startY); y <= endY; y++) { if (y % 10 === 0) continue; let sy = (y - camera.y) * ts + camera.height/2; ctx.moveTo(0, sy); ctx.lineTo(camera.width, sy); }
+        ctx.stroke();
+
+        ctx.lineWidth = 1; ctx.strokeStyle = theme.gridBig; ctx.beginPath();
+        for (let x = Math.floor(startX/10)*10; x <= endX; x+=10) { let sx = (x - camera.x) * ts + camera.width/2; ctx.moveTo(sx, 0); ctx.lineTo(sx, camera.height); }
+        for (let y = Math.floor(startY/10)*10; y <= endY; y+=10) { let sy = (y - camera.y) * ts + camera.height/2; ctx.moveTo(0, sy); ctx.lineTo(camera.width, sy); }
+        ctx.stroke();
+    },
+
+    _drawPlayer: function(ctx, cx, cy, ts) {
+        ctx.beginPath(); ctx.arc(cx, cy, ts * 0.4, 0, Math.PI * 2); ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, cy, ts * 0.25, 0, Math.PI * 2); ctx.fillStyle = "#d32f2f"; ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+    },
+
+    _checkOverlap: function(zone, view) {
+        return !(zone.x[1] < view.x || zone.x[0] > view.x + view.w || zone.y[1] < view.y || zone.y[0] > view.y + view.h);
+    },
+
+    _getDeterministicRandom: function(x, y, seed = 0) {
+        const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+        return n - Math.floor(n);
     },
 
     _drawDecorations: function(ctx, camera, ts, cx, cy, viewRect) {
@@ -212,7 +329,6 @@ const MapAtlas = {
         const sw = (zone.x[1] - zone.x[0]) * ts;
         const sh = (zone.y[1] - zone.y[0]) * ts;
 
-        // 映射类型到主题颜色
         if (zone.type === 'road') ctx.fillStyle = theme.road;
         else if (zone.type === 'river') ctx.fillStyle = theme.river;
         else if (zone.type === 'mountain') ctx.fillStyle = theme.mountainBg;
@@ -240,73 +356,6 @@ const MapAtlas = {
             ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillText(zone.name, tx, ty); ctx.restore();
         }
-    },
-
-    _drawTownWithShops: function(ctx, town, camera, ts, cx, cy, isNight, theme) {
-        const sx = (town.x - camera.x) * ts + cx;
-        const sy = (town.y - camera.y) * ts + cy;
-        const sw = town.w * ts; const sh = town.h * ts;
-
-        ctx.fillStyle = theme.townBg;
-        ctx.fillRect(sx, sy, sw, sh);
-
-        ctx.save();
-        const borderColor = theme.townBorder;
-        if (town.level === 'city') {
-            const wallWidth = Math.max(6, 12 * camera.scale);
-            ctx.lineWidth = wallWidth; ctx.strokeStyle = borderColor; ctx.strokeRect(sx, sy, sw, sh);
-            ctx.lineWidth = wallWidth * 0.6; ctx.strokeStyle = isNight ? "#3e2723" : "#8d6e63"; ctx.setLineDash([wallWidth * 1.5, wallWidth * 0.8]); ctx.strokeRect(sx, sy, sw, sh);
-        } else if (town.level === 'town') {
-            const wallWidth = Math.max(4, 8 * camera.scale);
-            ctx.lineWidth = wallWidth; ctx.strokeStyle = borderColor; ctx.strokeRect(sx, sy, sw, sh);
-            ctx.lineWidth = 1; ctx.strokeStyle = "#3e2723"; ctx.strokeRect(sx + wallWidth/2, sy + wallWidth/2, sw - wallWidth, sh - wallWidth);
-        } else {
-            const fenceWidth = Math.max(2, 4 * camera.scale);
-            ctx.lineWidth = fenceWidth; ctx.strokeStyle = "#795548"; ctx.setLineDash([fenceWidth, fenceWidth * 1.5]); ctx.strokeRect(sx, sy, sw, sh);
-        }
-        ctx.restore();
-
-        // 使用 theme.textDim，如果未定义则使用默认色，防止报错
-        let fontSize = (sw * 0.8) / Math.max(1, town.name.length);
-        fontSize = Math.min(fontSize, sh * 0.8); fontSize = Math.max(20, fontSize);
-        ctx.save();
-        ctx.fillStyle = theme.textDim || "rgba(62, 39, 35, 0.2)";
-        ctx.font = `bold ${fontSize}px Kaiti`;
-        ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(town.name, sx + sw/2, sy + sh/2); ctx.restore();
-
-        if (typeof TownShops !== 'undefined') {
-            TownShops.render(ctx, town, sx, sy, ts, isNight);
-        }
-    },
-
-    _drawGrid: function(ctx, camera, ts, theme) {
-        const startX = Math.floor(camera.x - (camera.width/2)/ts);
-        const startY = Math.floor(camera.y - (camera.height/2)/ts);
-        const endX = startX + (camera.width)/ts + 1; const endY = startY + (camera.height)/ts + 1;
-
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = theme.gridSmall;
-        ctx.beginPath();
-        for (let x = Math.floor(startX); x <= endX; x++) { if (x % 10 === 0) continue; let sx = (x - camera.x) * ts + camera.width/2; ctx.moveTo(sx, 0); ctx.lineTo(sx, camera.height); }
-        for (let y = Math.floor(startY); y <= endY; y++) { if (y % 10 === 0) continue; let sy = (y - camera.y) * ts + camera.height/2; ctx.moveTo(0, sy); ctx.lineTo(camera.width, sy); }
-        ctx.stroke();
-
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = theme.gridBig;
-        ctx.beginPath();
-        for (let x = Math.floor(startX/10)*10; x <= endX; x+=10) { let sx = (x - camera.x) * ts + camera.width/2; ctx.moveTo(sx, 0); ctx.lineTo(sx, camera.height); }
-        for (let y = Math.floor(startY/10)*10; y <= endY; y+=10) { let sy = (y - camera.y) * ts + camera.height/2; ctx.moveTo(0, sy); ctx.lineTo(camera.width, sy); }
-        ctx.stroke();
-    },
-
-    _drawPlayer: function(ctx, cx, cy, ts) {
-        ctx.beginPath(); ctx.arc(cx, cy, ts * 0.4, 0, Math.PI * 2); ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fill();
-        ctx.beginPath(); ctx.arc(cx, cy, ts * 0.25, 0, Math.PI * 2); ctx.fillStyle = "#d32f2f"; ctx.fill();
-        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-    },
-
-    _checkOverlap: function(zone, view) {
-        return !(zone.x[1] < view.x || zone.x[0] > view.x + view.w || zone.y[1] < view.y || zone.y[0] > view.y + view.h);
     }
 };
 
