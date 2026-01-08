@@ -121,7 +121,7 @@ const UISkill = {
         const learnedIds = Object.keys(player.skills);
         const list = [];
         learnedIds.forEach(id => {
-            const item = GAME_DB.items.find(i => i.id === id);
+            const item = books.find(i => i.id === id);
             if (!item) return;
             if (item.subType === this.currentTab) {
                 list.push(item);
@@ -258,7 +258,8 @@ const UISkill = {
             div.className = "skill_slot_box";
 
             if (skillId) {
-                const item = GAME_DB.items.find(id => id.id === skillId);
+                const item = books.find(id => id.id === skillId);
+
                 if (item) {
                     const rarityColor = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
                     div.style.border = "1px solid #a94442";

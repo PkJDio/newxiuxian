@@ -5,7 +5,7 @@ console.log("加载 功法核心逻辑");
 
 const UtilsSkill = {
     getSkillInfo: function(skillId) {
-        const item = GAME_DB.items.find(i => i.id === skillId);
+        const item = books.find(i =>i.id === skillId);
         if (!item) return null;
 
         const currentExp = (player.skills && player.skills[skillId] && player.skills[skillId].exp)
@@ -111,8 +111,11 @@ const UtilsSkill = {
     /* ================= 功法管理 (保持不变) ================= */
 
     learnSkill: function(skillId, expGain = 0, silent = false) {
+        console.log(`[UtilsSkill] 尝试学习功法: ${skillId}`)
         if (!player.skills) player.skills = {};
-        const item = GAME_DB.items.find(i => i.id === skillId);
+
+
+        const item = GAME_DB.items.find(i =>i.id === skillId);
 
         if (!item) {
             console.error(`[UtilsSkill] 尝试学习不存在的功法: ${skillId}`);

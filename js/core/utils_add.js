@@ -21,7 +21,7 @@ const UtilsAdd = {
       return false;
     }
 
-    const item = db.items.find(i => i.id === itemId);
+    const item = db.items.find(i =>i.id === itemId);
     if (!item) {
       console.error(`[UtilsAdd] 错误：未找到ID为 ${itemId} 的物品数据！`);
       return false;

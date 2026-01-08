@@ -12,7 +12,7 @@ const RARITY_CONFIG = {
 };
 
 const TYPE_MAPPING = {
-    'material': '材料', 'foodMaterial': '食材', 'food': '料理', 'weapon': '兵器', 'head': '头盔', 'body': '衣服', 'feet': '鞋子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
+    'material': '材料', 'foodMaterial': '食材', 'food': '料理', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
 };
 // 【新增】属性名映射表 (用于悬浮窗显示)
 const ATTR_MAPPING = {

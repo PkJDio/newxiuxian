@@ -144,7 +144,7 @@ const DebugSystem = {
         if (candidates.length === 0) return;
         const item = candidates[Math.floor(Math.random() * candidates.length)];
         const expGain = Math.floor(Math.random() * 500) + 100;
-        UtilsSkill.learnSkill(item.id, expGain);
+        UtilsSkill.learnSkill(item.id, expGain,true);
     }
 };
 

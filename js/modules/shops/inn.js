@@ -238,7 +238,7 @@ const InnShop = {
         if (town.level === 'city') config = { minType: 10, maxType: 15, minTotal: 20, maxTotal: 30, maxRarity: 6 };
         else if (town.level === 'town') config = { minType: 8, maxType: 10, minTotal: 10, maxTotal: 20, maxRarity: 5 };
 
-        const allItems = Object.values(window.GAME_DB.items || {});
+        const allItems = Object.values(foods || {});
         const validItems = allItems.filter(item => {
             if (item.type !== 'food') return false;
             const r = item.rarity || 1;
@@ -312,7 +312,7 @@ const InnShop = {
 
             let effectTags = '';
             if (item.effects) {
-                const attrMap = { hunger: "饱食", hp: "生命", mp: "法力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
+                const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
                 const tags = [];
 
                 Object.entries(item.effects).forEach(([key, val]) => {
@@ -324,7 +324,7 @@ const InnShop = {
                         const days = val.days || 0;
 
                         buffAttrs.forEach((attrKey, index) => {
-                            const label = attrMap[attrKey] || attrKey;
+                            const label = ATTR_MAPPING[attrKey] || attrKey;
                             // 获取对应数值，若缺失则取第一个
                             const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
                             const valStr = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
@@ -339,7 +339,7 @@ const InnShop = {
                     }
                     // 2. 处理常规数值属性（如饱食、生命等永久回复）
                     else if (typeof val === 'number' && val !== 0) {
-                        const label = attrMap[key] || key;
+                        const label = ATTR_MAPPING[key] || key;
                         const valStr = val > 0 ? `+${val}` : val;
                         tags.push(`
                 <span style="display:inline-block; background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">
@@ -468,8 +468,8 @@ const InnShop = {
             const itemId = slot.id || slot;
             const count = slot.count || 1;
             let itemData = null;
-            if (window.GAME_DB && window.GAME_DB.items) itemData = window.GAME_DB.items.find(i => i.id === itemId);
-            if (!itemData) itemData = window.GAME_DB.items?.[itemId];
+            if (window.GAME_DB && foods) itemData = foods.find(i => i &&  i.id === itemId);
+            if (!itemData) itemData = foods?.[itemId];
 
             if (itemData && itemData.value) {
                 sellableItems.push({ index: index, id: itemId, data: itemData, count: count });
@@ -480,7 +480,7 @@ const InnShop = {
         if (sellableItems.length === 0) {
             listHtml = `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">你的包袱里空空如也，没什么可卖的。</div>`;
         } else {
-            const attrMap = { hunger: "饱食", hp: "生命", mp: "法力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
+            const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
             const makeTag = (label, val, isBuff = false) => {
                 let valStr = val > 0 ? `+${val}` : `${val}`;
                 let style = isBuff ? "background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;" : "background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;";
@@ -498,11 +498,11 @@ const InnShop = {
                 if (item.effects) {
                     Object.entries(item.effects).forEach(([key, val]) => {
                         if (key === 'buff') return;
-                        if (attrMap[key]) effectTags += makeTag(attrMap[key], val);
+                        if (ATTR_MAPPING[key]) effectTags += makeTag(ATTR_MAPPING[key], val);
                     });
                     if (item.effects.buff) {
                         const b = item.effects.buff;
-                        const label = attrMap[b.attr] || b.attr;
+                        const label = ATTR_MAPPING[b.attr] || b.attr;
                         effectTags += makeTag(label, b.val, true).replace('</span>', `(${b.days}天)</span>`);
                     }
                 }

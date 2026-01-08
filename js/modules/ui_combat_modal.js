@@ -376,7 +376,7 @@ const UICombatModal = {
 
             if (itemId) {
                 const db = window.GAME_DB || { items: [] };
-                const item = db.items ? db.items.find(i => i.id === itemId) : null;
+                const item = db.items ? db.items.find(i => i &&  i.id === itemId) : null;
 
                 if (item) {
                     let icon = item.icon || '💊';
@@ -414,7 +414,7 @@ const UICombatModal = {
 
     _getItemCount: function(itemId) {
         if (!player || !player.inventory) return 0;
-        const slot = player.inventory.find(i => i.id === itemId);
+        const slot = player.inventory.find(i => i &&  i.id === itemId);
         return slot ? slot.count : 0;
     },
 

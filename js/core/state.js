@@ -32,7 +32,7 @@ function attemptDie() {
                 const oldSkill = player.skills[skillId];
                 // 只有大成(mastered)的功法才提供属性加成
                 if (oldSkill.mastered) {
-                    const itemData = GAME_DB.items.find(i => i.id === skillId);
+                    const itemData = books.find(i => i.id === skillId);
                     if (itemData) {
                         // 简单处理：稀有度越高加成越多
                         const bonusVal = (itemData.rarity || 1) * 1;

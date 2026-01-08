@@ -1,11 +1,16 @@
 // js/core/utils_tip.js
-// 悬浮窗专用管理器 (Tooltip System)
-// 优化版：自动隐藏数值为 0 的属性，隐藏 max_skill_level 属性(头部已显示)
-// 【新增】属性详情中显示 Buff 剩余时间
-console.log("加载 悬浮窗系统");
+// 悬浮窗专用管理器 (Tooltip System) - 性能优化版
+// 优化内容：引入 requestAnimationFrame 节流，缓存窗口尺寸，修复变量重复声明
+console.log("加载 悬浮窗系统 (性能优化版)");
 
 const TooltipManager = {
     el: null,
+    _visible: false, // 内部状态标记
+    _rAF: null,      // 动画帧ID
+    _mouseX: 0,      // 缓存鼠标X
+    _mouseY: 0,      // 缓存鼠标Y
+    _winW: window.innerWidth, // 缓存窗口宽
+    _winH: window.innerHeight,// 缓存窗口高
 
     _regionMap: {
         "xiongnu": "匈奴漠北", "beidi": "北地边疆", "guanzhong": "关中秦地",
@@ -13,12 +18,11 @@ const TooltipManager = {
         "liaodong": "辽东雪原", "xiyu": "西域大漠", "nanman": "南蛮丛林", "lingnan": "岭南山越"
     },
 
-
     // 属性名称映射
     _attrMap: {
         "atk": "攻击力", "def": "防御力", "speed": "速度",
-        "hp": "生命", "hpMax": "生命上限","hp_max": "生命上限",
-        "mp": "内力", "mpMax": "内力上限","mp_max": "内力上限",
+        "hp": "生命", "hpMax": "生命上限", "hp_max": "生命上限",
+        "mp": "内力", "mpMax": "内力上限", "mp_max": "内力上限",
         "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
         "toxicity": "丹毒"
     },
@@ -30,54 +34,99 @@ const TooltipManager = {
                 this.el = document.createElement('div');
                 this.el.id = 'global_tooltip';
                 this.el.className = 'ink_tooltip hidden';
+                // 【优化】告诉浏览器该元素位置会频繁变化，启用合成层
+                this.el.style.willChange = 'top, left';
+                // 【优化】确保层级够高且不捕捉鼠标事件，防止闪烁
+                this.el.style.pointerEvents = 'none';
+                this.el.style.zIndex = '999999';
                 document.body.appendChild(this.el);
             }
+
+            // 【优化】监听窗口大小改变，更新缓存
+            window.addEventListener('resize', () => {
+                this._winW = window.innerWidth;
+                this._winH = window.innerHeight;
+            }, { passive: true });
         }
     },
 
-    _move: function(e) {
-        if (!this.el) return;
-        const x = e.clientX + 15;
-        const y = e.clientY + 15;
+    // 【核心优化】使用 rAF 更新位置，而非直接操作
+    _updatePosition: function() {
+        if (!this._visible || !this.el) return;
+
+        const x = this._mouseX + 15;
+        const y = this._mouseY + 15;
+
+        // 获取元素尺寸（这个操作有一定消耗，但 rAF 限制了频率）
+        // 如果悬浮窗内容不动态变化，也可以考虑缓存 rect
         const rect = this.el.getBoundingClientRect();
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
+
         let left = x;
         let top = y;
-        if (x + rect.width > winW) left = x - rect.width - 30;
-        if (y + rect.height > winH) top = y - rect.height - 15;
+
+        // 边界检测
+        if (x + rect.width > this._winW) left = x - rect.width - 30;
+        if (y + rect.height > this._winH) top = y - rect.height - 15;
+
+        // 应用位置
         this.el.style.left = left + 'px';
         this.el.style.top = top + 'px';
+
+        this._rAF = null; // 重置帧ID
+    },
+
+    // 外部调用的移动接口，只记录坐标并请求帧
+    _move: function(e) {
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        if (this._visible && !this._rAF) {
+            this._rAF = requestAnimationFrame(this._updatePosition.bind(this));
+        }
     },
 
     hide: function() {
+        this._visible = false;
+        if (this._rAF) {
+            cancelAnimationFrame(this._rAF);
+            this._rAF = null;
+        }
         if (this.el) {
             this.el.classList.add('hidden');
             this.el.style.width = '';
         }
     },
 
+    // 显示通用逻辑
+    _show: function() {
+        this._visible = true;
+        if (this.el) {
+            this.el.classList.remove('hidden');
+            // 立即触发一次位置更新，防止刚显示时闪烁在左上角
+            this._updatePosition();
+        }
+    },
+
     /* ================= 1. 状态栏属性详情 ================= */
     showStatus: function(e, key, label) {
         this._init();
+        // 记录当前鼠标位置，防止 _show 时坐标未定义
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
         const breakdown = window.player && window.player.statBreakdown ? window.player.statBreakdown[key] : [];
         let html = `<div class="tt_title">${label}详情</div>`;
         let hasContent = false;
 
         if (breakdown && breakdown.length > 0) {
             breakdown.forEach(b => {
-                // 【优化】如果数值是 0，不显示
                 if (b.val === 0) return;
-
                 const valStr = b.val > 0 ? `+${b.val}` : `${b.val}`;
                 const colorClass = b.val > 0 ? 'tt_pos' : 'tt_neg';
-
-                // 【新增】显示剩余天数
                 let extraHtml = '';
                 if (b.days) {
                     extraHtml = `<span style="font-size:12px; color:#888; margin-left:4px;">(${b.days}天)</span>`;
                 }
-
                 html += `
                   <div class="tt_row">
                     <span>${b.label}</span>
@@ -94,23 +143,24 @@ const TooltipManager = {
             html += `<div class="tt_desc">暂无加成来源</div>`;
         }
 
-        this.el.className = 'ink_tooltip'; // 基础样式
+        this.el.className = 'ink_tooltip';
         this.el.innerHTML = html;
-        this.el.classList.remove('hidden');
-        this._move(e);
+        this._show();
     },
 
     /* ================= 2. 普通物品 (背包/地图) ================= */
     showItem: function(e, itemId, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, itemId); return; }
         this._init();
-        const item = instance || (typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i => i.id === itemId) : null);
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        const item = instance || (typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i =>i.id === itemId) : null);
         if (!item) return;
 
         const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : {};
         const color = rarityConf.color || '#ccc';
         const typeName = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING[item.type] : item.type;
-        const attrMap = (typeof ATTR_MAPPING !== 'undefined') ? ATTR_MAPPING : {};
 
         let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
         html += `<div class="tt_sub">${typeName || '未知'} · ${item.rarity}品</div>`;
@@ -123,38 +173,30 @@ const TooltipManager = {
         if (item.price || item.value) {
             html += `<div class="tt_row"><span>参考价</span><span style="color:gold">${item.value || item.price} </span></div>`;
         }
-        let statsHtml = '';
+
+        let statsHtml = ''; // 【修复】这里只声明一次，不要在if里重复声明
         if (item.effects) {
-            let hasEffects = false;
-            let statsHtml = ""; // 确保 statsHtml 已定义
             const effects = item.stats || item.effects || {};
 
             for (let k in effects) {
                 let val = effects[k];
 
-                // 【核心修改】处理嵌套的 buff 对象，增加多属性拆分逻辑
                 if (k === 'buff' && typeof val === 'object') {
-                    // 1. 拆分属性名和数值字符串 (兼容 "atk_def" 和 "6_6")
                     const buffAttrs = String(val.attr).split('_');
                     const buffVals = String(val.val).split('_');
-
-                    // 2. 遍历并生成每一行效果描述
                     let buffDetailsHtml = "";
                     buffAttrs.forEach((attrKey, index) => {
                         const attrLabel = this._attrMap[attrKey] || attrKey;
-                        // 取对应索引的数值，如果数值少于属性，则默认取第一个数值
                         const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
                         const displayVal = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
 
                         buffDetailsHtml += `
-                    <div class="tt_row">
-                        <span style="color:#ba68c8;">💫 临时${attrLabel}</span>
-                        <span style="color:#ba68c8; font-weight:bold;">${displayVal}</span>
-                    </div>
-                `;
+                        <div class="tt_row">
+                            <span style="color:#ba68c8;">💫 临时${attrLabel}</span>
+                            <span style="color:#ba68c8; font-weight:bold;">${displayVal}</span>
+                        </div>`;
                     });
 
-                    // 3. 处理持续时间显示 (保持原有的玩家实际剩余时间检测逻辑)
                     let durationText = `${val.days} 天`;
                     if (window.player && window.player.buffs && window.player.buffs[item.id]) {
                         const activeBuff = window.player.buffs[item.id];
@@ -164,30 +206,23 @@ const TooltipManager = {
                         }
                     }
 
-                    // 4. 合并到 statsHtml
                     statsHtml += buffDetailsHtml;
                     statsHtml += `
-                <div class="tt_row" style="padding-left:10px; font-size:12px; color:#aaa;">
-                    └ 持续时间: ${durationText}
-                </div>
-            `;
+                    <div class="tt_row" style="padding-left:10px; font-size:12px; color:#aaa;">
+                        └ 持续时间: ${durationText}
+                    </div>`;
                     continue;
                 }
 
-                // 处理常规数值属性 (保持原样)
                 if (typeof val === 'number' && val !== 0) {
                     if (k === 'max_skill_level') continue;
-
                     let label = this._attrMap[k] || k;
                     let c = '#fff';
-
                     if (k === 'hp') c = '#4caf50';
                     else if (k === 'mp') c = '#2196f3';
                     else if (k === 'atk') c = '#ff9800';
                     else if (k === 'def') c = '#9e9e9e';
-                    else if (k === 'toxicity') {
-                        label = '☠️ 丹毒'; c = '#9c27b0';
-                    }
+                    else if (k === 'toxicity') { label = '☠️ 丹毒'; c = '#9c27b0'; }
 
                     statsHtml += `<div class="tt_row"><span style="color:#ccc;">${label}</span><span style="color:${c}; font-weight:bold;">${val > 0 ? '+' : ''}${val}</span></div>`;
                 }
@@ -199,39 +234,35 @@ const TooltipManager = {
         }
         this.el.className = 'ink_tooltip';
         this.el.innerHTML = html;
-        this.el.classList.remove('hidden');
-        this._move(e);
+        this._show();
     },
 
-    /* ================= 3. 技能详情 (大字体、境界高亮、宽版适配) ================= */
+    /* ================= 3. 技能详情 ================= */
     showSkill: function(e, skillId) {
         this._init();
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
         const info = window.UtilsSkill ? UtilsSkill.getSkillInfo(skillId) : null;
-        const item = GAME_DB.items.find(i => i.id === skillId);
+        const item = GAME_DB.items.find(i =>i.id === skillId);
         if (!item || !info) return;
 
         const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#ccc', name: '普通' };
         const typeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
         const typeName = typeMap[item.type] || "功法";
         const attrMap = (typeof ATTR_MAPPING !== 'undefined') ? ATTR_MAPPING : {};
-
-        // 是否已参悟 (从 player.skills 读取)
         const isMastered = player.skills && player.skills[skillId] && player.skills[skillId].mastered;
 
-        // 样式定义
-        const styleHeader = `font-size:22px; font-weight:bold; color:${rarityConf.color}; word-break: break-all;`; // 允许换行
+        const styleHeader = `font-size:22px; font-weight:bold; color:${rarityConf.color}; word-break: break-all;`;
         const styleSub = `font-size:15px; color:#aaa; margin-top:4px;`;
         const styleBarLabel = `font-size:14px; color:#ccc;`;
         const styleBarNum = `font-size:14px; color:#eee;`;
         const styleStatRow = `font-size:16px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;`;
         const styleDesc = `font-size:16px; color:#bbb; line-height:1.6; margin-top:10px; padding-top:10px; border-top:1px dashed #444;`;
-
-        // 境界标签样式 (flex布局，防止挤压)
         const tagStyle = `display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; white-space: nowrap; flex-shrink: 0;`;
         const levelTag = `<span style="${tagStyle} background:#d4af37; color:#000;">${info.levelName}</span>`;
         const limitTag = `<span style="${tagStyle} background:#444; color:#ccc;">上限: ${info.limitLevelName}</span>`;
 
-        // 2. 头部 (使用 Flex 布局优化长名字显示)
         let html = `
         <div style="border-bottom:1px solid #555; padding-bottom:8px; margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
@@ -242,10 +273,8 @@ const TooltipManager = {
                 <span>${typeName} · ${rarityConf.name}</span>
                 ${limitTag}
             </div>
-        </div>
-        `;
+        </div>`;
 
-        // 3. 熟练度
         let expText = "已满级";
         let progressPct = 100;
         if (info.nextExp !== -1) {
@@ -264,75 +293,53 @@ const TooltipManager = {
             <div style="width:100%; height:6px; background:#333; border-radius:3px; overflow:hidden;">
                 <div style="width:${progressPct}%; height:100%; background:${info.isCapped ? '#ff9800' : '#4caf50'};"></div>
             </div>
-        </div>
-        `;
+        </div>`;
 
-        // 4. 属性显示
         if (info.baseEffects) {
             let statsHtml = "";
-            console.group(`[Tooltip] 功法数值: ${item.name}`);
-
             for (let key in info.baseEffects) {
                 if (key === 'max_skill_level') continue;
-
                 const baseVal = info.baseEffects[key];
                 const finalVal = info.finalEffects[key];
-
                 if (typeof baseVal !== 'number') continue;
-
-                // 【保留你原来的逻辑】数值为 0 则不显示
                 if (baseVal === 0 && finalVal === 0) continue;
 
-                console.log(`属性: ${key}, 基础: ${baseVal}, 实际: ${finalVal}`);
-
                 const name = attrMap[key] || key;
-                let valDisplay = `
-                    <span style="color:#fff;">${baseVal}</span> 
-                    <span style="color:#d4af37; margin-left:4px;">(${finalVal})</span>
-                `;
-
-                statsHtml += `
-                <div style="${styleStatRow}">
-                    <span style="color:#ccc;">${name}</span>
-                    <span>${valDisplay}</span>
-                </div>
-                `;
+                let valDisplay = `<span style="color:#fff;">${baseVal}</span><span style="color:#d4af37; margin-left:4px;">(${finalVal})</span>`;
+                statsHtml += `<div style="${styleStatRow}"><span style="color:#ccc;">${name}</span><span>${valDisplay}</span></div>`;
             }
-            console.groupEnd();
-
             if (statsHtml) {
                 html += `<div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:4px;">${statsHtml}</div>`;
             }
         }
 
-        // 【新增】参悟加成显示
         if (isMastered && info.masteryBonus) {
             const mAttr = attrMap[info.masteryBonus.attr] || info.masteryBonus.attr;
             const mVal = info.masteryBonus.val;
-
             html += `
             <div style="margin-top:10px; padding:8px; background:rgba(255, 235, 59, 0.1); border:1px solid rgba(255, 235, 59, 0.3); border-radius:4px;">
                 <div style="color:#ffeb3b; font-weight:bold; font-size:16px; margin-bottom:4px;">✨ 已参悟</div>
                 <div style="color:#ddd; font-size:14px;">
                     轮回加成: <span style="color:#fff">${mAttr}</span> <span style="color:#ffeb3b">+${mVal}</span>
                 </div>
-            </div>
-            `;
+            </div>`;
         }
 
         html += `<div style="${styleDesc}">${item.desc || "暂无描述"}</div>`;
 
         this.el.className = 'ink_tooltip';
-        this.el.style.width = '320px'; // 【修改】宽度增加到 320px
+        this.el.style.width = '320px';
         this.el.innerHTML = html;
-        this.el.classList.remove('hidden');
-        this._move(e);
+        this._show();
     },
 
-    /* ================= 4. 万物图鉴 (保留) ================= */
+    /* ================= 4. 万物图鉴 ================= */
     showGalleryItem: function(e, itemId) {
         this._init();
-        const item = typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i => i.id === itemId) : null;
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        const item = typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i =>i.id === itemId) : null;
         if (!item) return;
 
         const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#ccc', name: '普通' };
@@ -370,21 +377,14 @@ const TooltipManager = {
                 if (typeof val === 'number' && val === 0) continue;
                 if (val === null || val === undefined) continue;
 
-                // 【核心修改】处理嵌套的 buff 对象，支持多属性拆分
                 if (key === 'buff' && typeof val === 'object') {
-                    // 1. 拆分属性名和数值 (处理如 "atk_def" 和 "6_6")
                     const buffAttrs = String(val.attr).split('_');
                     const buffVals = String(val.val).split('_');
-
-                    // 2. 循环生成多条属性行
                     buffAttrs.forEach((attrKey, index) => {
                         const attrName = attrMap[attrKey] || attrKey;
-                        // 取对应索引的数值，若不足则取第一个
                         const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
-                        if (parseInt(currentVal) === 0) return; // 数值为0不显示
-
+                        if (parseInt(currentVal) === 0) return;
                         const sign = parseInt(currentVal) > 0 ? "+" : "";
-
                         statsHtml += `
                     <div class="tt_row" style="${rowStyle}">
                         <span style="${labelStyle}">临时${attrName}</span>
@@ -397,20 +397,15 @@ const TooltipManager = {
                     continue;
                 }
 
-                // 处理丹毒 (保持原样)
                 if (key === 'toxicity') {
                     const sign = val > 0 ? "+" : "";
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">丹毒</span><span style="color:#9c27b0;">${sign}${val}</span></div>`;
                     continue;
                 }
-
-                // 处理全图视野 (保持原样)
                 if (key === 'map' && val === true) {
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">特殊效果</span><span style="color:#d4af37; font-weight:bold;">🌏 全图视野</span></div>`;
                     continue;
                 }
-
-                // 处理解锁区域 (保持原样)
                 if (key === 'unlockRegion') {
                     const rName = this._regionMap[val] || val;
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">解锁区域</span><span style="color:#2196f3;">🗺️ ${rName}</span></div>`;
@@ -420,7 +415,6 @@ const TooltipManager = {
                 if (typeof val === 'object') continue;
                 const name = attrMap[key] || key;
 
-                // 处理常规恢复/数值属性 (保持原样)
                 if (key === 'hp' || key === 'mp') {
                     const c = val > 0 ? '#4caf50' : '#f44336';
                     const p = val > 0 ? "恢复" : "减少";
@@ -443,8 +437,7 @@ const TooltipManager = {
         this.el.className = 'ink_tooltip';
         this.el.style.width = '240px';
         this.el.innerHTML = html;
-        this.el.classList.remove('hidden');
-        this._move(e);
+        this._show();
     }
 };
 
@@ -456,9 +449,9 @@ window.showSkillTooltip = TooltipManager.showSkill.bind(TooltipManager);
 window.hideTooltip = TooltipManager.hide.bind(TooltipManager);
 window.moveTooltip = TooltipManager._move.bind(TooltipManager);
 
+// 【优化】事件监听逻辑：
+// 1. 全局监听 mousemove 更新坐标 (被动模式，性能更好)
+// 2. 只有当 Tooltip 可见时，才请求动画帧更新 DOM
 document.addEventListener('mousemove', (e) => {
-    const tt = document.getElementById('global_tooltip');
-    if (tt && !tt.classList.contains('hidden')) {
-        TooltipManager._move(e);
-    }
-});
+    TooltipManager._move(e);
+}, { passive: true });

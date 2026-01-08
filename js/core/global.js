@@ -8,7 +8,15 @@ const GAME_DB = {
     items: [],
     enemies: [],
     levels: ["凡人", "炼气", "筑基", "金丹", "元婴", "化神", "渡劫", "大乘", "飞升"],
-    maps: []
+    maps: [],
+    //裝備
+    equipments: [],
+    //能吃的
+    eatables: [],
+    //草药和丹药
+    herbs: [],
+
+
 };
 
 /**
@@ -25,12 +33,10 @@ function initGameDB() {
         typeof head !== "undefined" ? head : [],
         typeof body !== "undefined" ? body : [],
         typeof feet !== "undefined" ? feet : [],
-        typeof booksBody !== "undefined" ? booksBody : [],
-        typeof booksKnowledge !== "undefined" ? booksKnowledge : [],
-        typeof booksCultivation !== "undefined" ? booksCultivation : [],
+        typeof books !== "undefined" ? books : [],
         typeof pills !== "undefined" ? pills : [],
         typeof herbs !== "undefined" ? herbs : [],
-        typeof tools !== "undefined" ? tools : [],
+        // typeof tools !== "undefined" ? tools : [],
         typeof mounts !== "undefined" ? mounts : [],
         typeof fishingRods !== "undefined" ? fishingRods : [],
     ];
@@ -39,6 +45,42 @@ function initGameDB() {
     itemSources.forEach((arr) => {
         GAME_DB.items = GAME_DB.items.concat(arr);
     });
+    console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
+    //合并装备
+    const equipItemSources = [
+        typeof weapons !== "undefined" ? weapons : [],
+        typeof head !== "undefined" ? head : [],
+        typeof body !== "undefined" ? body : [],
+        typeof feet !== "undefined" ? feet : [],
+        typeof fishingRods !== "undefined" ? fishingRods : [],
+    ];
+    GAME_DB.equipments = [];
+    equipItemSources.forEach((arr) => {
+        GAME_DB.equipments = GAME_DB.equipments.concat(arr);
+    });
+    console.log(`[Core] 装备初始化完成，加载装备 ${GAME_DB.equipments.length} 个。`);
+
+    //合并能吃的
+    const eatItemSources = [
+        typeof foodMaterial !== "undefined" ? foodMaterial : [],
+        typeof foods !== "undefined" ? foods : [],
+    ];
+    GAME_DB.eatables = [];
+    eatItemSources.forEach((arr) => {
+        GAME_DB.eatables = GAME_DB.eatables.concat(arr);
+    });
+    console.log(`[Core] 食物初始化完成，加载食物 ${GAME_DB.eatables.length} 个。`);
+
+    //合并草药和丹药
+    const herbItemSources = [
+        typeof herbs !== "undefined" ? herbs : [],
+        typeof pills !== "undefined" ? pills : [],
+    ]
+    GAME_DB.herbs = [];
+    herbItemSources.forEach((arr) => {
+        GAME_DB.herbs = GAME_DB.herbs.concat(arr);
+    });
+
 
     // 收集敌人数据
     if (typeof enemies !== 'undefined') GAME_DB.enemies = enemies;
@@ -46,7 +88,7 @@ function initGameDB() {
     // 收集地图数据
     if (typeof SUB_REGIONS !== 'undefined') GAME_DB.maps = SUB_REGIONS;
 
-    console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
+
 }
 
 
@@ -139,7 +181,7 @@ function recalcStats() {
                         }
                     } else {
                         // 兼容纯物品库模式
-                        const item = GAME_DB.items.find(i => i.id === skillId);
+                        const item = GAME_DB.items.find(i => i &&  i.id === skillId);
                         if (item && item.effects) {
                             for (let k in item.effects) {
                                 if(typeof item.effects[k] === 'number') add(k, item.effects[k], item.name);

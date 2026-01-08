@@ -32,6 +32,8 @@ const BlackMarket = {
         const allItems = Object.values(window.GAME_DB.items || {});
         const validItems = allItems.filter(item => {
             const r = item.rarity || 1;
+            //如果type是book的话，name里不能包含_full
+            if (item.type === 'book' && item.name.includes('_full')) return false;
             return r <= config.maxRarity;
         });
 
@@ -48,7 +50,7 @@ const BlackMarket = {
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
         // 【要求3】稀有度配比
-        const rarityWeights = { 1: 100, 2: 200, 3: 300, 4: 20, 5: 10, 6: 5 };
+        const rarityWeights = { 1: 100, 2: 200, 3: 300, 4: 50, 5: 10, 6: 1 };
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;
@@ -98,11 +100,6 @@ const BlackMarket = {
             return;
         }
 
-        const attrMap = {
-            hunger: "饱食", hp: "生命", mp: "法力",
-            atk: "攻击", def: "防御", speed: "速度",
-            jing: "精", qi: "气", shen: "神"
-        };
 
         const levelNames = (window.SKILL_CONFIG && SKILL_CONFIG.levelNames)
             ? SKILL_CONFIG.levelNames
@@ -124,7 +121,7 @@ const BlackMarket = {
                         const buffVals = String(val.val).split('_');
                         const days = val.days || 0;
                         buffAttrs.forEach((attrKey, bIdx) => {
-                            const label = attrMap[attrKey] || attrKey;
+                            const label = ATTR_MAPPING[attrKey] || attrKey;
                             const currentVal = buffVals[bIdx] !== undefined ? buffVals[bIdx] : buffVals[0];
                             const valStr = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
                             tags.push(`<span style="display:inline-block; background:#f3e5f5; color:#7b1fa2; border:1px solid #e1bee7; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">${label}${valStr}<span style="opacity:1; font-size:15px;">(${days}天)</span></span>`);
@@ -138,13 +135,20 @@ const BlackMarket = {
                         tags.push(`<span style="display:inline-block; background:#fff3e0; color:#ef6c00; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">境界上限:${levelStr}</span>`);
                     }
                     else if (typeof val === 'number' && val !== 0) {
-                        const label = attrMap[key] || key;
+                        const label = ATTR_MAPPING[key] || key;
                         const valStr = val > 0 ? `+${val}` : val;
                         tags.push(`<span style="display:inline-block; background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">${label}${valStr}</span>`);
                     }
                 });
                 effectTags = tags.join('');
             }
+            // 【新增】获取物品类型中文名称
+            const typeMap = (window.TYPE_MAPPING) ? window.TYPE_MAPPING : {
+                "weapon": "兵器", "head": "头部", "body": "身体", "feet": "足部",
+                "mount": "坐骑", "pill": "丹药", "book": "秘籍", "food": "食物",
+                "material": "材料", "tool": "工具", "fishing_rod": "钓具"
+            };
+            const typeName = typeMap[item.type] || "物品";
 
             let btnText = "购买";
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
@@ -162,7 +166,7 @@ const BlackMarket = {
         <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #333; background:${index % 2 === 0 ? '#222' : '#1a1a1a'}; transition: background 0.2s;">
             <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                 <div style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 5px rgba(255,255,255,0.5);">
-                    ${item.name}
+                    <span style="font-size:18px; color:#ddd; font-weight:normal; text-shadow:none; margin-right:2px;">【${typeName}】</span>${item.name}
                 </div>
                 <div>${effectTags}</div>
                 <div style="font-size:15px; color:#aaa; font-style: italic;">${item.desc || '珍稀秘宝'}</div>
