@@ -65,6 +65,7 @@ const PLAYER_TEMPLATE = {
     version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10, //外功槽位
     gongfa_ext: 1, //内功槽位
     gongfa_int: 1, // 基础进度
+    gongfa_nums: 3,
     age      : 16, dayCount: 0, timeHours: 7, // 辰时
     worldSeed: 20251227, // 默认种子，开始游戏时会随机覆盖
     //当前时间阶段

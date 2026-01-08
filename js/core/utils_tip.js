@@ -238,6 +238,7 @@ const TooltipManager = {
     },
 
     /* ================= 3. 技能详情 ================= */
+    /* ================= 3. 技能详情 (修改版：展示主动技能) ================= */
     showSkill: function(e, skillId) {
         this._init();
         this._mouseX = e.clientX;
@@ -295,6 +296,7 @@ const TooltipManager = {
             </div>
         </div>`;
 
+        // 基础属性加成
         if (info.baseEffects) {
             let statsHtml = "";
             for (let key in info.baseEffects) {
@@ -312,6 +314,38 @@ const TooltipManager = {
                 html += `<div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:4px;">${statsHtml}</div>`;
             }
         }
+
+        // --- 新增：主动技能展示 ---
+        if (item.action) {
+            const act = item.action;
+            // 构造简单的描述
+            // 例如：造成 150% 伤害 (消耗: 20 MP, CD: 3回合)
+            // 也可以更详细
+            let dmgStr = "";
+            if (act.dmgMult) dmgStr = `造成 <span style="color:#ff5252; font-weight:bold;">${Math.round(act.dmgMult * 100)}%</span> 伤害`;
+
+            let costStr = "";
+            if (act.mpCost) costStr = `消耗 <span style="color:#2196f3;">${act.mpCost}</span> 内力`;
+
+            let cdStr = "";
+            if (act.cd) cdStr = `冷却 <span style="color:#ff9800;">${act.cd}</span> 回合`;
+
+            // 组合消耗与CD
+            let metaInfo = [];
+            if (costStr) metaInfo.push(costStr);
+            if (cdStr) metaInfo.push(cdStr);
+
+            html += `
+            <div style="margin-top:10px; padding:8px; background:rgba(217, 83, 79, 0.1); border:1px solid rgba(217, 83, 79, 0.3); border-radius:4px;">
+                <div style="color:#e57373; font-weight:bold; font-size:16px; margin-bottom:4px; display:flex; justify-content:space-between;">
+                    <span>⚡ 主动招式：${act.name || '未命名'}</span>
+                </div>
+                ${dmgStr ? `<div style="color:#ddd; font-size:14px; margin-bottom:4px;">${dmgStr}</div>` : ''}
+                ${metaInfo.length > 0 ? `<div style="color:#aaa; font-size:12px; margin-bottom:4px;">${metaInfo.join(' | ')}</div>` : ''}
+                ${act.desc ? `<div style="color:#ccc; font-size:14px; line-height:1.4; border-top:1px dashed rgba(217,83,79,0.3); padding-top:4px; margin-top:4px;">${act.desc}</div>` : ''}
+            </div>`;
+        }
+        // -------------------------
 
         if (isMastered && info.masteryBonus) {
             const mAttr = attrMap[info.masteryBonus.attr] || info.masteryBonus.attr;

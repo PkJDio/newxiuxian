@@ -112,9 +112,10 @@ const UtilsEnemy = {
             money: template.money,
             drops: template.drops,
             desc: template.desc,
-
+            // 【关键修复】拷贝技能列表
+            skills: template.skills ? JSON.parse(JSON.stringify(template.skills)) : [] ,
             visual: {
-                icon: template.icon || "💀",
+                icon: ENEMY_TEMPLATES[template.template].icon || "💀",
                 color: displayColor,
                 scale: style.scale,
                 shadowBlur: style.shadowBlur,

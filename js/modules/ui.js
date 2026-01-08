@@ -191,7 +191,7 @@ function renderBuffs() {
                         }
                     }
                 } else {
-                    const item = GAME_DB.items.find(i => i.id === skillId);
+                    const item = books.find(i => i.id === skillId);
                     if (item && item.effects) {
                         for (let key in item.effects) {
                             if (typeof item.effects[key] === 'number') {

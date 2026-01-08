@@ -13,29 +13,56 @@ const MapAtlas = {
     // 【修复】保留 colors 对象，防止外部文件(如 main.js) 调用报错
     // ==========================================
     colors: {
-        bg: "#f4f4f4",
-        gridSmall: "rgba(0, 0, 0, 0.03)", gridBig: "rgba(0, 0, 0, 0.08)",
+        bg: "#e0e0e0",
+        gridSmall: "rgba(0, 0, 0, 0.04)", gridBig: "rgba(0, 0, 0, 0.08)",
         road: "#a1887f", river: "#81d4fa", mountainBg: "rgba(121, 85, 72, 0.4)",
         grass: "#aed581", desert: "#ffe082", ocean: "#29b6f6",
-        townBg: "rgba(255, 248, 225, 0.9)",
-        townBorder: "#5d4037"
+        townBg: "rgba(255, 248, 225, 0.9)", townBorder: "#5d4037",
+        textMain: "#3e2723", textDim: "rgba(62, 39, 35, 0.2)"
     },
 
-    // 昼夜主题配置
+    // 昼夜主题配置 (已调整配色)
+    // 昼夜主题配置 (v19.3 - 通透/柔和/空气感)
+    // 昼夜主题配置 (v19.4 - 护眼配色)
     themes: {
         day: {
-            bg: "#f4f4f4", gridSmall: "rgba(0, 0, 0, 0.03)", gridBig: "rgba(0, 0, 0, 0.08)",
-            road: "#a1887f", river: "#81d4fa", mountainBg: "rgba(121, 85, 72, 0.4)",
-            grass: "#aed581", desert: "#ffe082", ocean: "#29b6f6",
-            townBg: "rgba(255, 248, 225, 0.9)", townBorder: "#5d4037",
-            textMain: "#3e2723", textDim: "rgba(62, 39, 35, 0.2)"
+            // 白天调暗：使用柔和的中性灰/暖灰，不再刺眼
+            bg: "#cfd8dc",  // 蓝灰调的浅灰 (Blue Grey 100) -> 视觉上更稳重
+            // 或者用暖灰: "#d7ccc8"
+
+            gridSmall: "rgba(0, 0, 0, 0.05)",
+            gridBig: "rgba(0, 0, 0, 0.1)",
+
+            // 地形颜色保持半透明，但为了适应深一点的背景，稍微加深一点点不透明度
+            road: "rgba(121, 85, 72, 0.4)",         // 褐色路
+            river: "rgba(33, 150, 243, 0.4)",       // 蓝色河
+            mountainBg: "rgba(93, 64, 55, 0.2)",    // 深褐山
+            grass: "rgba(104, 159, 56, 0.35)",      // 绿色草
+            desert: "rgba(255, 179, 0, 0.3)",       // 橙黄沙
+            ocean: "rgba(2, 119, 189, 0.4)",        // 深蓝海
+
+            townBg: "rgba(255, 255, 255, 0.6)",
+            townBorder: "rgba(69, 90, 100, 0.5)",
+            textMain: "#37474f", textDim: "rgba(55, 71, 79, 0.3)"
         },
         night: {
-            bg: "#1a1a1d", gridSmall: "rgba(255, 255, 255, 0.03)", gridBig: "rgba(255, 255, 255, 0.06)",
-            road: "#3e2723", river: "#1a237e", mountainBg: "rgba(0, 0, 0, 0.6)",
-            grass: "#1b5e20", desert: "#af6c08", ocean: "#0d47a1",
-            townBg: "rgba(40, 45, 50, 0.95)", townBorder: "#263238",
-            textMain: "#b0bec5", textDim: "rgba(200, 200, 200, 0.15)"
+            // 晚上保持之前的通透深蓝灰
+            bg: "#37474f", // Blue Grey 800
+
+            gridSmall: "rgba(255, 255, 255, 0.03)",
+            gridBig: "rgba(255, 255, 255, 0.06)",
+
+            // 夜间地形：通透感
+            road: "rgba(180, 160, 150, 0.15)",
+            river: "rgba(140, 158, 255, 0.2)",
+            mountainBg: "rgba(0, 0, 0, 0.2)",
+            grass: "rgba(129, 199, 132, 0.15)",
+            desert: "rgba(255, 202, 40, 0.1)",
+            ocean: "rgba(68, 138, 255, 0.2)",
+
+            townBg: "rgba(236, 240, 241, 0.15)",
+            townBorder: "rgba(176, 190, 197, 0.3)",
+            textMain: "#eceff1", textDim: "rgba(176, 190, 197, 0.3)"
         }
     },
 

@@ -4,25 +4,29 @@ const ENEMY_TEMPLATES = {
         name       : "杂鱼",
         color      : "#212121",
         basePen    : 0,
-        multipliers: {hp: 1.0, atk: 1.0, def: 1.0, speed: 1.0, exp: 1.0, money: 1.0}
+        multipliers: {hp: 1.0, atk: 1.0, def: 1.0, speed: 1.0, exp: 1.0, money: 1.0},
+        icon: "💀"
     },
     "elite" : {
         name       : "精英",
         color      : "#1e5faf",
-        basePen    : 5, // 精英微量穿甲
-        multipliers: {hp: 3.5, atk: 1.3, def: 1.2, speed: 1.1, exp: 3.0, money: 2.5}
+        basePen    : 15, // 精英微量穿甲
+        multipliers: {hp: 3.5, atk: 1.3, def: 1.2, speed: 1.1, exp: 3.0, money: 2.5},
+        icon: "💀"
     },
     "boss"  : {
         name       : "头目",
         color      : "#56059f",
-        basePen    : 15, // 头目具备穿甲能力
-        multipliers: {hp: 12.0, atk: 1.8, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0}
+        basePen    : 25, // 头目具备穿甲能力
+        multipliers: {hp: 12.0, atk: 1.8, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0},
+        icon: "☠️"
     },
     "lord"  : {
         name       : "领主",
         color      : "#a60518",
-        basePen    : 30, // 领主高穿甲，克制重甲
-        multipliers: {hp: 30.0, atk: 2.2, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0}
+        basePen    : 35, // 领主高穿甲，克制重甲
+        multipliers: {hp: 30.0, atk: 2.2, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0},
+        icon: "👹"
     }
 };
 // 定义怪物的具体生态类型
@@ -240,7 +244,7 @@ const enemies_all = [
         ],
         skills: [
             // 技能 Type 2: 撒石灰/致盲 (降低命中难以模拟，这里模拟降低攻击atk)
-            { id: "撒石灰", rate: 0.25, type: 2, debuffValue: 10, debuffAttr: "atk", debuffTimes: 3 }
+            { id: "撒石灰", rate: 0.5, type: 2, debuffValue: 10, debuffAttr: "atk", debuffTimes: 3 }
         ],
         desc: "【精英】官府悬赏百金的要犯，杀人不眨眼，身手了得。"
     },
