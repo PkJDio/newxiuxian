@@ -112,17 +112,31 @@ const UtilsItem = {
                 if (b.attr && b.val && b.days) {
                     if (!player.buffs) player.buffs = {};
 
-                    // 以物品ID作为 Key，防止同种药叠加出无限个条目
-                    // 或者允许覆盖刷新
-                    player.buffs[item.id] = {
-                        attr: b.attr,
-                        val: b.val,
+                    // 1. 准备基础数据结构
+                    const newBuff = {
+                        name: item.name,
                         days: b.days,
-                        name: item.name // 存入名字，方便 UI 显示
                     };
 
+                    // 2. 解析属性与数值（支持 "atk_def" 和 "6_6" 这种格式）
+                    const attrs = String(b.attr).split('_');
+                    const vals = String(b.val).split('_');
+
+                    // 将属性名和数值一一对应存入 effects
+                    attrs.forEach((attrName, index) => {
+                        // 如果数值数组里没有对应项，则取第一个数值或默认为0
+                        const value = vals[index] !== undefined ? vals[index] : 0;
+                        const attr=attrs[index]!== undefined ? vals[index] : 0;
+                        newBuff.attr = attr;
+                        newBuff.val = value;
+                    });
+
+                    // 3. 存储/覆盖 BUFF
+                    // 以物品ID作为 Key，确保同名 BUFF 刷新持续时间而不是无限叠加
+                    player.buffs[item.id] = newBuff;
+
                     applied = true;
-                    // msg += ` (获得状态: ${item.name})`;
+                    console.log(`已应用BUFF [${item.name}]:`, newBuff.effects);
                 }
             }
         }

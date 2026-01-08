@@ -303,12 +303,19 @@ const UIBag = {
             for (let key in effects) {
                 const val = effects[key];
                 if (!val && val !== 0) continue;
+                // 在 renderDetail 的 effects 遍历中修改对象处理部分
                 if (typeof val === 'object') {
                     if (val.attr && val.val) {
-                        const name = mapping[val.attr] || val.attr;
-                        const sign = val.val > 0 ? "+" : "";
+                        const buffAttrs = String(val.attr).split('_');
+                        const buffVals = String(val.val).split('_');
                         const days = val.days ? `(${val.days}天)` : '';
-                        statsRows.push(`<div>🧪 临时${name}: <span style="color:#2196f3">${sign}${val.val}</span> ${days}</div>`);
+
+                        buffAttrs.forEach((attrKey, bIdx) => {
+                            const name = mapping[attrKey] || attrKey;
+                            const currentVal = buffVals[bIdx] !== undefined ? buffVals[bIdx] : buffVals[0];
+                            const sign = parseInt(currentVal) > 0 ? "+" : "";
+                            statsRows.push(`<div>🧪 临时${name}: <span style="color:#2196f3">${sign}${currentVal}</span> ${days}</div>`);
+                        });
                     }
                     continue;
                 }
@@ -398,11 +405,16 @@ const UIBag = {
                 btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
             }
 
+            // 在 renderDetail 函数内部，找到 pill 类型判断的位置并替换为：
             else if (item.type === 'pill') {
-                const isCarried = window.player.consumables && window.player.consumables.includes(item.id);
-                if (isCarried) {
-                    btnsHtml += `<button class="bag_btn_action disabled" style="background:#eee;color:#999;border:none;">已携带</button>`;
+                // 检查是否在快捷栏中，并获取其索引
+                const carriedIndex = window.player.consumables ? window.player.consumables.indexOf(item.id) : -1;
+
+                if (carriedIndex !== -1) {
+                    // 如果已携带，直接显示“解除携带”按钮，并传入快捷栏索引
+                    btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${carriedIndex})">解除携带</button>`;
                 } else {
+                    // 如果未携带，显示“随身携带”按钮
                     btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${item.id}')">随身携带</button>`;
                 }
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">服用</button>`;
@@ -469,9 +481,12 @@ const UIBag = {
 
         this.refresh();
 
+        // 重新渲染详情页
         const slotIdx = p.inventory.findIndex(s => s.id === itemId);
         if(slotIdx !== -1) {
-            this.renderDetailFromBag(slotIdx);
+            const item = GAME_DB.items.find(i => i.id === itemId);
+            // 这里重新调用 renderDetail，上下文仍保持为 'bag' 视角
+            this.renderDetail(item, { type: 'bag', index: slotIdx });
         }
     },
 
@@ -487,14 +502,15 @@ const UIBag = {
 
         this.refresh();
 
-        // 卸下后，尝试切回“背包视角”详情页，这样按钮会变回“随身携带”
+        // 刷新详情页视角
         const bagIdx = p.inventory.findIndex(s => s.id === itemId);
         if(bagIdx !== -1) {
-            this.renderDetailFromBag(bagIdx);
+            const item = GAME_DB.items.find(i => i.id === itemId);
+            // 变回背包视角
+            this.renderDetail(item, { type: 'bag', index: bagIdx });
         } else {
-            // 如果背包里都没了（比如用光了），就显示空状态
             const container = document.getElementById('bag_detail_panel');
-            if(container) container.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">已移除快捷栏</div>';
+            if(container) container.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">已从快捷栏移除</div>';
         }
     },
 

@@ -23,8 +23,9 @@ const TownShops = {
         let base = this.specialConfig[town.name] || this.defaultConfig[town.level] || [];
         let allShops = base.map(name => ({ name: name, type: 'normal' }));
 
-        if (town.level === 'city' || town.level === 'town') {
-            allShops.push({ name: "夜市", type: 'night' });
+        // 【修改点】夜市 -> 黑市，且仅限 city
+        if (town.level === 'city') {
+            allShops.push({ name: "黑市", type: 'night' });
         }
 
         if (town.name === "咸阳") {

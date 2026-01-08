@@ -126,44 +126,56 @@ const TooltipManager = {
         let statsHtml = '';
         if (item.effects) {
             let hasEffects = false;
-            let effectRows = "";
+            let statsHtml = ""; // 确保 statsHtml 已定义
             const effects = item.stats || item.effects || {};
+
             for (let k in effects) {
                 let val = effects[k];
-                // 【核心修改】处理嵌套的 buff 对象 (如 pills_042)
+
+                // 【核心修改】处理嵌套的 buff 对象，增加多属性拆分逻辑
                 if (k === 'buff' && typeof val === 'object') {
-                    const buffAttr = this._attrMap[val.attr] || val.attr;
-                    const buffVal = val.val > 0 ? `+${val.val}` : `${val.val}`;
+                    // 1. 拆分属性名和数值字符串 (兼容 "atk_def" 和 "6_6")
+                    const buffAttrs = String(val.attr).split('_');
+                    const buffVals = String(val.val).split('_');
 
-                    // 默认显示配置表里的天数
+                    // 2. 遍历并生成每一行效果描述
+                    let buffDetailsHtml = "";
+                    buffAttrs.forEach((attrKey, index) => {
+                        const attrLabel = this._attrMap[attrKey] || attrKey;
+                        // 取对应索引的数值，如果数值少于属性，则默认取第一个数值
+                        const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
+                        const displayVal = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
+
+                        buffDetailsHtml += `
+                    <div class="tt_row">
+                        <span style="color:#ba68c8;">💫 临时${attrLabel}</span>
+                        <span style="color:#ba68c8; font-weight:bold;">${displayVal}</span>
+                    </div>
+                `;
+                    });
+
+                    // 3. 处理持续时间显示 (保持原有的玩家实际剩余时间检测逻辑)
                     let durationText = `${val.days} 天`;
-
-                    // 【新增】检查玩家是否已激活该Buff，如果激活则显示实际剩余时间
-                    if (window.player && window.player.buffs && window.player.buffs[itemId]) {
-                        const activeBuff = window.player.buffs[itemId];
+                    if (window.player && window.player.buffs && window.player.buffs[item.id]) {
+                        const activeBuff = window.player.buffs[item.id];
                         if (activeBuff.days > 0) {
-                            // 保留1位小数
                             const realDays = typeof activeBuff.days === 'number' ? activeBuff.days.toFixed(1) : activeBuff.days;
                             durationText = `<span style="color:#ffd700;">${realDays} 天 (剩余)</span>`;
                         }
                     }
 
-                    // 使用紫色显示临时Buff效果
+                    // 4. 合并到 statsHtml
+                    statsHtml += buffDetailsHtml;
                     statsHtml += `
-                    <div class="tt_row">
-                        <span style="color:#ba68c8;">💫 临时${buffAttr}</span>
-                        <span style="color:#ba68c8; font-weight:bold;">${buffVal}</span>
-                    </div>
-                    <div class="tt_row" style="padding-left:10px; font-size:12px; color:#aaa;">
-                        └ 持续时间: ${durationText}
-                    </div>
-                `;
-                    continue; // 跳过常规处理
+                <div class="tt_row" style="padding-left:10px; font-size:12px; color:#aaa;">
+                    └ 持续时间: ${durationText}
+                </div>
+            `;
+                    continue;
                 }
 
-                // 处理常规数值属性
+                // 处理常规数值属性 (保持原样)
                 if (typeof val === 'number' && val !== 0) {
-                    // 不显示 max_skill_level
                     if (k === 'max_skill_level') continue;
 
                     let label = this._attrMap[k] || k;
@@ -180,6 +192,7 @@ const TooltipManager = {
                     statsHtml += `<div class="tt_row"><span style="color:#ccc;">${label}</span><span style="color:${c}; font-weight:bold;">${val > 0 ? '+' : ''}${val}</span></div>`;
                 }
             }
+
             if (statsHtml) {
                 html += `<div style="margin:8px 0; padding-bottom:8px; border-bottom:1px dashed #444;">${statsHtml}</div>`;
             }
@@ -357,22 +370,47 @@ const TooltipManager = {
                 if (typeof val === 'number' && val === 0) continue;
                 if (val === null || val === undefined) continue;
 
+                // 【核心修改】处理嵌套的 buff 对象，支持多属性拆分
                 if (key === 'buff' && typeof val === 'object') {
-                    const attrName = attrMap[val.attr] || val.attr;
-                    if (val.val === 0) continue;
-                    const sign = val.val > 0 ? "+" : "";
-                    statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">临时${attrName}</span><span style="color:#2196f3;">${sign}${val.val} <span style="font-size:12px; color:#aaa;">(${val.days}天)</span></span></div>`;
+                    // 1. 拆分属性名和数值 (处理如 "atk_def" 和 "6_6")
+                    const buffAttrs = String(val.attr).split('_');
+                    const buffVals = String(val.val).split('_');
+
+                    // 2. 循环生成多条属性行
+                    buffAttrs.forEach((attrKey, index) => {
+                        const attrName = attrMap[attrKey] || attrKey;
+                        // 取对应索引的数值，若不足则取第一个
+                        const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
+                        if (parseInt(currentVal) === 0) return; // 数值为0不显示
+
+                        const sign = parseInt(currentVal) > 0 ? "+" : "";
+
+                        statsHtml += `
+                    <div class="tt_row" style="${rowStyle}">
+                        <span style="${labelStyle}">临时${attrName}</span>
+                        <span style="color:#2196f3;">
+                            ${sign}${currentVal} 
+                            <span style="font-size:12px; color:#aaa;">(${val.days}天)</span>
+                        </span>
+                    </div>`;
+                    });
                     continue;
                 }
+
+                // 处理丹毒 (保持原样)
                 if (key === 'toxicity') {
                     const sign = val > 0 ? "+" : "";
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">丹毒</span><span style="color:#9c27b0;">${sign}${val}</span></div>`;
                     continue;
                 }
+
+                // 处理全图视野 (保持原样)
                 if (key === 'map' && val === true) {
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">特殊效果</span><span style="color:#d4af37; font-weight:bold;">🌏 全图视野</span></div>`;
                     continue;
                 }
+
+                // 处理解锁区域 (保持原样)
                 if (key === 'unlockRegion') {
                     const rName = this._regionMap[val] || val;
                     statsHtml += `<div class="tt_row" style="${rowStyle}"><span style="${labelStyle}">解锁区域</span><span style="color:#2196f3;">🗺️ ${rName}</span></div>`;
@@ -382,6 +420,7 @@ const TooltipManager = {
                 if (typeof val === 'object') continue;
                 const name = attrMap[key] || key;
 
+                // 处理常规恢复/数值属性 (保持原样)
                 if (key === 'hp' || key === 'mp') {
                     const c = val > 0 ? '#4caf50' : '#f44336';
                     const p = val > 0 ? "恢复" : "减少";

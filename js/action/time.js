@@ -135,6 +135,8 @@ const TimeSystem = {
         while (t.day > 30) {
             t.day -= 30;
             t.month += 1;
+            //跨月的时候清空player.shopLogs
+            player.shopLogs = {};
         }
         while (t.month > 12) {
             t.month -= 12;
@@ -143,8 +145,10 @@ const TimeSystem = {
         }
 
         // Buff 和 UI
-        const daysPassed = hours / 24;
-        this._checkBuffs(daysPassed);
+        console.log("时间流逝:", hours, "小时");
+
+
+        this._checkBuffs(hours);
 
         if (window.updateUI) window.updateUI();
         if (window.saveGame) window.saveGame();
@@ -185,14 +189,24 @@ const TimeSystem = {
 
     _onNewDay: function() {},
 
-    _checkBuffs: function(passedDays) {
+    _checkBuffs: function(hours) {
         if (!player.buffs) return;
         let hasChange = false;
         for (let id in player.buffs) {
             let buff = player.buffs[id];
             if (buff.days > 9000) continue;
             if (buff.days > 0) {
-                buff.days -= passedDays;
+                console.log(`[${buff.name||'状态'}] 扣除前剩余 ${buff.days} 天`);
+                //读取buff.useHour,不存在的话就当作0
+                buff.useHour = buff.useHour || 0;
+                buff.useHour += hours;
+                //如果buff.useHour大于6，则buff.days减去0.25天，然后buff.useHour-6
+                if(buff.useHour>6){
+                    buff.days -= 0.25;
+                    buff.useHour -= 6;
+                }
+
+
                 if (buff.days <= 0) {
                     buff.days = 0;
                     if(window.showToast) window.showToast(`[${buff.name||'状态'}] 已消散`);

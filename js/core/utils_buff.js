@@ -1,5 +1,5 @@
 // js/core/utils_buff.js
-// Buff/Debuff 状态检测与定义 v2.1 (完善：补全系统Buff的描述信息)
+// Buff/Debuff 状态检测与定义 v2.2 (新增：通用Buff添加/刷新接口)
 console.log("加载 状态Buff系统");
 
 // 这是一个新函数，专门用来根据数值 赋予/移除 Buff
@@ -102,5 +102,41 @@ function processPoisonTimePass() {
     }
 }
 
+/**
+ * 【新增】通用添加/刷新Buff函数
+ * 被 inn.js 或其他药品模块调用
+ * @param {String} buffId  Buff的唯一ID (如 'buff_inn_rest')
+ * @param {Object} buffData Buff的具体数据对象
+ */
+function addBuff(buffId, buffData) {
+    if (!player) return;
+    if (!player.buffs) player.buffs = {};
+
+    // 检查是否已经存在该BUFF
+    if (player.buffs[buffId]) {
+        // --- 情况A：已存在，刷新时间 ---
+        // 我们只更新持续时间(days)和可能的数值效果，不新增对象
+        player.buffs[buffId].days = buffData.days;
+
+        // 如果新BUFF的数值效果不同（比如吃了更高级的药），也可以更新数值
+        // 这里默认全部覆盖关键属性，确保数据最新
+        player.buffs[buffId].val = buffData.val;
+        player.buffs[buffId].desc = buffData.desc;
+        player.buffs[buffId].effects = buffData.effects;
+
+        console.log(`[Buff系统] 刷新BUFF: ${buffData.name}，重置时间为 ${buffData.days} 天`);
+        if(window.showToast) window.showToast(`【${buffData.name}】的状态时间已延长！`);
+
+    } else {
+        // --- 情况B：不存在，新增BUFF ---
+        player.buffs[buffId] = buffData;
+        console.log(`[Buff系统] 新增BUFF: ${buffData.name}`);
+        // 首次获得时，调用者(如inn.js)通常会提示，这里可以不弹窗，或者保留下方代码
+        // if(window.showToast) window.showToast(`获得了状态【${buffData.name}】`);
+    }
+}
+
+// 导出函数到 window
 window.checkStatusDebuffs = checkStatusDebuffs;
 window.processPoisonTimePass = processPoisonTimePass;
+window.addBuff = addBuff; // 导出 addBuff

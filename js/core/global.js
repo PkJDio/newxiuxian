@@ -1,6 +1,6 @@
 // js/core/global.js
 // 全局核心：数据库, 属性计算, 常用常量
-// 【更新】recalcStats 支持记录 Buff 持续时间，并在 derived 中包含实时状态
+// 【修复】recalcStats: 调整计算顺序，支持百分比Buff，解决神光焕发不生效问题
 console.log("加载 全局核心");
 
 /* ================= 1. 游戏数据库 (GAME_DB) ================= */
@@ -44,7 +44,7 @@ function initGameDB() {
     if (typeof enemies !== 'undefined') GAME_DB.enemies = enemies;
 
     // 收集地图数据
-    if (typeof SUB_REGIONS !== 'undefined') GAME_DB.maps = SUB_REGIONS; // 注意这里是直接赋值
+    if (typeof SUB_REGIONS !== 'undefined') GAME_DB.maps = SUB_REGIONS;
 
     console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
 }
@@ -54,45 +54,42 @@ function initGameDB() {
 
 /**
  * 重新计算玩家所有属性 (Derived Stats)
- * 逻辑：基础 -> 转世 -> 装备 -> 功法 -> Buff -> 转化 -> 【惩罚扣减】 -> 收尾
+ * 逻辑：基础 -> 转世 -> 装备 -> 转化(精气神变攻防) -> Buff(百分比加成) -> 状态惩罚
  */
 function recalcStats() {
     if (!player) return;
 
-    // 1. 初始化 derived (最终属性) 和 breakdown (数值构成详情)
+    // 1. 初始化 derived (最终属性)
     player.derived = {
         jing: 0, qi: 0, shen: 0,
         atk: 0, def: 0, speed: 0,
         hpMax: 0, mpMax: 0, hungerMax: 100,
         space: 200,
-        fatigueMax: 100, // 疲劳上限
-        // 实时属性将在最后同步进来
+        fatigueMax: 100,
     };
 
     // 初始化统计详情
     player.statBreakdown = {};
 
     // --- 内部辅助函数：累加属性并记录来源 ---
-    // 支持传入负数（用于扣减属性）
     const add = (key, val, source, extra = null) => {
-        if (val === 0) return; // 0不处理，但允许负数
+        if (val === 0) return;
 
-        // 确保 derived 中有这个字段
+        // 确保 derived 中有这个字段，没有则初始化
         if (player.derived[key] === undefined) player.derived[key] = 0;
 
-        // 累加数值 (如果是负数，这里自然就是减法)
+        // 累加数值
         player.derived[key] += val;
 
         // 记录详情
         if (!player.statBreakdown[key]) player.statBreakdown[key] = [];
-
         let entry = { label: source, val: val };
         if (extra) Object.assign(entry, extra);
         player.statBreakdown[key].push(entry);
     };
 
-    // ================= A. 基础层 =================
-    // 2. 基础属性
+    // ================= A. 基础数值层 =================
+    // 2. 基础属性 (精/气/神)
     for (let k in player.attr) {
         add(k, player.attr[k], "基础属性");
     }
@@ -104,7 +101,14 @@ function recalcStats() {
         }
     }
 
-    // ================= B. 装备层 =================
+    // 永久加成
+    if (player.exAttr) {
+        for (let k in player.exAttr) {
+            add(k, player.exAttr[k], "永久加成");
+        }
+    }
+
+    // ================= B. 装备层 (扁平数值) =================
     // 4. 装备加成
     if (player.equipment) {
         const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'fishing_rod'];
@@ -134,6 +138,7 @@ function recalcStats() {
                             }
                         }
                     } else {
+                        // 兼容纯物品库模式
                         const item = GAME_DB.items.find(i => i.id === skillId);
                         if (item && item.effects) {
                             for (let k in item.effects) {
@@ -146,74 +151,82 @@ function recalcStats() {
         });
     }
 
-    // ================= C. 状态层 (加成类) =================
-    // 6. 临时 Buff (增加属性的Buff)
-    if (player.buffs) {
-        for (let buffId in player.buffs) {
-            const buff = player.buffs[buffId];
-            if (buff.days > 0 && buff.attr && buff.val && typeof buff.val === 'number') { // 确保 val 是数字
-                let buffName = buff.name || "状态";
-                if (buffName === "状态") {
-                    const srcItem = GAME_DB.items.find(i => i.id === buffId);
-                    if (srcItem) buffName = srcItem.name;
-                }
-                add(buff.attr, buff.val, buffName, { days: buff.days });
-            }
-        }
-    }
-
-    if (player.exAttr) {
-        for (let k in player.exAttr) {
-            add(k, player.exAttr[k], "永久加成");
-        }
-    }
-
-    // ================= D. 转化层 (精气神 -> 二级属性) =================
-    // 7. 属性转化规则
+    // ================= C. 转化层 (精气神 -> 二级属性) =================
+    // 【重要】先进行转化，算出基础的HP/攻击/防御，这样后面的百分比Buff才有基数可以乘
     const totalJing = player.derived.jing || 0;
     const totalQi   = player.derived.qi || 0;
     const totalShen = player.derived.shen || 0;
 
-    add('hpMax', totalJing * 10, "精 转化 ");
+    add('hpMax', totalJing * 10, "精 转化");
     add('def',   Math.floor(totalJing * 0.5), "精 转化");
     add('mpMax', totalQi * 5, "气 转化");
     add('atk',   totalShen * 1, "神 转化");
     add('speed', Math.floor(totalShen * 0.2), "神 转化");
 
 
-    // ================= E. 状态惩罚 (疲劳/饥饿) 【新增部分】 =================
-    // 在计算完所有增加项后，最后进行乘法惩罚
-    // 我们通过计算出“损失值”，以负数的形式 add 进去
-    // 这样 UI 上就会显示： 攻击力 100 ...  身体状态 -50 = 最终 50
+    // ================= D. 状态层 (Buff 加成) =================
+    // 【重要】移到转化层之后，并支持百分比
+    if (player.buffs) {
+        for (let buffId in player.buffs) {
+            const buff = player.buffs[buffId];
+            if (!buff || (buff.days !== undefined && buff.days <= 0)) continue; // 跳过过期
 
+            let buffName = buff.name || "状态";
+
+            // 1. 优先处理 effects 对象 (处理百分比加成)
+            // 在 inn.js 中，神光焕发定义了 effects: { atkPct: 0.20 ... }
+            if (buff.effects) {
+                // 攻击百分比
+                if (buff.effects.atkPct) {
+                    const bonus = Math.floor(player.derived.atk * buff.effects.atkPct);
+                    add('atk', bonus, buffName);
+                }
+                // 防御百分比
+                if (buff.effects.defPct) {
+                    const bonus = Math.floor(player.derived.def * buff.effects.defPct);
+                    add('def', bonus, buffName);
+                }
+                // 速度百分比
+                if (buff.effects.spdPct) {
+                    const bonus = Math.floor(player.derived.speed * buff.effects.spdPct);
+                    add('speed', bonus, buffName);
+                }
+
+                // 处理 effects 里的其他扁平数值 (如 atk: 10)
+                for (let key in buff.effects) {
+                    if (key.endsWith('Pct')) continue; // 跳过百分比字段
+                    if (typeof buff.effects[key] === 'number') {
+                        add(key, buff.effects[key], buffName);
+                    }
+                }
+            }
+            // 2. 兼容旧逻辑：简单的数值加成 (val 是数字)
+            else if (buff.attr && typeof buff.val === 'number') {
+                add(buff.attr, buff.val, buffName, { days: buff.days });
+            }
+        }
+    }
+
+
+    // ================= E. 状态惩罚 (疲劳/饥饿) =================
     let efficiency = 1.0;
 
-    // 检查是否有 Debuff (根据我们在 time.js 里定义的 ID)
     const hasFatigue = player.buffs && player.buffs['debuff_fatigue'];
     const hasHunger = player.buffs && player.buffs['debuff_hunger'];
 
-    // 叠加乘法效率
     if (hasFatigue) efficiency *= 0.5;
     if (hasHunger) efficiency *= 0.5;
 
-    // 如果效率小于 100%，则计算并应用扣除
     if (efficiency < 1.0) {
-        // 计算损失比例 (例如 efficiency 0.25, lossRatio 就是 0.75)
         const lossRatio = 1.0 - efficiency;
-
-        // 获取当前已累计的属性值
         const currentAtk = player.derived.atk || 0;
         const currentDef = player.derived.def || 0;
         const currentSpeed = player.derived.speed || 0;
 
-        // 计算损失的具体数值 (向下取整)
-        // 使用负数传入 add 函数
         const lostAtk = Math.floor(currentAtk * lossRatio);
         const lostDef = Math.floor(currentDef * lossRatio);
         const lostSpeed = Math.floor(currentSpeed * lossRatio);
 
-        // 如果数值大于0，则添加一条负数记录
-        // 来源显示为 "身体状态" 或 "虚弱"
         if (lostAtk > 0) add('atk', -lostAtk, "身体状态(虚弱)");
         if (lostDef > 0) add('def', -lostDef, "身体状态(虚弱)");
         if (lostSpeed > 0) add('speed', -lostSpeed, "身体状态(虚弱)");
@@ -222,20 +235,17 @@ function recalcStats() {
     // ================= F. 收尾 =================
 
     // 8. 状态修正 (Clamp)
-    // 确保当前值不超过上限
     if (player.status.hp > player.derived.hpMax) player.status.hp = player.derived.hpMax;
     if (player.status.mp > player.derived.mpMax) player.status.mp = player.derived.mpMax;
     if (player.status.hunger > player.derived.hungerMax) player.status.hunger = player.derived.hungerMax;
 
-    // 疲劳值逻辑：不锁最大值(允许溢出触发Debuff)，但不能小于0
     if (player.status.fatigue > player.derived.fatigueMax) player.status.fatigue = player.derived.fatigueMax;
     if (player.status.fatigue < 0) player.status.fatigue = 0;
 
-    // 兜底：防止速度被扣成0导致无法移动
     if (player.derived.speed < 1) player.derived.speed = 1;
     if (player.derived.atk < 1) player.derived.atk = 1;
 
-    // 【新增】将实时状态同步到 derived 中，方便 UI 统一读取
+    // 同步实时状态
     player.derived.hp = player.status.hp;
     player.derived.mp = player.status.mp;
     player.derived.hunger = player.status.hunger;
