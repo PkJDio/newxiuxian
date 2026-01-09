@@ -4,9 +4,9 @@ console.log("加载 店铺渲染子模块 (自适应散列版)");
 
 const TownShops = {
     defaultConfig: {
-        "city": ["铁匠铺", "客栈",  "丹房", "医馆"],
-        "town": ["铁匠铺", "客栈", "医馆"],
-        "village": ["客栈"]
+        "city": ["铁匠铺", "客栈",  "丹房", "医馆", "悬赏榜"],
+        "town": ["铁匠铺", "客栈", "医馆", "悬赏榜"],
+        "village": ["客栈", "悬赏榜"]
     },
     specialConfig: {},
     colors: {
