@@ -744,21 +744,52 @@ const Combat = {
             if (window.UtilsAdd) UtilsAdd.addMoney(money);
             else this.player.money = (this.player.money || 0) + money;
         }
+        // --- 核心修复：自动通知悬赏榜计数 ---
+        if (window.BountyBoard && typeof window.BountyBoard.onEnemyKilled === 'function') {
+            console.log("[Combat] 尝试更新悬赏计数 -> ID:", this.enemy.id);
+            window.BountyBoard.onEnemyKilled(this.enemy.id);
+        }
+
         const drops = this._calculateDrops(this.enemy.drops);
+        // 【新增】=== 悬赏任务额外掉落 ===
+        const bountyDrops = this._checkBountyDrops(); // 调用刚才写的方法
+        // 将悬赏掉落合并到展示列表里
+        // 注意：这里我们直接把 item 对象转成 drops 数组需要的格式 {id: ...}，方便统一渲染
+        bountyDrops.forEach(item => {
+            drops.push({ id: item.id, isBounty: true }); // 标记一下是悬赏掉的(可选)
+        });
         let rewardHtml = "";
         if (money > 0 || drops.length > 0) {
             rewardHtml += `<div style="background:#e8f5e9; border:1px solid #c8e6c9; padding:10px; margin-top:10px; border-radius:4px;">`;
             if (money > 0) rewardHtml += `<p>获得钱财: <span style="color:#f57f17; font-weight:bold;">+${money}</span></p>`;
+
             if (drops.length > 0) {
                 rewardHtml += `<div style="font-weight:bold; margin-top:5px;">战利品:</div><div style="display:flex; flex-wrap:wrap; gap:5px;">`;
                 drops.forEach(drop => {
+                    // 添加物品到背包
                     if (window.UtilsAdd) UtilsAdd.addItem(drop.id, 1, false);
+
                     let name = drop.id;
+                    let styleExtra = "";
+
+                    // 获取物品名称
+                    let itemData = null;
                     if (window.GAME_DB && window.GAME_DB.items) {
-                        const d = window.GAME_DB.items.find(i=>i.id===drop.id);
-                        if(d) name = d.name;
+                        // 尝试查找
+                        if (Array.isArray(window.GAME_DB.items)) itemData = window.GAME_DB.items.find(i=>i.id===drop.id);
+                        else itemData = window.GAME_DB.items[drop.id];
                     }
-                    rewardHtml += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px;">${name}</span>`;
+
+                    if (itemData) {
+                        name = itemData.name;
+                        // 如果是悬赏掉落，加个特效或颜色
+                        if (drop.isBounty) {
+                            styleExtra = "border-color:#ff9800; background:#fff3e0; color:#e65100;";
+                            name = "✨ " + name;
+                        }
+                    }
+
+                    rewardHtml += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${styleExtra}">${name}</span>`;
                 });
                 rewardHtml += `</div>`;
             }
@@ -785,6 +816,101 @@ const Combat = {
         this._renderEnd("失败");
         const footer = document.getElementById('map_combat_footer');
         if (footer) footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">黯然离去</button>`;
+    },
+    // 【新增】检查悬赏任务额外掉落
+    _checkBountyDrops: function() {
+        if (!window.player || !window.player.bounty || !window.player.bounty.activeTasks) return [];
+
+        const drops = [];
+        const enemyId = this.enemy.id;
+        const enemyRank = this.enemy.template || 'minion';
+
+        // 遍历所有进行中的剿灭任务
+        window.player.bounty.activeTasks.forEach(task => {
+            // 只处理剿灭任务 (type 1) 且 状态为 active
+            if (task.type === 1 && task.status === 'active' && task.targets) {
+
+                // 检查是否是目标之一
+                const target = task.targets.find(t => t.id === enemyId);
+
+                // 关键判定：是目标 且 击杀数未溢出 (即当前击杀的是任务要求的第1~N只)
+                // 注意：此时 task.curCount 还没更新(在onWinCallback后更新)，所以判断条件是 < reqCount
+                if (target && target.curCount < target.reqCount) {
+
+                    // 1. 概率判定 (固定 0.3)
+                    if (Math.random() < 0.3) {
+                        const dropItem = this._rollBountyEquip(enemyRank);
+                        if (dropItem) {
+                            drops.push(dropItem);
+                        }
+                    }
+                }
+            }
+        });
+        return drops;
+    },
+
+    // 【新增】根据阶级随机装备
+    _rollBountyEquip: function(rank) {
+        if (!window.GAME_DB) return null;
+
+        // 1. 确定稀有度权重
+        let rarityWeights = {};
+        // 格式: { rarity: weight }
+
+        if (rank === 'minion') {
+            rarityWeights = { 1: 100 }; // 100% R1
+        } else if (rank === 'elite') {
+            rarityWeights = { 1: 60, 2: 40 }; // 2:1 -> 约 60% : 40% (原设定 0.18:0.12 = 3:2)
+        } else if (rank === 'boss') {
+            // 80:40:20:5:1
+            rarityWeights = { 1: 80, 2: 40, 3: 20, 4: 5, 5: 1 };
+        } else if (rank === 'lord') {
+            // 40:20:5:1 (R3, R4, R5, R6)
+            rarityWeights = { 3: 40, 4: 20, 5: 5, 6: 1 };
+        } else {
+            rarityWeights = { 1: 100 };
+        }
+
+        // 2. 权重随机选择稀有度
+        let totalWeight = 0;
+        for (let r in rarityWeights) totalWeight += rarityWeights[r];
+
+        let randomVal = Math.random() * totalWeight;
+        let selectedRarity = 1;
+
+        for (let r in rarityWeights) {
+            randomVal -= rarityWeights[r];
+            if (randomVal <= 0) {
+                selectedRarity = parseInt(r);
+                break;
+            }
+        }
+
+        // 3. 从数据库筛选对应稀有度的装备 (weapon, head, body, feet)
+        const validTypes = ['weapon', 'head', 'body', 'feet'];
+        let pool = [];
+
+        // 兼容 items 为数组或对象的情况
+        const allItems = Array.isArray(window.GAME_DB.items)
+            ? window.GAME_DB.items
+            : Object.values(window.GAME_DB.items || {});
+
+        pool = allItems.filter(i => validTypes.includes(i.type) && i.rarity === selectedRarity);
+
+        // 兜底：如果 items 里没装备，尝试去 specific DB 找 (如果你的数据结构是分开的)
+        if (pool.length === 0 && window.GAME_DB.weapons) {
+            const dbs = [window.GAME_DB.weapons, window.GAME_DB.head, window.GAME_DB.body, window.GAME_DB.feet];
+            dbs.forEach(db => {
+                if (db) pool = pool.concat(Object.values(db).filter(i => i.rarity === selectedRarity));
+            });
+        }
+
+        if (pool.length === 0) return null; // 实在没随到
+
+        // 4. 随机取一件
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        return item;
     },
 
     _handleEnd: function(type) {

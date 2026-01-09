@@ -1,0 +1,121 @@
+/* 悬赏列表容器 */
+.bounty_list_container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+/* 任务卡片 */
+.bounty_item {
+    border: 1px solid #8d6e63; /* 棕色边框 */
+    background: #fff8e1; /* 米黄色纸张背景 */
+    color: #3e2723;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.bounty_item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* 失败状态样式 */
+.bounty_item.failed {
+    background: #e0e0e0;
+    border-color: #9e9e9e;
+    opacity: 0.8;
+}
+.bounty_item.failed .bounty_title {
+    text-decoration: line-through;
+    color: #757575;
+}
+
+/* 头部: 标题与难度 */
+.bounty_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #bdbdbd;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.bounty_title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #bf360c; /* 深橘色 */
+}
+
+.bounty_diff {
+    font-size: 14px;
+    color: #f57f17;
+}
+
+/* 内容区域 */
+.bounty_body {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.bounty_desc {
+    color: #5d4037;
+    margin-bottom: 8px;
+}
+
+/* 复用 BountyBoard 生成的进度条样式调整 */
+.bounty_progress_block {
+    background: rgba(0,0,0,0.05);
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #2e7d32; /* 进度文字绿色 */
+}
+
+/* 底部: 奖励与状态 */
+.bounty_footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.bounty_reward {
+    color: #f9a825; /* 金币色 */
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.bounty_meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bounty_deadline {
+    color: #d32f2f; /* 红色警告 */
+}
+
+.bounty_status_tag {
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #4caf50;
+    color: white;
+    font-size: 12px;
+}
+
+.bounty_status_tag.failed {
+    background: #757575;
+}
+
+/* 空状态 */
+.bounty_empty_tip {
+    text-align: center;
+    padding: 40px;
+    color: #8d6e63;
+    font-style: italic;
+}

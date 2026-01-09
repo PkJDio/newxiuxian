@@ -82,7 +82,7 @@ const enemies_all = [
         stats: { hp: 30, atk: 5, def: 0, speed: 6 },
         money: [0, 0],
         drops: [
-            { id: " materials_001", rate: 0.4 },
+            { id: "materials_001", rate: 0.4 },
             { id: "materials_002", rate: 0.3 },
         ],
         skills: [],

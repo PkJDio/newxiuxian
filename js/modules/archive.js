@@ -37,7 +37,7 @@ const ArchiveSystem = {
             localStorage.setItem(this.getKey(), dataStr);
             console.log("[Archive] 游戏已保存 (v" + this.CURRENT_VERSION + ")");
 
-            if(window.showToast) window.showToast("游戏已保存");
+            // if(window.showToast) window.showToast("游戏已保存");
         } catch (e) {
             console.error("保存失败 (可能是空间不足):", e);
             if(window.showToast) window.showToast("保存失败，空间不足");

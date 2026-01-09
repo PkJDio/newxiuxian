@@ -167,7 +167,7 @@ function recalcStats() {
         });
 
         // 5. 装备中的功法
-        ['gongfa_ext', 'gongfa_int'].forEach(type => {
+        ['gongfa'].forEach(type => {
             const list = player.equipment[type];
             if (Array.isArray(list)) {
                 list.forEach(skillId => {
@@ -181,7 +181,7 @@ function recalcStats() {
                         }
                     } else {
                         // 兼容纯物品库模式
-                        const item = GAME_DB.items.find(i => i &&  i.id === skillId);
+                        const item = books.find(i => i &&  i.id === skillId);
                         if (item && item.effects) {
                             for (let k in item.effects) {
                                 if(typeof item.effects[k] === 'number') add(k, item.effects[k], item.name);

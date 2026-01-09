@@ -90,7 +90,7 @@ const UtilsEnemy = {
             name: template.name,
             template: type,
             timeStart: template.timeStart || 0,
-
+            region: template.region,
             x: finalX,
             y: finalY,
             gx: gx,

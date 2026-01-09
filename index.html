@@ -78,11 +78,17 @@
 
         <div id="center_action_panel">
             <div id="center_toolbar">
-                <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图</button>
-                <button id="btn_open_bag" class="ink_btn_tab" onclick="openBag()">🎒 行囊</button>
-                <button id="btn_open_gongfa" class="ink_btn_tab" onclick="console.log('HTML内联点击'); if(window.UISkill) UISkill.open(); else alert('UISkill未加载');">
-                    🎨 技艺
+                <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图 (M)</button>
+                <button id="btn_open_bag" class="ink_btn_tab" onclick="openBag()">🎒 行囊 (I)</button>
+
+                <button id="btn_open_gongfa" class="ink_btn_tab" onclick="if(window.UISkill) UISkill.open();">
+                    🎨 技艺 (K)
                 </button>
+
+                <button id="btn_open_bounty" class="ink_btn_tab" onclick="UIBounty.open()">
+                    📜 悬赏 (T)
+                </button>
+
                 <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
             </div>
 
@@ -207,6 +213,10 @@
     <script src="js/modules/ui.js"></script>
     <script src="js/modules/ui_bag.js"></script>
     <script src="js/modules/ui_skill.js"></script>
+    <script src="js/modules/ui_bounty.js"></script>
+
+
+    <script src="js/modules/input_shortcuts.js"></script>
     <script src="js/modules/map_view.js"></script>
     <script src="js/modules/archive.js"></script>
 

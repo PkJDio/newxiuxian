@@ -327,6 +327,12 @@ const UICombatModal = {
             }
 
             Combat.start(enemy, () => {
+                // 【核心修复】战斗胜利回调：通知悬赏榜检查击杀进度
+                if (window.BountyBoard && window.BountyBoard.onEnemyKilled) {
+                    // enemy.id 是当前击杀的怪物ID，例如 'enemy_wolf_id'
+                    window.BountyBoard.onEnemyKilled(enemy.id);
+                }
+
                 if (window.GlobalEnemies) {
                     window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
                 }
