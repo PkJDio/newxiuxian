@@ -1,6 +1,6 @@
 // js/core/utils_enemy.js
 // 敌人生成工具类 v15.3 (修复：分离中毒状态(toxicity)与毒性攻击(toxAtk))
-console.log("加载 敌人生成系统 (UtilsEnemy v15.3 - Field Separation)");
+//console.log("加载 敌人生成系统 (UtilsEnemy v15.3 - Field Separation)");
 
 // 1. 阶级生成权重
 const RANK_PROBS = {
@@ -19,7 +19,7 @@ const TEMPLATE_STYLES = {
 };
 
 const UtilsEnemy = {
-    SPAWN_RATE: 0.3,
+    SPAWN_RATE: 0.5,
 
     createRandomEnemy: function(x, y) {
         const gx = Math.floor(x / 10);
@@ -44,6 +44,7 @@ const UtilsEnemy = {
         if (this._isInTown(checkX, checkY)) return null;
 
         const regionId = this._getRegionId(checkX, checkY);
+
         const isWater = this._isWater(checkX, checkY);
         const playerTimeStart = (window.player && window.player.timeStart !== undefined) ? window.player.timeStart : 0;
 
@@ -165,7 +166,7 @@ const UtilsEnemy = {
         const timeKey = this._getTimeKey();
         const key = `kill_${timeKey}_${gx}_${gy}`;
         window.player.defeatedEnemies[key] = true;
-        console.log(`[UtilsEnemy] ✅ 记录击杀: ${key}`);
+        //console.log(`[UtilsEnemy] ✅ 记录击杀: ${key}`);
         this._cleanOldCache(timeKey);
         if(window.saveGame) window.saveGame();
     },

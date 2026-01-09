@@ -1,5 +1,5 @@
 // 丹药
-console.log("加载 丹药");
+//console.log("加载 丹药");
  const pills = [
      // --- Batch 1 ---
      { id: "pills_001", name: "止血散", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 10, effects: { hp: 20  }, desc: "由止血草研磨而成，洁白细腻，止血效果更佳。" },
@@ -114,5 +114,26 @@ console.log("加载 丹药");
      { id: "pills_098", name: "半边莲散", subType: "reply", type: "pill", grade: 0, rarity: 2, value: 36, effects: { toxicity: -72, hp: 6 }, desc: "利水消肿，解蛇虫毒。" },
      { id: "pills_099", name: "地丁清毒丸", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 12, effects: { toxicity: -24, hp: 3 }, desc: "基础解毒丹药。" },
      { id: "pills_100", name: "犀角化毒散", subType: "reply", type: "pill", grade: 1, rarity: 4, value: 1000, effects: { toxicity: -100, hp: 13 }, desc: "【珍贵】几乎能解世间大部分奇毒。" },
-
+     {
+         id: "pills_101",
+         name: "尸丹",
+         subType: "poison",
+         type: "pill",
+         grade: 1,
+         rarity: 4,
+         value: 1500,
+         effects: { hp: -100, toxicity: 200 },
+         desc: "由千年古尸体内凝结而成的内丹，集至阴至邪之气，蕴含恐怖的尸毒，触之即腐。"
+     },
+     {
+         id: "pills_102",
+         name: "失败的长生药",
+         type: "pill",
+         subType: "poison",
+         grade: 0,
+         rarity: 4,
+         value: 444,
+         effects: { hp: -500, maxHp: -5 },
+         desc: "方士为求长生而炼制的丹药，色泽红艳如血，重如金石。虽然未能让人羽化登仙，但其猛烈的金石药性足以瞬间摧毁凡人的五脏六腑。"
+     }
  ];

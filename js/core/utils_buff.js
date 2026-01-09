@@ -1,6 +1,6 @@
 // js/core/utils_buff.js
 // Buff/Debuff 状态检测与定义 v2.2 (新增：通用Buff添加/刷新接口)
-console.log("加载 状态Buff系统");
+//console.log("加载 状态Buff系统");
 
 // 这是一个新函数，专门用来根据数值 赋予/移除 Buff
 function checkStatusDebuffs() {
@@ -91,7 +91,7 @@ function processPoisonTimePass() {
         if (player.toxicity >= 100) {
             const dmg = Math.floor(player.derived.hpMax * 0.05);
             player.status.hp = Math.max(0, player.status.hp - dmg);
-            console.log(`[Poison] 非战斗扣血: -${dmg}`);
+            //console.log(`[Poison] 非战斗扣血: -${dmg}`);
         }
 
         // 2. 自然衰减 (每时辰 -20)
@@ -124,13 +124,13 @@ function addBuff(buffId, buffData) {
         player.buffs[buffId].desc = buffData.desc;
         player.buffs[buffId].effects = buffData.effects;
 
-        console.log(`[Buff系统] 刷新BUFF: ${buffData.name}，重置时间为 ${buffData.days} 天`);
+        //console.log(`[Buff系统] 刷新BUFF: ${buffData.name}，重置时间为 ${buffData.days} 天`);
         if(window.showToast) window.showToast(`【${buffData.name}】的状态时间已延长！`);
 
     } else {
         // --- 情况B：不存在，新增BUFF ---
         player.buffs[buffId] = buffData;
-        console.log(`[Buff系统] 新增BUFF: ${buffData.name}`);
+        //console.log(`[Buff系统] 新增BUFF: ${buffData.name}`);
         // 首次获得时，调用者(如inn.js)通常会提示，这里可以不弹窗，或者保留下方代码
         // if(window.showToast) window.showToast(`获得了状态【${buffData.name}】`);
     }

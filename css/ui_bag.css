@@ -324,3 +324,49 @@
     background: #d32f2f;
     color: #fff;
 }
+
+/* --- 核心修改：未激活状态下的图标样式 --- */
+.bag_equip_slot img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    /* 默认：未装备时置灰，并增加透明度 */
+    filter: grayscale(100%);
+    opacity: 0.4;
+    transition: all 0.3s ease;
+}
+
+/* --- 当父容器有 active 或 has_item 类时，恢复彩色 --- */
+.bag_equip_slot.active img,
+.bag_equip_slot.has_item img {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+/* 也可以给虚线框增加一点视觉引导 */
+.bag_equip_slot:not(.active) {
+    border-color: #ddd;
+    background-color: #f5f5f5;
+}
+/* 默认：未装备状态 (没有 .active 类) */
+.bag_equip_slot .bag_equip_icon {
+    filter: grayscale(100%); /* 强制变灰 */
+    opacity: 0.3;            /* 降低透明度，让它看起来更像占位符 */
+    transition: all 0.3s;    /* 切换时平滑一点 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 激活状态：装备后 (有 .active 或 .has_item 类) */
+.bag_equip_slot.active .bag_equip_icon,
+.bag_equip_slot.has_item .bag_equip_icon {
+    filter: grayscale(0%);   /* 恢复彩色 */
+    opacity: 1;              /* 恢复亮度 */
+}
+
+/* 针对 Emoji 的特殊处理 (有些浏览器 Emoji 不受 grayscale 影响) */
+.bag_equip_slot:not(.active):not(.has_item) .bag_equip_icon {
+    /* 如果 grayscale 对 Emoji 无效，可以尝试降低亮度或使用特定的蒙版 */
+    filter: grayscale(100%) brightness(0.7);
+}

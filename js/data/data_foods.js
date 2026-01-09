@@ -1,5 +1,5 @@
 // 成品食物
-console.log("加载 成品食物");
+//console.log("加载 成品食物");
 
 const foods = [
     {id: "foods_001", name: "竹筒饭", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 24, effects: {hunger: 18, hp: 8}, desc: "竹筒饭。（制作获得）", recipe: [["foodMaterial_032", "foodMaterial_002", "foodMaterial_007"], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
@@ -1842,7 +1842,17 @@ const foods = [
         desc: "天道混沌神肉，蕴含混沌法则，食用后速度与防御达到极致，甚至能躲避时间流逝。",
         value: 445,
     },
-
+    {
+        id: "foods_300",
+        name: "猴儿酒",
+        type: "food",
+        grade: 0,
+        rarity: 4,
+        obtain: "wild",
+        value: 94,
+        effects: { hunger: 10, mp: 80},
+        desc: "【奇遇】山中灵猴采集百果在树洞中自然发酵而成的绝世佳酿，千金难求。酒液粘稠如琥珀，异香扑鼻，饮之虽不解饱，但能大幅滋养内力，令人神清气爽。",
+    }
 
 ];
 

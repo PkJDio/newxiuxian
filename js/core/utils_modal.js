@@ -12,7 +12,7 @@ const ModalManager = {
         const legacyOverlay = document.getElementById('modal_overlay');
         if (legacyOverlay && !legacyOverlay.classList.contains('dynamic_modal')) {
             legacyOverlay.remove();
-            console.log("已清理旧版静态弹窗遮罩");
+            //console.log("已清理旧版静态弹窗遮罩");
         }
     },
 

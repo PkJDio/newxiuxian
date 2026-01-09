@@ -86,31 +86,45 @@ const UIBag = {
             return;
         }
         const count = this.selectedIndices.size;
-        const title = "批量丢弃";
+        const title = "批量处理";
         const content = `
-        <div style="text-align:center; padding:20px 10px;">
-            <div style="font-size:18px; margin-bottom:10px; font-family:Kaiti;">
-                确定要丢弃这 <span style="color:#a94442; font-weight:bold; font-size:22px;">${count}</span> 件物品吗？
+        <div style="text-align:center; padding:10px 5px;">
+            <div style="font-size:18px; margin-bottom:8px; font-family:Kaiti; color:#333;">
+                确定要丢弃选中的 <b style="color:#d32f2f;">${count}</b> 件物品吗？
             </div>
-            <div style="font-size:14px; color:#888;">( 丢弃后将无法找回，请三思 )</div>
+            <div style="font-size:13px; color:#999;">( 此操作不可撤销，请谨慎操作 )</div>
         </div>
-      `;
+    `;
+
+        // 取消按钮直接调用全局的 window.closeModal()
         const footer = `
-        <button class="bag_btn_action" onclick="UIBag.open()">取消</button>
+        <button class="bag_btn_action" style="margin-right:10px;" onclick="window.closeModal()">取消</button>
         <button class="bag_btn_danger" onclick="UIBag._doBatchDiscard()">确认丢弃</button>
-      `;
+    `;
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            window.UtilsModal.showInteractiveModal(title, content, footer);
+            // 传入 40 (vw) 和 30 (vh) 确保弹窗是小巧的
+            window.UtilsModal.showInteractiveModal(title, content, footer, "modal_batch_confirm", 40, 30);
         }
     },
 
     _doBatchDiscard: function() {
-        if (window.UtilsModal) window.UtilsModal.closeModal();
-        UtilsItem.discardMultipleItems(this.selectedIndices);
+        // 1. 关闭确认小窗
+        window.closeModal();
+
+        // 2. 执行逻辑
+        if (window.UtilsItem && UtilsItem.discardMultipleItems) {
+            UtilsItem.discardMultipleItems(this.selectedIndices);
+        }
+
+        // 3. 重置状态
         this.selectionMode = false;
         this.selectedIndices.clear();
-        this.open();
+
+        if (window.showToast) window.showToast("已成功处理物品");
+
+        // 4. 原地刷新 UI（保持“修仙行囊”大窗口不动）
+        this.refresh();
     },
 
     refresh: function() {
@@ -136,28 +150,28 @@ const UIBag = {
                 const item = itemId ? GAME_DB.items.find(i => i.id === itemId) : null;
 
                 let icon = slot.defaultIcon;
+                let activeClass = ''; // 默认为空，触发 CSS 的 grayscale
                 let borderColor = '#ccc';
-                let activeClass = '';
 
                 if (item) {
+                    // 有装备：替换图标并激活彩色类名
                     icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || icon;
                     const qualityColor = (item && window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#ddd';
                     borderColor = qualityColor;
-                    activeClass = 'active';
+                    activeClass = 'active'; // 激活彩色
                 }
 
                 const name = item ? item.name : slot.label;
-                // 装备栏点击查看详情
                 const clickAction = item ? `UIBag.showEquippedDetail('${slot.key}')` : '';
 
                 return `
-                    <div class="bag_equip_wrapper" onclick="${clickAction}">
-                        <div class="bag_equip_slot ${activeClass}" style="border-color:${borderColor}">
-                            <div class="bag_equip_icon">${icon}</div>
-                        </div>
-                        <div class="bag_equip_label" style="color:${item ? borderColor : '#999'}">${name}</div>
+                <div class="bag_equip_wrapper" onclick="${clickAction}">
+                    <div class="bag_equip_slot ${activeClass}" style="border-color:${borderColor}">
+                        <div class="bag_equip_icon">${icon}</div>
                     </div>
-                `;
+                    <div class="bag_equip_label" style="color:${item ? borderColor : '#999'}">${name}</div>
+                </div>
+            `;
             }).join('');
 
             // B. 插入间隔
@@ -206,7 +220,21 @@ const UIBag = {
 
         let html = '';
         if (!player.inventory || player.inventory.length === 0) {
-            html = `<div style="width:100%; text-align:center; color:#999; padding-top:50px;">行囊空空如也</div>`;
+            // 【优化点】：增加 span 包装并使用强力的居中样式，防止被 Grid 布局压缩
+            html = `
+                <div style="
+                    grid-column: 1 / -1; 
+                    display: flex; 
+                    justify-content: center; 
+                    align-items: center; 
+                    height: 200px; 
+                    color: #999; 
+                    font-size: 18px; 
+                    font-family: Kaiti;
+                    letter-spacing: 2px;
+                ">
+                    <span style="white-space: nowrap;">🍃 行囊空空如也</span>
+                </div>`;
         } else {
             player.inventory.forEach((slot, index) => {
                 const item = GAME_DB.items.find(i => i.id === slot.id);
@@ -292,6 +320,18 @@ const UIBag = {
         let statsRows = [];
         if (item.durability !== undefined) {
             statsRows.push(`<div style="color:#795548;">🛡 耐久: ${item.durability}</div>`);
+        }
+        // --- 在此处插入锐利度显示逻辑 ---
+        const sharpness = item.sharpness || (item.effects && item.effects.sharpness);
+        if (sharpness !== undefined) {
+            // 计算百分比效果，方便玩家直观理解（对应你战斗系统中的抑制系数）
+            const sharpEffectPct = Math.floor((1 - (100 / (100 + sharpness))) * 100);
+            statsRows.push(`
+        <div style="color:#ff9800; display:flex; align-items:center; gap:5px;">
+            <span>✨ 锐利: ${sharpness}</span>
+            <span style="font-size:14px; color:#ffb74d;">(护甲穿透 +${sharpEffectPct}%)</span>
+        </div>
+    `);
         }
         if (item.type === 'book') {
             const status = UtilsItem.getBookStatus(item.id);
@@ -547,23 +587,27 @@ const UIBag = {
         </div>
     `;
         const footer = `
-      <button class="bag_btn_action" onclick="UIBag.open()">取消</button>
-      <button class="bag_btn_danger" onclick="UIBag._doDiscardEquip('${slotKey}')">确认丢弃</button>
+        <button class="bag_btn_action" style="margin-right:10px;" onclick="window.closeModal()">取消</button>
+        <button class="bag_btn_danger" onclick="UIBag._doDiscardEquip('${slotKey}')">确认丢弃</button>
     `;
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            window.UtilsModal.showInteractiveModal(title, content, footer);
+            window.UtilsModal.showInteractiveModal(title, content, footer, "modal_equip_discard", 40, 30);
         }
     },
 
     _doDiscardEquip: function(slotKey) {
-        if (window.UtilsModal) window.UtilsModal.closeModal();
+        window.closeModal(); // 关闭确认小窗
 
         player.equipment[slotKey] = null;
+
         if(window.recalcStats) window.recalcStats();
         if(window.updateUI) window.updateUI();
 
-        this.open();
+        if (window.showToast) window.showToast("装备已移除并丢弃");
+
+        // 原地刷新行囊顶部的装备格
+        this.refresh();
     }
 };
 

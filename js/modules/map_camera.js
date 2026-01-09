@@ -1,6 +1,6 @@
 // js/modules/map_camera.js
 // 主界面地图交互模块 v34.1 (修复：完整接入 ShopSystem)
-console.log("加载 主界面地图控制 (Shop System Integrated)");
+//console.log("加载 主界面地图控制 (Shop System Integrated)");
 
 const MapCamera = {
     canvas: null,

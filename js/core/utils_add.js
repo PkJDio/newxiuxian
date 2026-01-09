@@ -12,7 +12,7 @@ const UtilsAdd = {
    * @returns {Boolean} 是否添加成功
    */
   addItem: function(itemId, count = 1, showToast = true) {
-    console.log(`[UtilsAdd] 尝试添加物品: ID=${itemId}, 数量=${count}`);
+    //console.log(`[UtilsAdd] 尝试添加物品: ID=${itemId}, 数量=${count}`);
 
     // 1. 数据校验
     const db = window.GAME_DB || (typeof GAME_DB !== 'undefined' ? GAME_DB : null);
@@ -38,7 +38,7 @@ const UtilsAdd = {
     // 优先使用 UtilsItem (如果存在)
     if (window.UtilsItem && typeof window.UtilsItem.addItem === 'function') {
       success = window.UtilsItem.addItem(itemId, count);
-      console.log("[UtilsAdd] 调用 UtilsItem.addItem 完成");
+      //console.log("[UtilsAdd] 调用 UtilsItem.addItem 完成");
     } else {
       // 兜底逻辑：直接操作 inventory 数组
       if (!player.inventory) player.inventory = [];
@@ -46,17 +46,17 @@ const UtilsAdd = {
       const existingSlot = player.inventory.find(slot => slot.id === itemId);
       if (existingSlot) {
         existingSlot.count += count;
-        console.log(`[UtilsAdd] 物品堆叠增加，当前数量: ${existingSlot.count}`);
+        //console.log(`[UtilsAdd] 物品堆叠增加，当前数量: ${existingSlot.count}`);
       } else {
         player.inventory.push({ id: itemId, count: count });
-        console.log("[UtilsAdd] 新物品已推入背包数组");
+        //console.log("[UtilsAdd] 新物品已推入背包数组");
       }
       success = true;
 
       // 刷新背包UI
       if(window.refreshBagUI) {
         window.refreshBagUI();
-        console.log("[UtilsAdd] 背包UI已刷新");
+        //console.log("[UtilsAdd] 背包UI已刷新");
       }
     }
 
@@ -92,7 +92,7 @@ const UtilsAdd = {
    * 添加金钱
    */
   addMoney: function(amount) {
-    console.log(`[UtilsAdd] 尝试添加钱: ${amount}`);
+    //console.log(`[UtilsAdd] 尝试添加钱: ${amount}`);
     if (typeof player === 'undefined') return;
 
     player.money = (player.money || 0) + amount;
@@ -116,13 +116,13 @@ const UtilsAdd = {
    * 添加技能/功法
    */
   addSkill: function(skillId) {
-    console.log(`[UtilsAdd] 尝试添加技能: ${skillId}`);
+    //console.log(`[UtilsAdd] 尝试添加技能: ${skillId}`);
     if (typeof player === 'undefined') return;
 
     if (!player.skills) player.skills = {};
 
     if (player.skills[skillId]) {
-      console.log("[UtilsAdd] 技能已存在，跳过");
+      //console.log("[UtilsAdd] 技能已存在，跳过");
       if(window.showToast) window.showToast("你已经学会了该技能，无需重复学习。");
       return;
     }
@@ -141,7 +141,7 @@ const UtilsAdd = {
       exp: 0,
       mastered: false
     };
-    console.log("[UtilsAdd] 技能已写入 player.skills");
+    //console.log("[UtilsAdd] 技能已写入 player.skills");
 
     if(window.updateUI) window.updateUI();
     if(window.showToast) window.showToast(`领悟了新功法：<span style="color:#2b58a6">${skillName}</span>`);
@@ -154,19 +154,19 @@ const UtilsAdd = {
    * 内部方法：触发自动保存
    */
   _triggerAutoSave: function() {
-    console.log("[UtilsAdd] 准备执行自动保存...");
+    //console.log("[UtilsAdd] 准备执行自动保存...");
 
     // 尝试方案1: State.save() (推荐)
     if (typeof State !== 'undefined' && typeof State.save === 'function') {
       State.save();
-      console.log("[UtilsAdd] 已调用 State.save() 保存游戏");
+      //console.log("[UtilsAdd] 已调用 State.save() 保存游戏");
       return;
     }
 
     // 尝试方案2: saveGame() (全局函数)
     if (typeof saveGame === 'function') {
       saveGame();
-      console.log("[UtilsAdd] 已调用 saveGame() 保存游戏");
+      //console.log("[UtilsAdd] 已调用 saveGame() 保存游戏");
       return;
     }
 
@@ -174,7 +174,7 @@ const UtilsAdd = {
     if (typeof player !== 'undefined' && typeof SAVE_KEY !== 'undefined') {
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(player));
-        console.log(`[UtilsAdd] 已直接写入 localStorage (Key: ${SAVE_KEY})`);
+        //console.log(`[UtilsAdd] 已直接写入 localStorage (Key: ${SAVE_KEY})`);
       } catch (e) {
         console.error("[UtilsAdd] 保存失败:", e);
       }

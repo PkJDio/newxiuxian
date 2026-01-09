@@ -1,6 +1,6 @@
 // js/modules/shop_system.js
 // 店铺功能管理器
-console.log("加载 店铺功能系统");
+//console.log("加载 店铺功能系统");
 
 const ShopSystem = {
     // 注册表：存储 店铺名 -> 处理函数 的映射
@@ -13,7 +13,7 @@ const ShopSystem = {
      */
     register: function(shopName, handler) {
         this.registry[shopName] = handler;
-        console.log(`[ShopSystem] 已注册店铺功能: ${shopName}`);
+        //console.log(`[ShopSystem] 已注册店铺功能: ${shopName}`);
     },
 
     /**
@@ -24,7 +24,7 @@ const ShopSystem = {
     enter: function(shopName, town) {
         const handler = this.registry[shopName];
         if (handler && typeof handler.enter === 'function') {
-            console.log(`正在进入 ${town.name} 的 ${shopName}...`);
+            //console.log(`正在进入 ${town.name} 的 ${shopName}...`);
             // 执行具体的店铺逻辑
             handler.enter(town);
         } else {

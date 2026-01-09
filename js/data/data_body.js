@@ -1,6 +1,40 @@
 // 盔甲
-console.log("加载 盔甲");
-
+//console.log("加载 盔甲");
+/*
+ * ======================================================================================
+ * [SYSTEM MEMORY] 盔甲属性生成公式 (Game Balance Formulas V1.0)
+ * 注意：此配置块用于指导 AI 生成新衣服/护甲数据，请勿删除。
+ * ======================================================================================
+ *
+ * 1. 属性点预算 (Stats Budget):
+ * 总点数参考：TotalPoints = Def + (HP_max / 5) + (Speed > 0 ? Speed : 0)
+ * - R1 (普通):    5 ~ 15 点
+ * - R2 (精良):   15 ~ 25 点
+ * - R3 (稀有):   30 ~ 45 点
+ * - R4 (史诗):   45 ~ 65 点
+ * - R5 (传世):   70 ~ 100 点
+ * - R6 (神话):  110 ~ 160 点
+ *
+ * 2. 护甲类型分配倾向 (Type Distribution):
+ * - 【布】(Cloth): 防御低, 闪避(Speed)高, 生命中。需求：100% 神(shen)。
+ * - 【轻】(Light): 属性均衡。需求：40% 精(jing) / 60% 神(shen)。
+ * - 【重】(Heavy): 防御极高, 闪避(Speed)为负, 生命高。需求：80% 精(jing) / 20% 神(shen)。
+ *
+ * 3. 需求点数公式 (Requirement Formula):
+ * 仅 R2 及以上触发。
+ * - TotalReq = Def * 0.5 + (HP_max / 5)
+ * - 分配方式：根据上方【护甲类型】比例分配至 jing 和 shen，向上取整。
+ *
+ * 4. 价格计算公式 (Value Formula):
+ * - R1: Value = (Def * 10) + (HP_max * 2) + (Speed * 10)
+ * - R2: Value = (Def * 15) + (HP_max * 3) + (Speed * 15)
+ * - R3: Value = 3000 + (Def * 50) + (HP_max * 10)
+ * - R4: Value = 5000 + (Def * 70) + (HP_max * 15)
+ * - R5: Value = 10000 + (Def * 100) + (HP_max * 20)
+ * - R6: Value = 25000 + (Def * 200) + (HP_max * 40)
+ *
+ * ======================================================================================
+ */
 const body = [
     {
         id        : "body_001",
@@ -2162,4 +2196,28 @@ const body = [
         req       : {jing: 40, shen: 10},
         desc      : "【重】虽是后人仿制，但融入了开天辟地的意志，是世间万物之母防御。",
     },
+    {
+        id        : "body_181",
+        name      : "古旧铜甲",
+        type      : "body",
+        grade     : 0,
+        rarity    : 2,
+        value     : 320,
+        durability: 60,
+        effects   : {def: 17, speed: -2, hp_max: 12},
+        req       : {jing: 9, shen: 2},
+        desc      : "【重】从古战场挖掘出的青铜甲胄，虽然系带已经腐朽更换过，但铜甲本身依然坚固。",
+    },
+    {
+        id        : "body_182",
+        name      : "狼王氅",
+        type      : "body",
+        grade     : 0,
+        rarity    : 4,
+        value     : 8320,
+        durability: 140,
+        effects   : {def: 26, speed: 10, hp_max: 100},
+        req       : {jing: 14, shen: 20},
+        desc      : "【轻】由极寒之地的雪狼王皮毛缝制而成，披在身上轻若无物，且隐约散发着一股令人胆寒的野性气息。",
+    }
 ];

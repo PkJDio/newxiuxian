@@ -1,7 +1,7 @@
 // js/core/utils_skill.js
 // 功法/技能核心逻辑工具箱
 // 【更新】引入 typeExpRate (外功/内功全局熟练度系数)
-console.log("加载 功法核心逻辑");
+//console.log("加载 功法核心逻辑");
 
 const UtilsSkill = {
     getSkillInfo: function(skillId) {
@@ -111,7 +111,7 @@ const UtilsSkill = {
     /* ================= 功法管理 (保持不变) ================= */
 
     learnSkill: function(skillId, expGain = 0, silent = false) {
-        console.log(`[UtilsSkill] 尝试学习功法: ${skillId}`)
+        //console.log(`[UtilsSkill] 尝试学习功法: ${skillId}`)
         if (!player.skills) player.skills = {};
 
 
@@ -156,7 +156,7 @@ const UtilsSkill = {
         this._unequipIfEquipped(skillId);
         delete player.skills[skillId];
         this._refreshSystem();
-        console.log(`[UtilsSkill] 已遗忘功法: ${skillId}`);
+        //console.log(`[UtilsSkill] 已遗忘功法: ${skillId}`);
     },
 
     forgetSkills: function(skillIdList) {

@@ -1,10 +1,10 @@
 // 【启动层】初始化, 游戏主循环, 事件绑定
-console.log("加载 游戏初始化")
+//console.log("加载 游戏初始化")
 
 /* ================= 游戏主入口 ================= */
 
 window.onload = function() {
-  console.log("[Main] 资源加载完毕，启动游戏...");
+  //console.log("[Main] 资源加载完毕，启动游戏...");
 
   if (typeof initGameDB === 'function') initGameDB();
   if (window.LogManager) window.LogManager.init();
@@ -96,7 +96,7 @@ function bindMainMenuEvents() {
  * (修正版：动态读取地图信息)
  */
 function startNewGame() {
-  console.log("正在构建新角色...");
+  //console.log("正在构建新角色...");
 
   if (typeof PLAYER_TEMPLATE === 'undefined') {
     console.error("配置丢失：找不到 PLAYER_TEMPLATE");
@@ -159,12 +159,12 @@ function startNewGame() {
 
 // 确保在页面加载后执行
 window.addEventListener('load', function() {
-    console.log("========================================");
-    console.log(">>> [MAIN] 页面加载完成 (Window Loaded)");
+    //console.log("========================================");
+    //console.log(">>> [MAIN] 页面加载完成 (Window Loaded)");
 
     // 1. 检查 UISkill 是否存在
     if (window.UISkill) {
-        console.log(">>> [MAIN] 检测到 window.UISkill 存在 ✅");
+        //console.log(">>> [MAIN] 检测到 window.UISkill 存在 ✅");
     } else {
         console.error(">>> [MAIN] ❌ window.UISkill 不存在！请检查 index.html 是否引入了 ui_skill.js");
     }
@@ -174,22 +174,22 @@ window.addEventListener('load', function() {
     const btn = document.getElementById(btnId);
 
     if (btn) {
-        console.log(`>>> [MAIN] 找到按钮 ID: ${btnId} ✅`);
+        //console.log(`>>> [MAIN] 找到按钮 ID: ${btnId} ✅`);
 
         // 3. 强制移除旧事件 (如果担心重复) 并绑定新事件
         btn.onclick = function() {
-            console.log(`>>> [CLICK] 你点击了功法按钮!`);
+            //console.log(`>>> [CLICK] 你点击了功法按钮!`);
 
             if (window.UISkill) {
-                console.log(">>> [CLICK] 调用 UISkill.open()...");
+                //console.log(">>> [CLICK] 调用 UISkill.open()...");
                 UISkill.open();
             } else {
                 alert("错误：UISkill 模块未加载，请查看控制台报错");
             }
         };
-        console.log(`>>> [MAIN] 按钮 ${btnId} 点击事件绑定成功 ✅`);
+        //console.log(`>>> [MAIN] 按钮 ${btnId} 点击事件绑定成功 ✅`);
     } else {
         console.error(`>>> [MAIN] ❌ 找不到按钮 ID: ${btnId}！请检查 HTML 中按钮的 id 属性是否写错了`);
     }
-    console.log("========================================");
+    //console.log("========================================");
 });

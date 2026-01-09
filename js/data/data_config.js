@@ -1,5 +1,5 @@
 // 常量配置：RARITY_CONFIG 等
-console.log("加载 常量配置")
+//console.log("加载 常量配置")
 
 
 const RARITY_CONFIG = {

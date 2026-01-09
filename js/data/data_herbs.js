@@ -1,5 +1,5 @@
 // 草药
-console.log("加载 草药");
+//console.log("加载 草药");
  const herbs = [
         { id: "herbs_001", name: "止血草", type: "material" , subType:"herbs" , grade: 0, rarity: 1, value: 5, effects: { hp: 5, toxicity: 1 }, desc: "路边常见的野草，嚼碎敷在伤口可止血。" },
         { id: "herbs_002", name: "甘草", type: "material" , subType:"herbs" , grade: 0, rarity: 1, value: 3, effects: { hp: 2, toxicity: 0 }, desc: "味甜，能调和百药，直接吃也能缓解疼痛。" },

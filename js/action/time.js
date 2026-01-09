@@ -1,5 +1,5 @@
 // js/action/time.js
-console.log("加载 时间系统 (24小时制 - 修复版)");
+//console.log("加载 时间系统 (24小时制 - 修复版)");
 
 // ================= 配置区域 =================
 const TIME_CONFIG = {
@@ -35,47 +35,46 @@ const TimeSystem = {
     },
 
     /**
-     * 获取时间字符串 (已修复小数显示问题)
+     * 获取时间字符串 (已修改为：秦始皇三十七年 01月 15日 13:08 格式)
      */
     getTimeString: function() {
         if (!player || !player.time) return "混沌未开";
         const t = player.time;
 
-        // 年月日
+        // 1. 年份保持中文显示
         const yearChar = this.toChineseNum(t.year);
         const yearStr = `秦始皇${yearChar}年`;
 
-        const mIdx = (t.month - 1) % 12;
-        const dIdx = (t.day - 1) % 30;
-        const monthStr = this.monthMap[mIdx] || `${t.month}月`;
-        const dayStr = this.dayMap[dIdx] || `${t.day}日`;
+        // 2. 月份改为数字补零显示 (例如: 01月)
+        const monthStr = t.month.toString().padStart(2, '0') + "月";
 
-        // ---【修复核心】---
+        // 3. 日期改为数字补零显示 (例如: 15日)
+        const dayStr = t.day.toString().padStart(2, '0') + "日";
+
+        // ---【时间处理逻辑保持不变】---
         let rawHour = t.hour || 0;
         let rawMin = t.minute || 0;
 
-        // 如果hour是小数(旧档残留)，把小数部分转化成分钟
         if (rawHour % 1 !== 0) {
-            let decimalPart = rawHour % 1; // 取出小数部分 (0.3557...)
-            rawMin += decimalPart * 60;    // 转化成分钟
-            rawHour = Math.floor(rawHour); // 小时取整
+            let decimalPart = rawHour % 1;
+            rawMin += decimalPart * 60;
+            rawHour = Math.floor(rawHour);
         }
 
-        // 确保分钟也是整数
         let displayHour = Math.floor(rawHour);
         let displayMin = Math.floor(rawMin);
 
-        // 处理一下因为转化导致的分钟溢出 (比如 0.99小时 -> 59分钟，没问题。但如果有累积误差)
         while (displayMin >= 60) {
             displayMin -= 60;
             displayHour += 1;
         }
-        displayHour = displayHour % 24; // 确保不超过24显示
+        displayHour = displayHour % 24;
 
-        // 格式化 HH:mm
+        // 4. 格式化 HH:mm
         const hh = displayHour.toString().padStart(2, '0');
         const mm = displayMin.toString().padStart(2, '0');
 
+        // 返回拼接后的字符串
         return `${yearStr} ${monthStr} ${dayStr} ${hh}:${mm}`;
     },
 
@@ -145,13 +144,13 @@ const TimeSystem = {
         }
 
         // Buff 和 UI
-        console.log("时间流逝:", hours, "小时");
+        // //console.log("时间流逝:", hours, "小时");
 
 
         this._checkBuffs(hours);
 
         if (window.updateUI) window.updateUI();
-        if (window.saveGame) window.saveGame();
+        // if (window.saveGame) window.saveGame();
     },
 
     // ... (_checkStatusDebuffs, _onNewDay, _checkBuffs 保持之前的代码不变，此处省略以节省篇幅，请保留原有的这些函数) ...
@@ -196,7 +195,7 @@ const TimeSystem = {
             let buff = player.buffs[id];
             if (buff.days > 9000) continue;
             if (buff.days > 0) {
-                console.log(`[${buff.name||'状态'}] 扣除前剩余 ${buff.days} 天`);
+                //console.log(`[${buff.name||'状态'}] 扣除前剩余 ${buff.days} 天`);
                 //读取buff.useHour,不存在的话就当作0
                 buff.useHour = buff.useHour || 0;
                 buff.useHour += hours;

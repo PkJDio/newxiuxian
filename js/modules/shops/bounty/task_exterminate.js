@@ -1,6 +1,6 @@
 // js/modules/shops/bounty/task_exterminate.js
 // 悬赏榜 - 剿灭任务逻辑 v4.1 (Debug版：增加详细日志)
-console.log("加载 悬赏榜任务: 剿灭 (v4.1 Debug)");
+//console.log("加载 悬赏榜任务: 剿灭 (v4.1 Debug)");
 
 const TaskExterminate = {
     type: 1,
@@ -19,7 +19,7 @@ const TaskExterminate = {
 
         // --- A. 筛选怪物池 ---
         const currentYear = (window.player && player.time) ? player.time.year : 0;
-
+        const timeStart= (window.player && player.timeStart) ? player.timeStart : 0;
         // 区域判定
         let regionPrefix = town.region || null;
         if (!regionPrefix && town.id) {
@@ -31,11 +31,11 @@ const TaskExterminate = {
             else regionPrefix = town.id; // 如果ID很短，就直接用ID
         }
 
-        console.log(`Step 1: 环境参数 -> 当前年份:${currentYear}, 城镇区域前缀:${regionPrefix}`);
-
+        // console.log(`Step 1: 环境参数 -> 当前年份:${currentYear}, 城镇区域前缀:${regionPrefix}`);
+        // console.log(`数量: `,allEnemies);
         let validEnemies = allEnemies.filter(e => {
             // 1. 年份检查
-            if ((e.timeStart || 0) > currentYear) return false;
+            if ((e.timeStart || 0) > timeStart) return false;
 
             // 2. 区域检查
             if (e.region === 'all') return true; // 通用怪
@@ -48,18 +48,18 @@ const TaskExterminate = {
             }
             return false;
         });
-
-        console.log(`Step 2: 初步筛选结果 (年份+区域匹配) -> 数量: ${validEnemies.length}`);
+        // console.log(`Step 2: 初步筛选结果 (年份+区域匹配) -> 数量:`,validEnemies);
+        // console.log(`Step 2: 初步筛选结果 (年份+区域匹配) -> 数量: ${validEnemies.length}`);
         if (validEnemies.length === 0) {
-            console.log("⚠️ 警告: 没有匹配区域的怪物，尝试降级为仅搜索 'region: all' 的通用怪...");
+            // console.log("⚠️ 警告: 没有匹配区域的怪物，尝试降级为仅搜索 'region: all' 的通用怪...");
             validEnemies = allEnemies.filter(e => e.region === 'all');
-            console.log(`Step 2 (Retry): 通用怪数量 -> ${validEnemies.length}`);
+            // console.log(`Step 2 (Retry): 通用怪数量 -> ${validEnemies.length}`);
         }
 
         if (validEnemies.length === 0) {
-            console.error("❌ 失败: 当前区域及通用池中没有可用怪物！");
-            console.log("调试建议: 请检查 enemies 数据中怪物的 region 字段是否与 town.id 匹配，或者是否定义了 region:'all' 的怪物。");
-            console.groupEnd();
+            // console.error("❌ 失败: 当前区域及通用池中没有可用怪物！");
+            // console.log("调试建议: 请检查 enemies 数据中怪物的 region 字段是否与 town.id 匹配，或者是否定义了 region:'all' 的怪物。");
+            // console.groupEnd();
             return null;
         }
 
@@ -71,32 +71,32 @@ const TaskExterminate = {
         else if (difficulty === 4) targetConfigs = [{ rank: 'boss', countMin: 1, countMax: 1 }];
         else if (difficulty === 5) targetConfigs = [{ rank: 'lord', countMin: 1, countMax: 1 }];
 
-        console.log(`Step 3: 难度配置 (Diff ${difficulty}) ->`, targetConfigs);
+        // console.log(`Step 3: 难度配置 (Diff ${difficulty}) ->`, targetConfigs);
 
         const targets = [];
         let usedEnemyIds = new Set();
         let totalReward = 0;
-
+        // console.log("validEnemies",validEnemies)
         for (let i = 0; i < targetConfigs.length; i++) {
             const cfg = targetConfigs[i];
 
             // 在筛选出的 validEnemies 中寻找符合 rank (minion/elite/boss) 的怪
             let pool = validEnemies.filter(e => e.template === cfg.rank && !usedEnemyIds.has(e.id));
 
-            console.log(`Step 4-Loop[${i}]: 寻找 Rank=${cfg.rank} 的怪物... 可用池大小: ${pool.length}`);
+            // console.log(`Step 4-Loop[${i}]: 寻找 Rank=${cfg.rank} 的怪物... 可用池大小: ${pool.length}`);
 
             // 如果没找到未使用的，尝试复用已使用的（防止怪太少导致生成失败）
             if (pool.length === 0) {
-                console.log("  -> 池为空，尝试允许复用怪物...");
+                // console.log("  -> 池为空，尝试允许复用怪物...");
                 pool = validEnemies.filter(e => e.template === cfg.rank);
-                console.log(`  -> 复用后池大小: ${pool.length}`);
+                // console.log(`  -> 复用后池大小: ${pool.length}`);
             }
 
             if (pool.length === 0) {
-                console.warn(`  ❌ 失败: 在 validEnemies 中找不到 template=${cfg.rank} 的怪物！此目标项跳过。`);
+                // console.warn(`  ❌ 失败: 在 validEnemies 中找不到 template=${cfg.rank} 的怪物！此目标项跳过。`);
                 continue;
             }
-
+            // console.log(`  -> 池大小: ${pool.length}`,pool);
             const rand = window.getSeededRandom(`${seed}_t${i}`, "enemy_select");
             const enemy = pool[Math.floor(rand * pool.length)];
             usedEnemyIds.add(enemy.id);
@@ -105,15 +105,15 @@ const TaskExterminate = {
             const count = Math.floor(countRand * (cfg.countMax - cfg.countMin + 1)) + cfg.countMin;
 
             // 赏金计算
-            let multiplier = 1;
-            if (cfg.rank === 'elite') multiplier = 5;
-            if (cfg.rank === 'boss' || cfg.rank === 'lord') multiplier = 10;
+            let multiplier = 5;
+            if (cfg.rank === 'elite') multiplier = 3;
+            if (cfg.rank === 'boss' || cfg.rank === 'lord') multiplier = 1;
 
             const hp = enemy.stats ? enemy.stats.hp : (enemy.hp || 100);
             const reward = Math.floor(hp * count * multiplier);
             totalReward += reward;
 
-            console.log(`  ✅ 选中怪物: ${enemy.name} (${enemy.id}), 数量: ${count}, 赏金: ${reward}`);
+            //console.log(`  ✅ 选中怪物: ${enemy.name} (${enemy.id}), 数量: ${count}, 赏金: ${reward}`);
 
             const rankColor = this._getRankColor(cfg.rank);
             targets.push({
@@ -133,7 +133,7 @@ const TaskExterminate = {
         }
 
         console.log("✅ 任务生成成功！", targets);
-        console.groupEnd();
+        // console.groupEnd();
 
         const titleStr = targets.map(t => t.name).join("、");
         const descStr = targets.map(t => t.descStr).join("，");
@@ -168,27 +168,61 @@ const TaskExterminate = {
     },
 
     getProgressHtml: function(task) {
-        if (!task || !task.targets) return "";
-        return task.targets.map(t => {
-            const isDone = t.curCount >= t.reqCount;
-            const color = isDone ? '#2e7d32' : '#d32f2f';
-            return `<div style="margin-top:4px;">${t.name}: <span style="font-weight:bold; color:${color}">${t.curCount} / ${t.reqCount}</span></div>`;
-        }).join("");
+        // 【新增判定】如果不是跑腿任务(type 2)，则直接返回原有的进度逻辑或空，不执行距离计算
+        if (task.type !== 2) {
+            // 这里可以根据需要返回默认逻辑，或者如果是 Exterminate 任务，由它自己的模块处理
+            return "";
+        }
+
+        const curTownId = (window.BountyBoard && BountyBoard.currentTown) ? BountyBoard.currentTown.id : null;
+        // 获取玩家当前实时坐标
+        const playerPos = window.player && window.player.position ? window.player.position : { x: 0, y: 0 };
+
+        let statusColor = "#999";
+        let locHint = "前往目标城镇途中";
+
+        // 获取目标城镇数据以提取坐标
+        const townData = window.WORLD_TOWNS || (window.GAME_DB ? window.GAME_DB.world : null) || {};
+        const targetTown = townData[task.targetTownId] || Object.values(townData).find(t => t.id === task.targetTownId);
+
+        if (curTownId === task.targetTownId) {
+            // 已到达目标城镇
+            statusColor = "#2e7d32";
+            locHint = "已送达目的地，可交付任务";
+        } else if (curTownId === task.originTownId) {
+            // 还在起点城镇
+            statusColor = "#e65100";
+            locHint = "正在起点等待出发";
+        } else if (targetTown) {
+            // 【核心逻辑】离开起点但在途中，计算玩家与目标的实时距离
+            const dx = targetTown.x - playerPos.x;
+            const dy = targetTown.y - playerPos.y;
+            const distance = Math.floor(Math.sqrt(dx * dx + dy * dy));
+
+            statusColor = "#2196f3"; // 蓝色表示进行中
+            locHint = `距离 <b style="color:#d32f2f;">${task.targetTownName}</b> 还有 <b style="color:#d32f2f;">${distance}</b> 距离`;
+        }
+
+        return `
+            <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                <p>目标地点: <b style="color:#2196f3">${task.targetTownName}</b></p>
+                <p style="color:${statusColor}; font-size:16px;">状态: ${locHint}</p>
+            </div>`;
     },
 
     // ================= 3. 战斗钩子 =================
-    onEnemyKilled: function(task, enemyId) {
+    onTaskEnemyKilled: function(task, enemyId) {
         let updated = false;
         if (task && task.targets) {
-            task.targets.forEach(target => {
-                if (target.id === enemyId && target.curCount < target.reqCount) {
-                    target.curCount++;
-                    updated = true;
-                    if (window.showToast) {
-                        window.showToast(`悬赏进度: ${target.name} (${target.curCount}/${target.reqCount})`);
-                    }
+            // 使用 find 找到第一个符合条件且未满的目标，而不是 forEach 遍历所有
+            const target = task.targets.find(t => t.id === enemyId && t.curCount < t.reqCount);
+            if (target) {
+                target.curCount++;
+                updated = true;
+                if (window.showToast) {
+                    window.showToast(`悬赏进度: ${target.name} (${target.curCount}/${target.reqCount})`);
                 }
-            });
+            }
         }
         return updated;
     }

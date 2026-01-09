@@ -1,6 +1,6 @@
 // js/modules/shops/inn.js
 // 客栈功能模块 v2.8 (适配新版弹窗管理：DOM对象操作 + 局部刷新优化)
-console.log("加载 客栈模块");
+//console.log("加载 客栈模块");
 
 // 注入样式 (保持原样，无需修改)
 const innStyles = `
@@ -244,7 +244,7 @@ const InnShop = {
             const r = item.rarity || 1;
             return r <= config.maxRarity;
         });
-        console.log("权重过滤",validItems)
+        //console.log("权重过滤",validItems)
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
@@ -266,7 +266,7 @@ const InnShop = {
             const score = Math.pow(rSafe, 1 / w);
             return { item: item, score: score, maxQty: 0 };
         });
-        console.log("scoredItems",scoredItems);
+        //console.log("scoredItems",scoredItems);
         scoredItems.sort((a, b) => b.score - a.score);
         const selectedItems = scoredItems.slice(0, targetTypeCount);
 

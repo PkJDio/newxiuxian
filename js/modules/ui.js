@@ -1,5 +1,5 @@
 // js/modules/ui.js - 核心界面交互 (修复：Buff小数位与详情显示)
-console.log("加载 界面交互 (Fix Buff Display)")
+//console.log("加载 界面交互 (Fix Buff Display)")
 
 /* ================= 界面交互逻辑 ================= */
 

@@ -1,6 +1,6 @@
 // js/modules/map_view.js
 // 全屏地图阅览控制器 (支持新地形：草原/沙漠/海洋，区分城镇村样式)
-console.log("加载 地图阅览模块 (独立版)");
+//console.log("加载 地图阅览模块 (独立版)");
 
 const MapView = {
     canvas: null,

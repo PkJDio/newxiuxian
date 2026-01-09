@@ -1,5 +1,5 @@
 // 工具：含斧镐、fishingRods
-console.log("加载 工具");
+//console.log("加载 工具");
 const tools = [
         { id: "tools_001", name: "初级纳戒", type: "tool", grade: 1, rarity: 4, value: 500, effects: { space: 10 }, desc: "内有小空间。" },
     ];

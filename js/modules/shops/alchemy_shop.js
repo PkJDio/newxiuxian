@@ -1,6 +1,6 @@
 // js/modules/shops/alchemy_shop.js
 // 丹房功能模块 v1.0
-console.log("加载 丹房模块");
+//console.log("加载 丹房模块");
 
 const AlchemyShop = {
     currentStock: [],

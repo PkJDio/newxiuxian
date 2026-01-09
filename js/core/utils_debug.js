@@ -1,6 +1,6 @@
 // js/core/utils_debug.js
 // 调试系统 (天道) - 全功能修复版
-console.log("加载 调试系统");
+//console.log("加载 调试系统");
 
 const DebugSystem = {
     open: function() {

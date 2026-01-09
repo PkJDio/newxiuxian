@@ -1,7 +1,7 @@
 // js/modules/map_enemy_manager.js
 // 地图敌人管理器 v1.0
 // 职责：管理地图上怪物的生成、销毁、点击判定
-console.log("加载 地图敌人管理器 (MapEnemyManager)");
+//console.log("加载 地图敌人管理器 (MapEnemyManager)");
 
 const MapEnemyManager = {
     spawnConfig: {
@@ -46,6 +46,7 @@ const MapEnemyManager = {
                 if (alreadyExists) continue;
 
                 const newEnemy = UtilsEnemy.createRandomEnemy(gx * 10, gy * 10);
+                //console.log("newEnemy",newEnemy);
                 if (newEnemy) window.GlobalEnemies.push(newEnemy);
             }
         }

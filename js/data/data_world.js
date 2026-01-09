@@ -1,6 +1,6 @@
 // js/data/data_world.js
 // 地图数据 v6.0：坐标修正(上北下南)、全境填充、新地形
-console.log("加载 地图数据");
+//console.log("加载 地图数据");
 
 const MAP_SIZE = 2700;
 const GRID_LARGE = 900;

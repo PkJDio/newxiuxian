@@ -1,6 +1,6 @@
 // js/core/utils_item.js
 // 物品核心逻辑工具箱 (修复物品使用效果：恢复/永久属性/Buff)
-console.log("加载 物品工具类");
+//console.log("加载 物品工具类");
 
 const UtilsItem = {
     // 获取书籍状态
@@ -50,7 +50,7 @@ const UtilsItem = {
         const item = GAME_DB.items.find(i => i.id === itemSlot.id);
         if (!item) return;
 
-        console.log(`尝试使用物品: ${item.name}`);
+        //console.log(`尝试使用物品: ${item.name}`);
 
         // 1. 类型检查
         if (item.type === 'book') {
@@ -136,7 +136,7 @@ const UtilsItem = {
                     player.buffs[item.id] = newBuff;
 
                     applied = true;
-                    console.log(`已应用BUFF [${item.name}]:`, newBuff.effects);
+                    //console.log(`已应用BUFF [${item.name}]:`, newBuff.effects);
                 }
             }
         }
@@ -157,7 +157,7 @@ const UtilsItem = {
             // 5. 【关键】自动保存 (防止刷新丢失 Buff)
             if (window.saveGame) {
                 window.saveGame();
-                console.log("[UtilsItem] 物品使用完毕，已存档");
+                //console.log("[UtilsItem] 物品使用完毕，已存档");
             }
         } else {
             if (window.showToast) window.showToast("使用了，但似乎没什么效果");

@@ -1,6 +1,6 @@
 // js/modules/ui_skill.js
 // 技艺系统 (整合外功、内功、生活技艺) - v2.0 统一槽位版
-console.log(">>> [UI_SKILL] 开始加载 ui_skill.js");
+//console.log(">>> [UI_SKILL] 开始加载 ui_skill.js");
 
 const UISkill = {
     currentTab: 'body',
@@ -23,7 +23,7 @@ const UISkill = {
     },
 
     open: function() {
-        console.log(">>> [UI_SKILL] Open");
+        //console.log(">>> [UI_SKILL] Open");
         this.showModal();
     },
 
@@ -376,7 +376,7 @@ const UISkill = {
         if(window.updateUI) window.updateUI();
         if(window.saveGame) {
             window.saveGame();
-            console.log(">>> [UISkill] 装备变动，已自动存档");
+            //console.log(">>> [UISkill] 装备变动，已自动存档");
         }
     },
 
@@ -395,7 +395,7 @@ const UISkill = {
             if(window.updateUI) window.updateUI();
             if(window.saveGame) {
                 window.saveGame();
-                console.log(">>> [UISkill] 装备变动，已自动存档");
+                //console.log(">>> [UISkill] 装备变动，已自动存档");
             }
         }
     }

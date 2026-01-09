@@ -1,6 +1,6 @@
 // js/modules/ink_generator.js
 // 水墨素材生成器 v2.1 (修复树木被裁切问题)
-console.log("加载 水墨生成器");
+//console.log("加载 水墨生成器");
 
 const InkSpriteGenerator = {
     tileSize: 64,

@@ -1,6 +1,6 @@
 // js/action/util_gather.js
 // 寻幽采集系统 v2.2：修复按钮选择器失效BUG
-console.log("加载 寻幽系统");
+//console.log("加载 寻幽系统");
 
 // ================= 配置区域 =================
 const GATHER_CONFIG = {

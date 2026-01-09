@@ -1,5 +1,5 @@
 // 头盔
-console.log("加载 头盔");
+//console.log("加载 头盔");
 const head = [
     {
         id: "head_001",
@@ -963,7 +963,7 @@ const head = [
     },
     {
         id: "head_081",
-        name: "【传世】凤凰翎金冠",
+        name: "凤凰翎金冠",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -975,7 +975,7 @@ const head = [
     },
     {
         id: "head_082",
-        name: "【传世】白虎吞天盔",
+        name: "白虎吞天盔",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -987,7 +987,7 @@ const head = [
     },
     {
         id: "head_083",
-        name: "【传世】冰蚕玄锦帕",
+        name: "冰蚕玄锦帕",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -999,7 +999,7 @@ const head = [
     },
     {
         id: "head_084",
-        name: "【传世】龙鳞百战胄",
+        name: "龙鳞百战胄",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1011,7 +1011,7 @@ const head = [
     },
     {
         id: "head_085",
-        name: "【传世】玄武震天帽",
+        name: "玄武震天帽",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1023,7 +1023,7 @@ const head = [
     },
     {
         id: "head_086",
-        name: "【传世】朱雀逐风冠",
+        name: "朱雀逐风冠",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1035,7 +1035,7 @@ const head = [
     },
     {
         id: "head_087",
-        name: "【传世】紫电雷鸣盔",
+        name: "紫电雷鸣盔",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1047,7 +1047,7 @@ const head = [
     },
     {
         id: "head_088",
-        name: "【传世】影豹千机面",
+        name: "影豹千机面",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1059,7 +1059,7 @@ const head = [
     },
     {
         id: "head_089",
-        name: "【传世】墨玉星陨冠",
+        name: "墨玉星陨冠",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1071,7 +1071,7 @@ const head = [
     },
     {
         id: "head_090",
-        name: "【传世】麒麟瑞金盔",
+        name: "麒麟瑞金盔",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1083,7 +1083,7 @@ const head = [
     },
     {
         id: "head_091",
-        name: "【传世】鲲鹏扶摇带",
+        name: "鲲鹏扶摇带",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1095,7 +1095,7 @@ const head = [
     },
     {
         id: "head_092",
-        name: "【传世】狴犴正法胄",
+        name: "狴犴正法胄",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1107,7 +1107,7 @@ const head = [
     },
     {
         id: "head_093",
-        name: "【传世】犀渠玄铁盔",
+        name: "犀渠玄铁盔",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1119,7 +1119,7 @@ const head = [
     },
     {
         id: "head_094",
-        name: "【传世】流云听雨巾",
+        name: "流云听雨巾",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1131,7 +1131,7 @@ const head = [
     },
     {
         id: "head_095",
-        name: "【传世】霸王紫金胄",
+        name: "霸王紫金胄",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1143,7 +1143,7 @@ const head = [
     },
     {
         id: "head_096",
-        name: "【传世】惊鸿掠影冠",
+        name: "惊鸿掠影冠",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1155,7 +1155,7 @@ const head = [
     },
     {
         id: "head_097",
-        name: "【传世】镇魔八棱盔",
+        name: "镇魔八棱盔",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1167,7 +1167,7 @@ const head = [
     },
     {
         id: "head_098",
-        name: "【传世】星海鲛绡帕",
+        name: "星海鲛绡帕",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1179,7 +1179,7 @@ const head = [
     },
     {
         id: "head_099",
-        name: "【传世】金戈踏雪胄",
+        name: "金戈踏雪胄",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1191,7 +1191,7 @@ const head = [
     },
     {
         id: "head_100",
-        name: "【传世】太阿遗风巾",
+        name: "太阿遗风巾",
         type: "head",
         grade: 0,
         rarity: 5,
@@ -1203,7 +1203,7 @@ const head = [
     },
     {
         id: "head_101",
-        name: "【神话】轩辕黄金胄",
+        name: "轩辕黄金胄",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1215,7 +1215,7 @@ const head = [
     },
     {
         id: "head_102",
-        name: "【神话】九天凤血冠",
+        name: "九天凤血冠",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1227,7 +1227,7 @@ const head = [
     },
     {
         id: "head_103",
-        name: "【神话】太极混沌帕",
+        name: "太极混沌帕",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1239,7 +1239,7 @@ const head = [
     },
     {
         id: "head_104",
-        name: "【神话】蚩尤魔神角",
+        name: "蚩尤魔神角",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1251,7 +1251,7 @@ const head = [
     },
     {
         id: "head_105",
-        name: "【神话】玄武星宿胄",
+        name: "玄武星宿胄",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1263,7 +1263,7 @@ const head = [
     },
     {
         id: "head_106",
-        name: "【神话】鲲鹏逍遥带",
+        name: "鲲鹏逍遥带",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1275,7 +1275,7 @@ const head = [
     },
     {
         id: "head_107",
-        name: "【神话】应龙金鳞冠",
+        name: "应龙金鳞冠",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1287,7 +1287,7 @@ const head = [
     },
     {
         id: "head_108",
-        name: "【神话】刑天悍神盔",
+        name: "刑天悍神盔",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1299,7 +1299,7 @@ const head = [
     },
     {
         id: "head_109",
-        name: "【神话】女娲五彩石箍",
+        name: "女娲五彩石箍",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1311,7 +1311,7 @@ const head = [
     },
     {
         id: "head_110",
-        name: "【神话】白虎战煞胄",
+        name: "白虎战煞胄",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1323,7 +1323,7 @@ const head = [
     },
     {
         id: "head_111",
-        name: "【神话】烛龙昼夜帕",
+        name: "烛龙昼夜帕",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1335,7 +1335,7 @@ const head = [
     },
     {
         id: "head_112",
-        name: "【神话】麒麟厚德盔",
+        name: "麒麟厚德盔",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1347,7 +1347,7 @@ const head = [
     },
     {
         id: "head_113",
-        name: "【神话】夸父逐日冠",
+        name: "夸父逐日冠",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1359,7 +1359,7 @@ const head = [
     },
     {
         id: "head_114",
-        name: "【神话】饕餮无尽面",
+        name: "饕餮无尽面",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1371,7 +1371,7 @@ const head = [
     },
     {
         id: "head_115",
-        name: "【神话】后羿落星兜",
+        name: "后羿落星兜",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1383,7 +1383,7 @@ const head = [
     },
     {
         id: "head_116",
-        name: "【神话】帝江空识发带",
+        name: "帝江空识发带",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1395,7 +1395,7 @@ const head = [
     },
     {
         id: "head_117",
-        name: "【神话】祝融赤帝盔",
+        name: "祝融赤帝盔",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1407,7 +1407,7 @@ const head = [
     },
     {
         id: "head_118",
-        name: "【神话】共工撞山胄",
+        name: "共工撞山胄",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1419,7 +1419,7 @@ const head = [
     },
     {
         id: "head_119",
-        name: "【神话】伏羲八卦巾",
+        name: "伏羲八卦巾",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1431,7 +1431,7 @@ const head = [
     },
     {
         id: "head_120",
-        name: "【神话】东皇太一钟盔",
+        name: "东皇太一钟盔",
         type: "head",
         grade: 0,
         rarity: 6,
@@ -1441,4 +1441,28 @@ const head = [
         req: { jing: 23, shen: 6 },
         desc: "【重】东皇钟残片锻造，钟声一响，时空静止，万物臣服。",
     },
+    {
+        id        : "head_121",
+        name      : "太阳金面具",
+        type      : "head",
+        grade     : 0,
+        rarity    : 6,
+        value     : 43000,
+        durability: 300,
+        effects   : {def: 50, speed: 30, hp_max: 200},
+        req       : {shen: 65},
+        desc      : "【神话】由纯金打造的古老面具，双目如烈日般耀眼。传闻中戴上它的人能沟通神明，获得太阳的庇佑，不仅肉身不朽，动作更如光火般迅捷。",
+    },
+    {
+        id        : "head_122",
+        name      : "苗银项圈",
+        type      : "head",
+        grade     : 0,
+        rarity    : 4,
+        value     : 7925,
+        durability: 100,
+        effects   : {def: 15, speed: 10, hp_max: 125},
+        req       : {shen: 33},
+        desc      : "【布】苗疆银匠精心打造的叠层项圈，雕刻着细密的蝉纹。不仅是身份的象征，据说其独特的银料成分在咒力加持下，能极大地提升佩戴者的感知与身法。",
+    }
 ];

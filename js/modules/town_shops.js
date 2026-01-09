@@ -1,6 +1,6 @@
 // js/modules/town_shops.js
 // 城镇店铺渲染与交互模块 v3.2 (自适应散列布局版)
-console.log("加载 店铺渲染子模块 (自适应散列版)");
+//console.log("加载 店铺渲染子模块 (自适应散列版)");
 
 const TownShops = {
     defaultConfig: {

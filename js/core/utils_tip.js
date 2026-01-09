@@ -1,7 +1,7 @@
 // js/core/utils_tip.js
 // 悬浮窗专用管理器 (Tooltip System) - 性能优化版
 // 优化内容：引入 requestAnimationFrame 节流，缓存窗口尺寸，修复变量重复声明
-console.log("加载 悬浮窗系统 (性能优化版)");
+//console.log("加载 悬浮窗系统 (性能优化版)");
 
 const TooltipManager = {
     el: null,

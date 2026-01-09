@@ -1,5 +1,5 @@
 // 食材
-console.log("加载 食材")
+//console.log("加载 食材")
 const foodMaterial = [
         { id: "foodMaterial_001", name: "面粉", type: "foodMaterial", grade: 0, rarity: 1, obtain: "shop", value: 2, effects: { hunger: 3, hp: 0 }, desc: "制作面食的基础材料。" },
         { id: "foodMaterial_002", name: "大米", type: "foodMaterial", grade: 0, rarity: 1, obtain: "shop", value: 3, effects: { hunger: 3, hp: 0 }, desc: "制作米饭的基础材料。" },

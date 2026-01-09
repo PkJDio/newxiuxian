@@ -1,5 +1,5 @@
 // 坐骑
-console.log("加载 坐骑");
+//console.log("加载 坐骑");
 const mounts = [
         { id: "mounts_001", name: "老黄牛", type: "mount", grade: 0, rarity: 1, value: 30, effects: { speed: 1, space: 5 }, desc: "走的慢，但能驮东西。速度+1，负重+5。" },
         { id: "mounts_002", name: "跛脚驴", type: "mount", grade: 0, rarity: 1, value: 20, effects: { speed: 1 }, desc: "倔脾气，偶尔不肯走。速度+1。" },

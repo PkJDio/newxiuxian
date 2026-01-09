@@ -371,6 +371,786 @@ const enemies_all = [
         ],
         skills: [],
         desc: "死而不僵的尸体，受到阴气侵蚀重新站了起来，不知疼痛。"
+    },
+    {
+        id: "global_021", template: "minion", name: "拦路响马", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 140, atk: 18, def: 12, speed: 5 },
+        money: [5, 15],
+        drops: [
+            { id: "materials_001", rate: 0.2 },    // 破旧布片
+            { id: "weapons_151", rate: 0.05 } // 锈铁刀
+        ],
+        skills: [],
+        desc: "埋伏在官道两旁的强盗，手持锈刀，只求财不害命...通常来说。"
+    },
+    {
+        id: "global_022", template: "minion", name: "野狗", region: "all", spawnType: "all", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 80, atk: 12, def: 5, speed: 8 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_010", rate: 0.4 },    // 兽皮
+            { id: "foodMaterial_005", rate: 0.1 }  // 兽骨
+        ],
+        skills: [],
+        desc: "饥肠辘辘的野狗，成群结队，眼神中透着凶光。"
+    },
+    {
+        id: "global_023", template: "minion", name: "溃逃士卒", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 130, atk: 16, def: 15, speed: 4 },
+        money: [2, 8],
+        drops: [
+            { id: "materials_022", rate: 0.15 },   // 磨损的甲片
+            { id: "foods_054", rate: 0.2 }       // 干粮
+        ],
+        skills: [],
+        desc: "从前线逃下来的士兵，盔甲歪斜，为了活命会攻击任何人。"
+    },
+    {
+        id: "global_024", template: "minion", name: "云游假道", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 110, atk: 10, def: 8, speed: 6 },
+        money: [10, 25], // 骗子通常有点钱
+        drops: [
+            { id: "materials_051", rate: 0.3 },    // 符纸
+            { id: "pills_001", rate: 0.1 }    // 狗皮膏药
+        ],
+        skills: [],
+        desc: "打着除魔卫道旗号招摇撞骗的道士，实际上只会些三脚猫功夫。"
+    },
+    {
+        id: "global_025", template: "minion", name: "大黑熊", region: "all", spawnType: "all", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 280, atk: 25, def: 10, speed: 2 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_012", rate: 0.1 },    // 熊胆
+            { id: "materials_013", rate: 0.5 }     // 熊掌
+        ],
+        skills: [],
+        desc: "体型硕大的黑熊，皮糙肉厚，一巴掌能拍断树干。"
+    },
+    {
+        id: "global_026", template: "minion", name: "竹叶青", region: "all", spawnType: "all", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 60, atk: 22, def: 2, speed: 12 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_033", rate: 0.4 },    // 蛇胆
+            { id: "materials_034", rate: 0.3 }     // 蛇皮
+        ],
+        skills: [],
+        desc: "翠绿色的毒蛇，潜伏在草丛中，攻击速度极快且带有剧毒。"
+    },
+    {
+        id: "global_027", template: "minion", name: "采花蜂", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 100, atk: 14, def: 5, speed: 9 },
+        money: [5, 10],
+        drops: [
+            { id: "materials_052", rate: 0.2 },     // 劣质香囊
+            { id: "weapons_251", rate: 0.05 }       // 铁扇
+        ],
+        skills: [],
+        desc: "江湖上的淫贼，轻功不错，擅长使用迷烟和暗器。"
+    },
+    {
+        id: "global_028", template: "minion", name: "狂暴野猪", region: "all", spawnType: "all", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 160, atk: 18, def: 15, speed: 4 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_011", rate: 0.4 },    // 野猪牙
+            { id: "foodMaterial_001", rate: 0.5 }  // 猪肉
+        ],
+        skills: [],
+        desc: "双眼通红的野猪，似乎受到了某种刺激，横冲直撞。"
+    },
+
+    // === timeStart: 1 (Night Only) ===
+    {
+        id: "global_029", template: "minion", name: "孤魂野鬼", region: "all", spawnType: "all", timeStart: 1,
+        subType: "undead",
+        stats: { hp: 90, atk: 12, def: 5, speed: 7 }, // 物理防御低，可能需要法术设定，暂按低防处理
+        money: [0, 0],
+        drops: [
+            { id: "materials_036", rate: 0.3 },    // 魂珠碎片
+            { id: "materials_037", rate: 0.1 }     // 阴沉木
+        ],
+        skills: [],
+        desc: "死后无人收敛的怨气所化，夜间飘荡在荒野，吸食生人阳气。"
+    },
+    {
+        id: "global_030", template: "minion", name: "夜行刺客", region: "all", spawnType: "all", timeStart: 1,
+        subType: "human",
+        stats: { hp: 110, atk: 25, def: 8, speed: 10 },
+        money: [20, 50],
+        drops: [
+            { id: "weapons_253", rate: 0.08 },   // 匕首
+            { id: "pills_071", rate: 0.2 }       // 毒药瓶
+        ],
+        skills: [],
+        desc: "身穿夜行衣的杀手，专挑夜晚赶路的人下手，动作干净利落。"
+    },
+    {
+        id: "global_elite_001", template: "elite", name: "独眼响马王", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 320, atk: 45, def: 25, speed: 6 },
+        money: [50, 120],
+        drops: [
+            { id: "weapons_350", rate: 0.1 }, // 精钢刀
+            { id: "materials_045", rate: 0.2 }      // 染血的眼罩
+        ],
+        skills: [
+            { id: "开山斩", rate: 0.25, type: 1, damage: 70 } // 造成固定高额伤害
+        ],
+        desc: "【精英】曾也是绿林好汉，如今却变得残暴不仁，独眼透着凶光。"
+    },
+
+    // === 2. 狼王 (Type 3: 自身攻击Buff) ===
+    {
+        id: "global_elite_002", template: "elite", name: "嗜血狼王", region: "all", spawnType: "all", timeStart: 0, // 昼夜都可能出现
+        subType: "beast",
+        stats: { hp: 280, atk: 40, def: 15, speed: 12 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_015", rate: 0.3 },     // 狼王皮
+            { id: "materials_016", rate: 0.1 }      // 狼王尖牙
+        ],
+        skills: [
+            { id: "野性呼唤", rate: 0.2, type: 3, buffValue: 15, buffAttr: "atk", buffTimes: 3 } // 提升自身攻击力
+        ],
+        desc: "【精英】统领狼群的首领，体型比普通野狗大两倍，獠牙滴着鲜血。"
+    },
+
+    // === 3. 逃亡武僧 (Type 3: 自身防御Buff) ===
+    {
+        id: "global_elite_003", template: "elite", name: "破戒武僧", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 380, atk: 35, def: 40, speed: 5 },
+        money: [20, 60],
+        drops: [
+            { id: "book_body_r1_11_full", rate: 0.15 }, // 《铁布衫》残页
+            { id: "materials_053", rate: 0.2 }      // 断裂的佛珠
+        ],
+        skills: [
+            { id: "金钟罩", rate: 0.2, type: 3, buffValue: 25, buffAttr: "def", buffTimes: 4 } // 提升自身防御
+        ],
+        desc: "【精英】因偷学禁术被逐出师门的武僧，一身横练功夫刀枪不入。"
+    },
+
+    // === 4. 剧毒生物 (Type 2: 削弱玩家防御) ===
+    {
+        id: "global_elite_004", template: "elite", name: "五彩斑斓蛛", region: "all", spawnType: "forest", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 220, atk: 50, def: 10, speed: 10 ,toxicity: 30 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_055", rate: 0.2 },     // 剧毒毒囊
+            { id: "materials_054", rate: 0.2 }      // 坚韧蛛丝
+        ],
+        skills: [
+            { id: "腐蚀毒液", rate: 0.3, type: 2, debuffValue: 10, debuffAttr: "def", debuffTimes: 3 } // 降低玩家防御
+        ],
+        desc: "【精英】色彩艳丽的巨型蜘蛛，越是美丽的东西越致命。"
+    },
+
+    // === 5. 鬼魂 (Type 2: 削弱玩家攻击) ===
+    {
+        id: "global_elite_005", template: "elite", name: "红衣厉鬼", region: "all", spawnType: "graveyard", timeStart: 1, // 夜间
+        subType: "undead",
+        stats: { hp: 200, atk: 55, def: 5, speed: 9 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_056", rate: 0.1 },     // 怨灵结晶
+            { id: "materials_057", rate: 0.15 }   // 破旧铜镜
+        ],
+        skills: [
+            { id: "凄厉尖叫", rate: 0.2, type: 2, debuffValue: 15, debuffAttr: "atk", debuffTimes: 2 } // 降低玩家攻击
+        ],
+        desc: "【精英】身着嫁衣上吊而亡的女子，怨气冲天，每夜都在寻找负心人。"
+    },
+
+    // === 6. 隐居剑客 (Type 1: 高爆发) ===
+    {
+        id: "global_elite_006", template: "elite", name: "走火入魔的剑客", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 300, atk: 60, def: 20, speed: 11 },
+        money: [80, 200],
+        drops: [
+            { id: "book_body_r2_17_full", rate: 0.1 }, // 《狂风剑法》残页
+            { id: "materials_058", rate: 0.3 }    // 这里的剑虽然断了但材质极好
+        ],
+        skills: [
+            { id: "疯魔剑", rate: 0.2, type: 1, damage: 85 } // 高伤害
+        ],
+        desc: "【精英】追求剑道极致而心智迷失的剑客，见人就杀，剑招凌厉却杂乱。"
+    },
+
+    // === 7. 野猪王 (Type 1: 冲撞伤害) ===
+    {
+        id: "global_elite_007", template: "elite", name: "铁皮野猪王", region: "all", spawnType: "forest", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 450, atk: 35, def: 30, speed: 4 }, // 高血高防低速
+        money: [0, 0],
+        drops: [
+            { id: "materials_004", rate: 0.4 },     // 坚硬的獠牙
+            { id: "foodMaterial_051", rate: 0.3 }   // 极品五花肉
+        ],
+        skills: [
+            { id: "野蛮冲撞", rate: 0.25, type: 1, damage: 60 }
+        ],
+        desc: "【精英】在泥浆和松脂中打滚多年的野猪，皮肤硬得像铁甲一样。"
+    },
+
+    // === 8. 杀手头目 (Type 2: 降低玩家速度/命中) ===
+    {
+        id: "global_elite_008", template: "elite", name: "血手堂分舵主", region: "all", spawnType: "all", timeStart: 1, // 夜间
+        subType: "human",
+        stats: { hp: 260, atk: 50, def: 15, speed: 13 },
+        money: [100, 300],
+        drops: [
+            { id: "materials_059", rate: 0.5 }, // 杀手令
+            { id: "weapons_351", rate: 0.2 }    // 淬毒飞镖
+        ],
+        skills: [
+            { id: "断筋", rate: 0.3, type: 2, debuffValue: 5, debuffAttr: "speed", debuffTimes: 3 } // 降低速度
+        ],
+        desc: "【精英】知名杀手组织的地区负责人，手段阴狠，从不正面硬拼。"
+    },
+
+    // === 9. 僵尸将军 (0 Skills - 纯数值怪) ===
+    {
+        id: "global_elite_009", template: "elite", name: "古墓铜甲尸", region: "all", spawnType: "tomb", timeStart: 1,
+        subType: "undead",
+        stats: { hp: 500, atk: 40, def: 60, speed: 2 }, // 极高的血防，极低的速度
+        money: [0, 0],
+        drops: [
+            { id: "pills_101", rate: 0.1 },     // 尸丹
+            { id: "body_181", rate: 0.05 } // 古旧铜甲
+        ],
+        skills: [], // 无技能，纯靠面板碾压
+        desc: "【精英】生前或许是位将军，死后尸体不腐，化为铜甲尸，力大无穷。"
+    },
+
+    // === 10. 异兽 (Type 3: 自身速度Buff/狂暴) ===
+    {
+        id: "global_elite_010", template: "elite", name: "火眼金猿", region: "all", spawnType: "mountain", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 300, atk: 45, def: 20, speed: 10 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_060", rate: 0.2 },     // 灵猴毛
+            { id: "foods_300", rate: 0.15 }   // 猴儿酒
+        ],
+        skills: [
+            { id: "狂暴", rate: 0.15, type: 3, buffValue: 10, buffAttr: "speed", buffTimes: 3 } // 提升速度
+        ],
+        desc: "【精英】通了灵智的猿猴，双目赤红，动作敏捷，极难捕捉。"
+    },
+    // === 1. 墨家机关术风格 (Type 1: 物理重击) ===
+    {
+        id: "global_elite_011", template: "elite", name: "失控机关铜人", region: "all", spawnType: "ruins", timeStart: 0,
+        subType: "mechanism", // 这是一个特殊的subType，或者归类为 undead/object
+        stats: { hp: 450, atk: 40, def: 50, speed: 3 }, // 高防低速
+        money: [0, 0],
+        drops: [
+            { id: "materials_061", rate: 0.3 }, // 青铜齿轮
+            { id: "materials_062", rate: 0.05 }          // 墨家核心
+        ],
+        skills: [
+            { id: "千钧臂", rate: 0.3, type: 1, damage: 65 }
+        ],
+        desc: "【精英】墨家制造的守城机关人，因年久失修内部机括错乱，见人便砸。"
+    },
+
+    // === 2. 殉葬文化/鬼神 (Type 2: 恐惧/降攻) ===
+    {
+        id: "global_elite_012", template: "elite", name: "殉葬鬼卒", region: "all", spawnType: "tomb", timeStart: 1,
+        subType: "undead",
+        stats: { hp: 300, atk: 35, def: 15, speed: 8 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_063", rate: 0.2 },  // 陪葬玉片
+            { id: "weapons_152", rate: 0.1 }    // 朽烂的长矛
+        ],
+        skills: [
+            { id: "冥府凝视", rate: 0.2, type: 2, debuffValue: 10, debuffAttr: "atk", debuffTimes: 3 }
+        ],
+        desc: "【精英】被迫为王侯殉葬的士兵，怨气锁在青铜面具之下，千年不散。"
+    },
+
+    // === 3. 门客/游侠文化 (Type 3: 爆发/加攻) ===
+    {
+        id: "global_elite_013", template: "elite", name: "嗜酒门客", region: "all", spawnType: "city", timeStart: 0,
+        subType: "human",
+        stats: { hp: 280, atk: 55, def: 15, speed: 10 },
+        money: [50, 150],
+        drops: [
+            { id: "item_bamboo_slip", rate: 0.1 },      // 兵法竹简
+            { id: "item_fine_wine", rate: 0.3 }         // 醇酒
+        ],
+        skills: [
+            { id: "醉剑式", rate: 0.2, type: 3, buffValue: 20, buffAttr: "atk", buffTimes: 3 }
+        ],
+        desc: "【精英】曾是权贵座下的三千食客之一，如今主家失势，流落江湖，剑术依然辛辣。"
+    },
+
+    // === 4. 方仙道/炼丹 (Type 2: 中毒/持续伤害预设) ===
+    {
+        id: "global_elite_014", template: "elite", name: "癫狂方士", region: "all", spawnType: "mountain", timeStart: 0,
+        subType: "human",
+        stats: { hp: 240, atk: 45, def: 10, speed: 9 },
+        money: [40, 90],
+        drops: [
+            { id: "materials_064", rate: 0.4 },         // 朱砂
+            { id: "materials_065", rate: 0.05 }       // 丹书残卷
+        ],
+        skills: [
+            { id: "丹炉毒烟", rate: 0.25, type: 2, debuffValue: 15, debuffAttr: "def", debuffTimes: 4 } // 腐蚀防御
+        ],
+        desc: "【精英】在大山深处寻求长生不老药的术士，因试药而精神错乱，周身散发着药石毒气。"
+    },
+
+    // === 5. 兵制/重弩 (Type 1: 穿透伤害) ===
+    {
+        id: "global_elite_015", template: "elite", name: "强弩校尉", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 260, atk: 60, def: 20, speed: 7 },
+        money: [60, 120],
+        drops: [
+            { id: "weapons_254", rate: 0.2 }, // 青铜弩机
+            { id: "materials_066", rate: 0.5 }        // 重型弩箭
+        ],
+        skills: [
+            { id: "透甲箭", rate: 0.2, type: 1, damage: 80 }
+        ],
+        desc: "【精英】擅长使用大黄弩的军官，能在百步之外射穿重甲。"
+    },
+
+    // === 6. 外族/戎狄 (Type 3: 狂暴) ===
+    {
+        id: "global_elite_016", template: "elite", name: "犬戎勇士", region: "all", spawnType: "wasteland", timeStart: 0,
+        subType: "human",
+        stats: { hp: 350, atk: 40, def: 25, speed: 8 },
+        money: [10, 40],
+        drops: [
+            { id: "weapons_352", rate: 0.1 },  // 狼图腾
+            { id: "weapons_016", rate: 0.2 }       // 骨棒
+        ],
+        skills: [
+            { id: "蛮荒血性", rate: 0.15, type: 3, buffValue: 15, buffAttr: "atk", buffTimes: 5 }
+        ],
+        desc: "【精英】来自西方蛮荒之地的异族战士，披发左衽，力大无穷。"
+    },
+
+    // === 7. 巫蛊/楚地风格 (Type 2: 虚弱) ===
+    {
+        id: "global_elite_017", template: "elite", name: "云梦巫祝", region: "all", spawnType: "swamp", timeStart: 1,
+        subType: "human",
+        stats: { hp: 200, atk: 50, def: 5, speed: 11 },
+        money: [20, 50],
+        drops: [
+            { id: "materials_067", rate: 0.2 },      // 巫蛊偶人
+            { id: "herbs_071", rate: 0.3 }  // 断肠草
+        ],
+        skills: [
+            { id: "摄魂咒", rate: 0.2, type: 2, debuffValue: 20, debuffAttr: "atk", debuffTimes: 2 }
+        ],
+        desc: "【精英】信奉鬼神的神秘祭司，擅长驱使毒虫和诅咒，令人防不胜防。"
+    },
+
+    // === 8. 铸剑文化 (Type 1: 锋利) ===
+    {
+        id: "global_elite_018", template: "elite", name: "剑池守剑奴", region: "all", spawnType: "mountain", timeStart: 0,
+        subType: "human",
+        stats: { hp: 320, atk: 55, def: 30, speed: 6 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_068", rate: 0.3 },    // 陨铁矿
+            { id: "weapons_353", rate: 0.1 }// 未完成的名剑
+        ],
+        skills: [
+            { id: "祭剑", rate: 0.2, type: 1, damage: 75 }
+        ],
+        desc: "【精英】世世代代守护铸剑池的哑奴，为了保护名剑胚胎可以牺牲性命。"
+    },
+
+    // === 9. 礼乐崩坏 (Type 2: 混乱/降速) ===
+    {
+        id: "global_elite_019", template: "elite", name: "失势贵族", region: "all", spawnType: "city", timeStart: 0,
+        subType: "human",
+        stats: { hp: 250, atk: 35, def: 15, speed: 9 },
+        money: [100, 300], // 很富有
+        drops: [
+            { id: "materials_069", rate: 0.4 },     // 龙纹玉佩
+            { id: "weapons_354", rate: 0.1 }// 仪仗剑
+        ],
+        skills: [
+            { id: "王霸之气", rate: 0.1, type: 2, debuffValue: 8, debuffAttr: "speed", debuffTimes: 3 }
+        ],
+        desc: "【精英】旧时代的世卿世禄者，虽然家族没落，但仍摆着贵族的架子，极其傲慢。"
+    },
+
+    // === 10. 山海经风格 (0 Skills - 纯数值) ===
+    {
+        id: "global_elite_020", template: "elite", name: "巴蛇幼崽", region: "all", spawnType: "swamp", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 400, atk: 45, def: 20, speed: 5 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_070", rate: 0.3 }, // 巴蛇鳞
+            { id: "foodMaterial_052", rate: 0.5 }        // 极其鲜美的蛇肉
+        ],
+        skills: [],
+        desc: "【精英】传说中能吞象的巨蛇后裔，虽然还未成年，但体型已如水桶般粗细。"
+    },
+    // === 1. 兵家杀神 (高攻高血) ===
+    {
+        id: "global_boss_001", template: "boss", name: "百战人屠", region: "all", spawnType: "battlefield", timeStart: 0,
+        subType: "human",
+        stats: { hp: 1200, atk: 90, def: 50, speed: 6 },
+        money: [200, 500],
+        drops: [
+            { id: "weapons_450", rate: 0.1 }, // 上将军画戟
+            { id: "book_body_r3_20_full", rate: 0.05 } // 《兵法残卷》
+        ],
+        skills: [
+            { id: "横扫千军", rate: 0.3, type: 1, damage: 120 }, // 群体高伤
+            { id: "杀气震慑", rate: 0.2, type: 2, debuffValue: 20, debuffAttr: "def", debuffTimes: 3 } // 降低玩家防御
+        ],
+        desc: "【BOSS】曾坑杀二十万降卒的疯魔将军，如今已沦为只知杀戮的行尸走肉。"
+    },
+
+    // === 2. 墨家巨型机关 (高防) ===
+    {
+        id: "global_boss_002", template: "boss", name: "非攻·巨灵神", region: "all", spawnType: "ruins", timeStart: 0,
+        subType: "mechanism",
+        stats: { hp: 1500, atk: 70, def: 100, speed: 2 }, // 极高的血量和防御，极慢
+        money: [0, 0],
+        drops: [
+            { id: "materials_071", rate: 0.1 },   // 机关之心
+            { id: "materials_072", rate: 0.3 }     // 玄铁
+        ],
+        skills: [
+            { id: "泰山压顶", rate: 0.25, type: 1, damage: 150 }, // 极高单体伤害
+            { id: "铁壁", rate: 0.2, type: 3, buffValue: 40, buffAttr: "def", buffTimes: 5 } // 进一步提升防御
+        ],
+        desc: "【BOSS】墨家先贤留下的战争兵器，原本用于守城，如今无人操控，自动攻击一切活物。"
+    },
+
+    // === 3. 山海经异兽 (Debuff/控制) ===
+    {
+        id: "global_boss_003", template: "boss", name: "独角夔牛", region: "all", spawnType: "mountain", timeStart: 0, // 雷雨天
+        subType: "beast",
+        stats: { hp: 1000, atk: 80, def: 40, speed: 8 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_073", rate: 0.1 },  // 雷兽皮
+            { id: "materials_074", rate: 0.05 }    // 夔牛鼓图纸
+        ],
+        skills: [
+            { id: "雷霆万钧", rate: 0.3, type: 1, damage: 100 },
+            { id: "震魂吼", rate: 0.2, type: 2, debuffValue: 15, debuffAttr: "speed", debuffTimes: 3 } // 降低速度（麻痹效果）
+        ],
+        desc: "【BOSS】状如牛，苍身而无角，一足，出入水则必有风雨，其光如日月，其声如雷。"
+    },
+
+    // === 4. 阴阳家方士 (毒/法术) ===
+    {
+        id: "global_boss_004", template: "boss", name: "长生丹魔", region: "all", spawnType: "cave", timeStart: 0,
+        subType: "human",
+        stats: { hp: 800, atk: 95, def: 30, speed: 10 },
+        money: [100, 300],
+        drops: [
+            { id: "pills_102", rate: 0.2 }, // 失败的长生药(毒药)
+            { id: "weapons_355", rate: 0.1 }           // 或者是把法剑
+        ],
+        skills: [
+            { id: "五石散毒", rate: 0.3, type: 2, debuffValue: 25, debuffAttr: "hp", debuffTimes: 5 }, // 假设有扣血debuff机制，这里用hp代指持续伤害逻辑
+            { id: "阴火", rate: 0.2, type: 1, damage: 110 }
+        ],
+        desc: "【BOSS】为了炼制不死药而用活人试毒的邪恶方士，自己也因药物反噬变得半人半鬼。"
+    },
+
+    // === 5. 顶级刺客 (高攻/高爆) ===
+    {
+        id: "global_boss_005", template: "boss", name: "鱼肠剑主", region: "all", spawnType: "city", timeStart: 1, // 夜间
+        subType: "human",
+        stats: { hp: 750, atk: 120, def: 20, speed: 15 }, // 极高攻速，血薄
+        money: [500, 1000],
+        drops: [
+            { id: "weapons_551", rate: 0.05 }, // 传说匕首
+            { id: "book_body_r4_20_upper", rate: 0.1 } ,      // 《刺客列传》
+            { id: "book_body_r4_20_middle", rate: 0.1 },
+            { id: "book_body_r4_20_lower", rate: 0.1 }
+        ],
+        skills: [
+            { id: "图穷匕见", rate: 0.3, type: 1, damage: 200 }, // 爆发伤害
+            { id: "如影随形", rate: 0.2, type: 3, buffValue: 20, buffAttr: "speed", buffTimes: 3 } // 提升闪避/速度
+        ],
+        desc: "【BOSS】专诸之后的刺客宗师，继承了勇绝之剑，十步杀一人，千里不留行。"
+    },
+
+    // === 6. 鬼道/巫术 (Debuff) ===
+    {
+        id: "global_boss_006", template: "boss", name: "九凤鬼母", region: "all", spawnType: "swamp", timeStart: 1,
+        subType: "undead",
+        stats: { hp: 900, atk: 85, def: 35, speed: 9 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_075", rate: 0.15 }, // 鬼车羽
+            { id: "materials_076", rate: 0.1 }            // 摄魂珠
+        ],
+        skills: [
+            { id: "鬼车夜哭", rate: 0.25, type: 2, debuffValue: 30, debuffAttr: "atk", debuffTimes: 2 } // 大幅降低攻击
+        ],
+        desc: "【BOSS】传说中的九头鸟化身，专门在夜间收割灵魂，叫声能让人神魂颠倒。"
+    },
+
+    // === 7. 戎狄蛮王 (Buff/狂暴) ===
+    {
+        id: "global_boss_007", template: "boss", name: "北地狼主", region: "all", spawnType: "wasteland", timeStart: 0,
+        subType: "human",
+        stats: { hp: 1100, atk: 80, def: 45, speed: 7 },
+        money: [200, 400],
+        drops: [
+            { id: "body_182", rate: 0.1 }, // 狼王氅
+            { id: "weapons_451", rate: 0.15 }      // 圆月弯刀
+        ],
+        skills: [
+            { id: "嗜血狂化", rate: 0.2, type: 3, buffValue: 30, buffAttr: "atk", buffTimes: 5 },
+            { id: "旋风斩", rate: 0.2, type: 1, damage: 90 }
+        ],
+        desc: "【BOSS】统领北方草原的霸主，信奉弱肉强食，拥有生撕虎豹的怪力。"
+    },
+
+    // === 8. 剑道宗师 (Buff/Dmg) ===
+    {
+        id: "global_boss_008", template: "boss", name: "洗剑池主", region: "all", spawnType: "mountain", timeStart: 0,
+        subType: "human",
+        stats: { hp: 950, atk: 100, def: 40, speed: 12 },
+        money: [0, 0],
+        drops: [
+            { id: "weapons_552", rate: 0.05 }, // 大师之剑
+            { id: "book_body_r5_20_upper", rate: 0.1 },    // 绝世剑谱
+            { id: "book_body_r5_20_middle", rate: 0.1 },
+            { id: "book_body_r5_20_lower", rate: 0.1 },
+        ],
+        skills: [
+            { id: "万剑归宗", rate: 0.2, type: 1, damage: 130 },
+            { id: "剑意护体", rate: 0.2, type: 3, buffValue: 20, buffAttr: "def", buffTimes: 3 }
+        ],
+        desc: "【BOSS】隐居在洗剑池畔的老人，据说曾指点过天下数位名将剑术，早已达到手中无剑的境界。"
+    },
+
+    // === 9. 旱魃 (AOE/Debuff) ===
+    {
+        id: "global_boss_009", template: "boss", name: "赤地旱魃", region: "all", spawnType: "desert", timeStart: 0,
+        subType: "undead",
+        stats: { hp: 1300, atk: 75, def: 60, speed: 5 },
+        money: [0, 0],
+        drops: [
+            { id: "materials_077", rate: 0.2 }, // 火精
+            { id: "materials_078", rate: 0.1 }      // 焚玉
+        ],
+        skills: [
+            { id: "赤地千里", rate: 0.3, type: 1, damage: 90 }, // 全体火焰伤害
+            { id: "热浪侵蚀", rate: 0.2, type: 2, debuffValue: 10, debuffAttr: "def", debuffTimes: 4 }
+        ],
+        desc: "【BOSS】引起大旱的僵尸之祖，所过之处滴水不存，浑身散发着令人窒息的高温。"
+    },
+
+    // === 10. 绿林总盟主 (综合) ===
+    {
+        id: "global_boss_010", template: "boss", name: "盗跖残魂", region: "all", spawnType: "all", timeStart: 1,
+        subType: "human", // 或者 spirit/undead
+        stats: { hp: 1000, atk: 85, def: 35, speed: 14 },
+        money: [1000, 2000], // 极其富有
+        drops: [
+            { id: "weapons_553", rate: 0.05 }, // 盗圣手套
+            { id: "weapons_554", rate: 0.05 }         // 双锋
+        ],
+        skills: [
+            { id: "探囊取物", rate: 0.2, type: 1, damage: 80 }, // 攻击并偷取(逻辑上)
+            { id: "疾风步", rate: 0.2, type: 3, buffValue: 30, buffAttr: "speed", buffTimes: 4 }
+        ],
+        desc: "【BOSS】上古大盗的意志化身，从者九千，横行天下，诸侯若是惹了他也不得安宁。"
+    },
+    // === 1. 墨家机关系 ===
+    {
+        id: "global_lord_mech_01", template: "lord", name: "暴走机关·非攻", region: "all", spawnType: "all", timeStart: 0,
+        subType: "machine",
+        stats: { hp: 600, atk: 70, def: 80, speed: 5 },
+        money: [500, 1000],
+        drops: [
+            { id: "materials_079", rate: 0.1 },  // 机关木料
+            { id: "book_body_r5_21_upper", rate: 0.05 },      // 《墨子·备城门》
+            { id: "book_body_r5_21_middle", rate: 0.05 },      // 《墨子·备城门》
+            { id: "book_body_r5_21_lower", rate: 0.05 },      // 《墨子·备城门》
+        ],
+        skills: [
+            { id: "巨木撞击", rate: 0.3, type: 1, damage: 120 },
+            { id: "墨守成规", rate: 0.2, type: 3, buffValue: 40, buffAttr: "def", buffTimes: 5 },
+            { id: "兼爱力场", rate: 0.2, type: 2, debuffValue: 10, debuffAttr: "atk", debuffTimes: 3 }
+        ],
+        desc: "【领主】墨家制造的守城机关兽，因核心损坏而失去了敌我识别能力，在世间游荡。"
+    },
+
+    // === 2. 刺客/游侠系 ===
+
+
+    // === 3. 纵横家/策士系 ===
+    {
+        id: "global_lord_strategist_01", template: "lord", name: "鬼谷游士", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 500, atk: 60, def: 40, speed: 12 },
+        money: [1000, 2000],
+        drops: [
+            { id: "book_inner_r6_10_upper", rate: 0.05 }, // 《本经阴符七术》
+            { id: "book_inner_r6_10_upper", rate: 0.05 }, // 《本经阴符七术》
+            { id: "book_inner_r6_10_upper", rate: 0.05 }, // 《本经阴符七术》
+
+
+            { id: "weapons_555", rate: 0.1 }  // 纵横法珠
+        ],
+        skills: [
+            { id: "捭阖之术", rate: 0.25, type: 1, damage: 100 },
+            { id: "飞钳破溃", rate: 0.25, type: 2, debuffValue: 20, debuffAttr: "def", debuffTimes: 4 },
+            { id: "转丸", rate: 0.2, type: 3, buffValue: 30, buffAttr: "speed", buffTimes: 3 }
+        ],
+        desc: "【领主】精通纵横之术的神秘策士，游走列国之间，一言可兴邦，一言可丧邦。"
+    },
+
+    // === 4. 阴阳家/神话系 ===
+    {
+        id: "global_lord_yinyang_01", template: "lord", name: "东皇太一祭司", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 480, atk: 80, def: 50, speed: 10 },
+        money: [600, 1200],
+        drops: [
+            { id: "head_121", rate: 0.05 },       // 太阳金面具
+            { id: "book_inner_r6_11_upper", rate: 0.05 } ,    // 《九歌》
+            { id: "book_inner_r6_11_middle", rate: 0.05 } ,    // 《九歌》
+            { id: "book_inner_r6_11_lower", rate: 0.05 } ,    // 《九歌》
+
+        ],
+        skills: [
+            { id: "魂兮归来", rate: 0.2, type: 3, buffValue: 50, buffAttr: "hp", buffTimes: 1 }, // 回血技能模拟
+            { id: "云中君", rate: 0.25, type: 1, damage: 130 },
+            { id: "大司命印", rate: 0.2, type: 2, debuffValue: 15, debuffAttr: "atk", debuffTimes: 3 }
+        ],
+        desc: "【领主】信奉至高神东皇太一的狂热祭司，身穿华丽的法袍，脸上戴着黄金面具。"
+    },
+
+    // === 5. 铸剑师/工匠系 ===
+    {
+        id: "global_lord_smith_01", template: "lord", name: "欧冶子残魂", region: "all", spawnType: "all", timeStart: 0,
+        subType: "undead",
+        stats: { hp: 700, atk: 90, def: 60, speed: 8 },
+        money: [300, 600],
+        drops: [
+            { id: "materials_080", rate: 0.1 }, // 玄铁
+            { id: "materials_081", rate: 0.2 }   // 断剑残片
+        ],
+        skills: [
+            { id: "淬火重击", rate: 0.3, type: 1, damage: 150 },
+            { id: "剑气护体", rate: 0.2, type: 3, buffValue: 25, buffAttr: "def", buffTimes: 4 },
+            { id: "熔炉烈焰", rate: 0.2, type: 2, debuffValue: 10, debuffAttr: "hp", debuffTimes: 3 } // 烧伤DOT模拟
+        ],
+        desc: "【领主】铸剑大师死后执念不散，徘徊在寻找稀世矿石的道路上，将过路人视为试剑石。"
+    },
+
+    // === 6. 游牧/蛮族系 ===
+    {
+        id: "global_lord_nomad_01", template: "lord", name: "林胡射雕手", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 500, atk: 100, def: 25, speed: 16 },
+        money: [400, 900],
+        drops: [
+            { id: "weapons_452", rate: 0.05 },    // 射雕弯弓
+            { id: "materials_081", rate: 0.15 }        // 胡服
+        ],
+        skills: [
+            { id: "连珠箭", rate: 0.3, type: 1, damage: 80 }, // 多段伤害由逻辑处理，这里仅示意
+            { id: "胡服骑射", rate: 0.2, type: 3, buffValue: 30, buffAttr: "speed", buffTimes: 5 },
+            { id: "鸣镝警示", rate: 0.2, type: 2, debuffValue: 20, debuffAttr: "def", debuffTimes: 3 }
+        ],
+        desc: "【领主】来自北方森林的胡人神射手，箭术超群，据说曾一箭射下双雕。"
+    },
+
+    // === 7. 刑徒/法家系 ===
+    {
+        id: "global_lord_convict_01", template: "lord", name: "骊山逃役刑徒", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 550, atk: 85, def: 35, speed: 10 },
+        money: [200, 500],
+        drops: [
+            { id: "weapons_453", rate: 0.1 }, // 沉重的铁镣
+            { id: "foods_123", rate: 0.3 }     // 粗粮饼
+        ],
+        skills: [
+            { id: "困兽之斗", rate: 0.2, type: 3, buffValue: 50, buffAttr: "atk", buffTimes: 2 },
+            { id: "铁镣重击", rate: 0.3, type: 1, damage: 140 },
+            { id: "绝望怒吼", rate: 0.2, type: 2, debuffValue: 10, debuffAttr: "atk", debuffTimes: 3 }
+        ],
+        desc: "【领主】从大型陵墓工地上逃出来的亡命之徒，手脚还带着铁镣，力大无穷且极其凶残。"
+    },
+
+    // === 8. 巫蛊/南蛮系 ===
+    {
+        id: "global_lord_witch_01", template: "lord", name: "百越蛇母", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 450, atk: 65, def: 40, speed: 11 },
+        money: [600, 1100],
+        drops: [
+            { id: "materials_082", rate: 0.2 }, // 剧毒蛇液
+            { id: "head_122", rate: 0.1 } // 苗银项圈
+        ],
+        skills: [
+            { id: "万蛇噬咬", rate: 0.25, type: 1, damage: 110 },
+            { id: "蛊毒缠身", rate: 0.25, type: 2, debuffValue: 15, debuffAttr: "speed", debuffTimes: 5 },
+            { id: "蜕皮重生", rate: 0.1, type: 3, buffValue: 20, buffAttr: "def", buffTimes: 3 }
+        ],
+        desc: "【领主】南方百越之地的部落首领，善养毒蛇，常以生灵祭祀图腾。"
+    },
+
+    // === 9. 山海异兽系 ===
+    {
+        id: "global_lord_beast_01", template: "lord", name: "蛊雕(幼兽)", region: "all", spawnType: "all", timeStart: 0,
+        subType: "beast",
+        stats: { hp: 650, atk: 95, def: 50, speed: 14 },
+        money: [1000, 2500],
+        drops: [
+            { id: "materials_083", rate: 0.1 }, // 异兽角
+            { id: "materials_084", rate: 0.1 }        // 璞玉
+        ],
+        skills: [
+            { id: "婴儿啼哭", rate: 0.2, type: 2, debuffValue: 20, debuffAttr: "atk", debuffTimes: 3 }, // 迷惑敌人
+            { id: "高空扑杀", rate: 0.3, type: 1, damage: 160 },
+            { id: "食人本性", rate: 0.2, type: 3, buffValue: 30, buffAttr: "atk", buffTimes: 3 }
+        ],
+        desc: "【领主】似鸟非鸟，似豹非豹，叫声像婴儿啼哭的食人异兽，出自《山海经》。"
+    },
+
+    // === 10. 名士/食客系 ===
+    {
+        id: "global_lord_guest_01", template: "lord", name: "信陵君门客(狂)", region: "all", spawnType: "all", timeStart: 0,
+        subType: "human",
+        stats: { hp: 420, atk: 75, def: 35, speed: 13 },
+        money: [700, 1400],
+        drops: [
+            { id: "weapons_556", rate: 0.1 },    // 长铗
+            { id: "item_pawn_ticket", rate: 0.2 }      // 典当票据
+        ],
+        skills: [
+            { id: "长铗归来", rate: 0.3, type: 1, damage: 100 },
+            { id: "窃符救赵", rate: 0.2, type: 3, buffValue: 40, buffAttr: "speed", buffTimes: 2 }, // 借典故名增加速度
+            { id: "鸡鸣狗盗", rate: 0.25, type: 2, debuffValue: 10, debuffAttr: "def", debuffTimes: 4 }
+        ],
+        desc: "【领主】曾是四大公子门下的食客，如今落魄江湖，但一身本事犹在，性格却变得古怪癫狂。"
     }
 ];
 
@@ -2118,3 +2898,27 @@ function initEnemyData() {
 // 导出最终数据
 const enemies = initEnemyData();
 window.enemies = enemies; // 挂载到全局
+
+// 初始化目标数组
+let enemies_all_drops = [];
+
+// 确保 window.enemies 存在且是数组
+if (window.enemies && Array.isArray(window.enemies)) {
+    // 遍历所有怪物数据
+    window.enemies.forEach(enemy => {
+        // 检查怪物是否有 drops 字段
+        if (enemy.drops && Array.isArray(enemy.drops)) {
+            // 遍历当前怪物的每一个掉落项
+            enemy.drops.forEach(drop => {
+                // 将掉落物详情、怪物ID (eid) 和 怪物模板 (template) 组合成新对象
+                enemies_all_drops.push({
+                    ...drop,             // 复制原有的 id 和 rate
+                    eid: enemy.id,       // 记录来源怪物的 ID
+                    template: enemy.template, // 记录来源怪物的 阶级/模板
+                    timeStart: enemy.timeStart
+                });
+            });
+        }
+    });
+}
+window.enemies_all_drops=enemies_all_drops;

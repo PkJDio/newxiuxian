@@ -1,6 +1,6 @@
 // js/modules/archive.js
 // 存档管理系统：支持深层合并 + 版本控制 (修复版：直接注入Player)
-console.log("加载 存档系统 (Version Injected)");
+//console.log("加载 存档系统 (Version Injected)");
 
 const ArchiveSystem = {
     // 默认存档键名
@@ -35,7 +35,7 @@ const ArchiveSystem = {
 
             const dataStr = JSON.stringify(window.player);
             localStorage.setItem(this.getKey(), dataStr);
-            console.log("[Archive] 游戏已保存 (v" + this.CURRENT_VERSION + ")");
+            //console.log("[Archive] 游戏已保存 (v" + this.CURRENT_VERSION + ")");
 
             // if(window.showToast) window.showToast("游戏已保存");
         } catch (e) {
@@ -52,7 +52,7 @@ const ArchiveSystem = {
             const key = this.getKey();
             const dataStr = localStorage.getItem(key);
             if (!dataStr) {
-                console.log("[Archive] 未找到存档");
+                //console.log("[Archive] 未找到存档");
                 return false;
             }
 
@@ -90,7 +90,7 @@ const ArchiveSystem = {
                 window.player.defeatedEnemies = {};
             }
 
-            console.log("读取存档成功", window.player);
+            //console.log("读取存档成功", window.player);
 
             // 3. 恢复后的刷新
             if (window.recalcStats) window.recalcStats();
@@ -108,7 +108,7 @@ const ArchiveSystem = {
      */
     resetGame: function() {
         localStorage.removeItem(this.getKey());
-        console.log("[Archive] 存档已清除");
+        //console.log("[Archive] 存档已清除");
     },
 
     /**

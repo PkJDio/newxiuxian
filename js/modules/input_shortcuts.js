@@ -90,14 +90,14 @@
         // 3. 核心逻辑：开关与互斥
         if (currentOpenPanel === action) {
             // A. 如果当前按下的键就是正在打开的窗口 -> 关闭它 (Toggle Off)
-            console.log(`[快捷键] 关闭当前窗口: ${action}`);
+            //console.log(`[快捷键] 关闭当前窗口: ${action}`);
             closeCurrentPanel();
         } else {
             // B. 如果按下的键是新窗口
 
             // 如果之前有别的开着，先关掉旧的 (Exclusive)
             if (currentOpenPanel) {
-                console.log(`[快捷键] 切换窗口: 关闭 ${currentOpenPanel}, 打开 ${action}`);
+                //console.log(`[快捷键] 切换窗口: 关闭 ${currentOpenPanel}, 打开 ${action}`);
                 closeCurrentPanel();
             }
 
@@ -150,4 +150,4 @@
 
 })();
 
-console.log("System: 快捷键模块加载完毕 (支持互斥与开关)");
+//console.log("System: 快捷键模块加载完毕 (支持互斥与开关)");

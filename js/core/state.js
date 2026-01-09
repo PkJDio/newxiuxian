@@ -1,6 +1,6 @@
 // js/core/state.js
 // 核心状态管理：定义玩家模板、兵解逻辑
-console.log("加载 状态管理");
+//console.log("加载 状态管理");
 
 // ==========================================
 // 1. 定义玩家标准模板 (Schema)
@@ -17,7 +17,7 @@ var player = null;
 function attemptDie() {
     // 定义具体的执行逻辑
     const executeDie = function() {
-        console.log("【Debug】=== 执行兵解 ===");
+        //console.log("【Debug】=== 执行兵解 ===");
 
         // 1. 基于模板创建新身体
         let newPlayer = JSON.parse(JSON.stringify(window.PLAYER_TEMPLATE));

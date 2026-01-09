@@ -1,5 +1,5 @@
 // js/data/data_icon.js
-console.log("加载 图标配置");
+//console.log("加载 图标配置");
 
 const ITEM_ICONS = {
     // 默认类型图标 (兜底用)

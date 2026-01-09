@@ -1,5 +1,5 @@
 // 工具箱：随机数, 日志, 弹窗, 时间格式化
-console.log("加载 工具箱")
+//console.log("加载 工具箱")
 
 /* ================= 核心工具箱 ================= */
 
@@ -28,7 +28,7 @@ const RandomSystem = {
         const key = `${seed}_${processedArgs.join('_')}`;
 
         // 调试用：你可以打开控制台看现在的 key 是否正确
-        // console.log("Hash Key:", key);
+        // //console.log("Hash Key:", key);
 
         return this._hash(key);
     },

@@ -1,9 +1,50 @@
 // 功法书：外功/内功/知识
-console.log("加载 功法书");
-/* --- 11. 书籍 (Books) --- */
-/* 书籍数据 */
-/* ================= 书籍数据 (v3.0 系统化版) ================= */
-
+//console.log("加载 功法书");
+/*
+ * ======================================================================================
+ * [SYSTEM MEMORY] 功法属性生成公式 (Game Balance Formulas V3.7)
+ * 注意：此配置块用于指导 AI 生成新功法数据，请勿删除。
+ * ======================================================================================
+ *
+ * 1. 属性点预算 (Stat Budget):
+ * 指该品级功法的“标准总属性点数”。
+ * - R1 (普通):   4 点
+ * - R2 (精良):  16 点
+ * - R3 (稀有):  32 点
+ * - R4 (史诗):  48 点 (若是残卷/分篇，则单篇 = 总预算 / 篇数)
+ * - R5 (传世):  64 点
+ * - R6 (神话):  84 点
+ *
+ * 2. 类型修正系数 (Type Modifier):
+ * 不同类型的功法，能获得的属性点比例不同。
+ * - category: "attack"  (攻击型) => 修正系数 0.5 (50% 属性，因为自带主动招式)
+ * - category: "defense" (防御型) => 修正系数 1.0 (100% 属性，纯被动)
+ * - category: "support" (辅助/知识) => 修正系数 0.8 (80% 属性)
+ *
+ * [计算示例]:
+ * 生成一本 R3 攻击型功法 -> 预算 32 * 0.5 = 16 点属性 (分配给 atk/def/speed)
+ * 生成一本 R3 防御型功法 -> 预算 32 * 1.0 = 32 点属性
+ *
+ * 3. 价值公式 (Value Formula):
+ * - R1 Base:   200 + (属性总和 * 10)
+ * - R2 Base:   600 + (属性总和 * 20)
+ * - R3 Base:  2000 + (属性总和 * 40)
+ * - R4 Base:  4000 + (属性总和 * 80)
+ * - R5 Base:  8000 + (属性总和 * 150)
+ * - R6 Base: 16000 + (属性总和 * 250)
+ *
+ * 4. 招式平衡模板 (Action Templates V3.7):
+ * 攻击型功法必须包含 action 字段，数值需严格遵守以下档位：
+ * - 【效率型】(Efficiency):
+ * dmgMult: 1.23, mpCost: 40, cd: 1~2, desc: "低耗快攻"
+ * - 【平衡型】(Balanced):
+ * dmgMult: 2.45, mpCost: 80, cd: 3~4, desc: "攻守兼备"
+ * - 【爆发型】(Burst):
+ * dmgMult: 4.90, mpCost: 160, cd: 6~8, desc: "终极一击"
+ * - (注：R1/R2 低阶功法倍率可适当降低，如 0.68 / 1.35)
+ *
+ * ======================================================================================
+ */
 const booksBody_R1 = [
     /* ================= [00-09] 攻击型功法 (属性减半 + V3.7 招式平衡) ================= */
     {
@@ -928,6 +969,27 @@ const booksBody_R3 = [
         },
         desc: "佛门护法杖法，刚猛威严。",
     },
+    {
+        id: "book_body_r3_20_full",
+        name: "兵法残卷",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 3,
+        value: 2200,
+        studyCost: 800,
+        studyTarget: "jing",
+        difficultyScale: 1.0,
+        effects: { atk: 8, def: 4, speed: 4 },
+        action: {
+            name: "兵法·诡道",
+            dmgMult: 2.45,
+            mpCost: 80,
+            cd: 3,
+            desc: "【平衡型】兵者诡道也，虚实结合，攻其不备。",
+        },
+        desc: "记载了古代名将行军布阵的残篇，虽非正统武功，但将兵法之理融入招式之中，变化万千，威力无穷。",
+    },
 
     /* ================= [10-19] 防御型功法 (属性全额) ================= */
     {
@@ -1070,6 +1132,7 @@ const booksBody_R3 = [
         effects: { atk: 2, def: 4, speed: 28 },
         desc: "武当轻功绝技，身轻如燕。",
     },
+
 ];
 
 const booksBody_R4 = [
@@ -1814,6 +1877,50 @@ const booksBody_R4 = [
         studyCost: 511,
         effects: { atk: 12, def: 12 },
     },
+    /* ================= [02] 刺客列传 (爆发型·极速) ================= */
+    {
+        id: "book_body_r4_20_upper",
+        name: "刺客列传·上篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 4,
+        value: 4640,
+        studyCost: 500,
+        studyTarget: "jing",
+        difficultyScale: 1.5,
+        effects: { atk: 5, speed: 3 },
+        desc: "记载了专诸刺王僚的英勇事迹，鱼肠藏剑，勇绝天下。【上篇】",
+    },
+    {
+        id: "book_body_r4_20_middle",
+        name: "刺客列传·中篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 4,
+        value: 4640,
+        studyCost: 500,
+        studyTarget: "jing",
+        difficultyScale: 1.5,
+        effects: { atk: 3, speed: 5 },
+        desc: "记载了豫让吞炭漆身的忠烈事迹，士为知己者死。【中篇】",
+    },
+    {
+        id: "book_body_r4_20_lower",
+        name: "刺客列传·下篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 4,
+        value: 4640,
+        studyCost: 500,
+        studyTarget: "jing",
+        difficultyScale: 1.5,
+        effects: { atk: 4, speed: 4 },
+        desc: "记载了荆轲刺秦王的悲壮事迹，风萧萧兮易水寒。【下篇】",
+    },
+
 ];
 
 const booksBody_R5 = [
@@ -2564,6 +2671,90 @@ const booksBody_R5 = [
         studyCost: 1014,
         effects: { atk: 18, def: 12, speed: 12 },
     },
+    {
+        id: "book_body_r5_20_upper",
+        name: "绝世剑谱·上篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 5,
+        value: 3800,
+        studyCost: 1800,
+        studyTarget: "shen",
+        difficultyScale: 1.8,
+        effects: { atk: 6, speed: 5 },
+        desc: "【残卷】记载了绝世剑法的起手式与身法要领，剑走偏锋，轻灵异常。",
+    },
+    {
+        id: "book_body_r5_20_middle",
+        name: "绝世剑谱·中篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 5,
+        value: 3850,
+        studyCost: 1900,
+        studyTarget: "jing",
+        difficultyScale: 1.9,
+        effects: { atk: 8, def: 3 },
+        desc: "【残卷】记载了剑谱的中坚招式，强调内力的吞吐与剑刃的破坏力。",
+    },
+    {
+        id: "book_body_r5_20_lower",
+        name: "绝世剑谱·下篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 5,
+        value: 3900,
+        studyCost: 2000,
+        studyTarget: "shen",
+        difficultyScale: 2.0,
+        effects: { atk: 10, speed: 1 },
+        desc: "【残卷】记载了绝世剑法的杀招绝学，一剑出而万剑归宗，凌厉无比。",
+    },
+    {
+        id: "book_body_r5_21_upper",
+        name: "《墨子·备城门》·上篇",
+        type: "book",
+        subType: "body",
+        category: "defense",
+        rarity: 5,
+        value: 11600, // 8000 + (24*150)
+        studyCost: 2000,
+        studyTarget: "jing",
+        difficultyScale: 2.2,
+        effects: { def: 18, atk: 6 },
+        desc: "【残卷】墨家御敌之始，详述城池工事之基，习之可稳固下盘，力抗千钧。",
+    },
+    {
+        id: "book_body_r5_21_middle",
+        name: "《墨子·备城门》·中篇",
+        type: "book",
+        subType: "body",
+        category: "defense",
+        rarity: 5,
+        value: 11600,
+        studyCost: 2100,
+        studyTarget: "jing",
+        difficultyScale: 2.3,
+        effects: { def: 16, speed: 8 },
+        desc: "【残卷】记载守城器械与格挡之法，身如铁壁，动静之间滴水不漏。",
+    },
+    {
+        id: "book_body_r5_21_lower",
+        name: "《墨子·备城门》·下篇",
+        type: "book",
+        subType: "body",
+        category: "defense",
+        rarity: 5,
+        value: 11600,
+        studyCost: 2200,
+        studyTarget: "jing",
+        difficultyScale: 2.4,
+        effects: { def: 16, atk: 6, speed: 2 },
+        desc: "【残卷】守城战术之精髓，反制攻城之策，令敌军陷于泥沼，无法寸进。",
+    },
 ];
 
 const booksBody_R6_Attack = [
@@ -2964,6 +3155,7 @@ const booksBody_R6_Attack = [
         effects: { atk: 39, speed: 30 },
         desc: "入海为鲲，扶摇为鹏。【下篇】",
     },
+
 ];
 
 const booksBody_R6_Defense = [
@@ -6296,6 +6488,90 @@ const booksCultivation_R6_Attack = [
         studyCost: 2432,
         effects: { qi: 30, jing: 8 },
     },
+    {
+        id: "book_inner_r6_10_upper",
+        name: "《本经阴符七术》·上篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400, // 16000 + (18 * 300)
+        studyCost: 4000,
+        studyTarget: "shen",
+        difficultyScale: 3.0,
+        effects: { atk: 12, def: 6 },
+        desc: "【残卷】含《盛神法五龙》与《养志法归鸿》，主修神气交融，意在神聚而不散。",
+    },
+    {
+        id: "book_inner_r6_10_middle",
+        name: "《本经阴符七术》·中篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400,
+        studyCost: 4500,
+        studyTarget: "shen",
+        difficultyScale: 3.2,
+        effects: { atk: 10, speed: 8 },
+        desc: "【残卷】含《实意法螣蛇》与《分威法伏熊》，主修意志控制，身随影动，势不可挡。",
+    },
+    {
+        id: "book_inner_r6_10_lower",
+        name: "《本经阴符七术》·下篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400,
+        studyCost: 5000,
+        studyTarget: "shen",
+        difficultyScale: 3.4,
+        effects: { atk: 10, speed: 4, def: 4 },
+        desc: "【残卷】含《散势法鸷鸟》等，主修能量收放，攻如鸷鸟之疾，守如猛兽之踞。",
+    },
+    {
+        id: "book_inner_r6_11_upper",
+        name: "《九歌》·上篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400, // 16000 + (18 * 300)
+        studyCost: 4000,
+        studyTarget: "shen",
+        difficultyScale: 3.0,
+        effects: { atk: 10, def: 4, speed: 4 },
+        desc: "【残卷】含《东皇太一》与《云中君》，气若云霓，感应天地之始，内息磅礴如海。",
+    },
+    {
+        id: "book_inner_r6_11_middle",
+        name: "《九歌》·中篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400,
+        studyCost: 4500,
+        studyTarget: "shen",
+        difficultyScale: 3.2,
+        effects: { atk: 12, speed: 6 },
+        desc: "【残卷】含《湘君》与《大司命》，掌控生死之机，真气流转间带有凛冽的肃杀之意。",
+    },
+    {
+        id: "book_inner_r6_11_lower",
+        name: "《九歌》·下篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 21400,
+        studyCost: 5000,
+        studyTarget: "shen",
+        difficultyScale: 3.4,
+        effects: { atk: 12, def: 6 },
+        desc: "【残卷】含《山鬼》与《国殇》，汇聚百折不挠之英魂志气，一招一式皆有千钧之重。",
+    },
 ];
 const booksCultivation_R6_Defense = [
     /* ================= [10] 道经 ================= */
@@ -6664,6 +6940,105 @@ const fullBooks = [
     ...booksCultivation_R1,
     ...booksCultivation_R2,
     ...booksCultivation_R3,
+    {
+        id: "book_inner_r6_02_full",
+        name: "《九歌》·全篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 32200,
+        studyCost: 12000,
+        studyTarget: "shen",
+        difficultyScale: 3.5,
+        effects: { atk: 34, speed: 10, def: 10 }, // 总计 54 点属性 (0.5修正)
+        action: {
+            name: "九歌·礼魂",
+            dmgMult: 5.5,
+            mpCost: 200,
+            cd: 8,
+            desc: "【爆发型】众神降临，礼魂归位。以燃烧真气为代价，唤起毁天灭地的远古神力冲击。",
+        },
+        desc: "【神话】屈原所传之绝世祭祀心法。歌颂天地诸神，习之可借神灵之威，纵横于虚实之间，超凡脱俗。",
+    },
+    {
+        id: "book_inner_r6_10_full",
+        name: "《本经阴符七术》·全篇",
+        type: "book",
+        subType: "inner",
+        category: "attack",
+        rarity: 6,
+        value: 32200,
+        studyCost: 12000,
+        studyTarget: "shen",
+        difficultyScale: 3.5,
+        effects: { atk: 32, speed: 12, def: 10 }, // 总计 54 点属性 (0.5修正)
+        action: {
+            name: "阴符·神化万物",
+            dmgMult: 5.5, // R6 特有的超模倍率 (高于 R5 的 4.9)
+            mpCost: 200,
+            cd: 8,
+            desc: "【爆发型】以神御气，物我两忘。瞬间爆发出摧枯拉朽的真气冲击，无视常规防御。",
+        },
+        desc: "【神话】鬼谷子传世奇书。内修神、志、意、德、神、驱、威七术，通晓者可夺天地造化，御龙而行。",
+    },
+    {
+        id: "book_body_r5_21_full",
+        name: "《墨子·备城门》·全篇",
+        type: "book",
+        subType: "body",
+        category: "defense",
+        rarity: 5,
+        value: 18800,
+        studyCost: 4500,
+        studyTarget: "jing",
+        difficultyScale: 2.5,
+        effects: { def: 50, atk: 12, speed: 10 }, // 总计 72 点属性 (1.0修正)
+        desc: "【传世】兼爱非攻，墨守成规。此卷汇聚墨子一生防御精义，练至大成者，虽万军围城亦不可破。",
+    },
+    {
+        id: "book_body_r5_20_full",
+        name: "绝世剑谱·全篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 5,
+        value: 12500,
+        studyCost: 5200,
+        studyTarget: "shen",
+        difficultyScale: 2.5,
+        effects: { atk: 22, speed: 10 }, // 总计 32 点属性
+        isCombined: true,
+        action: {
+            name: "绝世·剑斩乾坤",
+            dmgMult: 3.45,
+            mpCost: 120,
+            cd: 5,
+            desc: "【爆发型】凝聚全身精气神于一剑，对敌方造成毁灭性打击。",
+        },
+        desc: "【全篇精义】剑法之集大成者，练至圆满可人剑合一，纵横天下。",
+    },
+    {
+        id: "book_body_r4_20_full",
+        name: "刺客列传·全篇",
+        type: "book",
+        subType: "body",
+        category: "attack",
+        rarity: 4,
+        value: 5920,
+        studyCost: 1600,
+        studyTarget: "jing",
+        difficultyScale: 1.5,
+        effects: { atk: 16, speed: 16 },
+        action: {
+            name: "图穷匕见",
+            dmgMult: 4.9,
+            mpCost: 160,
+            cd: 7,
+            desc: "【爆发型】孤注一掷的终极刺杀，若不成功，便成仁。",
+        },
+        desc: "汇集天下刺客之大成，十步杀一人，千里不留行。",
+    },
     {
         id: "book_body_r4_00_full",
         name: "黯然销魂掌·全篇",

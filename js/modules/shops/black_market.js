@@ -1,6 +1,6 @@
 // js/modules/shops/inn.js
 // 客栈功能模块 v2.8 (适配新版弹窗管理：DOM对象操作 + 局部刷新优化)
-console.log("加载 黑市模块");
+//console.log("加载 黑市模块");
 
 
 

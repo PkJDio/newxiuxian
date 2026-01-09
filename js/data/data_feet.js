@@ -1,5 +1,5 @@
 // 鞋子
-console.log("加载 鞋子");
+//console.log("加载 鞋子");
 const feet = [
     {
         id        : "feet_001",

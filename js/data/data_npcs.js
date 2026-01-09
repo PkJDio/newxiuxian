@@ -1,5 +1,5 @@
 // NPC数据：特殊NPC, 随机库, 姓氏名字
-console.log("加载 NPC数据")
+//console.log("加载 NPC数据")
 
 /* ================= 0. 核心辅助函数 (新增) ================= */
 // 必须先定义这些工具，下面的生成逻辑才能调用
@@ -320,4 +320,4 @@ const npc = [
 ];
 
 // 如果你需要在控制台查看生成了多少个NPC，可以取消注释下面这行
-console.log(`Total NPCs generated: ${npc.length}`);
+//console.log(`Total NPCs generated: ${npc.length}`);

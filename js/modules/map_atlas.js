@@ -1,7 +1,7 @@
 // js/modules/map_atlas.js
 // 主地图渲染模块 v19.1 (夜视增强优化版)
 // 基于 v18.1 修改，增加了夜间敌人文字描边和发光效果
-console.log("加载 地图渲染模块 (Visual Enhanced - Night Vision)");
+//console.log("加载 地图渲染模块 (Visual Enhanced - Night Vision)");
 
 const MapAtlas = {
     tileSize: 20,

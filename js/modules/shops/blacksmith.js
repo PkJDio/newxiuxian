@@ -1,6 +1,6 @@
 // js/modules/shops/blacksmith.js
 // 铁匠铺功能模块 v1.1 (价格调整版)
-console.log("加载 铁匠铺模块");
+//console.log("加载 铁匠铺模块");
 
 const BlacksmithShop = {
     currentStock: [],

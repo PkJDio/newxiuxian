@@ -1,6 +1,6 @@
 // js/modules/combat.js
 // 战斗系统 v7.5 (修复：增加技能触发详细日志)
-console.log("加载 战斗系统 (Skill Debug v7.5)");
+//console.log("加载 战斗系统 (Skill Debug v7.5)");
 
 const Combat = {
     enemy: null,
@@ -70,8 +70,8 @@ const Combat = {
     },
 
     start: function(enemyObj, onWin, logId) {
-        console.log(">>> [Combat] 开始战斗:", enemyObj.name);
-        console.log(">>> [Combat] 敌人:", enemyObj);
+        //console.log(">>> [Combat] 开始战斗:", enemyObj.name);
+        //console.log(">>> [Combat] 敌人:", enemyObj);
         if (!window.player) return;
 
         this._injectStyles();
@@ -309,7 +309,7 @@ const Combat = {
 
         // DEBUG: 检查是否有技能列表
         if (!this.enemy.skills || this.enemy.skills.length === 0) {
-            console.log("[Enemy Action] No skills found, performing normal attack.");
+            //console.log("[Enemy Action] No skills found, performing normal attack.");
         } else {
             console.group("[Enemy Skill Check]");
             for (let skill of this.enemy.skills) {
@@ -327,19 +327,19 @@ const Combat = {
                 }
 
                 if (!canCast) {
-                    console.log(`- Skill [${skill.id}] skipped: ${failReason}`);
+                    //console.log(`- Skill [${skill.id}] skipped: ${failReason}`);
                     continue; // 条件不满足，跳过
                 }
 
                 // 2. 概率检查
                 const rand = Math.random();
                 if (rand > skill.rate) {
-                    console.log(`- Skill [${skill.id}] check failed: ${rand.toFixed(2)} > ${skill.rate}`);
+                    //console.log(`- Skill [${skill.id}] check failed: ${rand.toFixed(2)} > ${skill.rate}`);
                     continue; // 概率未命中，跳过
                 }
 
                 // 3. 释放技能
-                console.log(`+ Skill [${skill.id}] TRIGGERED! (Rate: ${skill.rate})`);
+                //console.log(`+ Skill [${skill.id}] TRIGGERED! (Rate: ${skill.rate})`);
 
                 if (skill.type === 1) { // 伤害
                     this._log(`${this.enemy.name} 施展了 <b style="color:#d32f2f;">${skill.id}</b>！`);
@@ -395,11 +395,11 @@ const Combat = {
 
         // 2. 技能修正
         if (atkStats.skillMult) {
-            console.log(`> Skill Mult: x${atkStats.skillMult}`);
+            //console.log(`> Skill Mult: x${atkStats.skillMult}`);
             finalAtkVal = Math.floor(finalAtkVal * atkStats.skillMult);
         }
         if (atkStats.skillFlat) {
-            console.log(`> Skill Flat: +${atkStats.skillFlat}`);
+            //console.log(`> Skill Flat: +${atkStats.skillFlat}`);
             finalAtkVal = finalAtkVal + atkStats.skillFlat;
         }
 
@@ -410,7 +410,7 @@ const Combat = {
         const spdDef = defStats.speed || 10;
 
         // 3. 闪避
-        let dodgeRate = 0.05 + (spdDef - spdAtk) / 100;
+        let dodgeRate = 0.05 + (spdDef - spdAtk) / 150;
         dodgeRate = Math.max(0, Math.min(0.60, dodgeRate));
 
         if (Math.random() < dodgeRate) {
@@ -418,19 +418,25 @@ const Combat = {
             const tip = `<div class="combat-tooltip-content"><div class="tip-row"><span>闪避率</span><span>${dodgePct}%</span></div></div>`;
             const span = `<span class="combat-tooltip-trigger" style="color:#aaa; cursor:help; border-bottom:1px dotted #ccc; position:relative;">✨闪避${tip}</span>`;
             this._log(`${name} 的${type}被 ${span} 了！`);
-            console.log("> Result: Dodged");
+            //console.log("> Result: Dodged");
             console.groupEnd();
             return 0;
         }
 
-        // 4. 穿甲
+        // 4. 穿甲穿甲与锐利度处理
+        const sharpness = atkStats.sharpness || 0; // 读取武器锐利度
         const pen = atkStats.basePen || 0;
         const originDef = defVal;
         if (pen > 0) {
             defVal = Math.max(0, defVal - pen);
             console.log(`> Pen: ${pen}, Def reduced from ${originDef} to ${defVal}`);
         }
-
+        // --- 方案 A 核心逻辑 ---
+        // 计算锐利度对护甲的抑制系数
+                const retentionMultiplier = 100 / (100 + sharpness);
+        // 计算最终有效防御
+                defVal = defVal * retentionMultiplier;
+        // -----------------------
         // 5. 减伤
         const ARMOR_CONST = 100;
         const reductionMultiplier = ARMOR_CONST / (ARMOR_CONST + defVal);
@@ -444,7 +450,7 @@ const Combat = {
         let critRate = 0;
         if (isPlayerAttacking) {
             const shen = atkStats.shen || 0;
-            critRate = 0 + (shen * 0.01);
+            critRate = 0 + (shen * 0.005);
         } else {
             const rank = this.enemy.template || "minion";
             if (rank === "lord") critRate = 0.20;
@@ -456,7 +462,7 @@ const Combat = {
         const isCrit = Math.random() < critRate;
         if (isCrit) {
             rawDamage = rawDamage * 1.5;
-            console.log("> Critical Hit! x1.5");
+            //console.log("> Critical Hit! x1.5");
         }
 
         // 7. 浮动
@@ -464,25 +470,46 @@ const Combat = {
         let finalDamage = Math.floor(rawDamage * variance);
         finalDamage = Math.max(1, finalDamage);
 
-        console.log(`> Variance: ${variance.toFixed(3)}, Final Dmg: ${finalDamage}`);
+        //console.log(`> Variance: ${variance.toFixed(3)}, Final Dmg: ${finalDamage}`);
         console.groupEnd();
+
+        const sharpEffectPct = Math.floor((1 - (100 / (100 + (atkStats.sharpness || 0)))) * 100);
 
         const penHtml = pen > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>⚡ 穿甲</span> <span>${pen}</span></div>` : '';
         const critPct = (critRate * 100).toFixed(1);
-
+        // 修改后的 Tooltip HTML
         const tooltipHtml = `
-            <div class="combat-tooltip-content">
-                <div class="tip-row"><span>🗡️ 最终攻</span> <span>${Math.floor(finalAtkVal)}</span></div>
-                ${atkStats.skillMult ? `<div class="tip-row tip-dim"><span>└ 基础</span> <span>${baseAtk} x ${atkStats.skillMult}</span></div>` : ''}
-                ${atkStats.skillFlat ? `<div class="tip-row tip-dim"><span>└ 基础</span> <span>${baseAtk} + ${atkStats.skillFlat}</span></div>` : ''}
-                <div class="tip-row"><span>🛡️ 防御</span> <span>${originDef} <span class="tip-dim">(-${reductionPercent}%)</span></span></div>
-                ${penHtml}
-                <div class="tip-row"><span>🎯 暴击</span> <span>${critPct}%</span></div>
-                ${isCrit ? `<div class="tip-row tip-crit"><span>💥 暴击</span> <span>x1.5</span></div>` : ''}
-                <div class="tip-divider"></div>
-                <div class="tip-row tip-total"><span>伤害</span> <span>${finalDamage}</span></div>
+    <div class="combat-tooltip-content">
+        <div class="tip-row"><span>🗡️ 最终攻击</span> <span>${Math.floor(finalAtkVal)}</span></div>
+        ${atkStats.skillMult ? `<div class="tip-row tip-dim"><span>└ 基础</span> <span>${baseAtk} x ${atkStats.skillMult}</span></div>` : ''}
+        
+        <div class="tip-divider"></div>
+        
+        <div class="tip-row"><span>🛡️ 原始防御</span> <span>${originDef}</span></div>
+        ${atkStats.sharpness > 0 ? `
+            <div class="tip-row" style="color:#ffb74d;">
+                <span>✨ 锐利度</span> 
+                <span>${atkStats.sharpness} <span class="tip-dim">(-${sharpEffectPct}%)</span></span>
             </div>
-        `;
+            <div class="tip-row tip-dim">
+                <span>└ 有效防御</span> 
+                <span>${defVal.toFixed(1)} <span style="color:#ff5252;">(-${reductionPercent}%)</span></span>
+            </div>
+        ` : `
+            <div class="tip-row"><span>└ 减伤率</span> <span class="tip-dim">-${reductionPercent}%</span></div>
+        `}
+        
+        ${penHtml}
+        
+        <div class="tip-divider"></div>
+        
+        <div class="tip-row"><span>🎯 暴击率</span> <span>${critPct}%</span></div>
+        ${isCrit ? `<div class="tip-row tip-crit"><span>💥 暴击伤害</span> <span>x1.5</span></div>` : ''}
+        
+        <div class="tip-divider"></div>
+        <div class="tip-row tip-total"><span>最终伤害</span> <span>${finalDamage}</span></div>
+    </div>
+`;
 
         const color = isPlayerAttacking ? "#d32f2f" : "#1976d2";
         const critText = isCrit ? " <b style='color:#ff9800'>[暴击!]</b>" : "";
@@ -744,11 +771,7 @@ const Combat = {
             if (window.UtilsAdd) UtilsAdd.addMoney(money);
             else this.player.money = (this.player.money || 0) + money;
         }
-        // --- 核心修复：自动通知悬赏榜计数 ---
-        if (window.BountyBoard && typeof window.BountyBoard.onEnemyKilled === 'function') {
-            console.log("[Combat] 尝试更新悬赏计数 -> ID:", this.enemy.id);
-            window.BountyBoard.onEnemyKilled(this.enemy.id);
-        }
+
 
         const drops = this._calculateDrops(this.enemy.drops);
         // 【新增】=== 悬赏任务额外掉落 ===
@@ -798,6 +821,9 @@ const Combat = {
             this._log(`<span style="color:#888;">(一无所获)</span>`);
         }
         if (window.UtilsEnemy) UtilsEnemy.markDefeated(this.enemy.x, this.enemy.y);
+
+
+
         this._syncPlayerStatus();
         if (this.onWinCallback) this.onWinCallback();
         if (window.saveGame) window.saveGame();
@@ -920,7 +946,92 @@ const Combat = {
         this._renderEnd(type);
     },
 
-    _injectStyles: function() { if (document.getElementById('combat-styles-v4')) return; const css = ` .turn-divider { margin:8px 0; border-top:1px dashed #ccc; color:#888; font-size:12px; text-align:center; } .combat-tooltip-trigger { display: inline-block; } .combat-tooltip-content { visibility: hidden; opacity: 0; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); width: 180px; background: rgba(0, 0, 0, 0.85); color: #fff; padding: 10px; border-radius: 6px; font-size: 12px; font-family: monospace; font-weight: normal; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: opacity 0.2s, bottom 0.2s; pointer-events: none; text-align: left; line-height: 1.6; } .combat-tooltip-content::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent; } .combat-tooltip-trigger:hover .combat-tooltip-content { visibility: visible; opacity: 1; bottom: 125%; } .tip-row { display: flex; justify-content: space-between; } .tip-dim { color: #aaa; font-size: 0.9em; } .tip-crit { color: #ffeb3b; font-weight: bold; } .tip-divider { border-top: 1px solid #555; margin: 5px 0; } .tip-total { font-size: 14px; color: #4caf50; font-weight: bold; } `; const style = document.createElement('style'); style.id = 'combat-styles-v4'; style.type = 'text/css'; style.appendChild(document.createTextNode(css)); document.head.appendChild(style); },
+    _injectStyles: function() { if (document.getElementById('combat-styles-v4')) return;
+        const css = `
+    /* 日志分隔线保持原样 */
+    .turn-divider { 
+        margin:8px 0; 
+        border-top:1px dashed #ccc; 
+        color:#888; 
+        font-size:12px; 
+        text-align:center; 
+    } 
+
+    .combat-tooltip-trigger { 
+        display: inline-block; 
+    } 
+
+    /* 核心修改：仅针对悬浮框主体 */
+    .combat-tooltip-content { 
+        visibility: hidden; 
+        opacity: 0; 
+        position: absolute; 
+        bottom: 110%; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        width: 200px;           /* 字体放大后，宽度稍微加宽防止折行 */
+        background: rgba(0, 0, 0, 0.85); 
+        color: #fff; 
+        padding: 10px; 
+        border-radius: 6px; 
+        font-size: 14px;        /* 基础文字从 12px 增加到 14px */
+        font-family: monospace; 
+        font-weight: normal; 
+        z-index: 1000; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+        transition: opacity 0.2s, bottom 0.2s; 
+        pointer-events: none; 
+        text-align: left; 
+        line-height: 1.6; 
+    } 
+
+    .combat-tooltip-content::after { 
+        content: ""; 
+        position: absolute; 
+        top: 100%; 
+        left: 50%; 
+        margin-left: -6px; 
+        border-width: 6px; 
+        border-style: solid; 
+        border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent; 
+    } 
+
+    .combat-tooltip-trigger:hover .combat-tooltip-content { 
+        visibility: visible; 
+        opacity: 1; 
+        bottom: 125%; 
+    } 
+
+    /* 内部行样式同步微调 */
+    .tip-row { 
+        display: flex; 
+        justify-content: space-between; 
+        font-size: 14px;        /* 确保行文字也是 14px */
+    } 
+
+    .tip-dim { 
+        color: #aaa; 
+        font-size: 12px;        /* 辅助说明文字调整为 12px */
+    } 
+
+    .tip-crit { 
+        color: #ffeb3b; 
+        font-weight: bold; 
+    } 
+
+    .tip-divider { 
+        border-top: 1px solid #555; 
+        margin: 5px 0; 
+    } 
+
+    /* 最终伤害值 */
+    .tip-total { 
+        font-size: 16px;        /* 最终结果从 14px 增加到 16px */
+        color: #4caf50; 
+        font-weight: bold; 
+    } 
+`;
+        const style = document.createElement('style'); style.id = 'combat-styles-v4'; style.type = 'text/css'; style.appendChild(document.createTextNode(css)); document.head.appendChild(style); },
     _calculateDrops: function(dropTable) { if (!dropTable || !Array.isArray(dropTable)) return []; const result = []; dropTable.forEach(entry => { if (Math.random() <= entry.rate) result.push({ id: entry.id }); }); return result; },
     _log: function(msg) { if (this.logContainerId) { const el = document.getElementById(this.logContainerId); if (el) { const line = document.createElement('div'); line.style.marginBottom = '4px'; line.innerHTML = msg; el.appendChild(line); el.scrollTop = el.scrollHeight; if (el.parentElement) el.parentElement.scrollTop = el.parentElement.scrollHeight; setTimeout(() => { line.scrollIntoView({ behavior: "smooth", block: "end" }); }, 10); } } else { this.logs.push(msg); } },
     _renderEnd: function(resultType, extraHtml = "") { if (this.logContainerId) { const el = document.getElementById(this.logContainerId); if (el && extraHtml) { const div = document.createElement('div'); div.innerHTML = extraHtml; el.appendChild(div); el.scrollTop = el.scrollHeight; if (el.parentElement) el.parentElement.scrollTop = el.parentElement.scrollHeight; setTimeout(() => { div.scrollIntoView({ behavior: "smooth", block: "end" }); }, 10); } } else { const logHtml = this.logs.map(l => `<div>${l}</div>`).join(''); this._updateModal(`战斗结束 - ${resultType}`, `<div style="max-height:300px; overflow-y:auto;">${logHtml}</div>${extraHtml}`, true); } },

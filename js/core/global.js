@@ -1,7 +1,7 @@
 // js/core/global.js
 // 全局核心：数据库, 属性计算, 常用常量
 // 【修复】recalcStats: 调整计算顺序，支持百分比Buff，解决神光焕发不生效问题
-console.log("加载 全局核心");
+//console.log("加载 全局核心");
 
 /* ================= 1. 游戏数据库 (GAME_DB) ================= */
 const GAME_DB = {
@@ -45,7 +45,7 @@ function initGameDB() {
     itemSources.forEach((arr) => {
         GAME_DB.items = GAME_DB.items.concat(arr);
     });
-    console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
+    //console.log(`[Core] 数据库初始化完成，加载物品 ${GAME_DB.items.length} 个。`);
     //合并装备
     const equipItemSources = [
         typeof weapons !== "undefined" ? weapons : [],
@@ -58,7 +58,7 @@ function initGameDB() {
     equipItemSources.forEach((arr) => {
         GAME_DB.equipments = GAME_DB.equipments.concat(arr);
     });
-    console.log(`[Core] 装备初始化完成，加载装备 ${GAME_DB.equipments.length} 个。`);
+    //console.log(`[Core] 装备初始化完成，加载装备 ${GAME_DB.equipments.length} 个。`);
 
     //合并能吃的
     const eatItemSources = [
@@ -69,7 +69,7 @@ function initGameDB() {
     eatItemSources.forEach((arr) => {
         GAME_DB.eatables = GAME_DB.eatables.concat(arr);
     });
-    console.log(`[Core] 食物初始化完成，加载食物 ${GAME_DB.eatables.length} 个。`);
+    //console.log(`[Core] 食物初始化完成，加载食物 ${GAME_DB.eatables.length} 个。`);
 
     //合并草药和丹药
     const herbItemSources = [
@@ -158,9 +158,20 @@ function recalcStats() {
             const itemId = player.equipment[slot];
             if (itemId) {
                 const item = GAME_DB.items.find(i => i.id === itemId);
-                if (item && item.effects) {
-                    for (let k in item.effects) {
-                        add(k, item.effects[k], item.name);
+                if (item) {
+                    // --- 4.1 提取锐利度 (仅限武器部位) ---
+                    if (slot === 'weapon') {
+                        // 兼容 sharpness 在 item 根目录或 effects 目录的情况
+                        const wpSharp = item.sharpness || (item.effects && item.effects.sharpness) || 0;
+                        player.derived.sharpness = wpSharp;
+                    }
+
+                    // --- 4.2 处理常规属性 (Atk, Def, Speed等) ---
+                    if (item.effects) {
+                        for (let k in item.effects) {
+                            // 如果 add 函数内部会自动更新 derived，确保 key 匹配
+                            add(k, item.effects[k], item.name);
+                        }
                     }
                 }
             }

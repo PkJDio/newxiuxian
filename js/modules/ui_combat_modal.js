@@ -1,6 +1,6 @@
 // js/modules/ui_combat_modal.js
 // 战斗弹窗UI管理器 v2.2 (修复：属性读取、速度按钮位置)
-console.log("加载 战斗弹窗UI模块 (UICombatModal v2.2)");
+//console.log("加载 战斗弹窗UI模块 (UICombatModal v2.2)");
 
 const UICombatModal = {
     // 修复旧数据: 映射 stats.toxicity -> instance.toxAtk
