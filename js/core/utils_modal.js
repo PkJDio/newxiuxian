@@ -1,38 +1,43 @@
 // js/core/utils_modal.js
-// 弹窗管理模块 (修复版：防双击、防重复堆叠、自动清理残留)
+// 弹窗管理模块 v3.1 (纯逻辑优化版：保留原有样式，仅修复堆栈逻辑)
 
 const ModalManager = {
     _modalStack: [],  // 弹窗堆栈
     _baseZIndex: 1000,
-    _lastOpenTime: 0, // 用于防止极速连点
+    _lastOpenTime: 0, // 防连点计时器
 
-    // ================= 初始化清理 =================
+    // ================= 初始化 =================
     init: function() {
-        // 自动清理页面上可能残留的旧版静态遮罩（如果有的话）
+        // 自动清理页面上残留的旧版遮罩
         const legacyOverlay = document.getElementById('modal_overlay');
+        // 只清理没有 dynamic_modal 标记的旧元素，防止误删
         if (legacyOverlay && !legacyOverlay.classList.contains('dynamic_modal')) {
             legacyOverlay.remove();
-            //console.log("已清理旧版静态弹窗遮罩");
         }
     },
 
-    // 1. Toast 提示
+    // 1. Toast 提示 (逻辑保持不变)
     showToast: function(msg, duration = 2000) {
         document.querySelectorAll('.ink_toast').forEach(el => el.remove());
         const toast = document.createElement('div');
         toast.className = 'ink_toast';
         toast.innerHTML = msg;
         document.body.appendChild(toast);
+
+        // 强制重绘触发动画
         requestAnimationFrame(() => toast.classList.add('show'));
+
         setTimeout(() => {
-            if (document.body.contains(toast)) {
+            if (toast.parentElement) {
                 toast.classList.remove('show');
-                setTimeout(() => { if (document.body.contains(toast)) toast.remove(); }, 300);
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 300);
             }
         }, duration);
     },
 
-    // 2. 通用交互弹窗 (返回 body 容器)
+    // 2. 通用交互弹窗
     showInteractiveModal: function(title, contentHtml, footerHtml = null, extraClass = "", width = null, height = null) {
         const result = this._showBaseModal('modal_interactive', title, contentHtml, footerHtml, extraClass, width, height);
         return result.body;
@@ -56,7 +61,7 @@ const ModalManager = {
         });
     },
 
-    // 6. 确认/取消弹窗
+    // 6. 确认/取消弹窗 (保留你原有的按钮样式结构)
     showConfirmModal: function(title, contentHtml, onConfirm) {
         this._createTempCallback(onConfirm, (funcName) => {
             const footer = `
@@ -97,6 +102,7 @@ const ModalManager = {
                             options[idx].onClick();
                             if (options[idx].autoClose) window.closeModal();
                         };
+                        // 简单的 hover 效果，防止 CSS 没覆盖到
                         btn.onmouseover = () => { btn.style.borderColor = '#333'; btn.style.background = '#fafafa'; };
                         btn.onmouseout =  () => { btn.style.borderColor = '#ccc'; btn.style.background = '#fff'; };
                     }
@@ -108,16 +114,18 @@ const ModalManager = {
         else wrapRender(null);
     },
 
-    // 8. 大地图
+    // 8. 大地图 (完全保留原有 DOM 结构，只增加防重逻辑)
     showMapModal: function(onOpenCallback) {
-        // 地图比较特殊，如果已经开了地图，先关闭旧的
         if (this._modalStack.length > 0 && this._modalStack[this._modalStack.length - 1].title === '九州舆图') {
-            this.closeTopModal();
+            this.closeTopModal(); // 防止重复打开
         }
 
         const { overlay, box } = this._createModalStructure('九州舆图');
+
+        // 关键：保留原有的 class 名，确保 style.css 能选中它
         box.className = `modal_content ink_modal_box ink_card modal_map_box`;
 
+        // 这里的 HTML 结构是你原有的，不要动
         box.innerHTML = `
             <div class="modal_header" style="background:#e0e0e0; border-bottom:1px solid #ccc; padding: 8px 20px; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0; height: 50px;">
                 <div style="display:flex; align-items:center; gap: 15px;">
@@ -134,13 +142,15 @@ const ModalManager = {
                 </div>
             </div>`;
 
+        // 移除 hidden 类显示 (如果你的 CSS 是用 .hidden 控制显示的)
         overlay.classList.remove('hidden');
+
         this._bindEscKey();
         if (onOpenCallback) setTimeout(onOpenCallback, 50);
         return box;
     },
 
-    // ================= 内部核心 =================
+    // ================= 核心逻辑 (不包含样式注入) =================
 
     _createTempCallback: function(callback, renderFn) {
         const tempName = 'temp_cb_' + Date.now();
@@ -152,74 +162,76 @@ const ModalManager = {
         renderFn(tempName);
     },
 
-    // 创建 DOM 结构
+    // 创建最基础的 DOM 骨架
     _createModalStructure: function(title) {
         const zIndex = this._baseZIndex + (this._modalStack.length * 10);
 
         const overlay = document.createElement('div');
-        overlay.className = 'modal_overlay dynamic_modal'; // 标记为动态生成的
-        Object.assign(overlay.style, {
-            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-            background: 'rgba(0,0,0,0.5)', zIndex: zIndex, display: 'flex',
-            justifyContent: 'center', alignItems: 'center'
-        });
+        // 这里的 id 和 class 必须和你原有的 style.css 匹配
+        overlay.id = 'modal_overlay';
+        overlay.className = 'modal_overlay dynamic_modal';
+
+        // 仅设置必要的层级，布局样式交给 style.css
+        overlay.style.zIndex = zIndex;
+        // 如果原 CSS 没有 display:flex，这里补救一下，确保居中
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        // 强制固定定位，防止页面滚动跑偏
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.5)'; // 默认半透明黑，会被 CSS 覆盖
 
         const box = document.createElement('div');
+        // 加上这一长串 class 是为了匹配你原有的样式
         box.className = 'modal_content ink_modal_box ink_card';
-        Object.assign(box.style, {
-            background: '#fff', borderRadius: '8px', padding: '20px',
-            display: 'flex', flexDirection: 'column', maxHeight: '95vh', minWidth: '300px'
-        });
 
         overlay.appendChild(box);
         document.body.appendChild(overlay);
 
-        // 点击阴影关闭
         overlay.onclick = (e) => {
             if (e.target === overlay) this.closeSpecificModal(overlay);
         };
 
-        // 存入堆栈时记录标题，用于防重检测
         this._modalStack.push({ overlay, box, title: title });
         return { overlay, box };
     },
 
     _showBaseModal: function(typeClass, title, content, footer, extraClass = "", width = null, height = null) {
-        // 【核心修复1】防重检测：如果最顶层的弹窗标题和现在一样，说明是重复调用
-        // 比如按钮连点，或者刷新界面时重复打开
+        // 1. 防重：复用同名窗口
         const topItem = this._modalStack[this._modalStack.length - 1];
         if (topItem && topItem.title === title) {
-            console.warn(`[Modal] 检测到重复打开 "${title}"，已复用现有窗口。`);
-            // 更新现有窗口的内容，而不是创建新的
+            console.warn(`[Modal] 复用窗口: "${title}"`);
             const existingBody = topItem.box.querySelector('.modal_body');
             if (existingBody) {
-                // 仅更新内容
                 existingBody.innerHTML = content;
-                // 如果需要，也可以更新 footer，这里简单处理直接返回
                 return { overlay: topItem.overlay, box: topItem.box, body: existingBody };
             }
         }
 
-        // 【核心修复2】防极速连点：200ms 内禁止连续打开新窗口
+        // 2. 防连点
         const now = Date.now();
         if (now - this._lastOpenTime < 200) {
-            console.warn("[Modal] 点击过快，已拦截。");
-            // 如果堆栈有窗口，返回顶层窗口防止报错；否则返回空对象
             if (topItem) return { overlay: topItem.overlay, box: topItem.box, body: topItem.box.querySelector('.modal_body') };
-            // 实在不行创建一个隐藏的 dummy 防止报错（极端情况）
             const dummy = document.createElement('div');
             return { overlay: dummy, box: dummy, body: dummy };
         }
         this._lastOpenTime = now;
 
-        // 创建新窗口
+        // 3. 创建窗口
         const { overlay, box } = this._createModalStructure(title);
 
-        box.className = `modal_content ink_modal_box ink_card ${typeClass} ${extraClass || ''}`;
+        // 追加类型 class，例如 modal_warning
+        box.classList.add(typeClass);
+        if (extraClass) box.classList.add(extraClass);
 
         if (width) box.style.width = typeof width === 'number' ? `${width}vw` : width;
         if (height) box.style.height = typeof height === 'number' ? `${height}vh` : height;
 
+        // 内部结构
         box.innerHTML = `
             <div class="modal_header" style="font-size:18px; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">${title || '提示'}</div>
             <div class="modal_body" style="overflow-y:auto; flex:1;">${content}</div>
@@ -229,7 +241,7 @@ const ModalManager = {
         const footerEl = box.querySelector('.modal_footer');
         if (footerEl) {
             if (footer) {
-                footerEl.style.display = 'flex';
+                footerEl.style.display = 'flex'; // 确保 flex 布局生效
                 footerEl.innerHTML = footer;
             } else {
                 footerEl.style.display = 'block';
@@ -248,21 +260,29 @@ const ModalManager = {
 
     _bindEscKey: function() {
         if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
-        this._escHandler = (e) => { if (e.key === 'Escape') window.closeModal(); };
+        this._escHandler = (e) => {
+            const top = this._modalStack[this._modalStack.length-1];
+            if (e.key === 'Escape' && top && !top.box.classList.contains('modal_warning')) {
+                window.closeModal();
+            }
+        };
         document.addEventListener('keydown', this._escHandler);
     },
 
+    // 彻底销毁逻辑：必须使用 remove()
     closeTopModal: function() {
         if (this._modalStack.length === 0) return;
         const topItem = this._modalStack.pop();
-        if (topItem && topItem.overlay) topItem.overlay.remove();
+        if (topItem && topItem.overlay) {
+            topItem.overlay.remove(); // 关键：从 DOM 树移除
+        }
         if (this._modalStack.length === 0) this._cleanup();
     },
 
     closeSpecificModal: function(targetOverlay) {
         const index = this._modalStack.findIndex(item => item.overlay === targetOverlay);
         if (index !== -1) {
-            this._modalStack[index].overlay.remove();
+            this._modalStack[index].overlay.remove(); // 关键
             this._modalStack.splice(index, 1);
             if (this._modalStack.length === 0) this._cleanup();
         }
@@ -274,12 +294,15 @@ const ModalManager = {
             document.removeEventListener('keydown', this._escHandler);
             this._escHandler = null;
         }
+        // 顺便通知 Combat 清理缓存
+        if (window.Combat && window.Combat.clearCache) window.Combat.clearCache();
     }
 };
 
-// 立即运行初始化清理
+// 初始化
 ModalManager.init();
 
+// 暴露接口
 window.UtilsModal = ModalManager;
 window.showToast = ModalManager.showToast.bind(ModalManager);
 window.showGeneralModal = ModalManager.showInteractiveModal.bind(ModalManager);

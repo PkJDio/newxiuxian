@@ -1,6 +1,5 @@
 // js/core/utils_item.js
-// 物品核心逻辑工具箱 (修复物品使用效果：恢复/永久属性/Buff)
-//console.log("加载 物品工具类");
+// 物品核心逻辑工具箱 (修复物品使用效果：恢复/永久属性/Buff/弹窗优化)
 
 const UtilsItem = {
     // 获取书籍状态
@@ -41,11 +40,7 @@ const UtilsItem = {
 
     /**
      * 使用物品 (吃丹药/食物)
-     * 【核心修复】实现恢复、永久加成、临时Buff
-     */
-    /**
-     * 使用物品 (吃丹药/食物)
-     * 【核心修改】支持 studyEff 研读效率 Buff 及多属性复合 Buff
+     * 【核心修复】支持 studyEff 研读效率 Buff 及多属性复合 Buff
      */
     useItem: function(inventoryIndex) {
         const itemSlot = player.inventory[inventoryIndex];
@@ -105,14 +100,12 @@ const UtilsItem = {
                 }
             });
 
-            // D. 临时 Buff (buff) - 【核心逻辑修复】
+            // D. 临时 Buff (buff)
             if (eff.buff) {
                 const b = eff.buff;
                 if (b.attr && b.val && b.days) {
                     if (!player.buffs) player.buffs = {};
 
-                    // 1. 准备基础数据结构
-                    // 这里存储原始的 attr 和 val 字符串，供后续解析（如 studyEff）
                     const newBuff = {
                         name: item.name,
                         days: b.days,
@@ -122,10 +115,8 @@ const UtilsItem = {
                         desc: item.desc || ""
                     };
 
-                    // 2. 存储/覆盖 BUFF
                     // 使用 item.id 作为唯一 Key 确保同类丹药刷新时间
                     player.buffs[item.id] = newBuff;
-
                     applied = true;
                 }
             }
@@ -219,15 +210,79 @@ const UtilsItem = {
 
         if (window.recalcStats) window.recalcStats();
         this._refreshAllUI();
-
         if (window.saveGame) window.saveGame();
     },
 
+    /**
+     * 丢弃物品 (适配 UtilsModal 自定义弹窗)
+     */
+    /**
+     * 丢弃物品 (已优化：小窗口、大字体)
+     */
     discardItem: function(inventoryIndex) {
-        if (!confirm("确定要丢弃该物品吗？")) return;
-        player.inventory.splice(inventoryIndex, 1);
-        this._refreshAllUI();
-        if (window.saveGame) window.saveGame();
+        const itemSlot = player.inventory[inventoryIndex];
+        if (!itemSlot) return;
+
+        const item = GAME_DB.items.find(i => i.id === itemSlot.id);
+        const itemName = item ? item.name : "未知物品";
+        const targetItemId = itemSlot.id;
+
+        // 1. 优化排版：增大字体，增加上下间距
+        const contentHtml = `
+            <div style="text-align:center; padding: 30px 10px;">
+                <div style="font-size: 18px; color: #333; margin-bottom: 15px; line-height: 1.5;">
+                    确定要丢弃 <span style="color:#d32f2f; font-weight:bold; font-size: 20px; padding: 0 4px;">${itemName}</span> 吗？
+                </div>
+                <div style="font-size:14px; color:#888;">
+                    (丢弃后将化为天地灵气，无法找回)
+                </div>
+            </div>
+        `;
+
+        // 执行删除的逻辑
+        const doDiscard = () => {
+            const currentSlot = player.inventory[inventoryIndex];
+            if (currentSlot && currentSlot.id === targetItemId) {
+                player.inventory.splice(inventoryIndex, 1);
+                if(window.showToast) window.showToast(`已丢弃 ${itemName}`);
+                this._refreshAllUI();
+                if (window.saveGame) window.saveGame();
+            } else {
+                if(window.showToast) window.showToast("背包状态已变更，取消操作");
+                this._refreshAllUI();
+            }
+        };
+
+        // 2. 调用弹窗：传入宽度(360px) 和 高度(auto)
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal && window.UtilsModal._createTempCallback) {
+            window.UtilsModal._createTempCallback(doDiscard, (funcName) => {
+                const footerHtml = `
+                    <div style="display:flex; justify-content: center; gap: 15px; padding-bottom: 10px;">
+                        <button class="ink_btn_normal" onclick="window.closeModal()" style="padding: 8px 25px;">取消</button>
+                        <button class="ink_btn_danger" onclick="window['${funcName}']()" style="padding: 8px 25px;">确定丢弃</button>
+                    </div>
+                `;
+
+                // 参数说明:
+                // title, content, footer,
+                // extraClass ('modal_compact' 用于特殊样式),
+                // width ('380px' 限制宽度),
+                // height ('auto' 让高度适应内容，去掉大量留白)
+                window.UtilsModal.showInteractiveModal(
+                    "丢弃确认",
+                    contentHtml,
+                    footerHtml,
+                    "modal_compact",
+                    "380px",
+                    "auto"
+                );
+            });
+        } else {
+            // 降级兼容
+            if (confirm(`确定要丢弃 ${itemName} 吗？`)) {
+                doDiscard();
+            }
+        }
     },
 
     /* ================= 批量操作逻辑 ================= */
@@ -264,9 +319,11 @@ const UtilsItem = {
         if (!player.inventory) return;
         const indexSet = new Set(indices);
         if (indexSet.size === 0) return;
+
         const initialCount = player.inventory.length;
         player.inventory = player.inventory.filter((_, index) => !indexSet.has(index));
         const deletedCount = initialCount - player.inventory.length;
+
         if (deletedCount > 0) {
             if(window.showToast) window.showToast(`已批量丢弃 ${deletedCount} 样物品`);
             this._refreshAllUI();

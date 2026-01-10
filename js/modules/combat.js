@@ -151,6 +151,7 @@ const Combat = {
         this._renderEnd("逃跑");
         const footer = document.getElementById('map_combat_footer');
         if (footer) footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">关闭</button>`;
+        this.clearCache();
     },
 
     togglePause: function() {
@@ -766,6 +767,7 @@ const Combat = {
         this._renderEnd("失败");
         const footer = document.getElementById('map_combat_footer');
         if (footer) footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">黯然离去</button>`;
+        this.clearCache();
     },
 
     _checkBountyDrops: function() {
@@ -940,11 +942,16 @@ const Combat = {
             }, 0);
         } else {
             // Fallback for when modal isn't open
-            const logHtml = this.logs.map(l => `<div>${l}</div>`).join('');
-            this._updateModal(`战斗结束 - ${resultType}`, `<div style="max-height:300px; overflow-y:auto;">${logHtml}</div>${extraHtml}`, true);
+            // const logHtml = this.logs.map(l => `<div>${l}</div>`).join('');
+            // this._updateModal(`战斗结束 - ${resultType}`, `<div style="max-height:300px; overflow-y:auto;">${logHtml}</div>${extraHtml}`, true);
         }
     },
-
+// 【新增】清理缓存，断开引用，释放内存
+    clearCache: function() {
+        this.uiRefs = {}; // 清空对象，切断对 DOM 的引用
+        this.logContainerId = null;
+        // console.log(">>> [Combat] 缓存已清理");
+    },
     _randomInt: function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
     _updateModal: function(title, content, showClose = false) { if (window.showGeneralModal) { let footer = showClose ? `<button class="ink_btn" onclick="closeModal()">关闭</button>` : null; window.showGeneralModal(title, content, footer); } }
 };
