@@ -272,6 +272,10 @@ const ModalManager = {
     // 彻底销毁逻辑：必须使用 remove()
     closeTopModal: function() {
         if (this._modalStack.length === 0) return;
+
+        // 【核心修复】窗口关闭时，强制清理任何残留的悬浮窗
+        if (window.hideTooltip) window.hideTooltip();
+
         const topItem = this._modalStack.pop();
         if (topItem && topItem.overlay) {
             topItem.overlay.remove(); // 关键：从 DOM 树移除
@@ -280,6 +284,9 @@ const ModalManager = {
     },
 
     closeSpecificModal: function(targetOverlay) {
+        // 【核心修复】窗口关闭时，强制清理任何残留的悬浮窗
+        if (window.hideTooltip) window.hideTooltip();
+
         const index = this._modalStack.findIndex(item => item.overlay === targetOverlay);
         if (index !== -1) {
             this._modalStack[index].overlay.remove(); // 关键
