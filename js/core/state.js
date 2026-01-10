@@ -1,85 +1,82 @@
 // js/core/state.js
-// 核心状态管理：定义玩家模板、兵解逻辑
-//console.log("加载 状态管理");
+// 核心状态管理：定义玩家模板、兵解逻辑 v2.0 (修复注释BUG，重命名接口)
 
-// ==========================================
-// 1. 定义玩家标准模板 (Schema)
-// 所有新字段必须在这里定义，读档时才能自动补全
-// ==========================================
-
-// 全局玩家对象初始化
 var player = null;
 
-
 // ==========================================
-// 2. 兵解 (轮回) 逻辑
+// 2. 核心逻辑：直接执行兵解 (无弹窗，纯逻辑)
 // ==========================================
-function attemptDie() {
-    // 定义具体的执行逻辑
-    const executeDie = function() {
-        //console.log("【Debug】=== 执行兵解 ===");
+// 供战斗系统直接调用，或由确认弹窗回调调用
+window.performDirectRebirth = function() {
+    console.log(">>> [State] 执行 performDirectRebirth (纯逻辑，无弹窗)");
 
-        // 1. 基于模板创建新身体
-        let newPlayer = JSON.parse(JSON.stringify(window.PLAYER_TEMPLATE));
+    if (!window.player) return;
 
-        // 2. 计算继承数据
-        const nextGen = (player.generation || 1) + 1;
+    // 1. 准备新数据
+    let template = window.PLAYER_TEMPLATE || {
+        name: "新角色", generation: 1, money: 0,
+        attributes: { hp: 100, mp: 0, atk: 10, def: 0, speed: 10 },
+        inventory: []
+    };
 
-        // --- 【添加以下两行】 ---
-        // 继承功法研读进度 (对象拷贝)
-        newPlayer.studyProgress = player.studyProgress ? JSON.parse(JSON.stringify(player.studyProgress)) : {};
-        // 继承当前选中的研读目标
-        newPlayer.currentStudyTarget = player.currentStudyTarget || null;
-        // ----------------------
+    let newPlayer = JSON.parse(JSON.stringify(template));
+    const nextGen = (window.player.generation || 1) + 1;
 
+    // 继承逻辑
+    newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
+    newPlayer.currentStudyTarget = window.player.currentStudyTarget || null;
 
-        let legacyStats = player.bonus_stats || {};
+    let legacyStats = window.player.bonus_stats || {};
+    const dbItems = window.books || (window.GAME_DB ? window.GAME_DB.items : []);
 
-        // 功法继承逻辑 (保留大成属性)
-        if (player.skills) {
-            for (let skillId in player.skills) {
-                const oldSkill = player.skills[skillId];
-                // 只有大成(mastered)的功法才提供属性加成
-                if (oldSkill.mastered) {
-                    const itemData = books.find(i => i.id === skillId);
-                    if (itemData) {
-                        // 简单处理：稀有度越高加成越多
-                        const bonusVal = (itemData.rarity || 1) * 1;
-                        // 假设加成到 'shen' (或者根据功法类型判断)
-                        if(!legacyStats.shen) legacyStats.shen = 0;
-                        legacyStats.shen += bonusVal;
-                    }
+    if (window.player.skills) {
+        for (let skillId in window.player.skills) {
+            const oldSkill = window.player.skills[skillId];
+            if (oldSkill.mastered) {
+                const itemData = Array.isArray(dbItems) ? dbItems.find(i => i.id === skillId) : null;
+                if (itemData) {
+                    const bonusVal = (itemData.rarity || 1) * 1;
+                    if(!legacyStats.shen) legacyStats.shen = 0;
+                    legacyStats.shen += bonusVal;
                 }
             }
         }
+    }
 
-        // 3. 应用新属性
-        newPlayer.bonus_stats = legacyStats;
-        newPlayer.generation = nextGen;
-        newPlayer.name = "道友" + nextGen + "世";
-        newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
+    newPlayer.bonus_stats = legacyStats;
+    newPlayer.generation = nextGen;
+    newPlayer.name = "道友" + nextGen + "世";
+    newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
 
-        // 4. 覆盖全局
-        window.player = newPlayer;
+    // 2. 覆盖全局数据
+    window.player = newPlayer;
 
-        // 5. 保存并刷新
-        if(window.saveGame) window.saveGame();
+    // 3. 保存与清理
+    if(window.saveGame) window.saveGame();
+    if (window.LogManager) window.LogManager.clear();
 
-        // 清理日志
-        if (window.LogManager) window.LogManager.clear();
+    // 4. 刷新界面
+    if(window.recalcStats) window.recalcStats();
+    if(window.updateUI) window.updateUI();
 
-        // 刷新UI
-        if(window.recalcStats) window.recalcStats();
-        if(window.updateUI) window.updateUI();
+    // 5. 【关键修复】这里强制关闭所有弹窗，换行写，避免被注释掉
+    if (window.closeModal) window.closeModal();
 
-        // 回主页
-        backToMenu();
-        if (typeof checkSaveFile === 'function') checkSaveFile();
-        if(window.showToast) window.showToast("兵解成功，开启第 " + nextGen + " 世");
-    };
+    // 6. 回主页
+    if (typeof backToMenu === 'function') backToMenu();
+    if (typeof checkSaveFile === 'function') checkSaveFile();
 
-    // 【UI 恢复】调用 ModalManager 的 showConfirmModal
-    // 优先检查 window.showConfirmModal，如果不存在则使用原生 confirm 兜底
+    if(window.showToast) window.showToast("兵解成功，开启第 " + nextGen + " 世");
+};
+
+// 为了兼容旧存档或习惯，保留 executeDie 别名，但指向新函数
+window.executeDie = window.performDirectRebirth;
+
+// ==========================================
+// 3. 交互逻辑：用户手动点击兵解 (带确认弹窗)
+// ==========================================
+function attemptDie() {
+    console.log(">>> [State] 用户点击兵解，弹出确认框");
     if (window.showConfirmModal) {
         window.showConfirmModal(
             "兵解轮回",
@@ -92,12 +89,12 @@ function attemptDie() {
                 <p style="font-weight:bold;">道友道心已决，确定要开启来世吗？</p>
             </div>
             `,
-            executeDie // 点击"确定"后执行的回调
+            // 确认后，调用上面的纯逻辑函数
+            window.performDirectRebirth
         );
     } else {
-        // 兜底：防止 util_modal.js 没加载时报错
-        if(confirm("确定要兵解轮回吗？(保留大成功法加成，重置其他进度)")) {
-            executeDie();
+        if(confirm("确定要兵解轮回吗？")) {
+            window.performDirectRebirth();
         }
     }
 }
@@ -111,8 +108,5 @@ function backToMenu() {
     }
 }
 
-// 暴露接口
 window.attemptDie = attemptDie;
 window.backToMenu = backToMenu;
-
-// 注意：saveGame 和 loadGame 现在由 archive.js 提供

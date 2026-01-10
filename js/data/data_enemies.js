@@ -18,14 +18,14 @@ const ENEMY_TEMPLATES = {
         name       : "头目",
         color      : "#56059f",
         basePen    : 25, // 头目具备穿甲能力
-        multipliers: {hp: 12.0, atk: 1.8, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0},
+        multipliers: {hp: 7.0, atk: 1.5, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0},
         icon: "☠️"
     },
     "lord"  : {
         name       : "领主",
         color      : "#a60518",
         basePen    : 35, // 领主高穿甲，克制重甲
-        multipliers: {hp: 30.0, atk: 2.2, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0},
+        multipliers: {hp: 14.0, atk: 1.8, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0},
         icon: "👹"
     }
 };

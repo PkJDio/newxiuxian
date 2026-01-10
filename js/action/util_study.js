@@ -5,14 +5,7 @@ const UtilStudy = {
     FATIGUE_GAIN: 8,
 
     /**
-     * 计算单次研读获得的进度值
-     * 公式: (10 + 相关属性) / (1 + 功法稀有度 * 0.1)
-     * 增益逻辑：
-     * - 检查 studyEff 属性，按加法叠加倍率（如 +0.1 即为 1.1倍）
-     * 减益逻辑:
-     * - 存在“疲惫”Buff (debuff_fatigue): 收益 x 0.5
-     * - 存在“饥饿”Buff (debuff_hunger): 收益 x 0.5
-     * - 若两者共存: 收益将变为 0.25 倍
+     * 计算收益 (保持不变，这部分逻辑没问题)
      */
     calcGain: function(book) {
         if (!book) return 0;
@@ -21,67 +14,58 @@ const UtilStudy = {
 
         let relatedAttrValue = 0;
         if (book.subType === 'body') {
-            relatedAttrValue = attr.shen || 0; // 外功主要参考“神” (悟性)
+            relatedAttrValue = attr.shen || 0;
         } else {
             const qi = attr.qi || 0;
             const shen = attr.shen || 0;
-            relatedAttrValue = Math.floor((qi + shen) / 2); // 内功参考 (气+神)/2
+            relatedAttrValue = Math.floor((qi + shen) / 2);
         }
 
-        // 基础收益计算
         let gain = (10 + relatedAttrValue) / (1 + rarity * 0.1);
 
-        // --- 【核心修改：状态与丹药加成判定】 ---
         if (window.player && window.player.buffs) {
+            // 兼容 buffs 为数组或对象的情况
+            const buffList = Array.isArray(window.player.buffs) ? window.player.buffs : Object.values(window.player.buffs);
 
-            // 1. 处理 studyEff 效率 Buff 加成
             let buffEffMultiplier = 1.0;
-            for (let bId in window.player.buffs) {
-                let b = window.player.buffs[bId];
-                // 匹配 studyEff 字段
+            let hasFatigue = false;
+            let hasHunger = false;
+
+            buffList.forEach(b => {
+                if (!b) return;
                 if (b.attr === 'studyEff') {
-                    // 叠加倍率，例如 val 为 0.35 则倍率为 1.35
                     buffEffMultiplier += parseFloat(b.val);
                 }
-            }
-            gain *= buffEffMultiplier;
+                // 兼容 ID 或 Name 检测
+                if (b.id === 'debuff_fatigue' || (b.name && b.name.includes('疲'))) hasFatigue = true;
+                if (b.id === 'debuff_hunger' || (b.name && b.name.includes('饿'))) hasHunger = true;
+            });
 
-            // 2. 检查疲惫状态：效率减半
-            if (window.player.buffs['debuff_fatigue']) {
-                gain *= 0.5;
-            }
-            // 3. 检查饥饿状态：效率减半
-            if (window.player.buffs['debuff_hunger']) {
-                gain *= 0.5;
-            }
+            gain *= buffEffMultiplier;
+            if (hasFatigue) gain *= 0.5;
+            if (hasHunger) gain *= 0.5;
         }
 
-        // 确保收益至少为 1，并向上取整保持 UI 同步
         return Math.max(1, Math.ceil(gain));
     },
 
     /**
-     * 执行研读动作
-     * @param {string} bookId 功法书籍ID
+     * 执行研读
      */
     performStudy: function(bookId) {
         const book = window.GAME_DB.items.find(i => i.id === bookId);
         if (!book) return false;
 
-        // 1. 消耗时间与增加疲劳
         if (window.TimeSystem) {
             window.TimeSystem.passTime(this.COST_HOUR, 0, this.FATIGUE_GAIN);
         }
 
-        // 2. 初始化进度记录 (确保字段存在于 player 对象中以便存档)
         if (!window.player.studyProgress) window.player.studyProgress = {};
         if (window.player.studyProgress[bookId] === undefined) window.player.studyProgress[bookId] = 0;
 
-        // 3. 计算并应用本次获得的进度
         const gain = this.calcGain(book);
         window.player.studyProgress[bookId] += gain;
 
-        // 4. 【关键】数据变动后立即保存存档
         if (window.ArchiveSystem && window.ArchiveSystem.saveGame) {
             window.ArchiveSystem.saveGame();
         } else if (window.saveGame) {
@@ -91,34 +75,52 @@ const UtilStudy = {
         const curProgress = window.player.studyProgress[bookId];
         const maxProgress = book.studyCost || 100;
 
-        // 5. 检查是否达到大成
+        // 检查是否大成
         if (curProgress >= maxProgress) {
+            // 【关键】调用修复后的成功逻辑
             this.onLearnSuccess(book);
-            return true; // 研读完成
+            return true;
         }
-        return false; // 研读继续
+        return false;
     },
 
     /**
-     * 研读完成后的技能解锁逻辑
+     * 【核心修复】研读完成后的技能解锁逻辑 (适配对象结构)
      */
     onLearnSuccess: function(book) {
-        if (!Array.isArray(window.player.skills)) window.player.skills = [];
-        const alreadyHas = window.player.skills.find(s => s.id === book.id);
-
-        if (!alreadyHas) {
-            // 将书籍转化为玩家技能
-            window.player.skills.push({
-                id: book.id,
-                name: book.name,
-                level: 0,
-                exp: 0,
-                subType: book.subType,
-                effects: JSON.parse(JSON.stringify(book.effects || {}))
-            });
-            if (window.showToast) window.showToast(`✨ 功法大成！你已领悟《${book.name}》`);
+        // 1. 确保 skills 是对象，如果不存在则初始化为 {}
+        if (!window.player.skills || Array.isArray(window.player.skills)) {
+            // 如果以前错误地变成了数组，或者为空，这里强制转回对象，防止报错
+            // 注意：如果以前是数组且有数据，这里会清空。
+            // 但既然你的设定是对象，这里必须保证它是对象。
+            window.player.skills = window.player.skills && !Array.isArray(window.player.skills) ? window.player.skills : {};
         }
 
+        // 2. 使用对象 Key 检查是否存在
+        const alreadyHas = window.player.skills[book.id];
+
+        if (!alreadyHas) {
+            // 3. 调用 UtilsSkill 添加技能
+            if (window.UtilsSkill && window.UtilsSkill.learnSkill) {
+                window.UtilsSkill.learnSkill(book.id);
+            } else {
+                // 兜底逻辑：手动添加对象结构
+                window.player.skills[book.id] = {
+                    id: book.id,
+                    level: 1,
+                    exp: 0,
+                    mastered: false // 刚学会是否算mastered看你设定，通常刚学会是入门
+                };
+            }
+
+            if (window.showToast) window.showToast(`✨ 功法大成！你已领悟《${book.name}》`);
+            if (window.LogManager) window.LogManager.add(`[功法大成] 恭喜你，你已领悟《${book.name}》`);
+        } else {
+            // 如果已经有了，可能增加熟练度？这里暂时只提示
+            if (window.showToast) window.showToast(`你对《${book.name}》有了更深的感悟`);
+        }
+
+        // 刷新属性和保存
         if (window.recalcStats) window.recalcStats();
         if (window.saveGame) window.saveGame();
     }

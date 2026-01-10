@@ -311,3 +311,38 @@
     */
     /* grid-template-columns: repeat(13, 1fr);  <-- 确认一下这个 */
 }
+/* 修改或添加到 css/layout.css 中 */
+
+#buff_list {
+    /* 1. 设置最大高度，防止撑开整个侧边栏 */
+    /* 你可以根据实际界面调整这个值，比如 200px, 30vh 等 */
+    max-height: 250px;
+
+    /* 2. 允许垂直滚动 */
+    overflow-y: auto;
+
+    /* 3. 防止水平溢出 */
+    overflow-x: hidden;
+
+    /* 4. 保持原有的内边距和边框逻辑 (如果原本有的话) */
+    padding-right: 5px; /* 给滚动条留点空间 */
+}
+
+/* --- 自定义滚动条样式 (Webkit浏览器如Chrome, Edge) --- */
+#buff_list::-webkit-scrollbar {
+    width: 6px; /* 滚动条宽度 */
+}
+
+#buff_list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05); /* 轨道背景色 */
+    border-radius: 3px;
+}
+
+#buff_list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); /* 滑块颜色 */
+    border-radius: 3px;
+}
+
+#buff_list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4); /* 滑块悬停颜色 */
+}

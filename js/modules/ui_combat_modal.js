@@ -1,12 +1,82 @@
 // js/modules/ui_combat_modal.js
-// 战斗弹窗UI管理器 v2.2 (修复：属性读取、速度按钮位置)
-//console.log("加载 战斗弹窗UI模块 (UICombatModal v2.2)");
+// 战斗弹窗UI管理器 v2.3 (性能优化版：CSS单例化，防止DOM堆叠)
 
 const UICombatModal = {
-    // 修复旧数据: 映射 stats.toxicity -> instance.toxAtk
-    // 【修改点1】增加 basePen 读取逻辑 (保持原样)
+    // 内部标记：样式是否已注入
+    _isStyleInjected: false,
+
+    // 【优化1】将样式提取为独立方法，确保全生命周期只注入一次
+    _injectStyles: function() {
+        if (this._isStyleInjected) return;
+
+        const cssContent = `
+            .combat-wrapper { display: flex; flex-direction: column; height: 100%; min-height: 550px; font-family: "Kaiti", serif; font-size: 20px; color: #333; position:relative; }
+            .combat-header { display: flex; justify-content: space-between; align-items: stretch; padding: 5px 10px; background: #fdfbf7; border-bottom: 3px double #8d6e63; flex-shrink: 0; gap: 5px; }
+            .fighter-card { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+            .fighter-top { display: flex; align-items: center; gap: 8px; }
+            .fighter-icon { font-size: 40px; animation: combat-float 3s infinite; }
+            .fighter-info { display: flex; flex-direction: column; justify-content: center; }
+            .fighter-name { font-size: 22px; font-weight: bold; line-height: 1.1; }
+            .fighter-rank { font-size: 16px; font-weight: bold; padding: 1px 5px; border-radius: 4px; }
+            .player-rank { background: #1976d2; color: #fff; }
+            .vs-divider { font-size: 32px; font-weight: bold; color: #a94442; align-self: center; width: 40px; text-align: center; }
+            .stats-panel { background: rgba(0,0,0,0.03); padding: 6px 8px; border-radius: 8px; border: 1px solid #e0e0e0; }
+            .bar-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+            .mp-row { margin-bottom: 6px; }
+            .hp-bar-container { flex: 1; display: flex; align-items: center; gap: 5px; }
+            .bar-label { font-size: 20px; color: #d32f2f; font-weight: bold; width: 24px; text-align: center; }
+            .hp-bar-bg { flex: 1; height: 18px; background: #ddd; border: 2px solid #bbb; border-radius: 9px; overflow: hidden; position: relative; }
+            .hp-bar-fill { height: 100%; width: 100%; background: linear-gradient(45deg, #e53935 25%, #ef5350 25%, #ef5350 50%, #e53935 50%, #e53935 75%, #ef5350 75%, #ef5350); background-size: 40px 40px; animation: combat-liquid-move 2s linear infinite; transition: width 0.4s ease-out; }
+            .hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; z-index: 2; line-height:1; }
+            .tox-bar-container { width: 100px; display: flex; align-items: center; gap: 4px; }
+            .tox-label { font-size: 18px; color: #9c27b0; font-weight: bold; }
+            .tox-bar-bg { flex: 1; height: 10px; background: #eee; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
+            .tox-bar-fill { height: 100%; background: #9c27b0; width: 0%; transition: width 0.3s; }
+            .tox-val { font-size: 14px; color: #666; width: 30px; text-align: right; }
+            
+            .attr-row { display: flex; justify-content: space-around; font-size: 18px; font-weight: bold; font-family: Arial, sans-serif; }
+            .attr-item { display: flex; align-items: center; gap: 4px; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; position: relative; cursor: help; }
+            .attr-text { font-size: 16px; color: #555; margin-right: 2px; font-weight: normal; font-family: "Kaiti"; }
+            .attr-debuff { color: #f57f17 !important; background: rgba(245, 127, 23, 0.1); border: 1px solid rgba(245, 127, 23, 0.3); }
+            .attr-buff { color: #2e7d32 !important; background: rgba(46, 125, 50, 0.1); border: 1px solid rgba(46, 125, 50, 0.3); }
+
+            .combat-body { flex: 1; display: flex; overflow: hidden; border-top: 1px solid #d4a76a; }
+            #combat_log_container_embed { flex: 1; background: #fffbf0; padding: 20px; overflow-y: auto; border-right: 2px solid #e0d0b0; will-change: scroll-position; }
+            #combat_logs_realtime { font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.6; color: #333; }
+            
+            /* 侧边栏布局 */
+            .combat-sidebar-split { width: 190px; background: #f8f1e0; display: flex; box-shadow: -4px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+            .sidebar-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px; }
+            .sidebar-divider { width: 1px; background: #d7ccc8; margin: 5px 0; }
+            .sidebar-title { font-size: 18px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; padding-bottom: 4px; margin-bottom: 8px; }
+            .sidebar-items-container { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; overflow-y: auto; }
+
+            /* 消耗品/技能 槽位样式 */
+            .c-slot-wrapper { width: 76px; height: 86px; background: #fff; border: 2px solid #d7ccc8; border-radius: 6px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
+            .c-slot-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa; border: 1px dashed #ddd; border-radius: 2px; overflow: hidden; position: relative; }
+            .c-icon { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; font-size: 26px; line-height: 1; transform: translateY(-2px); }
+            .c-name-label { font-size: 11px; color: #333; font-weight: bold; text-align: center; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+            .c-count { position: absolute; top: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #fff; font-size: 9px; padding: 0 3px; border-radius: 2px; }
+            .c-slot-empty { font-size: 12px; color: #ccc; }
+            .c-use-btn { width: 100%; font-size: 11px; padding: 2px 0; margin-top: 2px; }
+            .c-use-btn:disabled { background: #e0e0e0; color: #aaa; border-color: #ccc; cursor: not-allowed; }
+            .c-cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #333; z-index: 5; cursor: not-allowed; }
+            
+            /* 给动画重命名，防止与其他模块冲突 */
+            @keyframes combat-liquid-move { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
+            @keyframes combat-float { 0% {transform: translateY(0px);} 50% {transform: translateY(-6px);} 100% {transform: translateY(0px);} }
+        `;
+
+        const styleEl = document.createElement('style');
+        styleEl.id = 'style-ui-combat-modal';
+        styleEl.textContent = cssContent;
+        document.head.appendChild(styleEl);
+
+        this._isStyleInjected = true;
+        //console.log("战斗UI样式已注入 (单例)");
+    },
+
     _patchEnemyData: function(enemy) {
-        // 尝试从 ENEMY_TEMPLATES 读取穿甲值
         if (enemy.basePen === undefined) {
             const tmplKey = enemy.template || "minion";
             if (typeof ENEMY_TEMPLATES !== 'undefined' && ENEMY_TEMPLATES[tmplKey]) {
@@ -16,7 +86,6 @@ const UICombatModal = {
 
         if (enemy.toxAtk === undefined) {
             const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
-
             if (db && db.length > 0) {
                 const template = db.find(e => e.id === enemy.id);
                 if (template && template.stats && template.stats.toxicity) {
@@ -28,7 +97,6 @@ const UICombatModal = {
                     enemy.toxAtk = 0;
                     if (enemy.toxicity === undefined) enemy.toxicity = 0;
                 }
-                // 如果模板里有特定穿甲定义，也可以覆盖
                 if (template && template.basePen !== undefined) {
                     enemy.basePen = template.basePen;
                 }
@@ -40,6 +108,9 @@ const UICombatModal = {
     show: function(enemy) {
         if (!window.Combat || !window.UtilsModal) return;
 
+        // 1. 确保样式存在 (只执行一次)
+        this._injectStyles();
+
         this._patchEnemyData(enemy);
 
         if (window.recalcStats) window.recalcStats();
@@ -48,12 +119,11 @@ const UICombatModal = {
         const pName = window.player.name || "少侠";
         const currentPTox = window.player.toxicity || 0;
 
-        // 玩家属性
         const pStats = {
             hp: pDerived.hp,
             maxHp: pDerived.hpMax,
             mp: pDerived.mp || 0,
-            maxMp: pDerived.mpMax || 100, // 默认100防错
+            maxMp: pDerived.mpMax || 100,
             atk: pDerived.atk,
             def: pDerived.def,
             speed: pDerived.speed,
@@ -63,8 +133,6 @@ const UICombatModal = {
         const eName = enemy.name || "未知敌人";
         const currentETox = enemy.toxicity || 0;
 
-        // 【修改点2】修复怪物属性读取逻辑
-        // 优先读取 enemy.stats 中的属性，如果不存在则读取 enemy 根属性，最后默认为 0
         const eStats = {
             hp: (enemy.stats && enemy.stats.hp !== undefined) ? enemy.stats.hp : (enemy.hp || 0),
             maxHp: (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 0),
@@ -88,7 +156,7 @@ const UICombatModal = {
         const pToxPct = Math.min(100, currentPTox);
         const eToxPct = Math.min(100, currentETox);
 
-        // 【修改点3】移除原顶部的 speed-control-panel
+        // 【优化2】移除了 <style> 标签，纯净 HTML 结构
         const contentHtml = `
             <div class="combat-wrapper">
                 <div class="combat-header">
@@ -197,103 +265,25 @@ const UICombatModal = {
                     </div>
                 </div>
             </div>
-            
-            <style>
-                .combat-wrapper { display: flex; flex-direction: column; height: 100%; min-height: 550px; font-family: "Kaiti", serif; font-size: 20px; color: #333; position:relative; }
-                /* 移除了 speed-control-panel 的绝对定位样式 */
-                .combat-header { display: flex; justify-content: space-between; align-items: stretch; padding: 5px 10px; background: #fdfbf7; border-bottom: 3px double #8d6e63; flex-shrink: 0; gap: 5px; } /* 移除了 margin-top */
-                .fighter-card { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-                .fighter-top { display: flex; align-items: center; gap: 8px; }
-                .fighter-icon { font-size: 40px; animation: float 3s infinite; }
-                .fighter-info { display: flex; flex-direction: column; justify-content: center; }
-                .fighter-name { font-size: 22px; font-weight: bold; line-height: 1.1; }
-                .fighter-rank { font-size: 16px; font-weight: bold; padding: 1px 5px; border-radius: 4px; }
-                .player-rank { background: #1976d2; color: #fff; }
-                .vs-divider { font-size: 32px; font-weight: bold; color: #a94442; align-self: center; width: 40px; text-align: center; }
-                .stats-panel { background: rgba(0,0,0,0.03); padding: 6px 8px; border-radius: 8px; border: 1px solid #e0e0e0; }
-                .bar-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
-                .mp-row { margin-bottom: 6px; }
-                .hp-bar-container { flex: 1; display: flex; align-items: center; gap: 5px; }
-                .bar-label { font-size: 20px; color: #d32f2f; font-weight: bold; width: 24px; text-align: center; }
-                .hp-bar-bg { flex: 1; height: 18px; background: #ddd; border: 2px solid #bbb; border-radius: 9px; overflow: hidden; position: relative; }
-                .hp-bar-fill { height: 100%; width: 100%; background: linear-gradient(45deg, #e53935 25%, #ef5350 25%, #ef5350 50%, #e53935 50%, #e53935 75%, #ef5350 75%, #ef5350); background-size: 40px 40px; animation: liquid-move 2s linear infinite; transition: width 0.4s ease-out; }
-                .hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; z-index: 2; line-height:1; }
-                .tox-bar-container { width: 100px; display: flex; align-items: center; gap: 4px; }
-                .tox-label { font-size: 18px; color: #9c27b0; font-weight: bold; }
-                .tox-bar-bg { flex: 1; height: 10px; background: #eee; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
-                .tox-bar-fill { height: 100%; background: #9c27b0; width: 0%; transition: width 0.3s; }
-                .tox-val { font-size: 14px; color: #666; width: 30px; text-align: right; }
-                
-                .attr-row { display: flex; justify-content: space-around; font-size: 18px; font-weight: bold; font-family: Arial, sans-serif; }
-                .attr-item { display: flex; align-items: center; gap: 4px; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; position: relative; cursor: help; }
-                .attr-text { font-size: 16px; color: #555; margin-right: 2px; font-weight: normal; font-family: "Kaiti"; }
-                /* 状态颜色样式 */
-                .attr-debuff { color: #f57f17 !important; background: rgba(245, 127, 23, 0.1); border: 1px solid rgba(245, 127, 23, 0.3); }
-                .attr-buff { color: #2e7d32 !important; background: rgba(46, 125, 50, 0.1); border: 1px solid rgba(46, 125, 50, 0.3); }
-
-                .combat-body { flex: 1; display: flex; overflow: hidden; border-top: 1px solid #d4a76a; }
-                #combat_log_container_embed { flex: 1; background: #fffbf0; padding: 20px; overflow-y: auto; border-right: 2px solid #e0d0b0; }
-                #combat_logs_realtime { font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.6; color: #333; }
-                
-                /* 侧边栏布局 */
-                .combat-sidebar-split { width: 190px; background: #f8f1e0; display: flex; box-shadow: -4px 0 10px rgba(0,0,0,0.05); z-index: 10; }
-                .sidebar-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px; }
-                .sidebar-divider { width: 1px; background: #d7ccc8; margin: 5px 0; }
-                .sidebar-title { font-size: 18px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; padding-bottom: 4px; margin-bottom: 8px; }
-                .sidebar-items-container { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; overflow-y: auto; }
-
-                /* 消耗品/技能 槽位样式 */
-                .c-slot-wrapper { 
-                    width: 76px; height: 86px; 
-                    background: #fff; border: 2px solid #d7ccc8; border-radius: 6px; padding: 3px; 
-                    display: flex; flex-direction: column; justify-content: space-between; 
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; 
-                }
-                .c-slot-box { 
-                    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-                    background: #fafafa; border: 1px dashed #ddd; border-radius: 2px; overflow: hidden; position: relative; 
-                }
-                .c-icon { 
-                    display: flex; justify-content: center; align-items: center; 
-                    width: 100%; height: 100%;
-                    font-size: 26px; line-height: 1; 
-                    transform: translateY(-2px);
-                }
-                .c-name-label {
-                    font-size: 11px; color: #333; font-weight: bold; text-align: center;
-                    margin-top: 1px;
-                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                    width: 100%;
-                }
-                .c-count { position: absolute; top: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #fff; font-size: 9px; padding: 0 3px; border-radius: 2px; }
-                .c-slot-empty { font-size: 12px; color: #ccc; }
-                .c-use-btn { width: 100%; font-size: 11px; padding: 2px 0; margin-top: 2px; }
-                .c-use-btn:disabled { background: #e0e0e0; color: #aaa; border-color: #ccc; cursor: not-allowed; }
-                .c-cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #333; z-index: 5; cursor: not-allowed; }
-                
-                /* Tooltip 样式 - 使用全局 TooltipManager 后已移除 c-item-tooltip 样式，防止冲突 */
-                
-                /* Log Tooltips (保持原有) */
-                .combat-tooltip-content { visibility: hidden; opacity: 0; position: absolute; left: 100%; top: -10px; margin-left: 12px; bottom: auto; transform: none; box-sizing: border-box !important; width: 210px !important; height: fit-content !important; min-height: 0 !important; display: block !important; background-color: rgba(0, 0, 0, 0.95) !important; color: #fff !important; padding: 8px 10px !important; border-radius: 5px; border: 1px solid #666; z-index: 999999; box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: none; text-align: left; line-height: 1.5 !important; white-space: normal !important; }
-                .combat-tooltip-content::after { content: ""; position: absolute; top: 15px; right: 100%; border-width: 6px; border-style: solid; border-color: transparent rgba(0, 0, 0, 0.95) transparent transparent; }
-                .combat-tooltip-content .tip-row { margin-bottom: 3px; }
-                .combat-tooltip-content .tip-divider { margin: 6px 0; border-top: 1px solid #555; }
-                
-                @keyframes liquid-move { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
-                @keyframes float { 0% {transform: translateY(0px);} 50% {transform: translateY(-6px);} 100% {transform: translateY(0px);} }
-            </style>
         `;
 
-        const combatCallbackName = 'cb_start_combat_' + Date.now();
-        const escapeCallbackName = 'cb_stop_combat_' + Date.now();
-        const pauseCallbackName = 'cb_pause_combat_' + Date.now();
+        const ts = Date.now();
+        const combatCallbackName = 'cb_start_' + ts;
+        const escapeCallbackName = 'cb_stop_' + ts;
+        const pauseCallbackName = 'cb_pause_' + ts;
+        const speedCallbackName = 'cb_spd_' + ts; // 缩短函数名
 
-        window[escapeCallbackName] = () => {
-            if (window.Combat && window.Combat.stop) window.Combat.stop();
-        };
+        // 绑定临时全局函数
+        window[escapeCallbackName] = () => { if (window.Combat && window.Combat.stop) window.Combat.stop(); };
+        window[pauseCallbackName] = () => { if (window.Combat && window.Combat.togglePause) window.Combat.togglePause(); };
+        window[speedCallbackName] = (delta) => { if (window.Combat && window.Combat.changeSpeed) window.Combat.changeSpeed(delta); };
 
-        window[pauseCallbackName] = () => {
-            if (window.Combat && window.Combat.togglePause) window.Combat.togglePause();
+        // 统一清理函数：确保窗口关闭时删除这些临时属性
+        const cleanCallbacks = () => {
+            delete window[combatCallbackName];
+            delete window[escapeCallbackName];
+            delete window[pauseCallbackName];
+            delete window[speedCallbackName];
         };
 
         window[combatCallbackName] = () => {
@@ -304,12 +294,11 @@ const UICombatModal = {
 
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
-                // 【修改点4】战斗开始后，在底部更新按钮，加入速度控制
                 footerDiv.innerHTML = `
                     <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="Combat.changeSpeed(-500)">⏫</button>
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="window['${speedCallbackName}'](-500)">⏫</button>
                         <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="Combat.changeSpeed(500)">⏬</button>
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="window['${speedCallbackName}'](500)">⏬</button>
                     </div>
                     <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCallbackName}']()">
                         ⏸ 暂停
@@ -318,21 +307,19 @@ const UICombatModal = {
                         🏃 拼死逃跑
                     </button>
                 `;
-
-                // 初始化速度显示
+                // 初始化速度文本
                 setTimeout(() => {
                     const spdEl = document.getElementById('combat_speed_display');
-                    if(spdEl && window.Combat) spdEl.innerText = (1000 / Combat.turnSpeed).toFixed(1) + "x";
+                    if(spdEl && window.Combat && window.Combat.turnSpeed) {
+                        spdEl.innerText = (1000 / window.Combat.turnSpeed).toFixed(1) + "x";
+                    }
                 }, 0);
             }
 
             Combat.start(enemy, () => {
-                // 【核心修复】战斗胜利回调：通知悬赏榜检查击杀进度
                 if (window.BountyBoard && window.BountyBoard.onEnemyKilled) {
-                    // enemy.id 是当前击杀的怪物ID，例如 'enemy_wolf_id'
                     window.BountyBoard.onEnemyKilled(enemy.id);
                 }
-
                 if (window.GlobalEnemies) {
                     window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
                 }
@@ -343,15 +330,27 @@ const UICombatModal = {
                 }
 
                 if (footerDiv) footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
+
+                // 战斗结束清理回调（虽然关闭模态框时也会清理，但双重保险）
+                cleanCallbacks();
             }, 'combat_logs_realtime');
         };
 
         const footerHtml = `
             <div id="map_combat_footer" style="display:flex; justify-content:space-between; width:100%; gap:15px;">
-                <button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal(); delete window['${combatCallbackName}']; delete window['${escapeCallbackName}']; delete window['${pauseCallbackName}']">🏃 撤退</button>
+                <button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal()">🏃 撤退</button>
                 <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${combatCallbackName}']()">⚔️ 拔剑迎敌</button>
             </div>
         `;
+
+        // 传入 onClose 回调 (UtilsModal 需要支持第7个参数或修改 showInteractiveModal 逻辑，这里假设通过全局监听或后续清理)
+        // 简单处理：给 Modal 关闭事件挂个钩子（如果 UtilsModal 没提供，可以在这里手动 hack 一个）
+        const originalClose = window.closeModal;
+        window.closeModal = function() {
+            if (originalClose) originalClose();
+            cleanCallbacks(); // 只要关窗就清理垃圾
+            window.closeModal = originalClose; // 还原
+        };
 
         UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, null);
 
@@ -359,7 +358,6 @@ const UICombatModal = {
     },
 
     updateSidebar: function() {
-        // 更新丹药栏
         const consContainer = document.getElementById('sidebar_consumables');
         if (consContainer) {
             let html = '';
@@ -368,7 +366,6 @@ const UICombatModal = {
                 let inner = '';
                 let btnClassAdd = 'empty-slot-btn';
                 let onclick = '';
-                // 使用全局 TooltipManager
                 let tooltipEvents = '';
 
                 if (itemId) {
@@ -377,7 +374,6 @@ const UICombatModal = {
                     if (item) {
                         let icon = item.icon || '💊';
                         if (window.getItemIcon) icon = getItemIcon(item);
-                        // Tooltip 事件
                         tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${itemId}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
 
                         inner = `
@@ -404,11 +400,9 @@ const UICombatModal = {
             consContainer.innerHTML = html;
         }
 
-        // 更新功法栏 (主动技能)
         const skillContainer = document.getElementById('sidebar_skills');
         if (skillContainer) {
             let html = '';
-            // 获取装备的主动功法
             const activeSkills = [];
             if (player.equipment && player.equipment.gongfa) {
                 player.equipment.gongfa.forEach(id => {
@@ -427,7 +421,6 @@ const UICombatModal = {
                     const book = entry.data;
                     const action = book.action;
                     const icon = book.icon || '📘';
-                    // Tooltip 事件
                     const tooltipEvents = `onmouseenter="TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
                     const onclick = `Combat.useSkill('${entry.id}', ${idx})`;
 
@@ -453,9 +446,7 @@ const UICombatModal = {
         if (!player || !player.inventory) return 0;
         const slot = player.inventory.find(i => i &&  i.id === itemId);
         return slot ? slot.count : 0;
-    },
-
-    // 移除废弃的 _generateItemTooltip 和 _generateSkillTooltip 函数
+    }
 };
 
 window.UICombatModal = UICombatModal;
