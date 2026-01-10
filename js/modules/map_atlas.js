@@ -53,14 +53,14 @@ const MapAtlas = {
             gridBig: "rgba(255, 255, 255, 0.06)",
 
             // 夜间地形：通透感
-            road: "rgba(180, 160, 150, 0.15)",
+            road: "rgba(180, 160, 150, 0.8)",
             river: "rgba(140, 158, 255, 0.2)",
             mountainBg: "rgba(0, 0, 0, 0.2)",
             grass: "rgba(129, 199, 132, 0.15)",
             desert: "rgba(255, 202, 40, 0.1)",
             ocean: "rgba(68, 138, 255, 0.2)",
 
-            townBg: "rgba(236, 240, 241, 0.15)",
+            townBg: "rgba(236, 240, 241, 0.3)",
             townBorder: "rgba(176, 190, 197, 0.3)",
             textMain: "#eceff1", textDim: "rgba(176, 190, 197, 0.3)"
         }

@@ -43,14 +43,16 @@ const UtilsItem = {
      * 使用物品 (吃丹药/食物)
      * 【核心修复】实现恢复、永久加成、临时Buff
      */
+    /**
+     * 使用物品 (吃丹药/食物)
+     * 【核心修改】支持 studyEff 研读效率 Buff 及多属性复合 Buff
+     */
     useItem: function(inventoryIndex) {
         const itemSlot = player.inventory[inventoryIndex];
         if (!itemSlot) return;
 
         const item = GAME_DB.items.find(i => i.id === itemSlot.id);
         if (!item) return;
-
-        //console.log(`尝试使用物品: ${item.name}`);
 
         // 1. 类型检查
         if (item.type === 'book') {
@@ -68,81 +70,69 @@ const UtilsItem = {
         let msg = `使用了 ${item.name}`;
 
         if (item.effects) {
+            const eff = item.effects;
+
             // A. 基础恢复 (HP/MP/饱食度)
-            if (item.effects.hp) {
-                player.status.hp = Math.min(player.derived.hpMax, player.status.hp + item.effects.hp);
+            if (eff.hp) {
+                player.status.hp = Math.min(player.derived.hpMax, player.status.hp + eff.hp);
                 applied = true;
             }
-            if (item.effects.mp) {
-                player.status.mp = Math.min(player.derived.mpMax, player.status.mp + item.effects.mp);
+            if (eff.mp) {
+                player.status.mp = Math.min(player.derived.mpMax, player.status.mp + eff.mp);
                 applied = true;
             }
-            if (item.effects.hunger) {
-                player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + item.effects.hunger);
+            if (eff.hunger) {
+                player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + eff.hunger);
                 applied = true;
             }
 
             // B. 丹毒 (Toxicity)
-            if (item.effects.toxicity) {
-                // 确保 toxicity 存在
+            if (eff.toxicity) {
                 if(player.status.toxicity === undefined) player.status.toxicity = 0;
-                player.status.toxicity += item.effects.toxicity;
+                player.status.toxicity += eff.toxicity;
                 if(player.status.toxicity < 0) player.status.toxicity = 0;
                 applied = true;
             }
 
             // C. 永久属性加成 (exAttr)
-            // 遍历 effects，如果是 jing/qi/shen/atk/def 等属性，则视为永久加成
             const permAttrs = ['jing', 'qi', 'shen', 'atk', 'def', 'speed', 'hpMax', 'mpMax'];
             permAttrs.forEach(key => {
-                if (item.effects[key]) {
+                if (eff[key]) {
                     if (!player.exAttr) player.exAttr = {};
                     if (!player.exAttr[key]) player.exAttr[key] = 0;
-
-                    player.exAttr[key] += item.effects[key];
+                    player.exAttr[key] += eff[key];
                     applied = true;
-                    // msg += ` (${key}+${item.effects[key]})`;
                 }
             });
 
-            // D. 临时 Buff (buff)
-            // 假设数据结构: item.effects.buff = { attr: "atk", val: 10, days: 3 }
-            if (item.effects.buff) {
-                const b = item.effects.buff;
+            // D. 临时 Buff (buff) - 【核心逻辑修复】
+            if (eff.buff) {
+                const b = eff.buff;
                 if (b.attr && b.val && b.days) {
                     if (!player.buffs) player.buffs = {};
 
                     // 1. 准备基础数据结构
+                    // 这里存储原始的 attr 和 val 字符串，供后续解析（如 studyEff）
                     const newBuff = {
                         name: item.name,
                         days: b.days,
+                        attr: b.attr,
+                        val: b.val,
+                        isDebuff: false,
+                        desc: item.desc || ""
                     };
 
-                    // 2. 解析属性与数值（支持 "atk_def" 和 "6_6" 这种格式）
-                    const attrs = String(b.attr).split('_');
-                    const vals = String(b.val).split('_');
-
-                    // 将属性名和数值一一对应存入 effects
-                    attrs.forEach((attrName, index) => {
-                        // 如果数值数组里没有对应项，则取第一个数值或默认为0
-                        const value = vals[index] !== undefined ? vals[index] : 0;
-                        const attr=attrs[index]!== undefined ? vals[index] : 0;
-                        newBuff.attr = attr;
-                        newBuff.val = value;
-                    });
-
-                    // 3. 存储/覆盖 BUFF
-                    // 以物品ID作为 Key，确保同名 BUFF 刷新持续时间而不是无限叠加
+                    // 2. 存储/覆盖 BUFF
+                    // 使用 item.id 作为唯一 Key 确保同类丹药刷新时间
                     player.buffs[item.id] = newBuff;
 
                     applied = true;
-                    //console.log(`已应用BUFF [${item.name}]:`, newBuff.effects);
                 }
             }
         }
 
         // 3. 消耗物品
-        if (applied || item.type === 'food') { // 食物即使没加属性也算吃掉了
+        if (applied || item.type === 'food') {
             itemSlot.count--;
             if (itemSlot.count <= 0) {
                 player.inventory.splice(inventoryIndex, 1);
@@ -150,15 +140,12 @@ const UtilsItem = {
 
             if (window.showToast) window.showToast(msg);
 
-            // 4. 刷新系统
+            // 4. 刷新状态
             if (window.recalcStats) window.recalcStats();
             this._refreshAllUI();
 
-            // 5. 【关键】自动保存 (防止刷新丢失 Buff)
-            if (window.saveGame) {
-                window.saveGame();
-                //console.log("[UtilsItem] 物品使用完毕，已存档");
-            }
+            // 5. 自动保存
+            if (window.saveGame) window.saveGame();
         } else {
             if (window.showToast) window.showToast("使用了，但似乎没什么效果");
         }

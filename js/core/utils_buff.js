@@ -3,6 +3,38 @@
 //console.log("加载 状态Buff系统");
 
 // 这是一个新函数，专门用来根据数值 赋予/移除 Buff
+
+// 在现有代码中添加濒死 BUFF ID 定义
+const NEAR_DEATH_BUFF_ID = "buff_near_death";
+
+/**
+ * 获取濒死 Buff 数据
+ */
+function getNearDeathBuff() {
+    return {
+        name: "濒死",
+        attr: "状态",
+        val: "重伤",
+        days: 7, // 持续7天
+        source: "战斗失败",
+        isDebuff: true,
+        desc: "你刚从鬼门关回来，身体极度虚弱。若在此期间再次重伤，恐有性命之忧。"
+    };
+}
+if (window.addBuff) {
+    window.addBuff("buff_near_death", {
+        name: "濒死",
+        attr: "状态",
+        val: "重伤",
+        days: 7,
+        source: "战斗失败",
+        isDebuff: true,
+        // 关键：详细描述会显示在悬浮窗中
+        desc: "你刚从鬼门关回来，身体极度虚弱。若在此期间再次战败，将直接导致肉身崩毁（死亡）。",
+        // 可选：为了让悬浮窗整齐，可以加一个空效果说明
+        effects: { "生存": "危" }
+    });
+}
 function checkStatusDebuffs() {
     if (!player || !player.buffs) return;
 

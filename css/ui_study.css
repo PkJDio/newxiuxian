@@ -1,0 +1,7 @@
+/* css/ui_tooltip.css 或其他样式文件 */
+.study_select_item:hover {
+    background-color: #fcf8e3 !important;
+    border-color: #795548 !important;
+    transform: translateX(5px);
+    transition: all 0.2s;
+}

@@ -318,32 +318,64 @@ const UIBag = {
         if (context.type === 'consumable') typeSuffix = '(已携带)';
 
         let statsRows = [];
+
+        // 1. 耐久度显示
         if (item.durability !== undefined) {
             statsRows.push(`<div style="color:#795548;">🛡 耐久: ${item.durability}</div>`);
         }
-        // --- 在此处插入锐利度显示逻辑 ---
+
+        // 2. 武器锐利度显示 (仅限武器类型)
         const sharpness = item.sharpness || (item.effects && item.effects.sharpness);
         if (sharpness !== undefined) {
-            // 计算百分比效果，方便玩家直观理解（对应你战斗系统中的抑制系数）
             const sharpEffectPct = Math.floor((1 - (100 / (100 + sharpness))) * 100);
             statsRows.push(`
-        <div style="color:#ff9800; display:flex; align-items:center; gap:5px;">
-            <span>✨ 锐利: ${sharpness}</span>
-            <span style="font-size:14px; color:#ffb74d;">(护甲穿透 +${sharpEffectPct}%)</span>
-        </div>
-    `);
-        }
-        if (item.type === 'book') {
-            const status = UtilsItem.getBookStatus(item.id);
-            statsRows.push(`<div>📚 状态: <span style="color:${status.color}">${status.text}</span></div>`);
+            <div style="color:#ff9800; display:flex; align-items:center; gap:5px;">
+                <span>✨ 锐利: ${sharpness}</span>
+                <span style="font-size:14px; color:#ffb74d;">(护甲穿透 +${sharpEffectPct}%)</span>
+            </div>
+        `);
         }
 
+        // 3. 功法研读进度显示 (支持跨世继承)
+        if (item.type === 'book') {
+            if (!player.studyProgress) player.studyProgress = {};
+            const curVal = player.studyProgress[item.id] || 0;
+            const maxVal = item.studyCost || 100;
+
+            // 判定是否已习得
+            // --- 【修复点】判定是否已习得：安全检查 skills 是否为数组 ---
+            const skillList = Array.isArray(player.skills) ? player.skills : [];
+            const isLearned = skillList.find(s => s.id === item.id);
+            // --------------------------------------------------------
+            let statusText = "未领悟";
+            let statusColor = "#999";
+
+            if (isLearned) {
+                statusText = "已领悟";
+                statusColor = "#2e7d32";
+            } else if (curVal > 0) {
+                const pct = Math.floor((curVal / maxVal) * 100);
+                statusText = `研读中 (${pct}%)`;
+                statusColor = "#f57f17";
+            }
+
+            statsRows.push(`
+            <div style="border-top:1px dashed #ddd; margin-top:10px; padding-top:10px;">
+                <div>📚 状态: <span style="color:${statusColor}">${statusText}</span></div>
+                <div style="font-size:14px; color:#666; margin-top:4px;">
+                    累计研读: <span style="color:#795548">${curVal}</span> / <span style="color:#333">${maxVal}</span>
+                </div>
+            </div>
+        `);
+        }
+
+        // 4. 基础属性效果显示
         const effects = item.effects || item.stats || item.param;
         if (effects) {
             for (let key in effects) {
                 const val = effects[key];
-                if (!val && val !== 0) continue;
-                // 在 renderDetail 的 effects 遍历中修改对象处理部分
+                if (!val && val !== 0 || key === 'sharpness') continue; // 跳过锐利度，上面已单独处理
+
                 if (typeof val === 'object') {
                     if (val.attr && val.val) {
                         const buffAttrs = String(val.attr).split('_');
@@ -352,24 +384,32 @@ const UIBag = {
 
                         buffAttrs.forEach((attrKey, bIdx) => {
                             const name = mapping[attrKey] || attrKey;
-                            const currentVal = buffVals[bIdx] !== undefined ? buffVals[bIdx] : buffVals[0];
-                            const sign = parseInt(currentVal) > 0 ? "+" : "";
-                            statsRows.push(`<div>🧪 临时${name}: <span style="color:#2196f3">${sign}${currentVal}</span> ${days}</div>`);
+                            let currentVal = buffVals[bIdx] !== undefined ? buffVals[bIdx] : buffVals[0];
+
+                            // --- 【核心修改点】 ---
+                            let displayVal = "";
+                            const sign = parseFloat(currentVal) > 0 ? "+" : "";
+
+                            if (attrKey === 'studyEff') {
+                                // 如果是研读效率，将 0.35 转换为 35%
+                                const pctVal = Math.round(parseFloat(currentVal) * 100);
+                                displayVal = `${sign}${pctVal}%`;
+                            } else {
+                                // 其他属性保持原样
+                                displayVal = `${sign}${currentVal}`;
+                            }
+                            // ----------------------
+
+                            statsRows.push(`<div>🧪 临时${name}: <span style="color:#2196f3">${displayVal}</span> ${days}</div>`);
                         });
                     }
                     continue;
                 }
+
                 const name = mapping[key] || key;
-                // 【修改开始】针对 toxicity 的特殊显示逻辑
                 if (key === 'toxicity') {
-                    if (val > 0) {
-                        // 正数：丹毒 (增加中毒值)
-                        statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
-                    } else {
-                        // 负数：解毒 (减少中毒值)
-                        // 用户要求显示 "解毒 -30" (或者你想要 "解毒 30"？通常显示数值变化保留符号比较清晰，这里按你要求的 "-30")
-                        statsRows.push(`<div>🌿 解毒: <span style="color:#4caf50">${val}</span></div>`);
-                    }
+                    if (val > 0) statsRows.push(`<div>☠️ 丹毒: <span style="color:#9c27b0">+${val}</span></div>`);
+                    else statsRows.push(`<div>🌿 解毒: <span style="color:#4caf50">${val}</span></div>`);
                 }
                 else if (key === 'hp' || key === 'mp') {
                     const isPositive = val > 0;
@@ -380,20 +420,21 @@ const UIBag = {
                 } else if (key === 'hunger') {
                     statsRows.push(`<div>🍖 ${name}: <span style="color:#4caf50">+${val}</span></div>`);
                 } else if (key === 'max_skill_level') {
-                    const limitName = UtilsItem.getSkillLimitName(val);
+                    const limitName = (typeof UtilsItem !== 'undefined' && UtilsItem.getSkillLimitName) ? UtilsItem.getSkillLimitName(val) : val;
                     statsRows.push(`<div>📈 ${name}: <span style="color:#ff9800">${limitName}</span></div>`);
                 } else {
-                    let icon = '✨';
-                    if(['atk','critRate','critDmg'].includes(key)) icon = '⚔️';
-                    if(['def','hpMax','dodge'].includes(key)) icon = '🛡';
-                    if(['speed'].includes(key)) icon = '👟';
+                    let p_icon = '✨';
+                    if(['atk','critRate','critDmg'].includes(key)) p_icon = '⚔️';
+                    if(['def','hpMax','dodge'].includes(key)) p_icon = '🛡';
+                    if(['speed'].includes(key)) p_icon = '👟';
                     const sign = val > 0 ? "+" : "";
                     const color = val > 0 ? '#4caf50' : '#f44336';
-                    statsRows.push(`<div>${icon} ${name}: <span style="color:${color}">${sign}${val}</span></div>`);
+                    statsRows.push(`<div>${p_icon} ${name}: <span style="color:${color}">${sign}${val}</span></div>`);
                 }
             }
         }
 
+        // 5. Buff 列表显示
         if (item.buffs && Array.isArray(item.buffs)) {
             item.buffs.forEach(buff => {
                 const name = mapping[buff.attr] || buff.attr;
@@ -407,6 +448,7 @@ const UIBag = {
             ? `<div class="bag_detail_stats" style="margin-top:10px; padding-bottom:10px; border-bottom:1px dashed #eee;">${statsRows.join('')}</div>`
             : '';
 
+        // 6. 穿戴条件显示
         let reqHtml = '';
         if (item.req) {
             let reqList = [];
@@ -417,9 +459,9 @@ const UIBag = {
                 const isMet = myVal >= reqVal;
                 const attrName = mapping[key] || key;
                 const color = isMet ? '#4caf50' : '#f44336';
-                const icon = isMet ? '✅' : '🚫';
+                const statusIcon = isMet ? '✅' : '🚫';
                 const text = isMet ? `已达标 (${reqVal})` : `需 ${reqVal} (当前 ${myVal})`;
-                reqList.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px; color:${isMet ? '#666' : '#d9534f'};"><span>${attrName}要求</span><span>${text} ${icon}</span></div>`);
+                reqList.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px; color:${isMet ? '#666' : '#d9534f'};"><span>${attrName}要求</span><span>${text} ${statusIcon}</span></div>`);
             }
             if (reqList.length > 0) {
                 reqHtml = `<div class="bag_detail_req" style="margin:10px 0; padding:8px; background:#fffbfb; border:1px dashed #e0e0e0; border-radius:4px;"><div style="font-weight:bold; color:#555; margin-bottom:5px; font-size:14px;">▼ 穿戴条件</div>${reqList.join('')}</div>`;
@@ -435,52 +477,43 @@ const UIBag = {
             priceHtml = `<div style="margin-top:15px; text-align:right; color:#d4af37; font-weight:bold;">💰 价值: ${price}</div>`;
         }
 
-        // === 按钮生成 ===
+        // 7. 按钮生成逻辑
         let btnsHtml = `<div class="bag_detail_actions">`;
 
-        // 1. 在背包中查看
         if (context.type === 'bag') {
             const idx = context.index;
+            // 装备按钮
             if (['weapon','head','body','feet','mount','fishing_rod','tool'].includes(item.type)) {
                 btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
             }
-
-            // 在 renderDetail 函数内部，找到 pill 类型判断的位置并替换为：
+            // 丹药/快捷栏按钮
             else if (item.type === 'pill') {
-                // 检查是否在快捷栏中，并获取其索引
                 const carriedIndex = window.player.consumables ? window.player.consumables.indexOf(item.id) : -1;
-
                 if (carriedIndex !== -1) {
-                    // 如果已携带，直接显示“解除携带”按钮，并传入快捷栏索引
                     btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${carriedIndex})">解除携带</button>`;
                 } else {
-                    // 如果未携带，显示“随身携带”按钮
                     btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${item.id}')">随身携带</button>`;
                 }
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">服用</button>`;
             }
-
-            else if (['food','book','foodMaterial','herb'].includes(item.type)) {
-                const btnName = item.type === 'book' ? '研读' : '使用';
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">${btnName}</button>`;
+            // 书籍研读按钮 (修改：绑定锁定研读目标逻辑)
+            else if (item.type === 'book') {
+                btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open('${item.id}')">研读</button>`;
+            }
+            // 其他消耗品
+            else if (['food','foodMaterial','herb'].includes(item.type)) {
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">使用</button>`;
             }
             btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.discardItem(${idx})">丢弃</button>`;
         }
-
-        // 2. 在装备栏中查看
         else if (context.type === 'equip') {
             const slotKey = context.key;
             btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleUnequipAction('${slotKey}')">卸下</button>`;
             btnsHtml += `<button class="bag_btn_danger" onclick="UIBag.discardEquippedItem('${slotKey}')">丢弃</button>`;
         }
-
-        // 3. 【新增】在消耗品栏中查看
         else if (context.type === 'consumable') {
             const slotIdx = context.index;
-            // 解除携带
             btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${slotIdx})">解除携带</button>`;
-
-            // 尝试添加“服用”按钮 (需找到背包索引)
             const bagIdx = player.inventory.findIndex(s => s.id === item.id);
             if (bagIdx !== -1) {
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${bagIdx})">服用</button>`;
@@ -490,16 +523,16 @@ const UIBag = {
         btnsHtml += `</div>`;
 
         container.innerHTML = `
-            <div class="bag_detail_header" style="color:${rarityInfo.color};">
-                <span>${icon} ${item.name}</span>
-                <span class="ink_tag" style="font-size:14px;">${rarityInfo.name}</span>
-            </div>
-            <div class="bag_detail_type">${typeName} ${typeSuffix}</div>
-            ${statsHtml}
-            ${reqHtml}  ${descHtml}
-            ${priceHtml}
-            ${btnsHtml}
-        `;
+        <div class="bag_detail_header" style="color:${rarityInfo.color};">
+            <span>${icon} ${item.name}</span>
+            <span class="ink_tag" style="font-size:14px;">${rarityInfo.name}</span>
+        </div>
+        <div class="bag_detail_type">${typeName} ${typeSuffix}</div>
+        ${statsHtml}
+        ${reqHtml}  ${descHtml}
+        ${priceHtml}
+        ${btnsHtml}
+    `;
     },
 
     // === 功能函数 ===
@@ -613,3 +646,11 @@ const UIBag = {
 
 window.refreshBagUI = () => UIBag.refresh();
 function openBag() { UIBag.open(); }
+
+// 对应的新增逻辑
+UIBag.lockStudyTarget = function(bookId) {
+    const item = window.GAME_DB.items.find(i => i.id === bookId);
+    window.player.currentStudyTarget = bookId;
+    if (window.showToast) window.showToast(`已将《${item.name}》设为当前研读目标，请回主界面执行操作。`);
+    window.closeModal(); // 关闭背包
+}

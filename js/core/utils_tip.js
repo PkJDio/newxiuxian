@@ -18,14 +18,7 @@ const TooltipManager = {
         "liaodong": "辽东雪原", "xiyu": "西域大漠", "nanman": "南蛮丛林", "lingnan": "岭南山越"
     },
 
-    // 属性名称映射
-    _attrMap: {
-        "atk": "攻击力", "def": "防御力", "speed": "速度",
-        "hp": "生命", "hpMax": "生命上限", "hp_max": "生命上限",
-        "mp": "内力", "mpMax": "内力上限", "mp_max": "内力上限",
-        "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
-        "toxicity": "丹毒"
-    },
+
 
     _init: function() {
         if (!this.el) {
@@ -108,26 +101,65 @@ const TooltipManager = {
     },
 
     /* ================= 1. 状态栏属性详情 ================= */
-    showStatus: function(e, key, label) {
+    showStatus: function(arg1, arg2, arg3) {
         this._init();
-        // 记录当前鼠标位置，防止 _show 时坐标未定义
+        if (!this.el) return;
+
+        let id, e, label;
+        if (arg1 instanceof Event || (arg1 && arg1.pageX !== undefined)) {
+            e = arg1; id = arg2; label = arg3;
+        } else {
+            id = arg1; e = arg2; label = null;
+        }
+
+        if (!id || !e) return;
         this._mouseX = e.clientX;
         this._mouseY = e.clientY;
 
-        const breakdown = window.player && window.player.statBreakdown ? window.player.statBreakdown[key] : [];
-        let html = `<div class="tt_title">${label}详情</div>`;
-        let hasContent = false;
+        let html = '';
 
-        if (breakdown && breakdown.length > 0) {
-            breakdown.forEach(b => {
-                if (b.val === 0) return;
-                const valStr = b.val > 0 ? `+${b.val}` : `${b.val}`;
-                const colorClass = b.val > 0 ? 'tt_pos' : 'tt_neg';
-                let extraHtml = '';
-                if (b.days) {
-                    extraHtml = `<span style="font-size:12px; color:#888; margin-left:4px;">(${b.days}天)</span>`;
-                }
-                html += `
+        if (window.player && player.buffs && player.buffs[id]) {
+            const b = player.buffs[id];
+            const color = b.isDebuff ? "#ff4444" : "#44ff44";
+
+            // --- 【核心修改：支持百分比显示】 ---
+            let displayVal = b.val;
+            if (b.attr === 'studyEff') {
+                const pct = Math.round(parseFloat(b.val) * 100);
+                displayVal = (pct > 0 ? "+" : "") + pct + "%";
+            }
+            // ------------------------------------
+
+            html = `
+            <div class="tt_title" style="color:${color}; font-weight:bold;">${b.name}</div>
+            <div class="tt_row">
+                <span>剩余时间</span>
+                <span style="color:#fff;">${b.days} 天</span>
+            </div>
+            <div class="tt_row">
+                <span>当前影响</span>
+                <span style="color:${color};">${ATTR_MAPPING[b.attr] || b.attr} ${displayVal}</span>
+            </div>
+            <div class="tt_desc" style="margin-top:8px; border-top:1px dashed #555; padding-top:4px; font-style:italic; color:#aaa;">
+                ${b.desc || "暂无描述"}
+            </div>`;
+        }
+        // --- 原有逻辑：属性加成详情 (statBreakdown) ---
+        else {
+            const breakdown = window.player && window.player.statBreakdown ? window.player.statBreakdown[id] : [];
+            html = `<div class="tt_title">${label || id}详情</div>`;
+            let hasContent = false;
+
+            if (breakdown && breakdown.length > 0) {
+                breakdown.forEach(b => {
+                    if (b.val === 0) return;
+                    const valStr = b.val > 0 ? `+${b.val}` : `${b.val}`;
+                    const colorClass = b.val > 0 ? 'tt_pos' : 'tt_neg';
+                    let extraHtml = '';
+                    if (b.days) {
+                        extraHtml = `<span style="font-size:12px; color:#888; margin-left:4px;">(${b.days}天)</span>`;
+                    }
+                    html += `
                   <div class="tt_row">
                     <span>${b.label}</span>
                     <div>
@@ -135,19 +167,19 @@ const TooltipManager = {
                         ${extraHtml}
                     </div>
                   </div>`;
-                hasContent = true;
-            });
-        }
+                    hasContent = true;
+                });
+            }
 
-        if (!hasContent) {
-            html += `<div class="tt_desc">暂无加成来源</div>`;
+            if (!hasContent) {
+                html += `<div class="tt_desc">暂无加成来源</div>`;
+            }
         }
 
         this.el.className = 'ink_tooltip';
         this.el.innerHTML = html;
-        this._show();
+        this._show(); // 内部会调用 _updatePosition 处理边界检测
     },
-
     /* ================= 2. 普通物品 (背包/地图) ================= */
     showItem: function(e, itemId, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, itemId); return; }
@@ -186,7 +218,7 @@ const TooltipManager = {
                     const buffVals = String(val.val).split('_');
                     let buffDetailsHtml = "";
                     buffAttrs.forEach((attrKey, index) => {
-                        const attrLabel = this._attrMap[attrKey] || attrKey;
+                        const attrLabel = ATTR_MAPPING[attrKey] || attrKey;
                         const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
                         const displayVal = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
 
@@ -216,7 +248,7 @@ const TooltipManager = {
 
                 if (typeof val === 'number' && val !== 0) {
                     if (k === 'max_skill_level') continue;
-                    let label = this._attrMap[k] || k;
+                    let label = ATTR_MAPPING[k] || k;
                     let c = '#fff';
                     if (k === 'hp') c = '#4caf50';
                     else if (k === 'mp') c = '#2196f3';

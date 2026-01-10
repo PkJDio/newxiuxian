@@ -831,17 +831,32 @@ const Combat = {
     },
 
     _handleDefeat: function() {
+        console.log("[Combat] 触发 _handleDefeat 逻辑");
         this.isEnded = true;
         this._log(`<div style="color:red; font-weight:bold; margin-top:10px;">💀 战斗失败...</div>`);
-        this._log("你重伤昏迷，被路人救回了最近的城镇。");
+
+        // 恢复基础状态
         if (window.player && window.player.status) {
             window.player.status.hp = 1;
             window.player.status.mp = 0;
+            console.log("[Combat] 玩家 HP/MP 已重置为 1/0");
         }
-        if (window.saveGame) window.saveGame();
+
+        // --- 调用失败处理中心 ---
+        if (window.UtilsFail && window.UtilsFail.onCombatDefeat) {
+            console.log("[Combat] 正在调用 UtilsFail.onCombatDefeat...");
+            window.UtilsFail.onCombatDefeat(this.enemy);
+        } else {
+            console.error("[Combat] 找不到 UtilsFail 模块，请检查脚本引入顺序！");
+        }
+        // ----------------------
+
         this._renderEnd("失败");
+
         const footer = document.getElementById('map_combat_footer');
-        if (footer) footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">黯然离去</button>`;
+        if (footer) {
+            footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">黯然离去</button>`;
+        }
     },
     // 【新增】检查悬赏任务额外掉落
     _checkBountyDrops: function() {

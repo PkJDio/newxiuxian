@@ -9,7 +9,7 @@ const ArchiveSystem = {
     // 【配置】当前游戏版本号 (格式 X.Y)
     // X (大版本): 变动时会清空存档
     // Y (小版本): 变动时兼容旧存档
-    CURRENT_VERSION: "1.0",
+    CURRENT_VERSION: "4.0",
 
     /**
      * 获取存档键

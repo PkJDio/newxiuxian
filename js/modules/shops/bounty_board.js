@@ -28,6 +28,7 @@ const BountyBoard = {
 
     enter: function(town) {
         this._initData();
+        this.checkAllTasksStatus(); // 进场时也检查一遍
         this.currentTown = town;
         if (player.bounty.prosperity[town.id] === undefined) {
             player.bounty.prosperity[town.id] = 0;
@@ -142,8 +143,36 @@ const BountyBoard = {
             }
         });
     },
+    /**
+     * 【新增/修改】检查所有正在进行中的任务状态
+     * 可以在不打开 UI 的情况下被调用
+     */
+    /**
+     * 【公共接口】检查任务是否过期，由 TimeSystem 跨天时自动调用
+     */
+    checkAllTasksStatus: function() {
+        if (!player || !player.bounty || !player.bounty.activeTasks) return;
 
-    _getDateValue: function(t) { return t.year * 360 + t.month * 30 + t.day; },
+        const curTimeVal = this._getDateValue(player.time);
+        let hasFailed = false;
+
+        player.bounty.activeTasks.forEach(task => {
+            if (task.status === 'active') {
+                const deadlineVal = this._getDateValue(task.deadline);
+                if (curTimeVal > deadlineVal) {
+                    task.status = 'failed';
+                    hasFailed = true;
+                    if(window.showToast) window.showToast(`任务《${task.title}》已过期失效`);
+                }
+            }
+        });
+
+        if (hasFailed && window.saveGame) window.saveGame();
+    },
+
+    _getDateValue: function(t) {
+        return (Number(t.year)||0) * 360 + (Number(t.month)||0) * 30 + (Number(t.day)||0);
+    },
 
     // ================= UI 渲染 =================
     renderUI: function() {

@@ -85,41 +85,37 @@ function updateUI() {
  * 【新增】自定义 Buff 悬浮窗显示函数
  * 用于显示系统自带的 Buff（如疲劳、剧毒），因为它们没有物品 ID
  */
-function showLocalBuffTooltip(e, buffData) {
-    if (!window.UtilsTip || !window.UtilsTip.showTooltip) return;
+/**
+ * 修改：接收 buffId，确保能准确找到数据并显示描述
+ */
+function showLocalBuffTooltip(e, buffId) {
+    if (!buffId) return;
 
-    // 构建提示内容
-    const color = buffData.isDebuff ? "#ff5252" : "#69f0ae";
-    let html = `<div style="padding:4px;">`;
-    html += `<div style="font-weight:bold; color:${color}; font-size:14px; margin-bottom:4px;">${buffData.name}</div>`;
-    html += `<div style="font-size:12px; color:#ccc;">剩余时间: <span style="color:#fff">${buffData.days}</span> 天</div>`;
-    html += `<div style="margin-top:4px; font-size:12px;">影响: <span style="color:${color}">${buffData.attr} ${buffData.val}</span></div>`;
-
-    if (buffData.desc) {
-        html += `<div style="margin-top:6px; font-size:12px; color:#aaa; font-style:italic; border-top:1px dashed #555; padding-top:4px;">${buffData.desc}</div>`;
-    }
-    html += `</div>`;
-
-    // 调用通用的显示函数 (假设 UtilsTip.showTooltip 接受 HTML 内容)
-    // 如果 UtilsTip 没有暴露，我们尝试直接调用全局挂载的
-    if (window.showSimpleTooltip) {
-        window.showSimpleTooltip(e, html);
-    } else if (window.showTooltipContent) { // 兼容旧版
-        window.showTooltipContent(e, html);
+    // 优先调用 utils_tip.js 挂载的全局函数
+    // 注意：TooltipManager.showStatus 的参数顺序是 (buffId, e)
+    if (window.showStatusTooltip) {
+        window.showStatusTooltip(buffId, e);
     } else {
-        // 兜底：直接构建一个临时的
-        const tooltip = document.getElementById('tooltip') || document.createElement('div');
-        tooltip.id = 'tooltip';
-        tooltip.innerHTML = html;
-        tooltip.style.display = 'block';
-        tooltip.style.left = e.pageX + 10 + 'px';
-        tooltip.style.top = e.pageY + 10 + 'px';
-        if(!document.getElementById('tooltip')) document.body.appendChild(tooltip);
+        // 兜底逻辑：如果全局函数失效，尝试直接访问管理对象
+        if (window.TooltipManager && window.player.buffs[buffId]) {
+            window.TooltipManager.showStatus(buffId, e);
+        }
     }
 }
-
 /**
  * 渲染状态栏的所有加成项
+ */
+/**
+ * 渲染状态栏的所有加成项
+ * 支持显示装备、功法、临时Buff（包括濒死、疲惫等）、永久属性和轮回底蕴
+ */
+/**
+ * 渲染状态栏的所有加成项
+ * 修复：统一事件绑定参数顺序，确保 Tooltip 触发
+ */
+/**
+ * 渲染状态栏的所有加成项
+ * 修复：统一百分比显示逻辑，将 studyEff 的 0.35 转换为 35%
  */
 function renderBuffs() {
     const containerId = 'buff_list';
@@ -127,24 +123,25 @@ function renderBuffs() {
     if (!container) return;
 
     container.innerHTML = '';
-
-    // 强制样式
-    container.style.display = 'block';
-    container.style.marginTop = '10px';
-    container.style.maxHeight = '250px';
-    container.style.overflowY = 'auto';
-    container.style.overflowX = 'hidden';
-    container.style.paddingRight = '5px';
-    container.style.borderTop = '1px solid rgba(0,0,0,0.1)';
-    container.style.paddingTop = '5px';
-
     const entries = [];
 
-    // 辅助函数：添加条目
-    const addEntry = (sourceName, attrKey, val, colorHex, itemId = null, customBuffData = null) => {
+    // --- 修改后的 addEntry 函数 ---
+    const addEntry = (sourceName, attrKey, val, colorHex, itemId = null, customBuffData = null, buffId = null) => {
         if (!val || val === 0) return;
+
+        // 1. 获取属性名称映射
         const attrName = (window.ATTR_MAPPING && window.ATTR_MAPPING[attrKey]) ? window.ATTR_MAPPING[attrKey] : attrKey;
-        const valStr = val > 0 ? `+${val}` : `${val}`;
+
+        // 2. 【核心修改】数值格式化逻辑
+        let valStr = "";
+        if (attrKey === 'studyEff') {
+            // 将 0.35 转换为 35%
+            const pct = Math.round(parseFloat(val) * 100);
+            valStr = (pct > 0 ? "+" : "") + pct + "%";
+        } else {
+            // 普通属性保持原样
+            valStr = val > 0 ? `+${val}` : `${val}`;
+        }
 
         entries.push({
             source: sourceName,
@@ -152,7 +149,8 @@ function renderBuffs() {
             val: valStr,
             color: colorHex,
             itemId: itemId,
-            buffData: customBuffData // 【新增】携带原始Buff数据
+            buffData: customBuffData,
+            buffId: buffId
         });
     };
 
@@ -166,85 +164,42 @@ function renderBuffs() {
                 if (item) {
                     const stats = item.stats || item.effects || {};
                     for (let key in stats) {
-                        if (typeof stats[key] === 'number') {
-                            addEntry(item.name, key, stats[key], '#2196f3', itemId);
-                        }
+                        if (typeof stats[key] === 'number') addEntry(item.name, key, stats[key], '#2196f3', itemId);
                     }
                 }
             }
         });
     }
 
-    // 2. 功法
-    ['gongfa_ext', 'gongfa_int'].forEach(type => {
-        const list = player.equipment[type];
+    // 2. 功法 (修正为 ['gongfa'])
+    if (player.equipment && player.equipment['gongfa']) {
+        const list = player.equipment['gongfa'];
         if (Array.isArray(list)) {
             list.forEach(skillId => {
                 if (!skillId) return;
-                if (window.UtilsSkill) {
-                    const info = UtilsSkill.getSkillInfo(skillId);
-                    if (info && info.finalEffects) {
-                        for (let key in info.finalEffects) {
-                            if (typeof info.finalEffects[key] === 'number') {
-                                addEntry(info.name, key, info.finalEffects[key], '#d4af37', skillId);
-                            }
-                        }
-                    }
-                } else {
-                    const item = books.find(i => i.id === skillId);
-                    if (item && item.effects) {
-                        for (let key in item.effects) {
-                            if (typeof item.effects[key] === 'number') {
-                                addEntry(item.name, key, item.effects[key], '#d4af37', skillId);
-                            }
-                        }
+                const info = window.UtilsSkill ? UtilsSkill.getSkillInfo(skillId) : null;
+                if (info && info.finalEffects) {
+                    for (let key in info.finalEffects) {
+                        if (typeof info.finalEffects[key] === 'number') addEntry(info.name, key, info.finalEffects[key], '#d4af37', skillId);
                     }
                 }
             });
         }
-    });
+    }
 
-    // 3. 临时 Buff (修复显示问题)
+    // 3. 临时 Buff (包括研读丹药、濒死、疲惫等)
     if (player.buffs) {
         for (let id in player.buffs) {
             const b = player.buffs[id];
-            if (b.days > 0 && b.val) {
-                let name = b.name || "状态";
-                let itemId = null;
-
-                // 尝试关联物品
-                const item = GAME_DB.items.find(i => i.id === id);
-                if (item) {
-                    name = item.name;
-                    itemId = id;
-                }
-
-                let color = b.color;
-                if (!color) {
-                    const isNegative = typeof b.val === 'number' ? b.val < 0 : String(b.val).includes('-');
-                    color = isNegative ? '#d32f2f' : '#4caf50';
-                }
-
-                // 传递整个 buff 对象，以便后续显示详情
-                addEntry(name, b.attr, b.val, color, itemId, b);
+            if (b.days > 0) {
+                let color = b.color || (b.isDebuff ? '#d32f2f' : '#4caf50');
+                // 直接传递 b.attr 和 b.val，addEntry 内部会自动判断 studyEff 进行转换
+                addEntry(b.name || "状态", b.attr, b.val, color, null, b, id);
             }
         }
     }
 
-    // 4. 永久属性
-    if (player.exAttr) {
-        for (let key in player.exAttr) {
-            addEntry("永久加成", key, player.exAttr[key], '#9c27b0');
-        }
-    }
-
-    // 5. 轮回
-    if (player.bonus_stats) {
-        for (let key in player.bonus_stats) {
-            addEntry("轮回底蕴", key, player.bonus_stats[key], '#e91e63');
-        }
-    }
-
+    // 4. 处理显示
     if (entries.length === 0) {
         container.innerHTML = '<div style="color:#ccc; font-size:12px; padding:5px;">暂无加成</div>';
         return;
@@ -252,40 +207,35 @@ function renderBuffs() {
 
     entries.forEach(item => {
         const row = document.createElement('div');
-        row.style.cssText = `
-            font-size: 13px; 
-            display: flex; 
-            align-items: center; 
-            padding: 4px 0; 
-            border-bottom: 1px dashed rgba(0,0,0,0.05);
-            cursor: default;
-            width: 100%;
-        `;
-
+        row.style.cssText = `font-size:13px; display:flex; align-items:center; padding:4px 0; border-bottom:1px dashed rgba(0,0,0,0.05); cursor:help; width:100%;`;
         row.innerHTML = `
             <span style="font-weight:bold; color:${item.color}; margin-right:6px; min-width:60px;">${item.source}</span>
             <span style="color:#666;">${item.attr}</span>
             <span style="font-weight:bold; color:${item.color}; margin-left: auto;">${item.val}</span>
         `;
 
-        // 【核心修复】Tooltips 绑定逻辑
-        if (item.itemId) {
-            // 如果是物品/技能，显示对应的 Tooltip
-            if (player.skills && player.skills[item.itemId]) {
-                row.onmouseenter = (e) => showSkillTooltip(e, item.itemId);
-            } else {
-                row.onmouseenter = (e) => showItemTooltip(e, item.itemId);
+        row.onmouseenter = (e) => {
+            if (item.itemId) {
+                const skillList = Array.isArray(player.skills) ? player.skills : [];
+                const isSkill = skillList.find(s => s.id === item.itemId);
+                if (isSkill && window.showSkillTooltip) {
+                    window.showSkillTooltip(item.itemId, e);
+                } else if (window.showItemTooltip) {
+                    window.showItemTooltip(item.itemId, e);
+                }
+            } else if (item.buffData) {
+                let bId = null;
+                if (player.buffs) {
+                    bId = Object.keys(player.buffs).find(key => player.buffs[key] === item.buffData);
+                }
+                if (bId) {
+                    showLocalBuffTooltip(e, bId);
+                }
             }
-        } else if (item.buffData) {
-            // 【新增】如果是纯状态Buff（无物品ID），显示自定义 Tooltip
-            row.onmouseenter = (e) => showLocalBuffTooltip(e, item.buffData);
-        }
+        };
 
-        if (item.itemId || item.buffData) {
-            row.onmouseleave = () => hideTooltip();
-            row.onmousemove = (e) => moveTooltip(e);
-            row.style.cursor = "help";
-        }
+        row.onmouseleave = () => { if (window.TooltipManager) window.TooltipManager.hide(); };
+        row.onmousemove = (e) => { if (window.TooltipManager) window.TooltipManager._move(e); };
 
         container.appendChild(row);
     });

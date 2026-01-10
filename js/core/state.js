@@ -24,6 +24,15 @@ function attemptDie() {
 
         // 2. 计算继承数据
         const nextGen = (player.generation || 1) + 1;
+
+        // --- 【添加以下两行】 ---
+        // 继承功法研读进度 (对象拷贝)
+        newPlayer.studyProgress = player.studyProgress ? JSON.parse(JSON.stringify(player.studyProgress)) : {};
+        // 继承当前选中的研读目标
+        newPlayer.currentStudyTarget = player.currentStudyTarget || null;
+        // ----------------------
+
+
         let legacyStats = player.bonus_stats || {};
 
         // 功法继承逻辑 (保留大成属性)

@@ -26,6 +26,8 @@ const ATTR_MAPPING = {
     "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运", "storage": "背包空间", //饱食度
     "hunger": "饱食度", //功法上限
     "max_skill_level": "修行上限",
+    //研读效率
+    "studyEff": "研读效率",
 };
 
 /* ================= 游戏核心常量配置 ================= */
@@ -63,9 +65,13 @@ const SKILL_CONFIG = {
 // 4. 玩家初始模板 (新档使用)
 const PLAYER_TEMPLATE = {
     version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10, //外功槽位
-    gongfa_ext: 1, //内功槽位
-    gongfa_int: 1, // 基础进度
+
     gongfa_nums: 3,
+    // 【新增】用于记录所有功法的研读进度，key为书籍ID，val为点数
+    studyProgress: {},
+
+    // 【新增】当前正在研读的目标书籍ID
+    currentStudyTarget: null,
     age      : 16, dayCount: 0, timeHours: 7, // 辰时
     worldSeed: 20251227, // 默认种子，开始游戏时会随机覆盖
     //当前时间阶段

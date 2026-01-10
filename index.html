@@ -115,7 +115,7 @@
                 <div class="panel_header">行动指令</div>
                 <div id="right_action_grid">
                     <button class="act_btn" onclick="doGather()">🌿 寻幽</button>
-                    <button class="act_btn" onclick="doStudy()">📖 研读</button>
+                    <button class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
                     <button class="act_btn" onclick="doTrain('ext')">⚔️ 外功</button>
                     <button class="act_btn" onclick="doTrain('int')">🧘 内功</button>
                     <button class="act_btn" onclick="doRest()">🛏️ 休憩</button>
@@ -219,8 +219,9 @@
     <script src="js/modules/input_shortcuts.js"></script>
     <script src="js/modules/map_view.js"></script>
     <script src="js/modules/archive.js"></script>
+    <script src="js/modules/ui_study.js"></script>
 
-
+    <script src="js/core/utils_fail.js"></script>
 
     <script src="js/main.js"></script>
 
