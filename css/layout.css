@@ -303,3 +303,11 @@
   background: #999;
   border-top: 1px solid #999;
 }
+#map_container {
+    display: grid;
+    /* 这里的列数必须和 MapView 渲染的宽度一致，
+       比如如果你视野是 13x13，这里最好是 repeat(13, 1fr)
+       或者由 JS 动态设置 style.gridTemplateColumns
+    */
+    /* grid-template-columns: repeat(13, 1fr);  <-- 确认一下这个 */
+}
