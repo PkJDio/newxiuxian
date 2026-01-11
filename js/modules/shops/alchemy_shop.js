@@ -12,6 +12,8 @@ const AlchemyShop = {
         this.currentTown = town;
         this._generateStock(town);
         this.renderMainMenu();
+        // 【新增】触发丹房引导
+        if (window.UITutorial) UITutorial.checkBuilding('alchemy');
     },
 
     // ================= 辅助：更新内容 =================
@@ -29,7 +31,7 @@ const AlchemyShop = {
 
         const townName = this.currentTown.name;
         const html = `
-            <div class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
+            <div id="alchemy_panel_main" class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
                 <div class="inn-greeting" style="flex:0 0 auto; border-bottom:2px dashed #5d4037; margin-bottom:20px; padding:15px; font-family:'Kaiti'; font-size:30px; color:#3e2723; background:rgba(255,255,255,0.5); border-radius:8px;">
                     <p style="margin:5px 0;">丹师：仙道漫漫，唯丹药可夺天地之造化。</p>
                     <p style="margin:5px 0;">你是要进几丸成品仙丹，还是寻些年份老到的灵草？</p>

@@ -355,6 +355,14 @@ const UICombatModal = {
         UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, null);
 
         this.updateSidebar();
+
+        // 【新增】触发战斗教程
+        // 使用 setTimeout 确保 DOM 已经完全渲染
+        setTimeout(() => {
+            if (window.UITutorial) {
+                UITutorial.start(false, 'combat');
+            }
+        }, 600);
     },
 
     updateSidebar: function() {
@@ -432,8 +440,8 @@ const UICombatModal = {
                                 </div>
                                 <div class="c-name-label" style="color:#5d4037;">${action.name.substring(0,4)}</div>
                             </div>
-                            <button id="combat_btn_skill_${idx}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="${onclick}">释放</button>
-                            <div id="combat_skill_cd_overlay_${idx}" class="c-cd-overlay" style="display:none;"></div>
+                            <button id="combat_btn_skill_${entry.id}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="${onclick}">释放</button>
+                            <div id="combat_skill_cd_overlay_${entry.id}" class="c-cd-overlay" style="display:none;"></div>
                         </div>
                     `;
                 });

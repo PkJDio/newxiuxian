@@ -38,6 +38,9 @@ const BountyBoard = {
         this.selectedTaskIndex = -1;
         this._generateMonthlyTasks(town);
         this.renderUI();
+
+        // 【新增】触发悬赏榜引导
+        if (window.UITutorial) UITutorial.checkBuilding('bounty');
     },
 
     // ================= 核心：生成本月任务 =================
@@ -180,7 +183,7 @@ const BountyBoard = {
         const prosperity = this.getProsperity(this.currentTown.id);
 
         const html = `
-            <div class="bounty-container" style="display:flex; height:100%; background:#fcf8e3; font-family:'Kaiti';">
+            <div id="bounty_board_panel" class="bounty-container" style="display:flex; height:100%; background:#fcf8e3; font-family:'Kaiti';">
                 <div class="bounty-list" style="width:40%; border-right:2px solid #5d4037; overflow-y:auto; background:#fff8e1; display:flex; flex-direction:column;">
                     <div style="padding:18px 15px; background:#5d4037; color:#fff; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border-bottom:3px solid #3e2723;">
                         <span style="font-size:22px; font-weight:bold; letter-spacing:1px;">📜 ${townName}悬赏榜</span>

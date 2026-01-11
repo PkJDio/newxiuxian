@@ -22,7 +22,7 @@
      // --- Batch 1 (MP) ---
      { id: "pills_002", name: "甘草片", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 36, effects: { mp: 54 }, desc: "蜜炙甘草，甜味浓郁，调和体内真气。" },
      { id: "pills_005", name: "茅根粉", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { mp: 90 }, desc: "凉血生津，饮后顿感灵台清明，法力恢复。" },
-     { id: "pills_008", name: "清热散", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { mp: 90 }, desc: "驱除心中燥火，快速回复枯竭的灵力。" },
+     { id: "pills_008", name: "清热散", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { mp: 90 }, desc: "驱除心中燥火，快速回复枯竭的法力。" },
      { id: "pills_009", name: "芦根露", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 36, effects: { mp: 54 }, desc: "甘甜清冽，专治施法过度后的神志困顿。" },
      { id: "pills_015", name: "黄芪口服液", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 90, effects: { mp: 135 }, desc: "补气固表，极大增强体内的真气循环。" },
 
@@ -31,7 +31,7 @@
      { id: "pills_022", name: "麦冬颗粒", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { mp: 90 }, desc: "清心润肺，回复损耗的法力。" },
      { id: "pills_023", name: "天冬膏", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { mp: 90 }, desc: "清火生津，化解真气运行产生的燥毒。" },
      { id: "pills_024", name: "百合干", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 48, effects: { mp: 72 }, desc: "安神助眠，平复战斗中波动不安的神识。" },
-     { id: "pills_029", name: "莲子心茶", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 36, effects: { mp: 54 }, desc: "清心去火，稳定体内的灵力流动。" },
+     { id: "pills_029", name: "莲子心茶", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 36, effects: { mp: 54 }, desc: "清心去火，稳定体内的法力流动。" },
 
      // --- Batch 1 (HP & MP) ---
      { id: "pills_004", name: "艾绒丸", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 48, effects: { hp: 36, mp: 36 }, desc: "艾火温经，不仅滋养肉身，更能贯通经络真气。" },
@@ -40,14 +40,14 @@
      { id: "pills_014", name: "红景天胶囊", subType: "reply", type: "pill", grade: 0, rarity: 2, value: 210, effects: { hp: 158, mp: 157 }, desc: "抗劳耐乏，均衡补益气血与真元。" },
      { id: "pills_016", name: "当归养血丸", subType: "reply", type: "pill", grade: 0, rarity: 2, value: 150, effects: { hp: 113, mp: 112 }, desc: "活血养髓，兼顾肉身治愈与法力运行。" },
      { id: "pills_018", name: "六味地黄丸", subType: "reply", type: "pill", grade: 0, rarity: 2, value: 180, effects: { hp: 135, mp: 135 }, desc: "三补三泻，滋阴补肾，是修士调理气血与真气的首选。" },
-     { id: "pills_020", name: "茯苓糕", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 90, effects: { hp: 68, mp: 67 }, desc: "健脾祛湿，气血与灵力共济。" },
+     { id: "pills_020", name: "茯苓糕", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 90, effects: { hp: 68, mp: 67 }, desc: "健脾祛湿，气血与法力共济。" },
 
 // --- Batch 2 (HP & MP) ---
      { id: "pills_025", name: "枸杞原浆", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 60, effects: { hp: 45, mp: 45 }, desc: "浓缩精华，明目滋身，对法力亦有裨益。" },
      { id: "pills_026", name: "淮山粉", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 36, effects: { hp: 27, mp: 27, hunger: 8 }, desc: "药食同源，在填饱肚子的同时稳固根基。" },
      { id: "pills_027", name: "红枣浓缩汁", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 30, effects: { hp: 23, mp: 22, hunger: 3 }, desc: "滋补气血法力，口感甘甜。" },
      { id: "pills_028", name: "桂圆膏", subType: "reply", type: "pill", grade: 0, rarity: 1, value: 48, effects: { hp: 36, mp: 36 }, desc: "益智宁神，法力与体能双重补益。" },
-     { id: "pills_030", name: "参王丹", subType: "reply", type: "pill", grade: 0, rarity: 3, value: 600, effects: { hp: 450, mp: 450 }, desc: "野山参精粹，瞬间激发生命潜能与浩瀚灵力。" },
+     { id: "pills_030", name: "参王丹", subType: "reply", type: "pill", grade: 0, rarity: 3, value: 600, effects: { hp: 450, mp: 450 }, desc: "野山参精粹，瞬间激发生命潜能与浩瀚法力。" },
      { id: "pills_031", name: "虫草胶囊", subType: "reply", type: "pill", grade: 0, rarity: 3, value: 540, effects: { hp: 405, mp: 405 }, desc: "补肺益肾，全方位调理修士的内息与外伤。" },
      { id: "pills_036", name: "九转还魂丹(残)", subType: "reply", type: "pill", grade: 2, rarity: 5, value: 15000, effects: { hp: 1463, mp: 1462 }, desc: "【稀世】生死肉骨，真气重聚。纵是残篇，亦能逆转阴阳。" },
      { id: "pills_037", name: "赤血丹", subType: "reply", type: "pill", grade: 1, rarity: 3, value: 1440, effects: { hp: 1080, mp: 1080 }, desc: "炽热药力，同步重塑体魄与灵核。" },
@@ -84,7 +84,7 @@
      { id: "pills_062", name: "星光散", subType: "buff", type: "pill", grade: 0, rarity: 3, value: 720, effects: { buff: { attr: 'qi', val: 15, days: 4 }, toxicity: 2 }, desc: "点点星光。临时能量+15(4天)。" },
      { id: "pills_063", name: "地脉丹", subType: "buff", type: "pill", grade: 1, rarity: 3, value: 1440, effects: { buff: { attr: 'qi', val: 15, days: 10 }, toxicity: 3 }, desc: "厚德载物。临时能量+15(10天)。" },
      { id: "pills_064", name: "蕴灵丹", subType: "buff", type: "pill", grade: 1, rarity: 4, value: 2400, effects: { buff: { attr: 'qi', val: 20, days: 7 }, toxicity: 5 }, desc: "灵气逼人。临时能量+20(7天)。" },
-     { id: "pills_065", name: "朱果丹", subType: "buff", type: "pill", grade: 2, rarity: 4, value: 3000, effects: { buff: { attr: 'qi', val: 20, days: 10 }, toxicity: 6 }, desc: "火属性灵力。临时能量+20(10天)。" },
+     { id: "pills_065", name: "朱果丹", subType: "buff", type: "pill", grade: 2, rarity: 4, value: 3000, effects: { buff: { attr: 'qi', val: 20, days: 10 }, toxicity: 6 }, desc: "火属性法力。临时能量+20(10天)。" },
      { id: "pills_066", name: "安神丸", subType: "buff", type: "pill", grade: 0, rarity: 2, value: 360, effects: { buff: { attr: 'shen', val: 10, days: 7 }, toxicity: 1 }, desc: "脑子清醒。临时悟性+10(7天)。" },
      { id: "pills_067", name: "忘忧丹", subType: "buff", type: "pill", grade: 0, rarity: 3, value: 720, effects: { buff: { attr: 'shen', val: 15, days: 4 }, toxicity: 2 }, desc: "心无杂念。临时悟性+15(4天)。" },
      { id: "pills_068", name: "紫烟丹", subType: "buff", type: "pill", grade: 1, rarity: 3, value: 1440, effects: { buff: { attr: 'shen', val: 15, days: 10 }, toxicity: 3 }, desc: "神识敏锐。临时悟性+15(10天)。" },

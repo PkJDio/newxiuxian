@@ -104,6 +104,24 @@ const TimeSystem = {
             // 扣除已使用的累计时间
             t.useHour -= (count * THRESHOLD);
 
+
+            if (window.player && window.player.status && window.player.derived) {
+                // 1. 获取最大法力值 (防呆处理，由 derived.mpMax 提供)
+                const maxMp = player.derived.mpMax || 100;
+
+                // 2. 计算回复量 (1/10)
+                const recoverAmount = maxMp / 10;
+
+                // 3. 执行回复 (当前mp + 回复量，但不超过 maxMp)
+                // 注意：确保 player.status.mp 存在，不存在则初始化为 0
+                let currentMp = player.status.mp || 0;
+                player.status.mp = Math.min(maxMp, currentMp + recoverAmount);
+
+                // (可选) 如果你希望显示日志，可以加一句
+                if(window.LogManager) window.LogManager.add(`[周天运转] 法力自动回复了 ${Math.floor(recoverAmount)} 点。`);
+            }
+
+
             // 执行 BUFF 扣减
             this._applyBuffReduction(totalReduction);
         }

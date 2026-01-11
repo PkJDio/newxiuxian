@@ -12,6 +12,8 @@ const MedicalShop = {
         this.currentTown = town;
         this._generateStock(town);
         this.renderMainMenu();
+        // 【新增】触发医馆引导
+        if (window.UITutorial) UITutorial.checkBuilding('medical');
     },
 
     // ================= 辅助：更新内容 =================
@@ -33,7 +35,7 @@ const MedicalShop = {
         const btnStyle = "font-size: 24px; padding: 20px 40px; border-width: 3px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);";
 
         const html = `
-            <div class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
+            <div id="medical_panel_main" class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
                 <div class="inn-greeting" style="flex:0 0 auto; border-bottom:2px dashed #5d4037; margin-bottom:20px; padding:15px; font-family:'Kaiti'; font-size:30px; color:#3e2723; background:rgba(255,255,255,0.5); border-radius:8px;">
                     <p style="margin:5px 0;">郎中：医者仁心，悬壶济世。</p>
                     <p style="margin:5px 0;">客官是来寻些滋补良药，还是身染沉疴需老夫施针？</p>

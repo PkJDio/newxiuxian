@@ -1,5 +1,5 @@
 // js/modules/combat.js
-// 战斗系统 v7.9 (修复Buff回合逻辑 + 持续伤害机制)
+// 战斗系统 v8.1 (修复技能释放延迟 + CD索引错位 + 完整未删减版)
 
 const Combat = {
     enemy: null,
@@ -183,6 +183,9 @@ const Combat = {
         if(spdEl) spdEl.innerText = (1000 / this.turnSpeed).toFixed(1) + "x";
     },
 
+    // =================================================================
+    // 【核心修复区域 1】 使用物品函数
+    // =================================================================
     useConsumable: function(slotIndex) {
         if (!this._canAct()) return;
         if (this.itemCDs[slotIndex] > 0) return;
@@ -195,6 +198,7 @@ const Combat = {
         const itemData = window.GAME_DB.items.find(i => i.id === itemId);
         if (!itemData) return;
 
+        // 1. 消耗物品逻辑
         invSlot.count--;
         if (invSlot.count <= 0) {
             this.player.inventory = this.player.inventory.filter(slot => slot.count > 0);
@@ -205,6 +209,7 @@ const Combat = {
             if(countEl) countEl.innerText = `x${invSlot.count}`;
         }
 
+        // 2. 效果应用
         const subType = (itemData.subType || itemData.subtype || "").toLowerCase();
         if (subType === 'poison') {
             this._applyPoisonToEnemy(itemData);
@@ -212,17 +217,29 @@ const Combat = {
             this._applyItemEffects(itemData, this.player);
         }
 
+        // 3. 设置 CD 并刷新
         this.itemCDs[slotIndex] = 4;
         this._refreshItemCDUI();
+
+        // 4. 同步状态
         this._syncPlayerStatus();
         if (window.saveGame) window.saveGame();
         this._updateUIStats();
         this._updateToxUI();
     },
 
+    // =================================================================
+    // 【核心修复区域 2】 使用技能函数
+    // 修复了 CD 逻辑，确保点击哪个技能就让哪个技能进入 CD
+    // =================================================================
     useSkill: function(bookId, skillIdx) {
         if (!this._canAct()) return;
-        if (this.skillCDs[bookId] > 0) return;
+
+        // 1. 检查 CD (直接通过 ID 检查，不再依赖 Index)
+        if (this.skillCDs[bookId] > 0) {
+            if(window.showToast) window.showToast("技能冷却中！");
+            return;
+        }
 
         const book = window.GAME_DB.items.find(i => i.id === bookId);
         if (!book || !book.action) return;
@@ -233,10 +250,16 @@ const Combat = {
             return;
         }
 
+        // 2. 消耗 MP
         this.currentPMp -= action.mpCost;
-        this.skillCDs[bookId] = action.cd + 1;
+
+        // 3. 设置 CD (防止 NaN，默认为 0 + 1)
+        this.skillCDs[bookId] = (action.cd || 0) + 1;
+
+        // 4. 立即刷新 UI (确保 CD 遮罩立刻显示，消除延迟感)
         this._refreshSkillCDUI();
 
+        // 5. 计算并应用伤害
         const pStats = this._getDynamicStats('player');
         const eStats = this._getDynamicStats('enemy');
 
@@ -250,6 +273,7 @@ const Combat = {
         const dmg = this._calcAndApplyDamage(skillAttacker, eStats, true, "技能");
         this.currentEHp -= dmg;
 
+        // 6. 更新血条/蓝条
         this._updateUIStats();
     },
 
@@ -281,8 +305,11 @@ const Combat = {
 
         this._log(`<div class="turn-divider">--- 第 ${this.currentTurn} 回合 ---</div>`);
 
+        // 回合开始：减少 CD
         for(let i=0; i<3; i++) if (this.itemCDs[i] > 0) this.itemCDs[i]--;
         for(let k in this.skillCDs) if (this.skillCDs[k] > 0) this.skillCDs[k]--;
+
+        // 刷新 UI CD
         this._refreshItemCDUI();
         this._refreshSkillCDUI();
 
@@ -341,11 +368,10 @@ const Combat = {
         if (!this.enemy.skills || this.enemy.skills.length === 0) {
             // 没有技能，直接普攻
         } else {
-            console.group("[Enemy Skill Check]");
+            // console.group("[Enemy Skill Check]");
             for (let skill of this.enemy.skills) {
                 let canCast = true;
 
-                // 检查是否已经存在同类状态
                 if (skill.type === 2) {
                     if (this.buffs.player[skill.debuffAttr]) canCast = false;
                 }
@@ -366,21 +392,19 @@ const Combat = {
                     break;
                 }
                 else if (skill.type === 2) {
-                    // Debuff: 无论是属性下降还是hp/mp扣除，统一走buff逻辑
                     this._log(`${this.enemy.name} 施展了 <b style="color:#f57f17;">${skill.id}</b>！`);
                     this._applyBuff('player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id);
                     actionDone = true;
                     break;
                 }
                 else if (skill.type === 3) {
-                    // Buff: 无论是属性上升还是hp/mp恢复，统一走buff逻辑
                     this._log(`${this.enemy.name} 施展了 <b style="color:#388e3c;">${skill.id}</b>！`);
                     this._applyBuff('enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id);
                     actionDone = true;
                     break;
                 }
             }
-            console.groupEnd();
+            // console.groupEnd();
         }
 
         if (!actionDone) {
@@ -529,7 +553,6 @@ const Combat = {
 
         const myBuffs = this.buffs[targetKey];
         for (let attr in myBuffs) {
-            // 注意：HP/MP buff 不参与属性计算，它们是回合结算的
             if (base[attr] !== undefined && attr !== 'hp' && attr !== 'mp') {
                 base[attr] += myBuffs[attr].val;
             }
@@ -546,14 +569,12 @@ const Combat = {
         const color = type === 'debuff' ? '#f57f17' : '#388e3c';
         const sign = val > 0 ? '+' : '';
 
-        // 【优化】添加 isNew 标记，用于控制回合扣除逻辑
         this.buffs[targetKey][attr] = { val, turns, type, name, isNew: true };
 
         const targetName = targetKey === 'player' ? '你' : this.enemy.name;
         const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '内力' };
         const attrName = attrMap[attr] || attr;
 
-        // 对于 HP/MP 类型的 DoT/HoT，日志描述稍微不同
         if (attr === 'hp' || attr === 'mp') {
             const effectDesc = (val < 0) ? `每回合损失 ${Math.abs(val)} ${attrName}` : `每回合恢复 ${val} ${attrName}`;
             this._log(`> ${targetName} 受到 <b style="color:${color}">[${name}]</b> 影响: ${effectDesc} (${turns}回合)`);
@@ -564,7 +585,6 @@ const Combat = {
         this._updateUIStats();
     },
 
-    // 【核心重写】统一处理回合结束的 Buff 结算和持续效果
     _processBuffs: function() {
         ['player', 'enemy'].forEach(target => {
             const buffList = this.buffs[target];
@@ -573,7 +593,6 @@ const Combat = {
             for (let attr in buffList) {
                 const b = buffList[attr];
 
-                // 1. 处理持续性效果 (HP/MP) - 只要有Buff就触发（包括刚施加的回合）
                 if (attr === 'hp') {
                     if (target === 'player') {
                         this.currentPHp = Math.max(0, Math.min(this.player.derived.hpMax, this.currentPHp + b.val));
@@ -592,13 +611,9 @@ const Combat = {
                     this._log(`> ${targetName} 因 [${b.name}] ${action} 内力`);
                 }
 
-                // 2. 处理回合扣除逻辑
                 if (attr === 'hp' || attr === 'mp') {
-                    // HP/MP 类：立即生效并扣除回合数（保证 N 回合触发 N 次）
                     b.turns--;
                 } else {
-                    // 属性类 (Atk/Def/Speed)：
-                    // 如果是本回合刚施加的 (isNew=true)，则不扣除回合数，确保能覆盖到下一个完整回合
                     if (b.isNew) {
                         b.isNew = false;
                     } else {
@@ -606,7 +621,6 @@ const Combat = {
                     }
                 }
 
-                // 3. 过期移除
                 if (b.turns <= 0) {
                     this._log(`<span style="color:#888;">> ${targetName} 的 [${b.name}] 效果消失了。</span>`);
                     delete buffList[attr];
@@ -683,18 +697,63 @@ const Combat = {
         return false;
     },
 
-    _refreshItemCDUI: function() { for(let i=0; i<3; i++) { const cd = this.itemCDs[i]; const overlay = document.getElementById(`combat_cd_overlay_${i}`); const btn = document.getElementById(`combat_btn_use_${i}`); if (overlay && btn) { if (cd > 0) { overlay.style.display = "flex"; overlay.innerText = cd; btn.disabled = true; } else { overlay.style.display = "none"; if (!btn.classList.contains('empty-slot-btn')) { btn.disabled = false; } } } } },
+    _refreshItemCDUI: function() {
+        for(let i=0; i<3; i++) {
+            const cd = this.itemCDs[i];
+            const overlay = document.getElementById(`combat_cd_overlay_${i}`);
+            const btn = document.getElementById(`combat_btn_use_${i}`);
 
+            if (overlay && btn) {
+                if (cd > 0) {
+                    overlay.style.display = "flex";
+                    overlay.innerText = cd;
+                    btn.disabled = true;
+                } else {
+                    overlay.style.display = "none";
+                    if (!btn.classList.contains('empty-slot-btn')) {
+                        btn.disabled = false;
+                    }
+                }
+            }
+        }
+    },
+
+    // =================================================================
+    // 【核心修复区域 3】 技能 CD 刷新 (重写)
+    // 彻底解决索引错位问题，通过DOM遍历寻找ID匹配的按钮，而不是依赖idx
+    // =================================================================
     _refreshSkillCDUI: function() {
         if(!this.player.equipment || !this.player.equipment.gongfa) return;
-        this.player.equipment.gongfa.forEach((id, idx) => {
-            if (!id) return;
-            const cd = this.skillCDs[id] || 0;
-            const overlay = document.getElementById(`combat_skill_cd_overlay_${idx}`);
-            const btn = document.getElementById(`combat_btn_skill_${idx}`);
-            if (overlay && btn) {
-                if (cd > 0) { overlay.style.display = "flex"; overlay.innerText = cd; btn.disabled = true; }
-                else { overlay.style.display = "none"; btn.disabled = false; }
+
+        // 1. 获取所有技能槽 DOM 容器 (在 ui_combat_modal.js 中生成的)
+        // 假设容器是 #sidebar_skills 下的 .c-slot-wrapper
+        const containers = document.querySelectorAll('#sidebar_skills .c-slot-wrapper');
+
+        containers.forEach((wrapper) => {
+            // 2. 找到内部的按钮
+            const btn = wrapper.querySelector('button[id^="combat_btn_skill_"]');
+            if (!btn) return;
+
+            // 3. 从按钮的 onclick 属性中解析出 skillId
+            // onclick="Combat.useSkill('book_fire_sword', 0)"
+            // 正则提取第一个单引号内的内容
+            const match = btn.getAttribute('onclick').match(/'([^']+)'/);
+            if (!match) return;
+
+            const skillId = match[1];
+            const cd = this.skillCDs[skillId] || 0;
+            const overlay = wrapper.querySelector('.c-cd-overlay');
+
+            if (overlay) {
+                if (cd > 0) {
+                    // 强制内联样式，确保显示在最上层
+                    overlay.style.cssText = "display: flex !important; align-items: center; justify-content: center; background: rgba(255,255,255,0.75); color: #333; font-weight: bold; font-size: 20px; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10;";
+                    overlay.innerText = cd;
+                    btn.disabled = true;
+                } else {
+                    overlay.style.display = "none";
+                    btn.disabled = false;
+                }
             }
         });
     },
@@ -804,7 +863,10 @@ const Combat = {
                             name = "✨ " + name;
                         }
                     }
-                    rewardHtml += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${styleExtra}">${name}</span>`;
+
+                    // 添加鼠标悬浮事件
+                    const tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${drop.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
+                    rewardHtml += `<span ${tooltipEvents} style="cursor:help; background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${styleExtra}">${name}</span>`;
                 });
                 rewardHtml += `</div>`;
             }

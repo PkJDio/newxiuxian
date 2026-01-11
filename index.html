@@ -89,7 +89,10 @@
                     📜 悬赏 (T)
                 </button>
                 <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图 (M)</button>
-<!--                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>-->
+                <button id="btn_help" class="ink_btn_tab" onclick="UITutorial.start(true)">
+                    ❓ 指引
+                </button>
+                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
             </div>
 
             <div id="center_map_container">
@@ -114,18 +117,18 @@
             <div id="right_action_container" class="ink_card">
                 <div class="panel_header">行动指令</div>
                 <div id="right_action_grid">
-                    <button class="act_btn" onclick="doGather()">🌿 寻幽</button>
-                    <button class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
+                    <button id="btn_action_gather" class="act_btn" onclick="doGather()">🌿 寻幽</button>
+
+                    <button id="btn_action_study" class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
+
                     <button id="btn_action_train" class="ink_btn" onclick="window.UITrain.open()">
                         <span class="btn_icon">⚔️</span>
                         <span class="btn_text">修炼</span>
                     </button>
-                    <button class="act_btn" onclick="doRest()">🛏️ 休憩</button>
-<!--                    <button class="act_btn" onclick="showCook()">🍳 烹饪</button>-->
-                    <button class="act_btn" onclick="window.UIFish.open()">🎣 垂钓</button>
-                    <button class="act_btn" onclick="doEat()">🍖 进食</button>
-<!--                    <button class="act_btn" onclick="doWater()">💧 打水</button>-->
-<!--                    <button class="act_btn" onclick="doShop()">⚖️ 集市</button>-->
+
+                    <button id="btn_action_rest" class="act_btn" onclick="doRest()">🛏️ 休憩</button>
+                    <button id="btn_action_fish" class="act_btn" onclick="window.UIFish.open()">🎣 垂钓</button>
+                    <button id="btn_action_eat" class="act_btn" onclick="doEat()">🍖 进食</button>
                 </div>
             </div>
         </div>
@@ -142,6 +145,32 @@
     </div>
 
     <div id="global_tooltip" class="ink_tooltip hidden"></div>
+    <div id="tutorial_overlay" class="hidden">
+        <div id="tutorial_spotlight"></div>
+
+        <div id="tutorial_box" class="ink_card">
+            <h3 id="tut_title">功能介绍</h3>
+            <p id="tut_content">这里是说明文字...</p>
+
+            <div class="tut_controls">
+                <div class="tut_page_info"><span id="tut_step">1</span> / <span id="tut_total">5</span></div>
+                <div class="tut_btns">
+                    <button id="tut_btn_prev" class="ink_btn_small" onclick="UITutorial.prev()">上一步</button>
+                    <button id="tut_btn_next" class="ink_btn_small" onclick="UITutorial.next()">下一步</button>
+                    <button id="tut_btn_finish" class="ink_btn_small btn_danger" onclick="UITutorial.finish()">关闭</button>
+                </div>
+            </div>
+
+            <div class="tut_footer">
+                <label>
+                    <input type="checkbox" id="tut_check_ignore"> 轮回不再自动提醒
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/modules/ui_tutorial.js"></script>
+
 
     <script src="js/data/data_config.js"></script>
     <script src="js/core/state.js"></script>

@@ -148,6 +148,14 @@ function startNewGame() {
     window.LogManager.add("大道三千，祝道友早证混元。");
   }
 
+    // 【新增】调用引导检查
+    // 使用 setTimeout 稍微延迟一点，确保界面DOM已经渲染完毕
+    setTimeout(function() {
+        if (window.UITutorial) {
+            window.UITutorial.checkAutoStart();
+        }
+    }, 500);
+
   return true;
 }
 

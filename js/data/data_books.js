@@ -3640,9 +3640,9 @@ const booksCultivation_R1 = [
             dmgMult: 0.68,
             mpCost: 10,
             cd: 1,
-            desc: "【效率型】引燃灵力，高频灼烧。",
+            desc: "【效率型】引燃法力，高频灼烧。",
         },
-        desc: "残简上带着一丝火气，修炼后灵力燥热。",
+        desc: "残简上带着一丝火气，修炼后法力燥热。",
     },
     {
         id: "book_cultivation_r1_02_full",
@@ -3684,7 +3684,7 @@ const booksCultivation_R1 = [
             cd: 3,
             desc: "【平衡型】寒气逼人，威力适中。",
         },
-        desc: "水属性变种功法，灵力带有寒意。",
+        desc: "水属性变种功法，法力带有寒意。",
     },
     {
         id: "book_cultivation_r1_04_full",
@@ -3747,7 +3747,7 @@ const booksCultivation_R1 = [
             cd: 4,
             desc: "【平衡型】青木化藤，困敌伤身。",
         },
-        desc: "青木灵力转化，兼具困敌效果。",
+        desc: "青木法力转化，兼具困敌效果。",
     },
     {
         id: "book_cultivation_r1_07_full",
@@ -4060,7 +4060,7 @@ const booksCultivation_R2 = [
             cd: 6,
             desc: "【爆发型】焚尽一切的高热掌力。",
         },
-        desc: "西域昆仑派内功，灵力如火。",
+        desc: "西域昆仑派内功，法力如火。",
     },
     {
         id: "book_cultivation_r2_05_full",

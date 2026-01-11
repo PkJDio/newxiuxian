@@ -16,6 +16,8 @@ const BlackMarket = {
         this.currentTown = town;
         this._generateStock(town);
         this.uiBuy(); // 直接打开购买页面
+        // 【新增】触发集市引导
+        if (window.UITutorial) UITutorial.checkBuilding('market');
     },
 
     _generateStock: function(town) {
@@ -163,7 +165,7 @@ const BlackMarket = {
             }
 
             return `
-        <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #333; background:${index % 2 === 0 ? '#222' : '#1a1a1a'}; transition: background 0.2s;">
+        <div id="market_panel_main" class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #333; background:${index % 2 === 0 ? '#222' : '#1a1a1a'}; transition: background 0.2s;">
             <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                 <div style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 5px rgba(255,255,255,0.5);">
                     <span style="font-size:18px; color:#ddd; font-weight:normal; text-shadow:none; margin-right:2px;">【${typeName}】</span>${item.name}

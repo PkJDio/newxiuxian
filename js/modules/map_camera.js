@@ -120,6 +120,9 @@ const MapCamera = {
 
             this.isDirty = false;
             this.lastRenderTime = timestamp;
+
+            // 【确保这里有调用】
+            this._checkMonsterTutorial();
         }
     },
 
@@ -240,9 +243,65 @@ const MapCamera = {
 
     // 供外部调用刷新地图渲染 (强制刷新)
     renderMap: function() {
+        this._checkMonsterTutorial();
         this.requestRender();
     },
+    // 【新增】检测屏幕内是否有怪物并触发教程
+    // 【修正版】检测屏幕内是否有怪物并触发教程
+    _checkMonsterTutorial: function() {
+        // 1. 检查是否已经教过了
+        if (localStorage.getItem('xiuxian_tut_monster_ignore') === 'true') return;
 
+        // 2. 限制检测频率 (每秒检测一次即可)
+        const now = Date.now();
+        if (now - this._lastTutorialCheck < 1000) return; // 这里的变量名要和 init 里定义的一致
+        this._lastTutorialCheck = now;
+
+        // 3. 获取当前屏幕内的所有怪物
+        if (!window.MapEnemyManager || !MapEnemyManager.enemies) return;
+
+        // 4. 准备参数
+        const ts = (window.MapAtlas ? MapAtlas.tileSize : 32); // 关键修正：获取格子大小
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const margin = 60; // 边缘边距
+
+        // 遍历所有活着的敌人
+        for (let key in MapEnemyManager.enemies) {
+            const enemy = MapEnemyManager.enemies[key];
+            if (enemy.isDead) continue;
+
+            // 关键修正：加入 ts (tileSize) 进行计算
+            const screenX = (enemy.x - this.x) * ts * this.scale + centerX;
+            const screenY = (enemy.y - this.y) * ts * this.scale + centerY;
+
+            // 5. 判断是否在屏幕可视范围内
+            if (screenX > margin && screenX < this.width - margin &&
+                screenY > margin && screenY < this.height - margin) {
+
+                console.log(">>> [MapCamera] 发现怪物，触发新手引导！");
+
+                // 构造虚拟坐标矩形 (图标大小也受缩放影响)
+                const iconSize = ts * this.scale;
+                const canvasRect = this.canvas.getBoundingClientRect();
+
+                // 绝对坐标 = Canvas在网页的坐标 + 怪物在Canvas的坐标
+                const virtualRect = {
+                    left: canvasRect.left + screenX - iconSize/2,
+                    top: canvasRect.top + screenY - iconSize/2,
+                    width: iconSize,
+                    height: iconSize
+                };
+
+                // 调用 UI 教程模块
+                if (window.UITutorial) {
+                    UITutorial.start(false, 'monster', virtualRect);
+                }
+
+                return; // 触发一次就够了
+            }
+        }
+    },
     _updateTerrainBuffs: function(x, y) {
         if (!player.buffs) player.buffs = {};
         const terrainKeys = ['t_town', 't_road', 't_grass', 't_mountain', 't_water', 't_desert'];

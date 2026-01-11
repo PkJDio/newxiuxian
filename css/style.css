@@ -19,3 +19,68 @@
 @import "ui_train.css";
 @import "ui_water.css";
 @import "ui_bounty.css";
+
+
+
+
+
+/* ================== 新手引导系统 ================== */
+#tutorial_overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 2000; /* 确保在最顶层 */
+    pointer-events: auto; /* 拦截点击 */
+    display: block;
+}
+
+#tutorial_overlay.hidden {
+    display: none;
+}
+
+/* 聚光灯高亮框：利用超大阴影实现遮罩 */
+#tutorial_spotlight {
+    position: absolute;
+    border: 2px solid #b8860b; /* 金色边框 */
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 15px #b8860b inset;
+    border-radius: 5px;
+    transition: all 0.3s ease; /* 平滑移动动画 */
+    pointer-events: none; /* 让点击穿透高亮区(如果需要操作) 或者不穿透 */
+    z-index: 2001;
+}
+
+/* 说明文本框 */
+#tutorial_box {
+    position: absolute;
+    width: 300px;
+    z-index: 2002;
+    background-color: #f0e6d2; /* 保持水墨风纸张色 */
+    transition: all 0.3s ease;
+    border: 2px solid #333;
+}
+
+.tut_controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #999;
+}
+
+.tut_btns {
+    display: flex;
+    gap: 5px;
+}
+
+.tut_footer {
+    margin-top: 10px;
+    font-size: 12px;
+    text-align: right;
+    color: #555;
+}
+
+/* 适配不同位置的箭头 (可选) */
+#tutorial_box::after {
+    /* 这里可以加一个小三角指向高亮区域，稍微复杂点，先略过 */
+}

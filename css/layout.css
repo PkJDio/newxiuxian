@@ -402,3 +402,16 @@
 #buff_list::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.4); /* 滑块悬停颜色 */
 }
+
+
+
+#game_log_content {
+    /* 开启硬件加速和独立的渲染层 */
+    will-change: scroll-position;
+    /* 现代浏览器优化：告诉浏览器这部分内容是独立的 */
+    contain: content;
+    /* 必须有高度和滚动条 */
+    overflow-y: auto;
+    /* 平滑滚动体验 */
+    scroll-behavior: smooth;
+}

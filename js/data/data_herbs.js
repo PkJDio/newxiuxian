@@ -37,7 +37,7 @@
         { id: "herbs_034", name: "紫珠", type: "material" , subType:"herbs" , grade: 0, rarity: 1, value: 5, effects: { hp: 6, toxicity: 1 }, desc: "收敛止血，清热解毒。" },
         { id: "herbs_035", name: "血余炭", type: "material" , subType:"herbs" , grade: 0, rarity: 1, value: 2, effects: { hp: 5, toxicity: 1 }, desc: "止血，化瘀。" },
         { id: "herbs_036", name: "九叶莲", type: "material" , subType:"herbs" , grade: 2, rarity: 5, value: 1200, effects: { hp: 200, toxicity: 5 }, desc: "【稀世】传说中的仙草，有起死回生之效。" },
-        { id: "herbs_037", name: "赤精芝", type: "material" , subType:"herbs" , grade: 1, rarity: 3, value: 120, effects: { hp: 60, toxicity: 8 }, desc: "蕴含火属性灵力，大补气血。" },
+        { id: "herbs_037", name: "赤精芝", type: "material" , subType:"herbs" , grade: 1, rarity: 3, value: 120, effects: { hp: 60, toxicity: 8 }, desc: "蕴含火属性法力，大补气血。" },
         { id: "herbs_038", name: "雪莲花", type: "material" , subType:"herbs" , grade: 1, rarity: 3, value: 100, effects: { hp: 50, toxicity: 5 }, desc: "生长在雪山之巅，解毒疗伤。" },
         { id: "herbs_039", name: "玉肌花", type: "material" , subType:"herbs" , grade: 1, rarity: 3, value: 90, effects: { hp: 45, toxicity: 3 }, desc: "生肌造肉，愈合伤口奇快。" },
         { id: "herbs_040", name: "还魂草", type: "material" , subType:"herbs" , grade: 1, rarity: 3, value: 110, effects: { hp: 55, toxicity: 6 }, desc: "卷柏的一种，生命力极强。" },

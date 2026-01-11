@@ -54,6 +54,7 @@ const InnShop = {
         this.currentTown = town;
         this._generateStock(town);
         this.renderMainMenu();
+        if (window.UITutorial) UITutorial.checkBuilding('inn');
     },
 
     // ================= 辅助：更新内容 =================
@@ -74,7 +75,7 @@ const InnShop = {
 
         const townName = this.currentTown.name;
         const html = `
-            <div class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
+            <div id="inn_panel_main" class="inn-layout" style="display:flex; flex-direction:column; height:100%; padding: 10px;">
                 <div class="inn-greeting" style="flex:0 0 auto; border-bottom:2px dashed #5d4037; margin-bottom:20px; padding:15px; font-family:'Kaiti'; font-size:30px; color:#3e2723; background:rgba(255,255,255,0.5); border-radius:8px;">
                     <p style="margin:5px 0;">店小二：哎哟，客官您里面请！</p>
                     <p style="margin:5px 0;">咱们这儿可是【${townName}】最好的歇脚地儿。</p>
