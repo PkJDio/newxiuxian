@@ -1,5 +1,5 @@
 // js/modules/combat.js
-// 战斗系统 v7.6 (DOM性能优化版：缓存引用 + 日志回收)
+// 战斗系统 v7.9 (修复Buff回合逻辑 + 持续伤害机制)
 
 const Combat = {
     enemy: null,
@@ -31,16 +31,27 @@ const Combat = {
         enemy: {}
     },
 
-    // 【优化】UI 引用缓存池
+    // UI 引用缓存池
     uiRefs: {},
 
     _patchEnemyData: function(enemy) {
+        const tmplKey = enemy.template || "minion";
+        const templateData = (typeof ENEMY_TEMPLATES !== 'undefined') ? ENEMY_TEMPLATES[tmplKey] : null;
+
         if (enemy.basePen === undefined) {
-            const tmplKey = enemy.template || "minion";
-            if (typeof ENEMY_TEMPLATES !== 'undefined' && ENEMY_TEMPLATES[tmplKey]) {
-                enemy.basePen = ENEMY_TEMPLATES[tmplKey].basePen;
+            if (templateData) {
+                enemy.basePen = templateData.basePen;
             }
         }
+
+        if (enemy.accuracy === undefined) {
+            if (templateData && templateData.accuracy !== undefined) {
+                enemy.accuracy = templateData.accuracy;
+            } else {
+                enemy.accuracy = 0;
+            }
+        }
+
         if (enemy.toxAtk === undefined) {
             const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
             if (db && db.length > 0) {
@@ -48,6 +59,7 @@ const Combat = {
                 if (template) {
                     if (template.stats && template.stats.toxicity) enemy.toxAtk = template.stats.toxicity;
                     if (template.basePen !== undefined) enemy.basePen = template.basePen;
+                    if (template.accuracy !== undefined) enemy.accuracy = template.accuracy;
                 }
             }
         }
@@ -59,26 +71,19 @@ const Combat = {
         if (enemy.speed !== undefined && enemy.stats.speed === undefined) enemy.stats.speed = enemy.speed;
     },
 
-    // 【优化】初始化 DOM 缓存
     _initUICache: function(logId) {
         this.uiRefs = {
             logContainer: document.getElementById(logId),
-
-            // 玩家状态
             pHp: document.getElementById('combat_p_hp'),
             pHpBar: document.getElementById('combat_p_hp_bar'),
             pMp: document.getElementById('combat_p_mp'),
             pMpBar: document.getElementById('combat_p_mp_bar'),
             pToxBar: document.getElementById('combat_p_tox_bar'),
             pToxVal: document.getElementById('combat_p_tox_val'),
-
-            // 敌人状态
             eHp: document.getElementById('combat_e_hp'),
             eHpBar: document.getElementById('combat_e_hp_bar'),
             eToxBar: document.getElementById('combat_e_tox_bar'),
             eToxVal: document.getElementById('combat_e_tox_val'),
-
-            // 属性栏 (用于 Buff 更新)
             pAttr: {
                 atk: document.getElementById('p_attr_atk'),
                 def: document.getElementById('p_attr_def'),
@@ -96,8 +101,6 @@ const Combat = {
         if (!window.player) return;
 
         this._injectStyles();
-
-        // 【优化】先初始化缓存
         this._initUICache(logId);
 
         this.enemy = JSON.parse(JSON.stringify(enemyObj));
@@ -109,7 +112,7 @@ const Combat = {
 
         this.logs = [];
         this.onWinCallback = onWin;
-        this.logContainerId = logId; // 保留 ID 以备不时之需
+        this.logContainerId = logId;
 
         this.isStopped = false;
         this.isPaused = false;
@@ -310,7 +313,12 @@ const Combat = {
             isDead = this._processPoisonOnPlayer();
         }
 
-        this._processBuffs();
+        // 【关键】统一处理所有Buff/Debuff/DoT结算
+        if (!isWin && !isDead) {
+            this._processBuffs();
+            if (this.currentPHp <= 0) isDead = true;
+            if (this.currentEHp <= 0) isWin = true;
+        }
 
         this.enemy.hp = this.currentEHp;
         this._syncPlayerStatus();
@@ -331,12 +339,19 @@ const Combat = {
     _enemyAction: function(eStats, pStats) {
         let actionDone = false;
         if (!this.enemy.skills || this.enemy.skills.length === 0) {
+            // 没有技能，直接普攻
         } else {
             console.group("[Enemy Skill Check]");
             for (let skill of this.enemy.skills) {
                 let canCast = true;
-                if (skill.type === 2 && this.buffs.player[skill.debuffAttr]) canCast = false;
-                else if (skill.type === 3 && this.buffs.enemy[skill.buffAttr]) canCast = false;
+
+                // 检查是否已经存在同类状态
+                if (skill.type === 2) {
+                    if (this.buffs.player[skill.debuffAttr]) canCast = false;
+                }
+                else if (skill.type === 3) {
+                    if (this.buffs.enemy[skill.buffAttr]) canCast = false;
+                }
 
                 if (!canCast) continue;
 
@@ -351,12 +366,14 @@ const Combat = {
                     break;
                 }
                 else if (skill.type === 2) {
+                    // Debuff: 无论是属性下降还是hp/mp扣除，统一走buff逻辑
                     this._log(`${this.enemy.name} 施展了 <b style="color:#f57f17;">${skill.id}</b>！`);
                     this._applyBuff('player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id);
                     actionDone = true;
                     break;
                 }
                 else if (skill.type === 3) {
+                    // Buff: 无论是属性上升还是hp/mp恢复，统一走buff逻辑
                     this._log(`${this.enemy.name} 施展了 <b style="color:#388e3c;">${skill.id}</b>！`);
                     this._applyBuff('enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id);
                     actionDone = true;
@@ -378,31 +395,40 @@ const Combat = {
     _calcAndApplyDamage: function(atkStats, defStats, isPlayerAttacking, type="普攻", attackerName=null) {
         const name = attackerName || (isPlayerAttacking ? "你" : this.enemy.name);
 
-        console.group(`[Damage Calc] ${name} (${type})`);
-        console.log("Attacker Stats:", atkStats);
-        console.log("Defender Stats:", defStats);
-
         const baseAtk = atkStats.atk || 1;
         let finalAtkVal = baseAtk;
 
         if (atkStats.skillMult) finalAtkVal = Math.floor(finalAtkVal * atkStats.skillMult);
         if (atkStats.skillFlat) finalAtkVal = finalAtkVal + atkStats.skillFlat;
 
-        console.log(`> Base Atk: ${baseAtk}, Final Atk: ${finalAtkVal}`);
-
         let defVal = defStats.def || 0;
         const spdAtk = atkStats.speed || 10;
         const spdDef = defStats.speed || 10;
 
-        let dodgeRate = 0.05 + (spdDef - spdAtk) / 150;
-        dodgeRate = Math.max(0, Math.min(0.60, dodgeRate));
+        // --- 闪避逻辑 ---
+        let rawDodgeRate = 0.05 + (spdDef - spdAtk) / 150;
+        rawDodgeRate = Math.max(0, Math.min(0.60, rawDodgeRate));
 
-        if (Math.random() < dodgeRate) {
-            const dodgePct = (dodgeRate * 100).toFixed(1);
-            const tip = `<div class="combat-tooltip-content"><div class="tip-row"><span>闪避率</span><span>${dodgePct}%</span></div></div>`;
+        const attackerAcc = atkStats.accuracy || 0;
+        const accModifier = attackerAcc / 100;
+
+        let finalDodgeRate = Math.max(0, rawDodgeRate - accModifier);
+
+        if (Math.random() < finalDodgeRate) {
+            const dodgePct = (rawDodgeRate * 100).toFixed(1);
+            const accPct = attackerAcc.toFixed(1);
+            const finalPct = (finalDodgeRate * 100).toFixed(1);
+
+            const tip = `
+                <div class="combat-tooltip-content">
+                    <div class="tip-row"><span>基础闪避率</span><span>${dodgePct}%</span></div>
+                    ${attackerAcc > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>敌方命中率</span><span>-${accPct}%</span></div>` : ''}
+                    <div class="tip-divider"></div>
+                    <div class="tip-row" style="color:#4caf50;"><span>最终闪避率</span><span>${finalPct}%</span></div>
+                </div>`;
+
             const span = `<span class="combat-tooltip-trigger" style="color:#aaa; cursor:help; border-bottom:1px dotted #ccc; position:relative;">✨闪避${tip}</span>`;
             this._log(`${name} 的${type}被 ${span} 了！`);
-            console.groupEnd();
             return 0;
         }
 
@@ -411,7 +437,6 @@ const Combat = {
         const originDef = defVal;
         if (pen > 0) {
             defVal = Math.max(0, defVal - pen);
-            console.log(`> Pen: ${pen}, Def reduced from ${originDef} to ${defVal}`);
         }
 
         const retentionMultiplier = 100 / (100 + sharpness);
@@ -421,9 +446,6 @@ const Combat = {
         const reductionMultiplier = ARMOR_CONST / (ARMOR_CONST + defVal);
         let rawDamage = finalAtkVal * reductionMultiplier;
         const reductionPercent = Math.floor((1 - reductionMultiplier) * 100);
-
-        console.log(`> Dmg Reduct: ${(reductionPercent)}% (Mult: ${reductionMultiplier.toFixed(3)})`);
-        console.log(`> Raw Damage: ${rawDamage.toFixed(2)}`);
 
         let critRate = 0;
         if (isPlayerAttacking) {
@@ -443,8 +465,6 @@ const Combat = {
         const variance = 0.95 + Math.random() * 0.1;
         let finalDamage = Math.floor(rawDamage * variance);
         finalDamage = Math.max(1, finalDamage);
-
-        console.groupEnd();
 
         const sharpEffectPct = Math.floor((1 - (100 / (100 + (atkStats.sharpness || 0)))) * 100);
         const penHtml = pen > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>⚡ 穿甲</span> <span>${pen}</span></div>` : '';
@@ -502,13 +522,17 @@ const Combat = {
                 speed: (s.speed !== undefined ? s.speed : (root.speed || 0)),
                 hp: this.currentEHp,
                 toxAtk: this.enemy.toxAtk,
-                basePen: this.enemy.basePen
+                basePen: this.enemy.basePen,
+                accuracy: this.enemy.accuracy
             };
         }
 
         const myBuffs = this.buffs[targetKey];
         for (let attr in myBuffs) {
-            if (base[attr] !== undefined) base[attr] += myBuffs[attr].val;
+            // 注意：HP/MP buff 不参与属性计算，它们是回合结算的
+            if (base[attr] !== undefined && attr !== 'hp' && attr !== 'mp') {
+                base[attr] += myBuffs[attr].val;
+            }
         }
 
         if (base.atk < 0) base.atk = 0;
@@ -521,25 +545,71 @@ const Combat = {
     _applyBuff: function(targetKey, attr, val, turns, type, name) {
         const color = type === 'debuff' ? '#f57f17' : '#388e3c';
         const sign = val > 0 ? '+' : '';
-        this.buffs[targetKey][attr] = { val, turns, type, name };
+
+        // 【优化】添加 isNew 标记，用于控制回合扣除逻辑
+        this.buffs[targetKey][attr] = { val, turns, type, name, isNew: true };
 
         const targetName = targetKey === 'player' ? '你' : this.enemy.name;
         const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '内力' };
         const attrName = attrMap[attr] || attr;
 
-        this._log(`> ${targetName} 受到 <b style="color:${color}">[${name}]</b> 影响: ${attrName} ${sign}${val} (${turns}回合)`);
+        // 对于 HP/MP 类型的 DoT/HoT，日志描述稍微不同
+        if (attr === 'hp' || attr === 'mp') {
+            const effectDesc = (val < 0) ? `每回合损失 ${Math.abs(val)} ${attrName}` : `每回合恢复 ${val} ${attrName}`;
+            this._log(`> ${targetName} 受到 <b style="color:${color}">[${name}]</b> 影响: ${effectDesc} (${turns}回合)`);
+        } else {
+            this._log(`> ${targetName} 受到 <b style="color:${color}">[${name}]</b> 影响: ${attrName} ${sign}${val} (${turns}回合)`);
+        }
+
         this._updateUIStats();
     },
 
+    // 【核心重写】统一处理回合结束的 Buff 结算和持续效果
     _processBuffs: function() {
         ['player', 'enemy'].forEach(target => {
-            for (let attr in this.buffs[target]) {
-                const b = this.buffs[target][attr];
-                b.turns--;
+            const buffList = this.buffs[target];
+            const targetName = target === 'player' ? '你' : this.enemy.name;
+
+            for (let attr in buffList) {
+                const b = buffList[attr];
+
+                // 1. 处理持续性效果 (HP/MP) - 只要有Buff就触发（包括刚施加的回合）
+                if (attr === 'hp') {
+                    if (target === 'player') {
+                        this.currentPHp = Math.max(0, Math.min(this.player.derived.hpMax, this.currentPHp + b.val));
+                        const action = b.val > 0 ? `<span style="color:#4caf50;">恢复 ${b.val}</span>` : `<span style="color:#d32f2f;">流失 ${Math.abs(b.val)}</span>`;
+                        this._log(`> ${targetName} 因 [${b.name}] ${action} 生命`);
+                    } else {
+                        const maxHp = this.enemy.maxHp || 100;
+                        this.currentEHp = Math.max(0, Math.min(maxHp, this.currentEHp + b.val));
+                        const action = b.val > 0 ? `<span style="color:#4caf50;">恢复 ${b.val}</span>` : `<span style="color:#d32f2f;">流失 ${Math.abs(b.val)}</span>`;
+                        this._log(`> ${targetName} 因 [${b.name}] ${action} 生命`);
+                    }
+                }
+                else if (attr === 'mp' && target === 'player') {
+                    this.currentPMp = Math.max(0, Math.min(this.player.derived.mpMax, this.currentPMp + b.val));
+                    const action = b.val > 0 ? `<span style="color:#2196f3;">恢复 ${b.val}</span>` : `<span style="color:#5c6bc0;">流失 ${Math.abs(b.val)}</span>`;
+                    this._log(`> ${targetName} 因 [${b.name}] ${action} 内力`);
+                }
+
+                // 2. 处理回合扣除逻辑
+                if (attr === 'hp' || attr === 'mp') {
+                    // HP/MP 类：立即生效并扣除回合数（保证 N 回合触发 N 次）
+                    b.turns--;
+                } else {
+                    // 属性类 (Atk/Def/Speed)：
+                    // 如果是本回合刚施加的 (isNew=true)，则不扣除回合数，确保能覆盖到下一个完整回合
+                    if (b.isNew) {
+                        b.isNew = false;
+                    } else {
+                        b.turns--;
+                    }
+                }
+
+                // 3. 过期移除
                 if (b.turns <= 0) {
-                    const targetName = target === 'player' ? '你' : this.enemy.name;
                     this._log(`<span style="color:#888;">> ${targetName} 的 [${b.name}] 效果消失了。</span>`);
-                    delete this.buffs[target][attr];
+                    delete buffList[attr];
                 }
             }
         });
@@ -629,10 +699,9 @@ const Combat = {
         });
     },
 
-    // 【优化】使用缓存更新UI
     _updateUIStats: function() {
         const ui = this.uiRefs;
-        if (!ui.pHp) return; // 缓存未初始化
+        if (!ui.pHp) return;
 
         const pMaxHp = this.player.derived.hpMax;
         const pMaxMp = this.player.derived.mpMax || 100;
@@ -650,19 +719,16 @@ const Combat = {
         this._updateAttrStyle('enemy', this.buffs.enemy);
     },
 
-    // 【优化】优化属性更新
     _updateAttrStyle: function(target, buffs) {
         const prefix = target === 'player' ? 'p' : 'e';
         const uiMap = target === 'player' ? this.uiRefs.pAttr : this.uiRefs.eAttr;
         const attrMap = { 'atk': '攻击', 'def': '防御', 'spd': '速度' };
 
-        // key在 buffs 中是 atk, def, speed
-        // suffix 是 atk, def, spd
         const keys = ['atk', 'def', 'spd'];
 
         keys.forEach(suffix => {
             const buffKey = suffix === 'spd' ? 'speed' : suffix;
-            const el = uiMap[suffix]; // 使用缓存
+            const el = uiMap[suffix];
 
             if (el) {
                 const oldBuffVal = el.querySelector('.attr-buff-val');
@@ -670,19 +736,19 @@ const Combat = {
                 el.classList.remove('attr-debuff', 'attr-buff');
 
                 const buff = buffs[buffKey];
+
                 if (buff) {
                     const isDebuff = buff.type === 'debuff';
                     const color = isDebuff ? '#d32f2f' : '#388e3c';
                     const sign = buff.val > 0 ? '+' : '';
                     const attrName = attrMap[suffix];
-                    const buffHtml = `<span class="attr-buff-val" style="color:${color}; margin-left:5px;margin-top: -5px"> - ${sign} ${Math.abs(buff.val)} ${attrName}</span>`;
+                    const buffHtml = `<span class="attr-buff-val" style="color:${color}; margin-left:5px;margin-top: -5px"> ${isDebuff?"-":""} ${sign} ${Math.abs(buff.val)} ${attrName}</span>`;
                     el.insertAdjacentHTML('beforeend', buffHtml);
                 }
             }
         });
     },
 
-    // 【优化】使用缓存更新毒性
     _updateToxUI: function() {
         const ui = this.uiRefs;
         if (ui.eToxBar && this.enemy) {
@@ -822,68 +888,14 @@ const Combat = {
     },
 
     _injectStyles: function() {
-        // 使用新ID避免旧样式干扰
         if (document.getElementById('combat-styles-v7-7')) return;
 
         const css = `
             .turn-divider { margin:8px 0; border-top:1px dashed #ccc; color:#888; font-size:12px; text-align:center; } 
-            
-            /* 触发器容器 */
-            .combat-tooltip-trigger { 
-                display: inline-block; 
-                position: relative; /* 关键：作为定位基准 */
-                cursor: help;
-            } 
-            
-            /* 悬浮窗主体 (改为右侧显示) */
-            .combat-tooltip-content { 
-                visibility: hidden; 
-                opacity: 0; 
-                
-                /* 定位核心修改 */
-                position: absolute; 
-                left: 100%;          /* 在父元素右侧 */
-                top: 50%;            /* 垂直居中 */
-                transform: translateY(-50%); /* 修正垂直偏移 */
-                margin-left: 10px;   /* 与触发器保持距离 */
-                
-                width: 220px; 
-                background: rgba(0, 0, 0, 0.9); 
-                color: #fff; 
-                padding: 8px 12px; 
-                border-radius: 6px; 
-                font-size: 13px; 
-                font-family: monospace; 
-                font-weight: normal; 
-                z-index: 99999;      /* 确保极高层级，不被遮挡 */
-                box-shadow: 2px 2px 10px rgba(0,0,0,0.4); 
-                transition: opacity 0.2s; 
-                pointer-events: none; 
-                text-align: left; 
-                line-height: 1.5;
-                white-space: normal; /* 允许换行 */
-            } 
-            
-            /* 小箭头 (指向左侧) */
-            .combat-tooltip-content::after { 
-                content: ""; 
-                position: absolute; 
-                top: 50%; 
-                right: 100%;         /* 在悬浮窗左侧 */
-                margin-top: -6px;    /* 垂直居中修正 */
-                border-width: 6px; 
-                border-style: solid; 
-                /* 箭头颜色指向右边 (黑色) */
-                border-color: transparent rgba(0, 0, 0, 0.9) transparent transparent; 
-            } 
-            
-            /* 悬停显示 */
-            .combat-tooltip-trigger:hover .combat-tooltip-content { 
-                visibility: visible; 
-                opacity: 1; 
-            } 
-            
-            /* 内部排版样式 (保持不变) */
+            .combat-tooltip-trigger { display: inline-block; position: relative; cursor: help; } 
+            .combat-tooltip-content { visibility: hidden; opacity: 0; position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 10px; width: 220px; background: rgba(0, 0, 0, 0.9); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-family: monospace; font-weight: normal; z-index: 99999; box-shadow: 2px 2px 10px rgba(0,0,0,0.4); transition: opacity 0.2s; pointer-events: none; text-align: left; line-height: 1.5; white-space: normal; } 
+            .combat-tooltip-content::after { content: ""; position: absolute; top: 50%; right: 100%; margin-top: -6px; border-width: 6px; border-style: solid; border-color: transparent rgba(0, 0, 0, 0.9) transparent transparent; } 
+            .combat-tooltip-trigger:hover .combat-tooltip-content { visibility: visible; opacity: 1; } 
             .tip-row { display: flex; justify-content: space-between; margin-bottom: 2px; } 
             .tip-dim { color: #aaa; font-size: 12px; } 
             .tip-crit { color: #ffeb3b; font-weight: bold; } 
@@ -905,23 +917,19 @@ const Combat = {
         return result;
     },
 
-    // 【优化】使用缓存 + 日志裁剪 + scrollIntoView
     _log: function(msg) {
-        // 使用缓存的容器，如果没有初始化则回退到 getElementById
         const container = this.uiRefs.logContainer || document.getElementById(this.logContainerId);
 
         if (container) {
             const line = document.createElement('div');
-            line.style.marginBottom = '4px'; // 保持原有样式
+            line.style.marginBottom = '4px';
             line.innerHTML = msg;
             container.appendChild(line);
 
-            // 节点修剪：保持 DOM 轻量，只保留最后 60 行
             if (container.children.length > 60) {
                 container.removeChild(container.firstChild);
             }
 
-            // 保持使用 scrollIntoView，确保最可靠的滚动体验
             setTimeout(() => {
                 line.scrollIntoView({ behavior: "smooth", block: "end" });
             }, 0);
@@ -940,17 +948,12 @@ const Combat = {
             setTimeout(() => {
                 div.scrollIntoView({ behavior: "smooth", block: "end" });
             }, 0);
-        } else {
-            // Fallback for when modal isn't open
-            // const logHtml = this.logs.map(l => `<div>${l}</div>`).join('');
-            // this._updateModal(`战斗结束 - ${resultType}`, `<div style="max-height:300px; overflow-y:auto;">${logHtml}</div>${extraHtml}`, true);
         }
     },
-// 【新增】清理缓存，断开引用，释放内存
+
     clearCache: function() {
-        this.uiRefs = {}; // 清空对象，切断对 DOM 的引用
+        this.uiRefs = {};
         this.logContainerId = null;
-        // console.log(">>> [Combat] 缓存已清理");
     },
     _randomInt: function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
     _updateModal: function(title, content, showClose = false) { if (window.showGeneralModal) { let footer = showClose ? `<button class="ink_btn" onclick="closeModal()">关闭</button>` : null; window.showGeneralModal(title, content, footer); } }

@@ -109,6 +109,7 @@ const UtilsEnemy = {
             // toxicity: 当前已中毒深度 (状态值，初始为0)
             toxicity: 0,
 
+
             exp: template.exp,
             money: template.money,
             drops: template.drops,

@@ -26,24 +26,7 @@ window.performDirectRebirth = function() {
     newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
     newPlayer.currentStudyTarget = window.player.currentStudyTarget || null;
 
-    let legacyStats = window.player.bonus_stats || {};
-    const dbItems = window.books || (window.GAME_DB ? window.GAME_DB.items : []);
 
-    if (window.player.skills) {
-        for (let skillId in window.player.skills) {
-            const oldSkill = window.player.skills[skillId];
-            if (oldSkill.mastered) {
-                const itemData = Array.isArray(dbItems) ? dbItems.find(i => i.id === skillId) : null;
-                if (itemData) {
-                    const bonusVal = (itemData.rarity || 1) * 1;
-                    if(!legacyStats.shen) legacyStats.shen = 0;
-                    legacyStats.shen += bonusVal;
-                }
-            }
-        }
-    }
-
-    newPlayer.bonus_stats = legacyStats;
     newPlayer.generation = nextGen;
     newPlayer.name = "道友" + nextGen + "世";
     newPlayer.worldSeed = Math.floor(Math.random() * 1000000);

@@ -89,7 +89,7 @@
                     📜 悬赏 (T)
                 </button>
                 <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图 (M)</button>
-                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
+<!--                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>-->
             </div>
 
             <div id="center_map_container">
@@ -116,14 +116,16 @@
                 <div id="right_action_grid">
                     <button class="act_btn" onclick="doGather()">🌿 寻幽</button>
                     <button class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
-                    <button class="act_btn" onclick="doTrain('ext')">⚔️ 外功</button>
-                    <button class="act_btn" onclick="doTrain('int')">🧘 内功</button>
+                    <button id="btn_action_train" class="ink_btn" onclick="window.UITrain.open()">
+                        <span class="btn_icon">⚔️</span>
+                        <span class="btn_text">修炼</span>
+                    </button>
                     <button class="act_btn" onclick="doRest()">🛏️ 休憩</button>
-                    <button class="act_btn" onclick="showCook()">🍳 烹饪</button>
-                    <button class="act_btn" onclick="doFish()">🎣 垂钓</button>
+<!--                    <button class="act_btn" onclick="showCook()">🍳 烹饪</button>-->
+                    <button class="act_btn" onclick="window.UIFish.open()">🎣 垂钓</button>
                     <button class="act_btn" onclick="doEat()">🍖 进食</button>
-                    <button class="act_btn" onclick="doWater()">💧 打水</button>
-                    <button class="act_btn" onclick="doShop()">⚖️ 集市</button>
+<!--                    <button class="act_btn" onclick="doWater()">💧 打水</button>-->
+<!--                    <button class="act_btn" onclick="doShop()">⚖️ 集市</button>-->
                 </div>
             </div>
         </div>
@@ -204,6 +206,7 @@
     <script src="js/modules/shops/medical_shop.js"></script>
 
 
+
     <script src="js/modules/ui_combat_modal.js"></script>
     <script src="js/modules/map_enemy_manager.js"></script>
     <script src="js/modules/map_camera.js"></script>
@@ -214,7 +217,9 @@
     <script src="js/modules/ui.js"></script>
     <script src="js/modules/ui_bag.js"></script>
     <script src="js/modules/ui_skill.js"></script>
+    <script src="js/modules/ui_train.js"></script>
     <script src="js/modules/ui_bounty.js"></script>
+    <script src="js/modules/ui_fish.js"></script>
 
 
     <script src="js/modules/input_shortcuts.js"></script>

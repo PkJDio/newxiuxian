@@ -82,12 +82,12 @@ const PLAYER_TEMPLATE = {
 // 【新增】随身消耗品 (3个格子)
     consumables: [null, null, null],
     //基础
-    attr: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 100, hungerMax: 100}, //额外加成的属性
-    exAttr: {jing: 0, qi: 0, shen: 0, atk: 0, def: 0, speed: 0, space: 0, hpMax: 0, mpMax: 0, hungerMax: 0}, //基础属性+加成之后显示的实际属性，显示在UI上，有计算属性的方法计算
-    derived: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 100, hungerMax: 100},
+    attr: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 100, hungerMax: 0,fatigueMax:0}, //额外加成的属性
+    exAttr: {jing: 0, qi: 0, shen: 0, atk: 0, def: 0, speed: 0, space: 0, hpMax: 0, mpMax: 0, hungerMax: 0,fatigueMax:0}, //基础属性+加成之后显示的实际属性，显示在UI上，有计算属性的方法计算
+    derived: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 0, hungerMax: 0,fatigueMax:0 },
 
     // 动态状态
-    status: {hp: 200, mp: 100, hunger: 100, mood: 100, toxicity: 0, fatigue: 0},
+    status: {hp: 9999, mp: 9999, hunger: 9999, mood: 100, toxicity: 0, fatigue: 0},
     //寻幽记录
     gatherRecords:{},
     // 经济与经验

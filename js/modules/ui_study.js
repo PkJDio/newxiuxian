@@ -1,248 +1,310 @@
 // js/modules/ui_study.js
-// 研读系统 UI - v2.1 (修复BUFF实时显示与通用性)
+// 研读界面 UI v3.5 (优化自动选中逻辑：优先记忆，失效则选第一本)
 
-window.UIStudy = {
-    _isStyleInjected: false,
+const UIStudy = {
+    selectedBookId: null, // 这里存储当前选中的书籍ID
+    modalBody: null,
 
-    _injectStyles: function() {
-        if (this._isStyleInjected) return;
-        const cssContent = `
-            .study_container { padding: 20px; font-family: "KaiTi", "楷体", serif; text-align: center; }
-            .study_header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-            .study_header h2 { color: #5d4037; margin: 0; }
-            .study_change_btn { color: #2196f3; cursor: pointer; text-decoration: underline; font-size: 14px; }
-            
-            .book_card { margin: 10px 0 20px 0; border: 2px solid #d4c4a8; padding: 15px; background: #fffdf5; border-radius: 8px; }
-            .book_title { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #3e2723; }
-            .book_desc { color: #666; font-size: 16px; line-height: 1.4; }
-            
-            .progress_box { margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px; }
-            .progress_info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 18px; }
-            .progress_val { color: #795548; font-weight: bold; }
-            .progress_bar_bg { width: 100%; height: 18px; background: #e0e0e0; border-radius: 8px; overflow: hidden; border: 1px solid #ccc; }
-            .progress_bar_fill { height: 100%; background: linear-gradient(to right, #8d6e63, #5d4037); transition: width 0.4s ease; }
-            
-            .gain_detail_box { margin-top: 12px; font-size: 16px; text-align: left; color: #5d4037; padding: 12px; background: rgba(0,0,0,0.03); border-radius: 4px; line-height: 1.6; }
-            .gain_row { display: flex; justify-content: space-between; align-items: center; }
-            .gain_base { color: #2e7d32; font-weight: bold; }
-            .gain_buff { color: #673ab7; font-weight: bold; }
-            
-            /* 新增：通用 Debuff 样式 */
-            .gain_debuff_tag { color: #d32f2f; margin-left: 8px; font-size: 14px; background: rgba(211, 47, 47, 0.1); padding: 1px 4px; border-radius: 3px; }
-            
-            .gain_final_row { border-top: 1px dashed #ccc; margin-top: 8px; padding-top: 6px; display: flex; justify-content: space-between; }
-            .gain_final_val { font-weight: bold; font-size: 18px; }
-            
-            .cost_tip { color: #a94442; font-size: 16px; margin-bottom: 20px; background: #fff3f3; padding: 8px; border-radius: 4px; }
-            
-            .empty_state { padding: 40px 20px; text-align: center; font-family: "KaiTi"; }
-            .empty_icon { font-size: 50px; margin-bottom: 20px; }
-            .empty_text { font-size: 20px; color: #5d4037; margin-bottom: 30px; }
-            
-            .selector_list { max-height: 400px; overflow-y: auto; padding: 10px; }
-            .selector_item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 10px; border: 1px solid #d4c4a8; background: #fff; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-            .selector_item:hover { background: #fffbf0; }
-            .selector_title { font-weight: bold; font-size: 16px; color: #3e2723; }
-            .selector_sub { font-size: 14px; color: #999; }
-            .selector_arrow { color: #795548; font-size: 16px; }
-        `;
-        const styleEl = document.createElement('style');
-        styleEl.id = 'style-ui-study';
-        styleEl.textContent = cssContent;
-        document.head.appendChild(styleEl);
-        this._isStyleInjected = true;
+    // 入口
+    open: function() {
+        // 这里不再强制清空 selectedBookId，保留上次的选择（如果有）
+        this.autoSelectBook();
+        this.renderModal();
     },
 
-    getCurrentTarget: function() {
-        return window.player.currentStudyTarget || null;
-    },
-
-    open: function(autoBookId = null) {
-        this._injectStyles();
-
-        if (autoBookId) {
-            window.player.currentStudyTarget = autoBookId;
-        }
-
-        const bookId = this.getCurrentTarget();
-        let contentHtml = "";
-
-        if (!bookId) {
-            contentHtml = `
-                <div class="empty_state">
-                    <div class="empty_icon">📜</div>
-                    <p class="empty_text">书案空空如也，尚未选定研读之物。</p>
-                    <button class="ink_btn" style="width:100%; height:45px;" onclick="window.UIStudy.openBookSelector()">选择研读功法</button>
-                </div>
-            `;
-        } else {
-            const book = window.GAME_DB.items.find(i => i.id === bookId);
-            const progress = (window.player.studyProgress && window.player.studyProgress[bookId]) || 0;
-            const max = book.studyCost || 100;
-            const pct = Math.min(100, Math.floor((progress / max) * 100));
-
-            const attr = window.player.derived || window.player.attributes;
-            const rarity = book.rarity || 1;
-            let relatedAttrValue = (book.subType === 'body') ? (attr.shen || 0) : Math.floor(((attr.qi || 0) + (attr.shen || 0)) / 2);
-
-            // 1. 基础收益
-            const baseGain = (10 + relatedAttrValue) / (1 + rarity * 0.1);
-            const theoreticalMax = Math.ceil(baseGain);
-
-            // 2. 实时遍历 Buff (通用化处理)
-            let extraEffPct = 0;
-            let debuffHtml = ""; // 用于拼接所有减益标签
-
-            const buffs = window.player.buffs || [];
-            const buffList = Array.isArray(buffs) ? buffs : Object.values(buffs);
-
-            buffList.forEach(b => {
-                if (!b) return;
-
-                // 增益：效率提升
-                if (b.attr === 'studyEff') {
-                    extraEffPct += parseFloat(b.val);
-                }
-
-                // 减益：特定 Debuff (兼容 ID 或 Name 检测)
-                // 这里把逻辑放宽，只要是名字里带“疲”或“饿”的，或者 ID 匹配的，都显示出来
-                const isFatigue = b.id === 'debuff_fatigue' || b.id === 'fatigue' || (b.name && b.name.includes('疲'));
-                const isHunger = b.id === 'debuff_hunger' || b.id === 'hunger' || (b.name && b.name.includes('饿'));
-
-                if (isFatigue) {
-                    debuffHtml += `<span class="gain_debuff_tag">疲惫-50%</span>`;
-                } else if (isHunger) {
-                    debuffHtml += `<span class="gain_debuff_tag">饥饿-50%</span>`;
-                }
-            });
-
-            const buffBonusHtml = extraEffPct > 0
-                ? `<div class="gain_row gain_buff">
-                    <span>丹药加成：</span>
-                    <span>+${Math.round(extraEffPct * 100)}%效率</span>
-                   </div>`
-                : "";
-
-            // 3. 实际收益计算
-            const actualGain = window.UtilStudy ? Math.ceil(window.UtilStudy.calcGain(book)) : 0;
-
-            // 颜色判断：只要实际收益低于理论最大值，就变红，否则变绿
-            const isReduced = actualGain < theoreticalMax;
-            const gainColor = isReduced ? "#d32f2f" : "#2e7d32";
-
-            contentHtml = `
-                <div class="study_container">
-                    <div class="study_header">
-                        <h2>📖 青灯研读</h2>
-                        <span class="study_change_btn" onclick="window.UIStudy.openBookSelector()">[更换书籍]</span>
-                    </div>
-                    
-                    <div class="book_card">
-                        <div class="book_title">《${book.name}》</div>
-                        <div class="book_desc">${book.desc || "深奥晦涩的古籍，需静心参悟。"}</div>
-                    </div>
-                    
-                    <div class="progress_box">
-                        <div class="progress_info">
-                            <span>研读进度</span>
-                            <span class="progress_val">${progress} / ${max} (${pct}%)</span>
-                        </div>
-                        <div class="progress_bar_bg">
-                            <div class="progress_bar_fill" style="width:${pct}%"></div>
-                        </div>
-
-                        <div class="gain_detail_box">
-                            <div class="gain_row">
-                                <span>预期基础进度：<span class="gain_base">+${theoreticalMax}</span></span>
-                                <div>${debuffHtml}</div>
-                            </div>
-                            
-                            ${buffBonusHtml}
-
-                            <div class="gain_final_row">
-                                <span>本次实际收益：</span>
-                                <span class="gain_final_val" style="color:${gainColor}">+${actualGain}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="cost_tip">
-                        消耗：${window.UtilStudy ? window.UtilStudy.COST_HOUR : 4}小时 & ${window.UtilStudy ? window.UtilStudy.FATIGUE_GAIN + 2 : 5}点疲劳值
-                    </div>
-
-                    <button class="ink_btn" style="width:100%; height:45px; font-size:18px;" onclick="window.UIStudy.doAction('${bookId}')">
-                        开始参悟
-                    </button>
-                </div>
-            `;
-        }
-
-        if (window.showGeneralModal) {
-            window.showGeneralModal("研读功法", contentHtml, null, "modal_study_action", 45, 70);
-        }
-    },
-
-    openBookSelector: function() {
-        this._injectStyles();
-        const inventory = window.player.inventory || [];
-        const booksInInv = inventory.filter(slot => {
-            const item = window.GAME_DB.items.find(i => i.id === slot.id);
-            return item && item.type === 'book';
-        });
-
-        if (booksInInv.length === 0) {
-            if (window.showToast) window.showToast("行囊中没有可研读的功法");
+    // 自动选中逻辑
+    autoSelectBook: function() {
+        // 1. 优先检查当前记录的 selectedBookId 是否有效
+        if (this.selectedBookId && this._isBookAvailable(this.selectedBookId)) {
+            // 如果上次选的书还在背包且没读完，就保持选中它，不做改变
             return;
         }
 
-        let listHtml = `<div class="selector_list">`;
-        booksInInv.forEach(slot => {
-            const item = window.GAME_DB.items.find(i => i.id === slot.id);
-            const progress = (window.player.studyProgress && window.player.studyProgress[item.id]) || 0;
-            const max = item.studyCost || 100;
+        // 2. 如果没有记录，或者记录的书无效（已读完/丢弃），则重新获取列表
+        const list = this._getReadableBooks();
+
+        if (list.length > 0) {
+            // 按照稀有度排序 (确保自动选中的是“最好”的一本)
+            list.sort((a, b) => (b.item.rarity || 1) - (a.item.rarity || 1));
+
+            // 选中第一本
+            this.selectedBookId = list[0].id;
+        } else {
+            // 一本能读的都没有
+            this.selectedBookId = null;
+        }
+    },
+
+    _isBookAvailable: function(bookId) {
+        // 检查背包是否有这本书，且进度未满
+        const book = GAME_DB.items.find(i => i.id === bookId);
+        if (!book) return false;
+
+        // 必须在背包里
+        const hasInBag = player.inventory.some(slot => slot.id === bookId);
+        if (!hasInBag) return false;
+
+        // 且未读完
+        const progress = (player.studyProgress && player.studyProgress[bookId]) || 0;
+        const max = book.studyCost || 100;
+        return progress < max;
+    },
+
+    _getReadableBooks: function() {
+        if (!player.inventory) return [];
+        // 获取背包里所有的书
+        const bookIds = player.inventory
+            .filter(slot => {
+                const item = GAME_DB.items.find(i => i.id === slot.id);
+                return item && item.type === 'book';
+            })
+            .map(slot => slot.id);
+
+        // 去重
+        const uniqueIds = [...new Set(bookIds)];
+
+        // 过滤掉已读完的
+        return uniqueIds.map(id => {
+            const item = GAME_DB.items.find(i => i.id === id);
+            return { id: id, item: item };
+        }).filter(entry => {
+            const progress = (player.studyProgress && player.studyProgress[entry.id]) || 0;
+            const max = entry.item.studyCost || 100;
+            return progress < max;
+        });
+    },
+
+    renderModal: function() {
+        const contentHtml = `
+            <div class="study_layout">
+                <div class="study_sidebar" id="study_book_list"></div>
+                <div class="study_main" id="study_dashboard"></div>
+            </div>
+        `;
+
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            this.modalBody = window.UtilsModal.showInteractiveModal("青灯研读", contentHtml, null, "modal_study", 70, 70);
+        }
+
+        this._injectStyles();
+        this.refresh();
+    },
+
+    refresh: function() {
+        if (!document.getElementById('study_book_list')) return;
+        this.renderLeftList();
+        this.renderRightPanel();
+    },
+
+    // 渲染左侧列表
+    renderLeftList: function() {
+        const container = document.getElementById('study_book_list');
+        container.innerHTML = "";
+
+        const list = this._getReadableBooks();
+
+        if (list.length === 0) {
+            container.innerHTML = `<div class="empty_tip">行囊空空<br>暂无未读功法</div>`;
+            return;
+        }
+
+        // 排序：稀有度高优先
+        list.sort((a, b) => (b.item.rarity || 1) - (a.item.rarity || 1));
+
+        list.forEach(entry => {
+            const isActive = entry.id === this.selectedBookId;
+            const progress = (player.studyProgress && player.studyProgress[entry.id]) || 0;
+            const max = entry.item.studyCost || 100;
             const pct = Math.floor((progress / max) * 100);
 
-            listHtml += `
-                <div class="selector_item" onclick="window.UIStudy.selectBook('${item.id}')">
-                    <div>
-                        <div class="selector_title">《${item.name}》</div>
-                        <div class="selector_sub">当前进度: ${pct}%</div>
+            const el = document.createElement('div');
+            el.className = `study_item ${isActive ? 'active' : ''}`;
+
+            // 点击事件
+            el.onclick = () => {
+                this.selectedBookId = entry.id;
+                this.refresh();
+            };
+
+            // 悬浮框事件
+            el.onmouseenter = (e) => {
+
+                    window.showSkillTooltip(e, entry.id);
+
+            };
+            el.onmouseleave = () => {
+                if (window.hideTooltip) window.hideTooltip();
+            };
+            el.onmousemove = (e) => {
+                if (window.moveTooltip) window.moveTooltip(e);
+            };
+
+            const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[entry.item.rarity] : { color: '#333' };
+            const typeText = entry.item.subType === 'body' ? '外功' : '内功';
+
+            el.innerHTML = `
+                <div class="si_icon">📜</div>
+                <div class="si_info">
+                    <div class="si_name" style="color:${rarityConfig.color}">${entry.item.name}</div>
+                    <div class="si_sub">
+                        <span class="si_tag">${typeText}</span> 
+                        <span class="si_pct">进度 ${pct}%</span>
                     </div>
-                    <div class="selector_arrow">点击选择 ></div>
                 </div>
             `;
+            container.appendChild(el);
         });
-        listHtml += `</div>`;
+    },
 
-        if (window.showGeneralModal) {
-            window.showGeneralModal("选择功法", listHtml, null, "modal_book_selector", 40, 60);
+    // 渲染右侧详情
+    renderRightPanel: function() {
+        const container = document.getElementById('study_dashboard');
+        container.innerHTML = "";
+
+        if (!this.selectedBookId) {
+            container.innerHTML = `<div class="empty_tip">请选择要研读的典籍</div>`;
+            return;
         }
+
+        const bookId = this.selectedBookId;
+        const item = GAME_DB.items.find(i => i.id === bookId);
+
+        // 获取详细计算数据 (来自 util_study.js 的 predictGain)
+        const predict = window.UtilStudy.predictGain(bookId);
+        const progress = (player.studyProgress && player.studyProgress[bookId]) || 0;
+        const max = item.studyCost || 100;
+
+        // 数值安全处理
+        let effValue = predict.efficiency;
+        if (isNaN(effValue) || effValue === undefined) effValue = 1.0;
+        const effPercent = Math.round(effValue * 100);
+
+        // 1. 标题头
+        const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#333', name: '普通' };
+        const headerHtml = `
+            <div class="sd_header">
+                <div class="sd_title" style="color:${rarityConfig.color}">${item.name} <span style="font-size:16px; color:#666; font-weight:normal;">(${rarityConfig.name})</span></div>
+                <div class="sd_desc">${item.desc || '深奥晦涩的古籍，需静心参悟。'}</div>
+            </div>
+        `;
+
+        // 2. 进度条
+        const pct = Math.min(100, (progress / max) * 100).toFixed(1);
+        const gainPct = Math.min(100, (predict.gain / max) * 100).toFixed(1);
+
+        const progressHtml = `
+            <div class="sd_progress_box">
+                <div class="sd_level_row">
+                    <span>研读进度</span>
+                    <span>${Math.floor(progress)} / ${max}</span>
+                </div>
+                <div class="sd_bar_bg">
+                    <div class="sd_bar_fill" style="width:${pct}%"></div>
+                    <div class="sd_bar_gain" style="left:${pct}%; width:${gainPct}%"></div>
+                </div>
+                <div class="sd_tip">研读完成后即可习得此功法</div>
+            </div>
+        `;
+
+        // 3. 效率详情
+        let breakdownHtml = "";
+        if (predict.breakdown) {
+            breakdownHtml = predict.breakdown.map(b => {
+                const color = b.color || '#666';
+                return `<div class="eff_row"><span>${b.label}</span><span style="color:${color}">${b.val}</span></div>`;
+            }).join('');
+        }
+
+        const effHtml = `
+            <div class="sd_stats_grid">
+                <div class="sd_stat_card">
+                    <div class="stat_label">单次研读进度</div>
+                    <div class="stat_val">+${predict.gain}</div>
+                    <div class="stat_sub">公式: [ ${predict.formulaDesc || '基础+属性加成'} ]</div>
+                </div>
+                <div class="sd_stat_card">
+                    <div class="stat_label">效率详情</div>
+                    <div class="stat_list">${breakdownHtml}</div>
+                    <div class="stat_total">当前效率: <b style="color:#2e7d32">${effPercent}%</b></div>
+                </div>
+            </div>
+        `;
+
+        // 4. 按钮
+        const btnHtml = `
+            <div class="sd_actions">
+                <button class="study_big_btn" 
+                    onclick="window.UtilStudy.performStudy('${bookId}')">
+                    🕯️ 秉烛夜读
+                </button>
+                <div class="study_cost_tip">
+                    消耗: 2时辰 / +8疲劳
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = headerHtml + progressHtml + effHtml + btnHtml;
     },
 
-    selectBook: function(bookId) {
-        window.player.currentStudyTarget = bookId;
-        if (window.showToast) window.showToast("已更换研读目标");
-        if (window.closeModal) window.closeModal();
-        setTimeout(() => { this.open(); }, 50);
-    },
+    _injectStyles: function() {
+        if (document.getElementById('style-ui-study')) return;
+        const css = `
+            .study_layout { display:flex; height:100%; gap:20px; font-family:"KaiTi"; overflow:hidden; }
+            
+            /* 左侧列表 */
+            .study_sidebar { flex:1; border:1px solid #ddd; background:#fff; border-radius:6px; overflow-y:auto; display:flex; flex-direction:column; max-width:260px; }
+            .study_item { padding:12px; border-bottom:1px solid #eee; cursor:pointer; display:flex; gap:10px; align-items:center; transition:0.2s; }
+            .study_item:hover { background:#fafafa; }
+            .study_item.active { background:#e8f5e9; border-left:4px solid #4caf50; }
+            
+            .si_icon { font-size:26px; width:34px; text-align:center; }
+            .si_info { flex:1; overflow:hidden; }
+            .si_name { font-weight:bold; font-size:18px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .si_sub { font-size:14px; color:#666; display:flex; justify-content:space-between; }
+            .si_tag { background:#eee; padding:1px 4px; border-radius:3px; }
 
-    doAction: function(bookId) {
-        if (window.UtilStudy && window.UtilStudy.performStudy) {
-            // 执行研读（内部会扣除时间、增加疲劳、增加Buff等）
-            const isFinished = window.UtilStudy.performStudy(bookId);
+            /* 右侧面板 */
+            .study_main { flex:2; display:flex; flex-direction:column; gap:15px; padding:10px; overflow-y:auto; }
+            
+            .sd_header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; }
+            .sd_title { font-size:28px; font-weight:bold; margin-bottom:5px; }
+            .sd_desc { font-size:16px; color:#666; }
 
-            if (isFinished) {
-                window.player.currentStudyTarget = null;
-                if (window.closeModal) window.closeModal();
-            } else {
-                // 关键：研读一次后，状态可能变了（比如多了疲劳BUFF），必须重新 open 来刷新界面显示
-                // 为了视觉上的“刷新感”，可以加一点点延迟
-                setTimeout(() => {
-                    this.open();
-                }, 50);
+            .sd_progress_box { background:#fffdf5; padding:20px; border-radius:8px; border:1px solid #d4c4a8; box-shadow:inset 0 0 5px rgba(0,0,0,0.05); }
+            .sd_level_row { display:flex; justify-content:space-between; margin-bottom:10px; font-size:18px; font-weight:bold; color:#5d4037; }
+            
+            .sd_bar_bg { height:18px; background:#e0e0e0; border-radius:8px; overflow:hidden; position:relative; box-shadow:inset 0 1px 3px rgba(0,0,0,0.2); }
+            .sd_bar_fill { height:100%; background:linear-gradient(90deg, #795548, #5d4037); transition:width 0.3s; }
+            .sd_bar_gain { position:absolute; top:0; height:100%; background:rgba(141, 110, 99, 0.5); box-shadow: 0 0 5px #a1887f; }
+            .sd_tip { margin-top:10px; color:#8d6e63; font-size:15px; text-align:center; }
+
+            .sd_stats_grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
+            .sd_stat_card { border:1px solid #ddd; border-radius:6px; padding:15px; background:#fff; display:flex; flex-direction:column; justify-content:center; }
+            .stat_label { font-size:16px; color:#888; margin-bottom:5px; text-align:center; }
+            .stat_val { font-size:30px; font-weight:bold; color:#5d4037; text-align:center; }
+            .stat_sub { font-size:14px; color:#999; margin-top:5px; text-align:center; }
+            .stat_list { font-size:15px; color:#555; }
+            .eff_row { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dashed #eee; }
+            .stat_total { margin-top:8px; text-align:right; font-size:16px; }
+
+            .sd_actions { text-align:center; margin-top:20px; }
+            .study_big_btn { 
+                font-size:26px; padding:15px 80px; border-radius:40px; border:none; 
+                background:linear-gradient(to bottom, #6d4c41, #4e342e); 
+                color:#fff; cursor:pointer; box-shadow:0 4px 10px rgba(93, 64, 55, 0.4); 
+                transition:0.2s; font-family:"KaiTi"; font-weight:bold; letter-spacing:2px;
             }
-        } else {
-            console.error("未找到 UtilStudy 模块");
-        }
+            .study_big_btn:hover { transform:translateY(-2px); box-shadow:0 6px 15px rgba(93, 64, 55, 0.5); }
+            .study_big_btn:active { transform:translateY(1px); }
+            .study_cost_tip { margin-top:12px; color:#888; font-size:16px; }
+
+            .empty_tip { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:22px; text-align:center; }
+        `;
+        const style = document.createElement('style');
+        style.id = 'style-ui-study';
+        style.textContent = css;
+        document.head.appendChild(style);
     }
 };
+
+window.UIStudy = UIStudy;

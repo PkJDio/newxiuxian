@@ -187,8 +187,6 @@ const MapCamera = {
         tx = Math.max(0, Math.min(MAX, tx));
         ty = Math.max(0, Math.min(MAX, ty));
 
-        // 即使坐标没变，如果时间流逝了（比如休息），可能光照会变，所以最好还是刷新
-        // 但为了性能，完全没变就不处理
         if (tx === player.coord.x && ty === player.coord.y) return;
 
         const dist = Math.abs(player.coord.x - tx) + Math.abs(player.coord.y - ty);
@@ -200,8 +198,12 @@ const MapCamera = {
 
         if (window.TimeSystem) TimeSystem.passTime(costHours);
 
+        // 更新坐标
         player.coord.x = tx;
         player.coord.y = ty;
+
+        // --- 新增：根据坐标检测并保存区域信息 ---
+        this._updateRegionInfo(tx, ty);
 
         this._checkRegion(tx, ty);
         this._updateTerrainBuffs(tx, ty);
@@ -209,9 +211,27 @@ const MapCamera = {
         if (window.MapEnemyManager) MapEnemyManager.update(this.x, this.y);
 
         if (window.GatherSystem) GatherSystem.updateButtonState();
-        if(window.saveGame) window.saveGame();
+        if(window.saveGame) window.saveGame(); // 保存存档
 
-        this.requestRender(); // 核心：移动后请求重绘
+        this.requestRender();
+    },
+
+    // --- 新增辅助方法 ---
+    _updateRegionInfo: function(x, y) {
+        if (typeof REGION_LAYOUT === 'undefined') return;
+
+        // 遍历区域布局寻找匹配项
+        const region = REGION_LAYOUT.find(r =>
+            x >= r.x[0] && x < r.x[1] &&
+            y >= r.y[0] && y < r.y[1]
+        );
+
+        if (region) {
+            player.coord.region = region.id;
+            // console.log(`已进入区域: ${region.name} (${region.id})`);
+        } else {
+            player.coord.region = "unknown";
+        }
     },
 
     updateSidebar: function() {

@@ -1,102 +1,216 @@
 // js/modules/ui_skill.js
-// 技艺系统 (整合外功、内功、生活技艺) - v2.1 (DOM与CSS分离优化版)
+// 技艺系统 v3.4 (残卷专属破碎纸张样式 + 稀有度适配)
 
 const UISkill = {
     currentTab: 'body',
-
-    // 标记样式是否已注入
     _isStyleInjected: false,
 
-    // 映射表：Tab名称 -> 装备数据Key | 槽位数量Key
     configMap: {
-        'body': {
-            equipKey: 'gongfa',      // 统一存储在 player.equipment.gongfa
-            limitKey: 'gongfa_nums'  // 统一读取 player.gongfa_nums 作为上限
-        },
-        'cultivation': {
-            equipKey: 'gongfa',
-            limitKey: 'gongfa_nums'
-        },
-        'life': {
-            equipKey: null,
-            limitKey: null
-        }
+        'body': { equipKey: 'gongfa', limitKey: 'gongfa_nums' },
+        'cultivation': { equipKey: 'gongfa', limitKey: 'gongfa_nums' },
+        'life': { equipKey: null, limitKey: null }
     },
 
-    // 【优化1】CSS 单例注入
+    // ================= CSS 样式注入 =================
     _injectStyles: function() {
         if (this._isStyleInjected) return;
 
         const cssContent = `
-            /* 容器布局 */
-            .skill_container { display:flex; width:100%; height:100%; gap:15px; font-family:"KaiTi", "楷体", serif; }
-            .skill_library { flex:2; display:flex; flex-direction:column; border:1px solid #ddd; border-radius:4px; background:#fff; }
-            .skill_slots_panel { flex:1; display:flex; flex-direction:column; border:1px solid #ddd; border-radius:4px; background:#fcfcfc; padding:15px; min-width: 280px; }
+            /* --- 容器布局 --- */
+            .skill_container { display:flex; width:100%; height:100%; gap:15px; font-family:"KaiTi", "楷体", serif; overflow:hidden; }
+            .skill_library { flex:3; display:flex; flex-direction:column; border:1px solid #ddd; border-radius:4px; background:#fff; min-width: 0; }
+            .skill_slots_panel { flex:1; display:flex; flex-direction:column; border:1px solid #ddd; border-radius:4px; background:#fcfcfc; padding:15px; min-width: 280px; max-width: 320px; }
             
-            /* 标签页 */
-            .skill_tabs { display:flex; border-bottom:1px solid #eee; background:#f9f9f9; }
-            .skill_tab_btn { flex:1; padding:10px; border:none; background:transparent; cursor:pointer; color:#888; font-size:16px; transition: all 0.2s; }
-            .skill_tab_btn.active { color:#333; border-bottom:2px solid #a94442; background:#fff; font-weight:bold; }
+            /* --- 标签页 --- */
+            .skill_tabs { display:flex; border-bottom:1px solid #eee; background:#f9f9f9; flex-shrink: 0; }
+            .skill_tab_btn { flex:1; padding:12px 10px; border:none; background:transparent; cursor:pointer; color:#888; font-size:18px; transition: all 0.2s; font-family:"KaiTi"; }
+            .skill_tab_btn.active { color:#333; border-bottom:3px solid #a94442; background:#fff; font-weight:bold; }
             .skill_tab_btn:hover { background: #f0f0f0; }
 
-            /* 列表区域 */
-            #skill_list_content { flex:1; overflow-y:auto; padding:10px; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px; align-content:start; }
-            
-            /* 技能卡片 */
-            .skill_card { border:1px solid #eee; background:#fff; padding:10px; border-radius:4px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
-            .skill_card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            
-            .skill_card.mastered { border:2px solid #ffc107; background:#fffdf5; }
-            .skill_card.equipped { border:1px solid #a94442; background:#fff5f5; }
-            
-            /* 技能图标与文字 */
-            .skill_icon { font-size:24px; }
-            .skill_info { flex:1; }
-            .skill_name { font-weight:bold; color:#333; }
-            .skill_level { font-size:14px; color:#666; }
-            
-            /* 印章水印 */
-            .skill_stamp {
-                position: absolute; top: -5px; right: -5px;
-                width: 60px; height: 60px; line-height: 54px;
-                border: 4px solid rgba(217, 83, 79, 0.4);
-                border-radius: 50%;
-                color: rgba(217, 83, 79, 0.3);
-                text-align: center; font-size: 36px; font-weight: 900;
-                transform: rotate(15deg); pointer-events: none; z-index: 0;
-                font-family: 'Kaiti', serif;
+            /* --- 列表区域 --- */
+            #skill_list_content { 
+                flex:1; overflow-y:auto; padding:15px; 
+                display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); 
+                grid-auto-rows: max-content; gap:12px; align-content:start; 
             }
+            #skill_list_content::-webkit-scrollbar { width: 6px; }
+            #skill_list_content::-webkit-scrollbar-track { background: #f1f1f1; }
+            #skill_list_content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+            /* --- 卡片通用样式 --- */
+            .skill_card { 
+                position:relative; min-height: 70px; 
+                display:flex; align-items:center; gap:12px; padding:12px; 
+                border:1px solid #eee; background:#fff; border-radius:6px; 
+                cursor:pointer; transition:all 0.2s; overflow:hidden; 
+            }
+            .skill_card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #ccc; }
             
-            /* 右侧面板 */
-            .slots_header { font-size:18px; font-weight:bold; text-align:center; margin-bottom:20px; border-bottom:2px solid #333; padding-bottom:10px; }
-            .slots_container { flex:1; display:flex; flex-direction:column; gap:10px; }
-            .slot_info_row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
-            
-            /* 装备槽位 */
-            .skill_slot_box { position: relative; padding: 10px; border-radius: 4px; display: flex; align-items: center; gap: 10px; min-height: 60px; }
-            .skill_slot_box.filled { border: 1px solid #a94442; background: #fffbfb; }
-            .skill_slot_empty { width:100%; text-align:center; color:#ccc; border: 1px dashed #ccc; padding: 15px 0; border-radius: 4px; }
-            
-            /* 槽位内的印章 (略微不同) */
-            .slot_stamp {
-                position: absolute; bottom: 0px; right: 40px;
-                width: 54px; height: 54px; line-height: 48px;
-                border: 3px solid rgba(217, 83, 79, 0.3);
-                border-radius: 50%;
-                color: rgba(217, 83, 79, 0.2);
-                text-align: center; font-size: 30px; font-weight: 900;
-                transform: rotate(-15deg); pointer-events: none; z-index: 0;
-                font-family: 'Kaiti', serif;
+            /* 状态修饰 */
+            .skill_card.mastered { background:#fffdf5; border-color:#ffecb3; }
+            .skill_card.equipped:not(.art_full_base):not(.art_part_base) { border-color:#a94442; background:#fff5f5; }
+
+            /* =========================================
+               【1. 完整功法 (Full Arts) 样式】
+               ========================================= */
+            .art_full_base { border-width: 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+            .art_full_base::before {
+                content: ""; position: absolute; top:0; left:0; right:0; bottom:0;
+                border-radius: 6px; padding: 2px; pointer-events: none;
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.6;
+            }
+            /* 完整底纹 */
+            .art_full_base::after {
+                content: "◈"; position: absolute; right: -10px; bottom: -20px;
+                font-size: 80px; font-family: serif; pointer-events: none;
+                opacity: 0.05; z-index: 0;
             }
 
-            /* 标签Tag */
-            .tag_body { background:#e3f2fd; color:#1565c0; padding:1px 4px; border-radius:3px; font-size:10px; margin-right:5px; }
-            .tag_cult { background:#fce4ec; color:#c2185b; padding:1px 4px; border-radius:3px; font-size:10px; margin-right:5px; }
+            /* =========================================
+               【2. 残卷功法 (Part Arts) 样式】 - 新增
+               ========================================= */
+            .art_part_base {
+                border-style: dashed; /* 虚线边框，暗示不完整 */
+                border-width: 2px;
+                background-color: #fcf9f2; /* 陈旧纸张色 */
+                
+                /* 模拟右上角撕裂缺口 */
+                clip-path: polygon(
+                    0% 0%, 
+                    85% 0%, 
+                    90% 5%, /* 撕裂点 */
+                    88% 8%, 
+                    92% 12%,
+                    100% 15%, 
+                    100% 100%, 
+                    0% 100%
+                );
+            }
             
-            /* 通用文本 */
-            .text-empty { width:100%; text-align:center; color:#999; margin-top:50px; }
-            .text-equipped { font-size:12px; color:#a94442; font-weight:bold; margin-right:5px; }
-            .text-mastered { color:#d4af37; font-size:12px; margin-left:5px; }
+            /* 残卷纹理：做旧噪点 */
+            .art_part_base::before {
+                content: ""; position: absolute; top:0; left:0; right:0; bottom:0;
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+                opacity: 0.4; pointer-events: none; z-index: 0;
+            }
+
+            /* 残卷水印：一个淡淡的“残”字 */
+            .art_part_base::after {
+                content: "残"; 
+                position: absolute; right: 10px; bottom: -10px;
+                font-size: 60px; font-family: "KaiTi", serif; 
+                pointer-events: none; opacity: 0.06; z-index: 0;
+                transform: rotate(-10deg);
+            }
+
+            /* =========================================
+               【3. 稀有度配色 (共用)】
+               ========================================= */
+            
+            /* R1: 凡品 */
+            .art_r1 { border-color: #546e7a; }
+            .art_full_base.art_r1 { background: linear-gradient(135deg, #eceff1 0%, #cfd8dc 100%); }
+            .art_full_base.art_r1 .skill_name { color: #37474f !important; }
+            .art_part_base.art_r1 .skill_name { color: #546e7a !important; opacity: 0.8; } /* 残卷文字稍微淡一点 */
+
+            /* R2: 优秀 */
+            .art_r2 { border-color: #2e7d32; }
+            .art_full_base.art_r2 { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
+            .art_full_base.art_r2 .skill_name { color: #1b5e20 !important; }
+            .art_part_base.art_r2 .skill_name { color: #2e7d32 !important; opacity: 0.8; }
+
+            /* R3: 精良 */
+            .art_r3 { border-color: #1565c0; }
+            .art_full_base.art_r3 { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
+            .art_full_base.art_r3 .skill_name { color: #0d47a1 !important; }
+            .art_part_base.art_r3 .skill_name { color: #1565c0 !important; opacity: 0.8; }
+
+            /* R4: 史诗 */
+            .art_r4 { border-color: #6a1b9a; }
+            .art_full_base.art_r4 { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); }
+            .art_full_base.art_r4 .skill_name { color: #4a148c !important; }
+            .art_part_base.art_r4 .skill_name { color: #6a1b9a !important; opacity: 0.8; }
+
+            /* R5: 传说 */
+            .art_r5 { border-color: #3e2723; }
+            .art_full_base.art_r5 { background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); }
+            .art_full_base.art_r5 .skill_name { color: #bf360c !important; text-shadow: 0 0 1px rgba(191, 54, 12, 0.2); }
+            .art_part_base.art_r5 .skill_name { color: #d84315 !important; opacity: 0.9; }
+
+            /* R6: 神话 */
+            .art_r6 { border-color: #b71c1c; }
+            .art_full_base.art_r6 { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); }
+            .art_full_base.art_r6 .skill_name { color: #b71c1c !important; text-shadow: 0 0 2px rgba(183, 28, 28, 0.2); }
+            .art_part_base.art_r6 .skill_name { color: #c62828 !important; opacity: 0.9; }
+
+            /* 流光特效仅限完整版 */
+            .art_r1.art_full_base::before { background: linear-gradient(45deg, transparent, #90a4ae, transparent); }
+            .art_r2.art_full_base::before { background: linear-gradient(45deg, transparent, #66bb6a, transparent); }
+            .art_r3.art_full_base::before { background: linear-gradient(45deg, transparent, #42a5f5, transparent); }
+            .art_r4.art_full_base::before { background: linear-gradient(45deg, transparent, #ab47bc, transparent); }
+            .art_r5.art_full_base::before { background: linear-gradient(45deg, transparent, #ffb300, transparent); }
+            .art_r6.art_full_base::before { background: linear-gradient(45deg, transparent, #e53935, transparent); }
+
+            /* ========================================= */
+
+            .skill_icon { font-size:28px; width: 40px; text-align:center; z-index: 1; }
+            .skill_info { flex:1; overflow:hidden; position: relative; z-index: 2; }
+            .skill_name { font-weight:bold; color:#333; font-size: 17px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .skill_level { font-size:14px; color:#666; }
+
+            /* 角标 */
+            .card_badge {
+                position: absolute; top: 0; right: 0;
+                background: #a94442; color: #fff;
+                font-size: 12px; font-weight: bold; padding: 2px 8px;
+                border-bottom-left-radius: 6px; z-index: 10;
+                box-shadow: -1px 1px 2px rgba(0,0,0,0.2); pointer-events: none;
+            }
+
+            /* 【左侧印章】墨红、加深 */
+            .skill_stamp {
+                position: absolute; 
+                bottom: -13px; right: -5%;
+                width: 60px; height: 60px; line-height: 54px;
+                border: 3px solid #8b0000; color: #8b0000; opacity: 0.8;
+                border-radius: 50%;
+                text-align: center; font-size: 34px; font-weight: 900;
+                transform: rotate(-25deg); 
+                pointer-events: none; z-index: 0;
+            }
+
+            /* --- 右侧面板 --- */
+            .slots_header { font-size:18px; font-weight:bold; text-align:center; margin-bottom:15px; border-bottom:2px solid #ddd; padding-bottom:10px; color:#555; }
+            .slots_container { flex:1; display:flex; flex-direction:column; gap:12px; overflow-y: auto; }
+            .slot_info_row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size: 14px; color:#666; }
+
+            /* --- 装备槽位 --- */
+            .skill_slot_box { position: relative; min-height: 75px; border-radius: 6px; display: flex; align-items: center; box-sizing: border-box; transition: all 0.2s; overflow: hidden; }
+            .skill_slot_box.filled { padding: 12px; gap: 12px; border: 1px solid #a94442; background: #fffbfb; justify-content: flex-start; }
+            .skill_slot_box.empty { justify-content: center; border: 2px dashed #e0e0e0; background: #fafafa; color: #ccc; font-size: 16px; font-weight: bold; letter-spacing: 2px; }
+            .skill_slot_box.empty:hover { border-color: #bbb; background: #f5f5f5; color: #999; }
+
+            /* --- 卸载按钮 --- */
+            .btn_unequip {
+                position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+                width: 32px; height: 32px; border-radius: 50%;
+                border: 1px solid #dcdcdc; background: #fff; color: #999;
+                font-size: 14px; font-weight: bold; cursor: pointer;
+                display: flex; align-items: center; justify-content: center;
+                transition: all 0.2s; z-index: 5; font-family: "KaiTi";
+            }
+            .btn_unequip:hover { background: #ffebee; border-color: #ef5350; color: #c62828; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            
+            /* 适配完整/残卷背景 */
+            .art_full_base .btn_unequip, .art_part_base .btn_unequip { border-color: rgba(0,0,0,0.1); background: rgba(255,255,255,0.6); }
+            .art_full_base .btn_unequip:hover, .art_part_base .btn_unequip:hover { background: #fff; border-color: #c62828; }
+
+            .tag_body { background:#e3f2fd; color:#1565c0; padding:2px 5px; border-radius:3px; font-size:12px; margin-right:5px; }
+            .tag_cult { background:#fce4ec; color:#c2185b; padding:2px 5px; border-radius:3px; font-size:12px; margin-right:5px; }
+            
+            .text-empty { grid-column: 1 / -1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; min-height: 200px; text-align: center; color: #999; font-size: 18px; }
         `;
 
         const styleEl = document.createElement('style');
@@ -114,7 +228,6 @@ const UISkill = {
 
     showModal: function() {
         const title = "修仙技艺";
-        // 纯净的 HTML 结构，无内联样式
         const contentHtml = `
             <div class="skill_container">
                 <div class="skill_library">
@@ -127,7 +240,7 @@ const UISkill = {
                 </div>
 
                 <div class="skill_slots_panel">
-                    <div class="slots_header">当前状态</div>
+                    <div class="slots_header">当前运功</div>
                     <div id="slots_dynamic_container" class="slots_container"></div>
                 </div>
             </div>
@@ -147,8 +260,6 @@ const UISkill = {
 
     switchTab: function(tabName) {
         this.currentTab = tabName;
-
-        // 使用 class 切换状态，而非操作 style
         document.querySelectorAll('.skill_tab_btn').forEach(btn => btn.classList.remove('active'));
         const activeBtn = document.getElementById(`tab_${tabName}`);
         if(activeBtn) activeBtn.classList.add('active');
@@ -159,10 +270,14 @@ const UISkill = {
 
     refresh: function() {
         setTimeout(() => {
-            this.switchTab(this.currentTab);
+            if(document.getElementById('skill_list_content')) {
+                this.renderList();
+                this.renderRightPanel();
+            }
         }, 0);
     },
 
+    // ================= 列表渲染 (DOM优化版) =================
     renderList: function() {
         const container = document.getElementById('skill_list_content');
         if (!container) return;
@@ -173,21 +288,23 @@ const UISkill = {
                 container.innerHTML = `<div class="text-empty">暂未领悟任何生活技艺</div>`;
                 return;
             }
+            const frag = document.createDocumentFragment();
             for (let key in player.lifeSkills) {
                 const skill = player.lifeSkills[key];
                 const card = document.createElement('div');
                 card.className = 'skill_card';
-                card.style.cursor = 'default'; // 生活技能不可点击装备
+                card.style.cursor = 'default';
                 card.innerHTML = `
                     <div class="skill_icon">🎨</div>
                     <div class="skill_info">
                         <div class="skill_name" style="color:#2e7d32;">${skill.name}</div>
-                        <div style="font-size:16px; color:#666;">熟练度: <span style="color:#d4af37; font-weight:bold;">${skill.exp}</span></div>
-                        <div style="font-size:14px; color:#999; margin-top:2px;">${skill.desc || '暂无描述'}</div>
+                        <div style="font-size:14px; color:#666;">熟练度: <span style="color:#d4af37; font-weight:bold;">${skill.exp}</span></div>
+                        <div style="font-size:12px; color:#999; margin-top:2px;">${skill.desc || '暂无描述'}</div>
                     </div>
                 `;
-                container.appendChild(card);
+                frag.appendChild(card);
             }
+            container.appendChild(frag);
             return;
         }
 
@@ -202,35 +319,55 @@ const UISkill = {
             }
         });
 
+        // 排序：完整 > 残卷 > 稀有度 > 熟练度
         list.sort((a, b) => {
+            const isFullA = a.id.includes('_full') ? 1 : 0;
+            const isFullB = b.id.includes('_full') ? 1 : 0;
+            if (isFullA !== isFullB) return isFullB - isFullA;
+
             const rA = a.rarity || 1;
             const rB = b.rarity || 1;
             if (rA !== rB) return rB - rA;
+
             const expA = player.skills[a.id] ? player.skills[a.id].exp : 0;
             const expB = player.skills[b.id] ? player.skills[b.id].exp : 0;
             return expB - expA;
         });
 
         if (list.length === 0) {
-            container.innerHTML = `<div class="text-empty">暂无此类功法<br><span style="font-size:12px">去天道或者研读获取吧</span></div>`;
+            container.innerHTML = `<div class="text-empty">暂无此类功法<br><span style="font-size:14px; color:#bbb; margin-top:8px;">去天道或者研读获取吧</span></div>`;
             return;
         }
+
+        const frag = document.createDocumentFragment();
 
         list.forEach(item => {
             const skillData = player.skills[item.id];
             const isEquipped = this.isEquipped(item.id);
             const info = window.UtilsSkill ? UtilsSkill.getSkillInfo(item.id) : { levelName: '未知' };
-            const rarityColor = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
+            const rarity = item.rarity || 1;
+            const rarityColor = (RARITY_CONFIG[rarity] || {}).color || '#333';
             const isMastered = skillData && skillData.mastered;
 
+            // 样式判断
+            const isFullArts = item.id.includes('_full');
+            const isPartArts = item.id.includes('_upper') || item.id.includes('_middle') || item.id.includes('_lower');
             const hasAction = item.action && Object.keys(item.action).length > 0;
-            const stampHtml = hasAction ? `<div class="skill_stamp">主</div>` : '';
 
-            const card = document.createElement('div');
-            // 根据状态添加不同的 class
             let classes = ['skill_card'];
             if (isMastered) classes.push('mastered');
             else if (isEquipped) classes.push('equipped');
+
+            // 添加特殊样式类
+            if (isFullArts) {
+                classes.push('art_full_base');
+                classes.push(`art_r${rarity}`);
+            } else if (isPartArts) {
+                classes.push('art_part_base');
+                classes.push(`art_r${rarity}`);
+            }
+
+            const card = document.createElement('div');
             card.className = classes.join(' ');
 
             card.onmouseenter = (e) => showSkillTooltip(e, item.id);
@@ -238,22 +375,28 @@ const UISkill = {
             card.onmousemove = (e) => moveTooltip(e);
             card.onclick = () => this.handleEquipToggle(item.id, item.subType);
 
+            const badgeHtml = isEquipped ? `<div class="card_badge">运功</div>` : '';
+            const stampHtml = hasAction ? `<div class="skill_stamp">主</div>` : '';
+
             card.innerHTML = `
                 <div class="skill_icon">${item.icon || '📘'}</div>
                 <div class="skill_info">
                     <div class="skill_name" style="color:${rarityColor};">
                         ${item.name} 
-                        ${isMastered ? '<span class="text-mastered">(参悟)</span>' : ''}
+                        ${isMastered ? '<span style="color:#d4af37; font-size:12px; margin-left:4px;">(参悟)</span>' : ''}
                     </div>
                     <div class="skill_level">${info.levelName}</div>
                 </div>
-                ${isEquipped ? '<div class="text-equipped">已装备</div>' : ''}
+                ${badgeHtml}
                 ${stampHtml} 
             `;
-            container.appendChild(card);
+            frag.appendChild(card);
         });
+
+        container.appendChild(frag);
     },
 
+    // ================= 右侧面板渲染 (联动优化) =================
     renderRightPanel: function() {
         const container = document.getElementById('slots_dynamic_container');
         if (!container) return;
@@ -261,11 +404,11 @@ const UISkill = {
 
         if (this.currentTab === 'life') {
             container.innerHTML = `
-                <div style="padding:20px; text-align:center; color:#666; font-size:14px; background:#f0f0f0; border-radius:4px;">
-                    <p style="margin-bottom:10px; font-weight:bold;">🍃 道法自然</p>
+                <div style="padding:20px; text-align:center; color:#666; font-size:16px; background:#f0f0f0; border-radius:6px; line-height: 1.6;">
+                    <p style="margin-bottom:15px; font-weight:bold; font-size: 18px;">🍃 道法自然</p>
                     <p>生活技艺无需装备，<br>在日常行动中即可自动生效。</p>
                     <p style="margin-top:15px; color:#2e7d32;">熟练度越高，效果越好。</p>
-                    <p style="margin-top:5px; color:#e91e63; font-size:12px;">(轮回可完全继承)</p>
+                    <p style="margin-top:10px; color:#e91e63; font-size:14px;">(轮回可完全继承)</p>
                 </div>
             `;
             return;
@@ -273,12 +416,12 @@ const UISkill = {
 
         const header = document.createElement('div');
         header.className = 'slot_info_row';
-        header.innerHTML = `<span style="font-weight:bold; color:#666;">已装备功法</span><span style="font-size:12px; color:#999;" id="limit_info_gongfa"></span>`;
+        header.innerHTML = `<span style="font-weight:bold;">已装备功法</span><span id="limit_info_gongfa"></span>`;
         container.appendChild(header);
 
         const slotsDiv = document.createElement('div');
         slotsDiv.id = "slots_gongfa";
-        slotsDiv.style.cssText = "display:flex; flex-direction:column; gap:10px;";
+        slotsDiv.className = "slots_container";
         container.appendChild(slotsDiv);
 
         this._renderSlotGroup('body', 'slots_gongfa', 'limit_info_gongfa');
@@ -287,8 +430,8 @@ const UISkill = {
     _renderSlotGroup: function(tabType, containerId, infoId) {
         const container = document.getElementById(containerId);
         const limitInfo = document.getElementById(infoId);
-
         if (!container) return;
+
         container.innerHTML = '';
 
         const config = this.configMap[tabType];
@@ -307,6 +450,8 @@ const UISkill = {
             limitInfo.innerText = `(${realList.filter(x=>x).length} / ${maxSlots})`;
         }
 
+        const frag = document.createDocumentFragment();
+
         for (let i = 0; i < maxSlots; i++) {
             const skillId = realList[i] || null;
             const div = document.createElement('div');
@@ -314,39 +459,51 @@ const UISkill = {
             if (skillId) {
                 const item = books.find(id => id.id === skillId);
                 if (item) {
-                    div.className = "skill_slot_box filled"; // 使用 class
-                    const rarityColor = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
+                    let boxClasses = ["skill_slot_box", "filled"];
+                    const isFullArts = item.id.includes('_full');
+                    const isPartArts = item.id.includes('_upper') || item.id.includes('_middle') || item.id.includes('_lower');
+                    const rarity = item.rarity || 1;
 
+                    // 联动样式：右侧装备槽同步使用左侧的高级样式
+                    if (isFullArts) {
+                        boxClasses.push("art_full_base");
+                        boxClasses.push(`art_r${rarity}`);
+                    } else if (isPartArts) {
+                        boxClasses.push("art_part_base");
+                        boxClasses.push(`art_r${rarity}`);
+                    }
+
+                    div.className = boxClasses.join(" ");
+
+                    const rarityColor = (RARITY_CONFIG[rarity] || {}).color || '#333';
                     const tagClass = item.subType === 'body' ? 'tag_body' : 'tag_cult';
                     const tagName = item.subType === 'body' ? '外' : '内';
-                    const tagHtml = `<span class="${tagClass}">${tagName}</span>`;
-
-                    const hasAction = item.action && Object.keys(item.action).length > 0;
-                    const stampHtml = hasAction ? `<div class="slot_stamp">主</div>` : '';
 
                     div.innerHTML = `
-                        <div style="font-size:24px;">${item.icon || '📘'}</div>
+                        <div style="font-size:28px;">${item.icon || '📘'}</div>
                         <div style="flex:1; overflow:hidden;">
                             <div style="font-weight:bold; color:${rarityColor}; white-space:nowrap; font-size:16px; display:flex; align-items:center;">
-                                ${tagHtml}${item.name}
+                                <span class="${tagClass}">${tagName}</span>${item.name}
                             </div>
                         </div>
-                        ${stampHtml}
-                        <button class="ink_btn_small btn_danger" onclick="event.stopPropagation(); UISkill.unequip('${equipKey}', ${i})">卸</button>
+                        <div class="btn_unequip" onclick="event.stopPropagation(); UISkill.unequip('${equipKey}', ${i})" title="卸下">
+                            卸
+                        </div>
                     `;
                     div.onmouseenter = (e) => showSkillTooltip(e, skillId);
                     div.onmouseleave = () => hideTooltip();
                 } else {
-                    div.className = "skill_slot_box";
-                    div.innerHTML = `<div style="color:red;">[ 数据错误 ]</div>`;
+                    div.className = "skill_slot_box empty";
+                    div.innerHTML = `<span style="color:red; font-size:14px;">[ 数据错误 ]</span>`;
                     if (i < realList.length) player.equipment[equipKey][i] = null;
                 }
             } else {
-                div.className = "skill_slot_box";
-                div.innerHTML = `<div class="skill_slot_empty">未装备</div>`;
+                div.className = "skill_slot_box empty";
+                div.innerHTML = `未装备`;
             }
-            container.appendChild(div);
+            frag.appendChild(div);
         }
+        container.appendChild(frag);
     },
 
     isEquipped: function(skillId) {
@@ -402,7 +559,6 @@ const UISkill = {
         }
     },
 
-    // 辅助：统一刷新数据和界面
     _refreshData: function() {
         if(window.recalcStats) window.recalcStats();
         this.refresh();

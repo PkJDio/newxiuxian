@@ -140,11 +140,11 @@ const DebugSystem = {
     // === 功法功能 ===
     addRandomGongfa: function(subType) {
         if (!window.UtilsSkill) return;
-        const candidates = GAME_DB.items.filter(i => i.type === 'book' && i.subType === subType);
+        const candidates = books.filter(i => i.type === 'book' && i.subType === subType && !i.id.includes('_full'));
         if (candidates.length === 0) return;
         const item = candidates[Math.floor(Math.random() * candidates.length)];
         const expGain = Math.floor(Math.random() * 500) + 100;
-        UtilsSkill.learnSkill(item.id, expGain,true);
+        UtilsSkill.learnSkill(item.id, expGain);
     }
 };
 

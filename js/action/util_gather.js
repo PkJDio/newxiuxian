@@ -141,8 +141,8 @@ const GatherSystem = {
 
     _calculateLoot: function() {
         if (!player.lifeSkills) player.lifeSkills = {};
-        if (!player.lifeSkills.gather) player.lifeSkills.gather = { exp: 0 };
-        const exp = player.lifeSkills.gather.exp;
+        if (!player.lifeSkills.gathering) player.lifeSkills.gathering = { exp: 0 };
+        const exp = player.lifeSkills.gathering.exp;
 
         // 1. 境界判断
         let stage = 0;

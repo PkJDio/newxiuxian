@@ -2,7 +2,7 @@
 
 /* 剩余次数 (金色/墨色) */
 .gather_count_val {
-    font-size: 10px;
+    font-size: 16px;
     color: #5d4037; /* 深棕色，像干枯的墨迹 */
     margin-top: 2px;
     font-family: "Kaiti", serif;
@@ -11,7 +11,7 @@
 
 /* 无资源 (灰色) */
 .gather_count_empty {
-    font-size: 10px;
+    font-size: 16px;
     color: #999;
     margin-top: 2px;
     font-family: "Kaiti", serif;

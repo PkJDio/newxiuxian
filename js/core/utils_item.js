@@ -13,7 +13,28 @@ const UtilsItem = {
         }
         return { text: "未读", color: "#999", isUnread: true };
     },
+    useItemById : function(itemId) {
+        if (!player.inventory) return false;
 
+        // 1. 在背包中查找该物品
+        const inventoryIndex = player.inventory.findIndex(slot => slot.id === itemId);
+
+        if (inventoryIndex === -1) {
+            if (window.showToast) window.showToast("数量不足，无法使用");
+            return false;
+        }
+
+        const itemSlot = player.inventory[inventoryIndex];
+        if (itemSlot.count <= 0) {
+            if (window.showToast) window.showToast("数量不足，无法使用");
+            return false;
+        }
+
+        // 2. 直接复用原有的 useItem 逻辑
+        // 原有的 useItem 内部包含：获取数据、效果应用、数量扣除、UI刷新、存档
+        this.useItem(inventoryIndex);
+        return true;
+    },
     // 获取技能等级名称
     getSkillLimitName: function(level) {
         if (window.SKILL_CONFIG && window.SKILL_CONFIG.levelNames) {
@@ -123,8 +144,28 @@ const UtilsItem = {
         }
 
         // 3. 消耗物品
+        // 3. 消耗物品
         if (applied || item.type === 'food') {
             itemSlot.count--;
+
+            // --- 【新增：日志记录逻辑】 ---
+            if (window.LogManager && window.LogManager.add) {
+                // 定义稀有度颜色映射
+                const rarityColors = {
+                    1: "#ffffff", // 普通 - 白色
+                    2: "#2ecc71", // 优秀 - 绿色
+                    3: "#3498db", // 精良 - 蓝色
+                    4: "#9b59b6", // 史诗 - 紫色
+                    5: "#f1c40f", // 传说 - 金色
+                    6: "#e74c3c"  // 神话 - 红色
+                };
+                const color = rarityColors[item.rarity] || "#ffffff";
+
+                // 输出日志，使用 span 标签包裹名称以实现颜色区分
+                window.LogManager.add(`腹中饥馁，你吃下了一份 <span style="color:${color}">${item.name}</span>。`);
+            }
+            // ---------------------------
+
             if (itemSlot.count <= 0) {
                 player.inventory.splice(inventoryIndex, 1);
             }
@@ -137,8 +178,6 @@ const UtilsItem = {
 
             // 5. 自动保存
             if (window.saveGame) window.saveGame();
-        } else {
-            if (window.showToast) window.showToast("使用了，但似乎没什么效果");
         }
     },
 

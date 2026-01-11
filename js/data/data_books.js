@@ -7153,6 +7153,7 @@ const fullBooks = [
         value: 4307,
         studyCost: 1531,
         isCombined: true,
+        effects: { atk: 54 },
         action: { name: "烈火燎原", dmgMult: 7.0, mpCost: 240, cd: 8 },
         desc: "刀气纯阳。",
     },
@@ -7166,6 +7167,7 @@ const fullBooks = [
         value: 4309,
         studyCost: 1544,
         isCombined: true,
+        effects: { atk: 36, speed: 18 },
         action: { name: "幻阴破脉", dmgMult: 3.5, mpCost: 120, cd: 4 },
         desc: "阴寒无比。",
     },
@@ -7179,6 +7181,7 @@ const fullBooks = [
         value: 4312,
         studyCost: 1556,
         isCombined: true,
+        effects: { atk: 42, def: 6 },
         action: { name: "血凝心停", dmgMult: 1.75, mpCost: 60, cd: 2 },
         desc: "陈近南绝学。",
     },
@@ -7192,6 +7195,7 @@ const fullBooks = [
         value: 4314,
         studyCost: 1568,
         isCombined: true,
+        effects: { atk: 48, def: 12 },
         action: { name: "伏魔金刚", dmgMult: 7.0, mpCost: 240, cd: 8 },
         desc: "刚猛无俦。",
     },
@@ -7205,6 +7209,7 @@ const fullBooks = [
         value: 4316,
         studyCost: 1580,
         isCombined: true,
+        effects: { atk: 43, speed: 18 },
         action: { name: "灵蛇出洞", dmgMult: 3.5, mpCost: 120, cd: 4 },
         desc: "诡异莫测。",
     },
@@ -7219,6 +7224,7 @@ const fullBooks = [
         value: 4319,
         studyCost: 1593,
         isCombined: true,
+        effects: { atk: 24, def: 72 },
         desc: "一龙一象之力。",
     },
     {
@@ -7231,6 +7237,7 @@ const fullBooks = [
         value: 4321,
         studyCost: 1605,
         isCombined: true,
+        effects: { speed: 72 },
         desc: "幻化九影。",
     },
     {
@@ -7243,6 +7250,7 @@ const fullBooks = [
         value: 4324,
         studyCost: 1617,
         isCombined: true,
+        effects: { def: 84 },
         desc: "防御无双。",
     },
     {
@@ -7255,6 +7263,7 @@ const fullBooks = [
         value: 4326,
         studyCost: 1629,
         isCombined: true,
+        effects: { atk: 18, def: 36, speed: 12 },
         desc: "半枯半荣。",
     },
     {
@@ -7267,6 +7276,7 @@ const fullBooks = [
         value: 4329,
         studyCost: 1642,
         isCombined: true,
+        effects: { atk: 24, def: 36, speed: 24 },
         desc: "提升根骨。",
     },
     {
@@ -7279,6 +7289,7 @@ const fullBooks = [
         value: 4331,
         studyCost: 1654,
         isCombined: true,
+        effects: { def: 24, speed: 60 },
         desc: "闪避逃跑。",
     },
     {
@@ -7291,6 +7302,7 @@ const fullBooks = [
         value: 4334,
         studyCost: 1666,
         isCombined: true,
+        effects: { atk: 36, def: 48 },
         desc: "纯阳护体。",
     },
     {
@@ -7303,6 +7315,7 @@ const fullBooks = [
         value: 4336,
         studyCost: 1678,
         isCombined: true,
+        effects: { atk: 30, def: 30, speed: 30 },
         desc: "内外兼修。",
     },
     {
@@ -7315,6 +7328,7 @@ const fullBooks = [
         value: 4339,
         studyCost: 1691,
         isCombined: true,
+        effects: { atk: 36, def: 36, speed: 24 },
         desc: "经脉逆转。",
     },
     {
@@ -7327,6 +7341,7 @@ const fullBooks = [
         value: 4341,
         studyCost: 1703,
         isCombined: true,
+        effects: { atk: 48, def: 48 },
         desc: "阵法防御。",
     },
     {

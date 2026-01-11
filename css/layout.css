@@ -288,21 +288,77 @@
 }
 
 /* 右下：行动 (1/3) */
+/* 右下：行动 (1/3) */
 #right_action_container {
     flex: 1;
     display: flex;
     flex-direction: column;
     background: #e0e0e0;
+    overflow: hidden; /* 防止溢出 */
 }
+
 #right_action_grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px; /* 间隙拉大一点 */
-  padding: 2px;
-  background: #999;
-  border-top: 1px solid #999;
+    flex: 1;
+    display: grid;
+    /* 3列等宽 */
+    grid-template-columns: repeat(3, 1fr);
+    /* 自动行高，设为固定值可以保证按钮高度一致且紧凑 */
+    grid-auto-rows: 60px;
+    /* 间隙：水平和垂直都设为 4px，紧凑但有呼吸感 */
+    gap: 4px;
+    padding: 6px;
+    background: #e0e0e0; /* 背景色与容器统一 */
+    border-top: 1px solid #ccc;
+
+    /* 【核心修复】内容靠上对齐，防止按钮数量少时被拉伸填满整个屏幕 */
+    align-content: start;
+    overflow-y: auto; /* 如果按钮太多，允许内部滚动 */
 }
+
+/* 针对行动区域内的所有按钮进行样式覆写 */
+#right_action_grid .ink_btn {
+    /* 【核心修复】字号加大 */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Kaiti", "楷体", serif;
+
+    /* 紧凑的内边距 */
+    padding: 0;
+
+    /* 确保按钮占满格子 */
+    width: 100%;
+    height: 100%;
+
+    /* 稍微圆角 */
+    border-radius: 6px;
+
+    /* 居中对齐 */
+    display: flex;
+    flex-direction: column; /* 图标和文字垂直排列 */
+    justify-content: center;
+    align-items: center;
+    line-height: 1.2;
+}
+
+/* 如果按钮里有图标和文字的结构，微调间距 */
+#right_action_grid .ink_btn .btn_icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+#right_action_grid .ink_btn .btn_text {
+    font-size: 16px;
+}
+
+
+
+
+
+
+
+
+
+
+
 #map_container {
     display: grid;
     /* 这里的列数必须和 MapView 渲染的宽度一致，
