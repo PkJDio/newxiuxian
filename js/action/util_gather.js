@@ -1,6 +1,5 @@
 // js/action/util_gather.js
-// 寻幽采集系统 v2.2：修复按钮选择器失效BUG
-//console.log("加载 寻幽系统");
+// 寻幽采集系统 v2.3：修复次数刷新与初始化问题
 
 // ================= 配置区域 =================
 const GATHER_CONFIG = {
@@ -17,7 +16,6 @@ const GatherResourceManager = {
 
     // 获取指定网格的资源上限
     getResourceCount: function(gridX, gridY) {
-
         // 1. 城镇/村落避让检查
         const worldX = gridX * GATHER_CONFIG.GRID_SIZE;
         const worldY = gridY * GATHER_CONFIG.GRID_SIZE;
@@ -32,23 +30,18 @@ const GatherResourceManager = {
                     worldY + GATHER_CONFIG.GRID_SIZE <= t.y
                 );
                 if (!noOverlap) {
-
                     return 0; // 在城镇内，资源为0
                 }
             }
         }
 
-        // 2. 正常资源生成 (使用你的 RandomSystem)
-        // 确保 RandomSystem 存在，否则给默认值
+        // 2. 正常资源生成
         let rand = 0.5;
         if (typeof RandomSystem !== 'undefined') {
-            // 构造 Key，确保 RandomSystem 能正确解析
             const key = { x: gridX, y: gridY };
-            // 注意：这里假设 RandomSystem.getByMonth 内部处理了种子和月份逻辑
             rand = RandomSystem.getByMonth(key);
-
         } else {
-            console.warn("RandomSystem 未定义，使用默认随机");
+            // console.warn("RandomSystem 未定义，使用默认随机");
             rand = Math.random();
         }
 
@@ -69,6 +62,7 @@ const GatherResourceManager = {
 
     // 获取当前 Key
     getCurrentKey: function() {
+        if (!window.player || !window.player.coord) return "0_0_m0";
         const gx = Math.floor(player.coord.x / GATHER_CONFIG.GRID_SIZE);
         const gy = Math.floor(player.coord.y / GATHER_CONFIG.GRID_SIZE);
         const totalDays = (player.time.year * 360 + player.time.month * 30 + player.time.day) || 0;
@@ -78,26 +72,23 @@ const GatherResourceManager = {
 
     // 获取剩余次数
     getRemaining: function() {
+        if (!window.player || !window.player.coord) return 0;
+
         const gx = Math.floor(player.coord.x / GATHER_CONFIG.GRID_SIZE);
         const gy = Math.floor(player.coord.y / GATHER_CONFIG.GRID_SIZE);
 
         // 1. 获取上限
         const max = this.getResourceCount(gx, gy);
-        if (max <= 0) return 0; // 如果本来就是不毛之地，直接返回0
+        if (max <= 0) return 0;
 
-        // 2. 准备数据
+        // 2. 获取已用次数
         const key = this.getCurrentKey();
-
-        // 【修复步骤 1】先确保 player.gatherRecords 存在，防止报错
         if (!player.gatherRecords) {
             player.gatherRecords = {};
         }
-
-        // 【修复步骤 2】获取已用次数，如果没有记录，默认为 0
         const used = player.gatherRecords[key] || 0;
 
-        // 【修复步骤 3】删除了之前的 `if (!player.gatherRecords[key]) return 0;`
-        // 现在的逻辑是：最大值 - 已用值
+        // 3. 计算剩余
         return Math.max(0, max - used);
     },
 
@@ -134,8 +125,13 @@ const GatherSystem = {
         // 4. 增加熟练度
         this._addExp();
 
-        // 5. 刷新UI
+        // 5. 【关键修复】强制刷新UI
+        // 更新按钮上的次数显示
         this.updateButtonState();
+        // 更新左侧属性栏(疲劳、饱食度等)
+        if(window.updateUI) window.updateUI();
+
+        // 6. 保存
         if(window.saveGame) window.saveGame();
     },
 
@@ -174,11 +170,10 @@ const GatherSystem = {
             if (Math.random() < 0.15) this._dropEquipment();
         }
 
-        // lootMap 用于聚合物品：{ "itemId": { name: "止血草", rarity: 1, count: 5 } }
         let lootMap = {};
         let junkCount = 0;
 
-        // 3. 模拟掉落过程（仅生成数据，不操作背包）
+        // 3. 模拟掉落
         for (let i = 0; i < dropCount; i++) {
             const type = itemPools[Math.floor(Math.random() * itemPools.length)];
             const rRand = Math.random() * 100;
@@ -208,22 +203,18 @@ const GatherSystem = {
             }
         }
 
-        // 4. 【批量处理】一次性添加物品并构建日志文本
+        // 4. 批量添加与日志
         let displayLogs = [];
         for (const itemId in lootMap) {
             const loot = lootMap[itemId];
-
-            // 调用 addItem，直接传入统计好的总数
             if (window.UtilsAdd && window.UtilsAdd.addItem) {
                 window.UtilsAdd.addItem(itemId, loot.count, false);
             }
-
             displayLogs.push(`<span class="text_item quality_${loot.rarity}">${loot.name}</span> x${loot.count}`);
         }
 
         if (junkCount > 0) displayLogs.push(`杂物 x${junkCount}`);
 
-        // 5. 反馈 UI
         const logContent = displayLogs.length > 0 ? `寻幽偶得：${displayLogs.join('，')}。` : "一无所获。";
         if(window.showToast) window.showToast(logContent);
         if (window.LogManager) LogManager.add(logContent);
@@ -250,7 +241,9 @@ const GatherSystem = {
     },
 
     _addExp: function() {
-        const skill = player.lifeSkills.gather;
+        if (!player.lifeSkills) player.lifeSkills = {};
+        if (!player.lifeSkills.gathering) player.lifeSkills.gathering = { exp: 0 };
+        const skill = player.lifeSkills.gathering; // 修正属性名
         skill.exp += 1;
         const check = (val, name) => {
             if (skill.exp === val) window.showToast(`[寻幽] 技艺提升至【${name}】！`);
@@ -258,16 +251,20 @@ const GatherSystem = {
         check(100, "入门"); check(500, "进阶"); check(2000, "大成");
     },
 
-    // 更新按钮 UI
+    // 更新按钮 UI (核心修复部分)
     updateButtonState: function() {
-        // 【核心修改】
-        // 1. 尝试寻找按钮
-        const btn = document.querySelector('button[onclick="doGather()"]');
-        if (!btn) {
-            // 如果真的找不到了，说明页面可能重绘了，或者之前的 removeAttribute 导致的
-            // console.warn("未找到寻幽按钮");
-            return;
+        // 使用更精确的选择器，或者直接给按钮加 ID 更好，这里兼容原有写法
+        // 查找所有按钮，找到 onclick 包含 doGather 的那个
+        const btns = document.querySelectorAll('button');
+        let btn = null;
+        for (let b of btns) {
+            if (b.getAttribute('onclick') && b.getAttribute('onclick').includes('doGather')) {
+                btn = b;
+                break;
+            }
         }
+
+        if (!btn) return;
 
         const count = GatherResourceManager.getRemaining();
 
@@ -276,35 +273,39 @@ const GatherSystem = {
         let isAvailable = true;
 
         if (count > 0) {
-            countHtml = `<span class="gather_count_val">剩余${count}</span>`;
+            countHtml = `<span class="gather_count_val" style="display:block; font-size:12px; color:#aaffaa;">剩余${count}</span>`;
             isAvailable = true;
         } else {
-            countHtml = `<span class="gather_count_empty">无资源</span>`;
+            countHtml = `<span class="gather_count_empty" style="display:block; font-size:12px; color:#ff8888;">无资源</span>`;
             isAvailable = false;
         }
 
-        btn.innerHTML = `
-            <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">
-                <span>🌿 寻幽</span>
-                ${countHtml}
-            </div>
-        `;
+        // 保持按钮原有结构，只更新内部文字
+        btn.innerHTML = `🌿 寻幽 ${countHtml}`;
 
-        // 【关键修复】
-        // 不要移除 onclick 属性！否则下次 querySelector 就找不到这个按钮了。
-        // 使用 CSS pointer-events 来禁止点击。
         if (!isAvailable) {
             btn.classList.add('ink_disabled');
-            // 禁止鼠标事件，这样就点不动了，也不会触发 onclick
-            btn.style.pointerEvents = 'none';
+            btn.style.pointerEvents = 'none'; // 禁用点击
+            btn.style.opacity = '0.6';
         } else {
             btn.classList.remove('ink_disabled');
-            // 恢复鼠标事件
-            btn.style.pointerEvents = 'auto';
+            btn.style.pointerEvents = 'auto'; // 恢复点击
+            btn.style.opacity = '1';
         }
     }
 };
 
+// 绑定全局
 window.doGather = function() { GatherSystem.execute(); };
 window.GatherSystem = GatherSystem;
 window.GatherResourceManager = GatherResourceManager;
+
+// 【修复步骤 4】监听页面加载，确保初始化时按钮状态正确
+document.addEventListener("DOMContentLoaded", () => {
+    // 延迟一点时间，确保存档数据(player)已加载完毕
+    setTimeout(() => {
+        if (window.GatherSystem) {
+            GatherSystem.updateButtonState();
+        }
+    }, 500);
+});
