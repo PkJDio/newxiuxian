@@ -6,8 +6,9 @@ const MapCamera = {
     canvas: null,
     ctx: null,
 
-    x: 1330,
-    y: 1350,
+    // MapCamera 对象的属性
+    x: 2550, // 原 1330 -> 5100/2
+    y: 2550, // 原 1350 -> 5100/2
     scale: 1.5,
     width: 0,
     height: 0,
@@ -186,7 +187,7 @@ const MapCamera = {
     },
 
     moveTo: function(tx, ty) {
-        const MAX = 2700;
+        const MAX = 5100;
         tx = Math.max(0, Math.min(MAX, tx));
         ty = Math.max(0, Math.min(MAX, ty));
 

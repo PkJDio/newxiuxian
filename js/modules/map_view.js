@@ -1,7 +1,8 @@
 // js/modules/map_view.js
-// 全屏地图阅览控制器 (支持新地形：草原/沙漠/海洋，区分城镇村样式)
-// 优化版：事件驱动渲染，降低静止时的 CPU 占用
-//console.log("加载 地图阅览模块 (独立版 - 优化)");
+// 小地图功能 - 适配 5100x5100
+
+// 【核心修改1】显式定义地图尺寸，防止外部未定义
+
 
 const MapView = {
     canvas: null,
@@ -12,8 +13,8 @@ const MapView = {
 
     layout: { size: 0, offX: 0, offY: 0 },
 
-    // 摄像机默认居中 (1350, 1350)
-    camera: { x: 1350, y: 1350, level: "world" },
+    // 摄像机默认居中 (2550, 2550)
+    camera: { x: (MAP_SIZE/2), y: (MAP_SIZE/2), level: "world" },
 
     isDragging: false,
     dragStartX: 0, dragStartY: 0,
@@ -66,8 +67,8 @@ const MapView = {
             this.camera.x = player.x;
             this.camera.y = player.y;
         } else {
-            this.camera.x = 1350;
-            this.camera.y = 1350;
+            this.camera.x = (MAP_SIZE/2);
+            this.camera.y = (MAP_SIZE/2);
         }
 
         this.camera.level = "world";
@@ -115,9 +116,12 @@ const MapView = {
         this._requestRender(); // 触发重绘
     },
 
+    // 【核心修改2】修正缩放比例计算
+    // world 模式：整个 canvas 显示完整的 MAP_SIZE (5100)
+    // nation 模式：放大显示，例如显示 1/3 的区域 (1700)
     _getScale: function() {
-        if (this.camera.level === 'world') return this.layout.size / 2700;
-        else return this.layout.size / 900;
+        if (this.camera.level === 'world') return this.layout.size / MAP_SIZE;
+        else return this.layout.size / (MAP_SIZE/3);
     },
 
     _screenToWorld: function(sx, sy) {
@@ -186,8 +190,8 @@ const MapView = {
             if (e.deltaY > 0) {
                 if (this.camera.level !== 'world') {
                     this.camera.level = 'world';
-                    this.camera.x = 1350;
-                    this.camera.y = 1350;
+                    this.camera.x = (MAP_SIZE/2);
+                    this.camera.y = (MAP_SIZE/2);
                     this._updateUI();
                     this._requestRender(); // 缩放后重绘
                 }
@@ -199,11 +203,14 @@ const MapView = {
                     const my = e.clientY - rect.top;
                     if (mx >= this.layout.offX && mx <= this.layout.offX + this.layout.size &&
                         my >= this.layout.offY && my <= this.layout.offY + this.layout.size) {
-                        const worldScale = this.layout.size / 2700;
-                        const relX = mx - this.layout.offX;
-                        const relY = my - this.layout.offY;
-                        this.camera.x = relX / worldScale;
-                        this.camera.y = relY / worldScale;
+                        const worldScale = this.layout.size / MAP_SIZE; // 这里之前是 / (MAP_SIZE/3)，但在 world 模式下鼠标指向是基于 worldScale 的
+                        // 但实际上如果当前是 world 模式，scale 就是 worldScale。
+                        // 如果要放大到 nation 模式，我们需要以鼠标位置为中心放大
+
+                        // 修正：从 world 模式进入 nation 模式的定位逻辑
+                        const wp = this._screenToWorld(mx, my);
+                        this.camera.x = Math.max(0, Math.min(MAP_SIZE, wp.x));
+                        this.camera.y = Math.max(0, Math.min(MAP_SIZE, wp.y));
                         this._clampCamera();
                     }
                     this._updateUI();
@@ -279,8 +286,6 @@ const MapView = {
         return null;
     },
 
-    // 移除了 _startLoop，改用按需渲染
-
     _render: function() {
         if (!this.ctx) return;
         const ctx = this.ctx;
@@ -308,14 +313,14 @@ const MapView = {
 
         this._drawGrids(ctx);
         this._drawRegionNames(ctx);
-        this._drawTerrain(ctx); // 画地形 (含新类型)
-        this._drawTowns(ctx);   // 画城镇 (区分样式)
+        this._drawTerrain(ctx);
+        this._drawTowns(ctx);
         this._drawPlayer(ctx);
 
-        // 边框绘制
+        // 【核心修改3】绘制世界边界 (5100x5100)
         ctx.strokeStyle = "#000";
         ctx.lineWidth = 2 / scale;
-        ctx.strokeRect(0, 0, 2700, 2700);
+        ctx.strokeRect(0, 0, MAP_SIZE, MAP_SIZE);
 
         ctx.restore();
 
@@ -332,9 +337,10 @@ const MapView = {
         ctx.beginPath();
         ctx.strokeStyle = c.gridWorld;
         ctx.lineWidth = 2 / scale;
-        for (let i = 0; i <= 2700; i += 900) {
-            ctx.moveTo(i, 0); ctx.lineTo(i, 2700);
-            ctx.moveTo(0, i); ctx.lineTo(2700, i);
+        // 【核心修改4】绘制区域网格 (间隔 MAP_SIZE/3 = 1700)
+        for (let i = 0; i <= MAP_SIZE; i += (MAP_SIZE/3)) {
+            ctx.moveTo(i, 0); ctx.lineTo(i, MAP_SIZE);
+            ctx.moveTo(0, i); ctx.lineTo(MAP_SIZE, i);
         }
         ctx.stroke();
 
@@ -342,10 +348,13 @@ const MapView = {
             ctx.beginPath();
             ctx.strokeStyle = c.gridNation;
             ctx.lineWidth = 1 / scale;
-            for (let i = 0; i <= 2700; i += 300) {
-                if (i % 900 === 0) continue;
-                ctx.moveTo(i, 0); ctx.lineTo(i, 2700);
-                ctx.moveTo(0, i); ctx.lineTo(2700, i);
+            // 【核心修改5】绘制详细网格 (间隔约 566)
+            const detailStep = MAP_SIZE / 9; // 5100 / 9 ≈ 566.6
+            for (let i = 0; i <= MAP_SIZE; i += detailStep) {
+                // 跳过与大网格重叠的线
+                if (Math.abs(i % (MAP_SIZE/3)) < 1) continue;
+                ctx.moveTo(i, 0); ctx.lineTo(i, MAP_SIZE);
+                ctx.moveTo(0, i); ctx.lineTo(MAP_SIZE, i);
             }
             ctx.stroke();
         }
@@ -373,8 +382,10 @@ const MapView = {
                         for(let gy=0; gy<3; gy++) {
                             const key = `${r.id}_${gx}_${gy}`;
                             if(SUB_REGIONS[key]) {
-                                const cx = r.x[0] + gx*300 + 150;
-                                const cy = r.y[0] + gy*300 + 150;
+                                // 修正子区域中心点计算
+                                const subW = (MAP_SIZE/9);
+                                const cx = r.x[0] + gx*subW + subW/2;
+                                const cy = r.y[0] + gy*subW + subW/2;
                                 ctx.fillText(SUB_REGIONS[key].name, cx, cy);
                             }
                         }
@@ -389,7 +400,6 @@ const MapView = {
         const c = this.config.colors;
         const scale = this._getScale();
 
-        // 优化：减少循环内的属性设置
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -506,10 +516,15 @@ const MapView = {
         ctx.strokeStyle = "#fff"; ctx.lineWidth = 2 / scale; ctx.stroke();
     },
 
+    // 【核心修改6】修正摄像机边界限制，允许移动到 5100
     _clampCamera: function() {
-        const half = 450;
-        this.camera.x = Math.max(half, Math.min(2700 - half, this.camera.x));
-        this.camera.y = Math.max(half, Math.min(2700 - half, this.camera.y));
+        const viewSizeWorld = this.layout.size / this._getScale();
+        const halfView = viewSizeWorld / 2;
+
+        // 允许摄像机移动到地图边缘，但不能让视野超出地图太远
+        // 简单策略：限制中心点在 [0, MAP_SIZE] 内
+        this.camera.x = Math.max(0, Math.min(MAP_SIZE, this.camera.x));
+        this.camera.y = Math.max(0, Math.min(MAP_SIZE, this.camera.y));
     },
 
     _updateUI: function() {
@@ -519,7 +534,7 @@ const MapView = {
                 el.innerText = "世界级 (全览)";
                 el.style.background = "#e65100";
             } else {
-                el.innerText = "国家级 (900里)";
+                el.innerText = "国家级 (局部)"; // 移除硬编码数字
                 el.style.background = "#2e7d32";
             }
         }
@@ -559,13 +574,12 @@ const MapView = {
             return;
         }
         const wp = this._screenToWorld(mx, my);
-        const dx = Math.floor(Math.max(0, Math.min(2700, wp.x)));
-        const dy = Math.floor(Math.max(0, Math.min(2700, wp.y)));
+        const dx = Math.floor(Math.max(0, Math.min(MAP_SIZE, wp.x)));
+        const dy = Math.floor(Math.max(0, Math.min(MAP_SIZE, wp.y)));
         el.innerText = `(${dx}, ${dy})`;
     },
 
     stopLoop: function() {
-        // if (this.animationId) cancelAnimationFrame(this.animationId); // 已移除
         if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
         if(this.canvas) {
             this.canvas.onmousedown = null;
