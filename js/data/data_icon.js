@@ -6,9 +6,9 @@ const ITEM_ICONS = {
     default: "📦",
 
     // 基础类型映射
-    material: "📦",      // 材料
-    foodMaterial: "🥬",  // 食材
-    food: "🍖",          // 料理
+    material: "🧱",      // 材料
+    foodMaterial: "🌾",  // 食材
+    food: "🍲",          // 料理
     weapon: "⚔️",         // 兵器
     head: "🧢",          // 头盔
     body: "🥋",          // 衣服

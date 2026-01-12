@@ -89,6 +89,19 @@ const weaponTypes = [
  */
 const weapons = [
     {
+        id: "weapons_000",
+        name: "无名小剑",
+        type: "weapon",
+        subType: "剑",
+        grade: 0,
+        rarity: 1,
+        value: 10,
+        durability: 30,
+        sharpness: 10,
+        effects: { atk: 1 },
+        req: {},
+        desc: "剑就是剑，哪有什么名字",
+    },{
         id: "weapons_001",
         name: "枯树枝",
         type: "weapon",

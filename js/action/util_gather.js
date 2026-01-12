@@ -204,20 +204,40 @@ const GatherSystem = {
         }
 
         // 4. 批量添加与日志
-        let displayLogs = [];
+        // 4. 【优化】批量添加与日志分级
+        let toastParts = []; // 简略提示 (纯文本)
+        let logParts = [];   // 详细日志 (带HTML)
+
         for (const itemId in lootMap) {
             const loot = lootMap[itemId];
             if (window.UtilsAdd && window.UtilsAdd.addItem) {
+                // 静默添加，不弹窗
                 window.UtilsAdd.addItem(itemId, loot.count, false);
             }
-            displayLogs.push(`<span class="text_item quality_${loot.rarity}">${loot.name}</span> x${loot.count}`);
+            // 构建简略提示
+            toastParts.push(`${loot.name} x${loot.count}`);
+            // 构建详细日志
+            logParts.push(`<span class="text_item quality_${loot.rarity}">${loot.name}</span> x${loot.count}`);
         }
 
-        if (junkCount > 0) displayLogs.push(`杂物 x${junkCount}`);
+        if (junkCount > 0) {
+            toastParts.push(`杂物 x${junkCount}`);
+            logParts.push(`杂物 x${junkCount}`);
+        }
 
-        const logContent = displayLogs.length > 0 ? `寻幽偶得：${displayLogs.join('，')}。` : "一无所获。";
-        if(window.showToast) window.showToast(logContent);
-        if (window.LogManager) LogManager.add(logContent);
+        if (toastParts.length > 0) {
+            // 简陋的 Toast 提示
+            if(window.showToast) window.showToast(`获得：${toastParts.join('，')}`);
+
+            // 详细的 Log 记录
+            if (window.LogManager) {
+                const timeCost = GATHER_CONFIG.COST.HOURS;
+                LogManager.add(`你于山林间搜寻许久，耗去 ${timeCost} 个时辰，寻幽偶得：${logParts.join('，')}。`);
+            }
+        } else {
+            if(window.showToast) window.showToast("一无所获。");
+            if (window.LogManager) LogManager.add(`你耗去 ${GATHER_CONFIG.COST.HOURS} 个时辰搜寻四周，却一无所获。`);
+        }
     },
 
     _dropEquipment: function() {
@@ -273,10 +293,10 @@ const GatherSystem = {
         let isAvailable = true;
 
         if (count > 0) {
-            countHtml = `<span class="gather_count_val" style="display:block; font-size:12px; color:#aaffaa;">剩余${count}</span>`;
+            countHtml = `<span class="gather_count_val" style="display:block; font-size:12px; color:#022f02;">剩余${count}</span>`;
             isAvailable = true;
         } else {
-            countHtml = `<span class="gather_count_empty" style="display:block; font-size:12px; color:#ff8888;">无资源</span>`;
+            countHtml = `<span class="gather_count_empty" style="display:block; font-size:12px; color:#460808;">无资源</span>`;
             isAvailable = false;
         }
 

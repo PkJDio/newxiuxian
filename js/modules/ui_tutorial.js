@@ -6,7 +6,7 @@ window.UITutorial = {
     steps: [],
     tutorialType: 'main', // 'main', 'monster', 'combat'
 
-    // ================== 1. 主页引导配置 (之前丢失的部分) ==================
+    // ================== 1. 主页引导配置 (根据 index.html 最新按钮更新) ==================
     mainSteps: [
         {
             target: 'left_profile_box',
@@ -21,7 +21,7 @@ window.UITutorial = {
         {
             target: 'center_toolbar',
             title: '3. 功能行囊',
-            text: '【行囊】装纳万物，【技艺】可炼丹炼器，【地图】则用于周游列国，寻找机缘。'
+            text: '【行囊】装纳万物，【技艺】可查看生活技能，【地图】则用于周游列国，寻找机缘。'
         },
         {
             target: 'btn_action_gather',
@@ -44,18 +44,33 @@ window.UITutorial = {
             text: '【消除疲劳】恢复血量、法力并消除疲劳值。客栈比野外更安全，但需要花费银两。'
         },
         {
-            target: 'btn_action_eat',
-            title: '8. 进食果腹',
-            text: '【补充体力】当饱食度低时，记得点击此按钮。它会自动消耗行囊里的食物。'
-        },
-        {
             target: 'btn_action_fish',
-            title: '9. 垂钓之乐',
+            title: '8. 垂钓之乐',
             text: '【食材获取】装备鱼竿和鱼饵后可进行垂钓。除了鱼，有时还能钓到意想不到的宝物。'
         },
         {
+            target: 'btn_action_water',
+            title: '9. 汲水',
+            text: '【基础资源】前往水源处打水。水是生存的必需品，也是烹饪的重要材料。'
+        },
+        {
+            target: 'btn_action_cook',
+            title: '10. 烹饪美食',
+            text: '【生活技艺】使用食材和水制作佳肴。烹饪出的食物不仅更美味，恢复效果也更佳。'
+        },
+        {
+            target: 'btn_action_eat',
+            title: '11. 进食果腹',
+            text: '【补充体力】当饱食度低时，记得点击此按钮。它会自动消耗行囊里的食物。'
+        },
+        {
+            target: 'btn_action_market',
+            title: '12. 城镇集市',
+            text: '【交易买卖】身处城镇时可进入集市。在这里购买物资，或出售多余的战利品换取盘缠。'
+        },
+        {
             target: 'right_log_container',
-            title: '10. 江湖传闻',
+            title: '13. 江湖传闻',
             text: '你的修仙之路会被记录在此。战斗结果、奇遇事件都会在这里实时更新。'
         }
     ],
@@ -88,19 +103,18 @@ window.UITutorial = {
             text: '战斗过程自动进行，你可以在这里观察每一招一式的详细判定。'
         }
     ],
-    // 【新增】各建筑的引导文案配置
+    // ================== 3. 建筑引导配置 ==================
     buildingSteps: {
         'inn': [
             { target: 'inn_panel_main', title: '悦来客栈', text: '【休憩】花费银两在客栈休息，可以安全地恢复全状态并消除疲劳。\n【打听】或许能听到一些特殊的传闻或任务线索。' }
         ],
         'bounty': [
             { target: 'bounty_board_panel', title: '悬赏榜', text: '【接取悬赏】这里发布着官府或个人的委托。完成悬赏可获得灵石和声望。' },
-            // 注意：如果没有任务列表，这一步可能会跳过，属于正常现象
             { target: 'bounty_task_list', title: '任务列表', text: '接取前请留意任务的【难度】（骷髅头）和【时限】。量力而行，切勿贪功冒进。' }
         ],
         'blacksmith': [
             { target: 'blacksmith_panel_main', title: '铁匠铺', text: '你可以在这里出售多余的装备换取铜板。' },
-            { target: 'btn_smith_buy', title: '兵甲买卖', text: '如果有神兵利器出售，不妨买下来武装自己。' } // 假设有个购买按钮或区域
+            { target: 'btn_smith_buy', title: '兵甲买卖', text: '如果有神兵利器出售，不妨买下来武装自己。' }
         ],
         'medical': [
             { target: 'medical_panel_main', title: '回春堂', text: '【治疗】花费银两恢复气血。高级治疗甚至能消除顽疾（疲劳Buff）。' },
@@ -114,8 +128,15 @@ window.UITutorial = {
             { target: 'black-buy-list', title: '淘货', text: '看中什么就买下来吧，机会难得，过时不候！' }
         ]
     },
+    buildingSteps: {
+        'bag': [
+            {target: 'bag_equipment_row', title: '穿戴装备', text: '上方显示你已穿戴的神兵利器及随身丹药。'},
+            {target: 'bag_grid_content', title: '行囊格目', text: '这里存放着你所有的资源。点击物品可以查看详细属性，进行使用或丢弃。'},
+            {target: 'bag_toolbar_container', title: '行囊管理', text: '点击【整理】可自动分类，【批量丢弃】则能快速清理不需要的杂物。'}
+        ],
+    },
     /**
-     * 【新增】检查并触发建筑引导
+     * 检查并触发建筑引导
      * @param {string} buildingKey 建筑标识，如 'inn', 'bounty'
      */
     checkBuilding: function(buildingKey) {
@@ -129,13 +150,12 @@ window.UITutorial = {
         this.steps = steps;
         this.currentStep = 0;
 
-        // 延迟 600ms 确保弹窗动画完成且 DOM 已生成
         setTimeout(() => {
             const overlay = document.getElementById('tutorial_overlay');
             if (overlay) {
                 overlay.classList.remove('hidden');
                 this.render();
-                localStorage.setItem(storageKey, 'true'); // 标记为已读
+                localStorage.setItem(storageKey, 'true');
             }
         }, 600);
     },
@@ -189,7 +209,6 @@ window.UITutorial = {
                 text: '地图上的红点代表敌人或猎物。点击图标即可拔剑迎敌！'
             }];
         } else {
-            // 默认主引导：这里修复了之前的空数组问题
             this.steps = this.mainSteps;
         }
 
@@ -255,37 +274,31 @@ window.UITutorial = {
             spotlight.style.left = (rect.left - padding) + 'px';
         }
 
-        // ================= 【核心修改点：智能定位说明框】 =================
+        // ================= 智能定位说明框 =================
         if (box) {
             const boxH = box.offsetHeight || 200;
             const boxW = box.offsetWidth || 320;
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
-            const gap = 20; // 离目标的间距
-            const edgePadding = 20; // 离屏幕边缘的最小距离
+            const gap = 20;
+            const edgePadding = 20;
 
-            // --- 1. 水平定位：优先尝试“居中对齐”目标 ---
-            // 算法：目标中心点 - 说明框一半宽度
+            // 1. 水平定位：优先尝试“居中对齐”目标
             let left = rect.left + (rect.width / 2) - (boxW / 2);
 
-            // 边界修正：防止左右溢出屏幕
+            // 边界修正
             if (left < edgePadding) left = edgePadding;
             if (left + boxW > screenW - edgePadding) left = screenW - boxW - edgePadding;
 
-            // --- 2. 垂直定位：优先“目标下方”，次选“目标上方” ---
+            // 2. 垂直定位：优先“目标下方”，次选“目标上方”
             let top = rect.bottom + gap;
 
-            // 检查下方是否放得下
             if (top + boxH > screenH - edgePadding) {
-                // 下方空间不足，尝试放上方
                 top = rect.top - boxH - gap;
-
-                // 检查上方是否放得下
                 if (top < edgePadding) {
-                    // 上下都放不下（说明目标非常高，或者是全屏弹窗）
-                    // 策略：强制固定在屏幕底部中央，作为浮层显示
-                    top = screenH - boxH - 60; // 离底部稍微远一点，避免挡住可能的底部操作栏
-                    left = (screenW - boxW) / 2; // 强制屏幕居中
+                    // 上下都放不下，强制固定底部中央
+                    top = screenH - boxH - 60;
+                    left = (screenW - boxW) / 2;
                 }
             }
 
@@ -314,13 +327,12 @@ window.UITutorial = {
         const overlay = document.getElementById('tutorial_overlay');
         if (overlay) overlay.classList.add('hidden');
 
-        // 记录状态，避免重复触发
+        // 记录状态
         if (this.tutorialType === 'monster') {
             localStorage.setItem('xiuxian_tut_monster_ignore', 'true');
         } else if (this.tutorialType === 'combat') {
             localStorage.setItem('xiuxian_tut_combat_ignore', 'true');
         }
-        // 注意：主页引导的 ignore 状态是由 checkbox 控制的，这里不强制设为 true
     }
 };
 

@@ -154,7 +154,28 @@ const TooltipManager = {
         this.el.innerHTML = html;
         this._show();
     },
+    /* ================= 2.1 商店/图鉴物品详情 (查库版) ================= */
+    /**
+     * 显示商店物品详情 (无SID，直接查库)
+     * @param {Event} e 鼠标事件
+     * @param {String} itemId 物品模板ID
+     */
+    showShopItem: function(e, itemId) {
+        // 1. 数据获取
+        let item = null;
+        if (window.GAME_DB && window.GAME_DB.items) {
+            item = window.GAME_DB.items.find(i => i.id === itemId);
+        }
 
+        if (!item) {
+            console.warn(`[Tooltip] 无法找到物品数据: ${itemId}`);
+            return;
+        }
+
+        // 2. 复用 showItem 逻辑
+        // 传入 null 作为 sid，传入 item 对象作为 instance
+        this.showItem(e, null, item, 'normal');
+    },
     /* ================= 2. 普通物品详情 (恢复完整版) ================= */
     showItem: function(e, sid, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, itemId); return; }
@@ -368,7 +389,8 @@ window.showGalleryTooltip = TooltipManager.showGalleryItem.bind(TooltipManager);
 window.showSkillTooltip = TooltipManager.showSkill.bind(TooltipManager);
 window.hideTooltip = TooltipManager.hide.bind(TooltipManager);
 window.moveTooltip = TooltipManager._move.bind(TooltipManager);
-
+// 【新增】暴露商店物品悬浮窗接口
+window.showShopItemTooltip = TooltipManager.showShopItem.bind(TooltipManager);
 // 全局监听
 document.addEventListener('mousemove', (e) => {
     TooltipManager._move(e);

@@ -1,6 +1,6 @@
 // js/core/utils_item.js
-// 物品核心逻辑工具箱 v5.0 (Deterministic SID / 全SID驱动版)
-console.log("加载 物品工具箱 (Deterministic SID v5.0)");
+// 物品核心逻辑工具箱 v5.2 (Deterministic SID / Log Optimized)
+console.log("加载 物品工具箱 (Log Optimized v5.2)");
 
 const UtilsItem = {
     // ============================================================
@@ -128,11 +128,31 @@ const UtilsItem = {
         if (consumed) {
             this.removeItem(sid, amount);
 
-            // 日志
+            // 【日志优化部分】
             if (window.LogManager && window.LogManager.add) {
                 const rarityColors = { 1: "#2D2B2BFF", 2: "#2ecc71", 3: "#3498db", 4: "#9b59b6", 5: "#f1c40f", 6: "#e74c3c" };
                 const color = rarityColors[itemSlot.rarity] || "#2d2b2b";
-                window.LogManager.add(`使用物品：<span style="color:${color}">${itemSlot.name}</span>`);
+
+                let verb = "使用了";
+                switch (itemSlot.type) {
+                    case 'food':
+                    case 'foodMaterial':
+                        verb = "享用了";
+                        break;
+                    case 'pill':
+                        verb = "炼化了";
+                        break;
+                    case 'herb':
+                        verb = "吞服了";
+                        break;
+                    case 'wine':
+                        verb = "畅饮了";
+                        break;
+                    default:
+                        verb = "使用了";
+                }
+
+                window.LogManager.add(`你${verb} <span style="color:${color}">${itemSlot.name}</span>。`);
             }
         }
     },
@@ -149,9 +169,9 @@ const UtilsItem = {
             if (eff.hp) {
                 player.derived.hp = Math.min(player.derived.hpMax, player.derived.hp + eff.hp);
                 if( eff.hp>0){
-                    msg += `生命+${eff.hp} `;
+                    msg += `生命回复${eff.hp} `;
                 }else if( eff.hp<0){
-                    msg += `生命-${Math.abs(eff.hp)} `;
+                    msg += `生命减少${Math.abs(eff.hp)} `;
                 }
 
                 applied = true;
@@ -159,9 +179,9 @@ const UtilsItem = {
             if (eff.mp) {
                 player.derived.mp = Math.min(player.derived.mpMax, (player.derived.mp||0) + eff.mp);
                 if(eff.mp>0){
-                    msg += `内力+${eff.mp} `;
+                    msg += `法力回复${eff.mp} `;
                 }else{
-                    msg += `内力-${Math.abs(eff.mp)} `;
+                    msg += `法力减少-${Math.abs(eff.mp)} `;
                 }
                 applied = true;
             }
@@ -169,9 +189,9 @@ const UtilsItem = {
                 if (!player.status) player.status = {};
                 player.status.hunger = Math.min(100, (player.status.hunger||0) + eff.hunger);
                 if (eff.hunger>0){
-                    msg += `饱食+${eff.hunger} `;
+                    msg += `饱食度增加 ${eff.hunger} 点`;
                 }else if(eff.hunger<0){
-                    msg += `饱食-${Math.abs(eff.hunger)} `;
+                    msg += `饱食度减少 ${Math.abs(eff.hunger)} 点`;
                 }
 
                 applied = true;

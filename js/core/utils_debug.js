@@ -25,6 +25,7 @@ const DebugSystem = {
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('pill')">💊 随机丹药</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('food')">🍱 随机食物</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('material')">🪵 随机素材</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('foodMaterial')">🪵 随机食材</button>
                 <button class="ink_btn_small" onclick="DebugSystem.addRandomItem('book')">📘 随机书籍</button>
                 <button class="ink_btn_small btn_danger" onclick="DebugSystem.clearBag()">🗑️ 清空背包</button>
             </div>

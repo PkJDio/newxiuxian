@@ -13,6 +13,12 @@ const UIBag = {
         this.selectionMode = false;
         this.selectedIndices.clear();
         this.showModal();
+        // --- 修改部分开始 ---
+        // 检查并触发背包引导
+        if (window.UITutorial && window.UITutorial.checkBuilding) {
+            // 这里复用 checkBuilding 逻辑，传入 'bag' 标识
+            window.UITutorial.checkBuilding('bag');
+        }
     },
 
     showModal: function() {

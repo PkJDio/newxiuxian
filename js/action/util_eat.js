@@ -51,7 +51,7 @@ function doEat() {
     // 3. 随机选择一个 SID
     const randomIndex = Math.floor(Math.random() * edibleSids.length);
     const targetSid = edibleSids[randomIndex];
-    console.log(`随机选择的 SID: ${targetSid}`)
+
     // 4. 调用 UtilsItem 进行消耗 (传入 SID)
     if (window.UtilsItem && window.UtilsItem.useItem) {
         // 使用 1 个

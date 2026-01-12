@@ -6,6 +6,8 @@ var player = null;
 // ==========================================
 // 2. 核心逻辑：直接执行兵解 (无弹窗，纯逻辑)
 // ==========================================
+
+
 // 供战斗系统直接调用，或由确认弹窗回调调用
 window.performDirectRebirth = function() {
     console.log(">>> [State] 执行 performDirectRebirth (纯逻辑，无弹窗)");
@@ -31,6 +33,8 @@ window.performDirectRebirth = function() {
     newPlayer.name = "道友" + nextGen + "世";
     newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
 
+
+
     // ==========================================
     // 【核心修改】增加一个标记，表明这是新的一世
     // ==========================================
@@ -38,7 +42,7 @@ window.performDirectRebirth = function() {
 
     // 2. 覆盖全局数据
     window.player = newPlayer;
-
+    setStartItem();
     // 3. 保存与清理
     if(window.saveGame) window.saveGame();
     if (window.LogManager) window.LogManager.clear();
@@ -56,6 +60,31 @@ window.performDirectRebirth = function() {
 
     if(window.showToast) window.showToast("兵解成功，开启第 " + nextGen + " 世");
 };
+/**
+ * 自定义为玩家添加初始物品
+ * @param newPlayer
+ * @returns {undefined}
+ */
+function setStartItem() {
+    //初始添加装备
+    UtilsAdd.addItem("weapons_000", 1);
+    UtilsAdd.addItem("body_001", 1);
+    UtilsAdd.addItem("head_001", 1);
+    UtilsAdd.addItem("feet_002", 1);
+
+    //添加初始金钱
+    UtilsAdd.addMoney(100);
+    //添加初始食物
+    UtilsAdd.addItem("foods_005", 2);
+    UtilsAdd.addItem("foods_053", 2);
+
+    //添加初始功法
+    UtilsAdd.addItem("book_body_r1_00_full", 1);
+
+
+};
+
+
 
 // 为了兼容旧存档或习惯，保留 executeDie 别名，但指向新函数
 window.executeDie = window.performDirectRebirth;
