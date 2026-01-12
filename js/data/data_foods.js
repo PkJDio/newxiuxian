@@ -2,66 +2,1357 @@
 //console.log("加载 成品食物");
 
 const foods = [
-    {id: "foods_001", name: "竹筒饭", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 24, effects: {hunger: 18, hp: 8}, desc: "竹筒饭。（制作获得）", recipe: [["foodMaterial_032", "foodMaterial_002", "foodMaterial_007"], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_032", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_002", name: "树皮汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 5, effects: {hunger: 5, hp: -1}, desc: "应急的树皮汤。（制作获得）", recipe: [["foodMaterial_010", "foodMaterial_007"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_006"], ["foodMaterial_010", "foodMaterial_007", "foodMaterial_008", "foodMaterial_006",],],}, {id: "foods_003", name: "炒豆角", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 4, effects: {hunger: 12, hp: 3}, desc: "炒豆角。（制作获得）", recipe: [["foodMaterial_041"], ["foodMaterial_041", "foodMaterial_008"], ["foodMaterial_041", "foodMaterial_026"], ["foodMaterial_041", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_004", name: "烤熊肉", type: "food", grade: 0, rarity: 2, value: 30, obtain: "craft", effects: {hunger: 40, hp: 16}, desc: "烤熊肉，含有丰富的油脂，极度耐饿。（制作获得）", recipe: [["foodMaterial_054"], ["foodMaterial_054", "foodMaterial_008"], ["foodMaterial_054", "foodMaterial_026"], ["foodMaterial_054", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_054", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_005", name: "烤野猪肉", type: "food", grade: 0, rarity: 1, value: 22, obtain: "craft", effects: {hunger: 35, hp: 9}, desc: "烤得外焦里嫩的野猪肉，十分顶饱。（制作获得）", recipe: [["foodMaterial_051"], ["foodMaterial_051", "foodMaterial_008"], ["foodMaterial_051", "foodMaterial_026"], ["foodMaterial_051", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_051", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_006", name: "煮蚕豆", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 12, hp: 2}, desc: "煮蚕豆。（制作获得）", recipe: [["foodMaterial_016"], ["foodMaterial_016", "foodMaterial_007"], ["foodMaterial_016", "foodMaterial_008"], ["foodMaterial_016", "foodMaterial_007", "foodMaterial_008"],],},
-    {id: "foods_007", name: "烤鸡肉", type: "food", grade: 0, rarity: 2, obtain: "craft", value: 20, effects: {hunger: 26, hp: 10}, desc: "烤鸡肉。（制作获得）", recipe: [["foodMaterial_029"], ["foodMaterial_029", "foodMaterial_008"], ["foodMaterial_029", "foodMaterial_026"], ["foodMaterial_029", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_029", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_008", name: "辣椒酱", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 2, effects: {hunger: 2, hp: 0}, desc: "简单的辣椒酱。（制作获得）", recipe: [["foodMaterial_026"], ["foodMaterial_026", "foodMaterial_008"], ["foodMaterial_026", "foodMaterial_025"], ["foodMaterial_026", "foodMaterial_008", "foodMaterial_025"],],},
-    {id: "foods_009", name: "煮玉米", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 12, hp: 2}, desc: "煮玉米。（制作获得）", recipe: [["foodMaterial_011"], ["foodMaterial_011", "foodMaterial_007"], ["foodMaterial_011", "foodMaterial_008"], ["foodMaterial_011", "foodMaterial_007", "foodMaterial_008"],],},
-    {id: "foods_010", name: "烤鳄鱼肉", type: "food", grade: 0, rarity: 2, value: 22, obtain: "craft", effects: {hunger: 30, hp: 8, def: 2}, desc: "烤鳄鱼肉，口感像鸡肉，据说能治哮喘。（制作获得）", recipe: [["foodMaterial_056"], ["foodMaterial_056", "foodMaterial_008"], ["foodMaterial_056", "foodMaterial_026"], ["foodMaterial_056", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_011", name: "烤狗肉", type: "food", grade: 0, rarity: 1, value: 20, obtain: "craft", effects: {hunger: 30, hp: 8}, desc: "烤得金黄的狗肉，香气四溢。（制作获得）", recipe: [["foodMaterial_050"], ["foodMaterial_050", "foodMaterial_008"], ["foodMaterial_050", "foodMaterial_026"], ["foodMaterial_050", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_050", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_012", name: "烤鸭", type: "food", grade: 0, rarity: 2, obtain: "craft", value: 21, effects: {hunger: 28, hp: 10}, desc: "烤鸭。（制作获得）", recipe: [["foodMaterial_049"], ["foodMaterial_049", "foodMaterial_008"], ["foodMaterial_049", "foodMaterial_026"], ["foodMaterial_049", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_049", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_013", name: "煎蛋", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 8, hp: 6}, desc: "煎蛋。（制作获得）", recipe: [["foodMaterial_004"], ["foodMaterial_004", "foodMaterial_008"], ["foodMaterial_004", "foodMaterial_026"], ["foodMaterial_004", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_014", name: "炒茄子", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 9, effects: {hunger: 12, hp: 4}, desc: "炒茄子。（制作获得）", recipe: [["foodMaterial_040"], ["foodMaterial_040", "foodMaterial_008"], ["foodMaterial_040", "foodMaterial_026"], ["foodMaterial_040", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_015", name: "面粉饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 7, effects: {hunger: 12, hp: 0}, desc: "简单的面粉饼。（制作获得）", recipe: [["foodMaterial_001"], ["foodMaterial_001", "foodMaterial_007"], ["foodMaterial_001", "foodMaterial_004"], ["foodMaterial_001", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_001", "foodMaterial_004", "foodMaterial_007"],],},
-    {id: "foods_016", name: "炒青椒", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 7, effects: {hunger: 10, hp: 2}, desc: "炒青椒。（制作获得）", recipe: [["foodMaterial_043"], ["foodMaterial_043", "foodMaterial_008"], ["foodMaterial_043", "foodMaterial_026"], ["foodMaterial_043", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_017", name: "烤鱼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 13, effects: {hunger: 15, hp: 9}, desc: "烤鱼。（制作获得）", recipe: [["foodMaterial_024", "foodMaterial_026"], ["foodMaterial_024", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_024", "foodMaterial_008", "foodMaterial_026"], ["foodMaterial_024", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",], ["foodMaterial_057", "foodMaterial_008", "foodMaterial_026"],],},
-    {id: "foods_018", name: "荷叶饭", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 11, effects: {hunger: 15, hp: 5}, desc: "荷叶饭。（制作获得）", recipe: [["foodMaterial_031", "foodMaterial_002", "foodMaterial_007"], ["foodMaterial_031", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005",], ["foodMaterial_031", "foodMaterial_002", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_031", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_019", name: "肉汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 15, effects: {hunger: 18, hp: 10}, desc: "简单的肉汤。（制作获得）", recipe: [["foodMaterial_005", "foodMaterial_007"], ["foodMaterial_005", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_005", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_005", "foodMaterial_007", "foodMaterial_008", "foodMaterial_020",],],},
-    {id: "foods_020", name: "小米粥", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 9, effects: {hunger: 12, hp: 4}, desc: "小米粥。（制作获得）", recipe: [["foodMaterial_019", "foodMaterial_007"], ["foodMaterial_019", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_019", "foodMaterial_007", "foodMaterial_005"], ["foodMaterial_019", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_021", name: "烤老鼠肉", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 6, effects: {hunger: 11, hp: -1}, desc: "烤老鼠肉。（制作获得）", recipe: [["foodMaterial_013"], ["foodMaterial_013", "foodMaterial_008"], ["foodMaterial_013", "foodMaterial_026"], ["foodMaterial_013", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_022", name: "蘑菇汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 10, effects: {hunger: 10, hp: 8}, desc: "蘑菇汤。（制作获得）", recipe: [["foodMaterial_044", "foodMaterial_007"], ["foodMaterial_044", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_044", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_044", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_023", name: "烤羊肉", type: "food", grade: 0, rarity: 2, obtain: "craft", value: 23, effects: {hunger: 30, hp: 12}, desc: "烤羊肉。（制作获得）", recipe: [["foodMaterial_048"], ["foodMaterial_048", "foodMaterial_008"], ["foodMaterial_048", "foodMaterial_026"], ["foodMaterial_048", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_048", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_024", name: "面条汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 11, effects: {hunger: 15, hp: 5}, desc: "面条汤。（制作获得）", recipe: [["foodMaterial_021", "foodMaterial_007"], ["foodMaterial_021", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_021", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_021", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_025", name: "桂花糕", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 11, effects: {hunger: 12, hp: 8}, desc: "桂花糕。（制作获得）", recipe: [["foodMaterial_037", "foodMaterial_001", "foodMaterial_007"], ["foodMaterial_037", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018",], ["foodMaterial_037", "foodMaterial_001", "foodMaterial_007", "foodMaterial_004",], ["foodMaterial_037", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018", "foodMaterial_004",],],},
-    {id: "foods_026", name: "花生酱", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 6, effects: {hunger: 8, hp: 2}, desc: "花生酱。（制作获得）", recipe: [["foodMaterial_028"], ["foodMaterial_028", "foodMaterial_008"], ["foodMaterial_028", "foodMaterial_018"], ["foodMaterial_028", "foodMaterial_008", "foodMaterial_018"],],},
-    {id: "foods_027", name: "烤花生", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 7, effects: {hunger: 10, hp: 2}, desc: "烤花生。（制作获得）", recipe: [["foodMaterial_015"], ["foodMaterial_015", "foodMaterial_008"], ["foodMaterial_015", "foodMaterial_028"], ["foodMaterial_015", "foodMaterial_008", "foodMaterial_026"],],},
-    {id: "foods_028", name: "柿饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 9, effects: {hunger: 10, hp: 6}, desc: "柿饼。（制作获得）", recipe: [["foodMaterial_017"], ["foodMaterial_017", "foodMaterial_018"], ["foodMaterial_017", "foodMaterial_008"], ["foodMaterial_017", "foodMaterial_018", "foodMaterial_008"],],},
-    {id: "foods_029", name: "炸土豆", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 12, hp: 2}, desc: "油炸土豆条。（制作获得）", recipe: [["foodMaterial_042"], ["foodMaterial_042", "foodMaterial_008"], ["foodMaterial_042", "foodMaterial_026"], ["foodMaterial_042", "foodMaterial_008", "foodMaterial_026"],],},
-    {id: "foods_030", name: "皮蛋汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 10, effects: {hunger: 12, hp: 6}, desc: "皮蛋汤。（制作获得）", recipe: [["foodMaterial_030", "foodMaterial_007"], ["foodMaterial_030", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_030", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_030", "foodMaterial_007", "foodMaterial_008", "foodMaterial_020",],],},
-    {id: "foods_031", name: "萝卜汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 10, hp: 4}, desc: "萝卜汤。（制作获得）", recipe: [["foodMaterial_038", "foodMaterial_007"], ["foodMaterial_038", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_038", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_038", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_032", name: "米饭", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 15, hp: 0}, desc: "简单的米饭。（制作获得）", recipe: [["foodMaterial_002", "foodMaterial_007"], ["foodMaterial_002", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_002", "foodMaterial_007", "foodMaterial_005"], ["foodMaterial_002", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_033", name: "鲜鱼刺身", type: "food", grade: 0, rarity: 1, value: 11, obtain: "craft", effects: {hunger: 15, hp: 5}, desc: "新鲜的生鱼片，口感鲜美。（制作获得）", recipe: [["foodMaterial_024"], ["foodMaterial_057"], ["foodMaterial_024", "foodMaterial_008"], ["foodMaterial_057", "foodMaterial_008"], ["fishes_base_01"],],},
-    {id: "foods_034", name: "酸菜汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 10, hp: 4}, desc: "酸菜汤。（制作获得）", recipe: [["foodMaterial_046", "foodMaterial_007"], ["foodMaterial_046", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_046", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_046", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_035", name: "葱油", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 1, effects: {hunger: 1, hp: 0}, desc: "简单的葱油。（制作获得）", recipe: [["foodMaterial_020"], ["foodMaterial_020", "foodMaterial_008"], ["foodMaterial_020", "foodMaterial_025"], ["foodMaterial_020", "foodMaterial_008", "foodMaterial_025"],],},
-    {id: "foods_036", name: "蝎子汤", type: "food", grade: 0, rarity: 2, obtain: "craft", value: 12, effects: {hunger: 15, hp: 8}, desc: "蝎子汤。（制作获得）", recipe: [["foodMaterial_058", "foodMaterial_007"], ["foodMaterial_058", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_058", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_058", "foodMaterial_007", "foodMaterial_008", "foodMaterial_020",],],},
-    {id: "foods_037", name: "紫菜汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 10, hp: 5}, desc: "紫菜汤。（制作获得）", recipe: [["foodMaterial_039", "foodMaterial_007"], ["foodMaterial_039", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_039", "foodMaterial_007", "foodMaterial_004"], ["foodMaterial_039", "foodMaterial_007", "foodMaterial_008", "foodMaterial_004",],],},
-    {id: "foods_038", name: "芝麻馅包子", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 11, effects: {hunger: 15, hp: 5}, desc: "芝麻馅包子。（制作获得）", recipe: [["foodMaterial_036", "foodMaterial_001", "foodMaterial_007"], ["foodMaterial_036", "foodMaterial_001", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_036", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018",], ["foodMaterial_036", "foodMaterial_001", "foodMaterial_007", "foodMaterial_004", "foodMaterial_008",],],},
-    {id: "foods_039", name: "芝麻饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 12, hp: 3}, desc: "芝麻饼。（制作获得）", recipe: [["foodMaterial_034", "foodMaterial_001", "foodMaterial_007"], ["foodMaterial_034", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018",], ["foodMaterial_034", "foodMaterial_001", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_034", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018", "foodMaterial_008",],],},
-    {id: "foods_040", name: "烤蛇肉", type: "food", grade: 0, rarity: 1, value: 15, obtain: "craft", effects: {hunger: 20, hp: 8}, desc: "烤得酥脆的蛇肉，肉质洁白细腻。（制作获得）", recipe: [["foodMaterial_052"], ["foodMaterial_052", "foodMaterial_008"], ["foodMaterial_052", "foodMaterial_026"], ["foodMaterial_052", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_041", name: "黄豆饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 7, effects: {hunger: 10, hp: 2}, desc: "简单的黄豆饼。（制作获得）", recipe: [["foodMaterial_003"], ["foodMaterial_003", "foodMaterial_007"], ["foodMaterial_003", "foodMaterial_008"], ["foodMaterial_003", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_027"],],},
-    {id: "foods_042", name: "烤麻雀", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 8, effects: {hunger: 12, hp: 2}, desc: "烤麻雀。（制作获得）", recipe: [["foodMaterial_014"], ["foodMaterial_014", "foodMaterial_008"], ["foodMaterial_014", "foodMaterial_026"], ["foodMaterial_014", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_043", name: "糖饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 5, effects: {hunger: 8, hp: 0}, desc: "简单的糖饼。（制作获得）", recipe: [["foodMaterial_018", "foodMaterial_001"], ["foodMaterial_018", "foodMaterial_001", "foodMaterial_007"], ["foodMaterial_018", "foodMaterial_001", "foodMaterial_004"], ["foodMaterial_018", "foodMaterial_001", "foodMaterial_007", "foodMaterial_004",],],},
-    {id: "foods_044", name: "烤红薯", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 10, effects: {hunger: 15, hp: 3}, desc: "烤红薯。（制作获得）", recipe: [["foodMaterial_012"], ["foodMaterial_012", "foodMaterial_008"], ["foodMaterial_012", "foodMaterial_007"], ["foodMaterial_012", "foodMaterial_007", "foodMaterial_008"],],},
-    {id: "foods_045", name: "烤虎肉", type: "food", grade: 0, rarity: 3, value: 30, obtain: "craft", effects: {hunger: 35, hp: 15, atk: 3, jing: 2}, desc: "烤虎肉，大补之物，食之气力大增。（制作获得）", recipe: [["foodMaterial_055"], ["foodMaterial_055", "foodMaterial_008"], ["foodMaterial_055", "foodMaterial_026"], ["foodMaterial_055", "foodMaterial_008", "foodMaterial_020"],],}, {id: "foods_046", name: "西红柿汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 3, effects: {hunger: 12, hp: 5}, desc: "西红柿汤。（制作获得）", recipe: [["foodMaterial_022", "foodMaterial_007"], ["foodMaterial_022", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_022", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_022", "foodMaterial_007", "foodMaterial_008", "foodMaterial_020",],],},
-    {id: "foods_047", name: "粉条汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 9, effects: {hunger: 12, hp: 5}, desc: "粉条汤。（制作获得）", recipe: [["foodMaterial_045", "foodMaterial_007"], ["foodMaterial_045", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_045", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_045", "foodMaterial_007", "foodMaterial_005", "foodMaterial_008",],],},
-    {id: "foods_048", name: "麦麸粥", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 6, effects: {hunger: 10, hp: 0}, desc: "麦麸粥。（制作获得）", recipe: [["foodMaterial_023", "foodMaterial_007"], ["foodMaterial_023", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_023", "foodMaterial_007", "foodMaterial_006"], ["foodMaterial_023", "foodMaterial_007", "foodMaterial_008", "foodMaterial_006",],],},
-    {id: "foods_049", name: "野菜汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 6, effects: {hunger: 8, hp: 3}, desc: "简单的野菜汤。（制作获得）", recipe: [["foodMaterial_006", "foodMaterial_007"], ["foodMaterial_006", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_006", "foodMaterial_007", "foodMaterial_020"], ["foodMaterial_006", "foodMaterial_007", "foodMaterial_008", "foodMaterial_020",],],},
-    {id: "foods_050", name: "烤狼肉", type: "food", grade: 0, rarity: 1, value: 16, obtain: "craft", effects: {hunger: 25, hp: 5}, desc: "烤狼肉，口感发酸但充满野性。（制作获得）", recipe: [["foodMaterial_053"], ["foodMaterial_053", "foodMaterial_008"], ["foodMaterial_053", "foodMaterial_026"], ["foodMaterial_053", "foodMaterial_008", "foodMaterial_020"],],},
-    {id: "foods_051", name: "艾草饼", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 9, effects: {hunger: 12, hp: 5}, desc: "艾草饼。（制作获得）", recipe: [["foodMaterial_035", "foodMaterial_001", "foodMaterial_007"], ["foodMaterial_035", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018",], ["foodMaterial_035", "foodMaterial_001", "foodMaterial_007", "foodMaterial_008",], ["foodMaterial_035", "foodMaterial_001", "foodMaterial_007", "foodMaterial_018", "foodMaterial_008",],],},
-    {id: "foods_052", name: "鱼汤", type: "food", grade: 0, rarity: 1, value: 9, obtain: "craft", effects: {hunger: 12, hp: 5}, desc: "鱼汤，口感鲜美。（制作获得）", recipe: [["foodMaterial_024", "foodMaterial_007"], ["foodMaterial_057", "foodMaterial_007"], ["foodMaterial_024", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_057", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_024", "foodMaterial_007", "foodMaterial_020"],],},
-    {id: "foods_053", name: "粽子", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 14, effects: {hunger: 18, hp: 8}, desc: "粽子。（制作获得）", recipe: [["foodMaterial_033", "foodMaterial_002", "foodMaterial_007"], ["foodMaterial_033", "foodMaterial_002", "foodMaterial_007", "foodMaterial_018",], ["foodMaterial_033", "foodMaterial_002", "foodMaterial_007", "foodMaterial_005",], ["foodMaterial_033", "foodMaterial_002", "foodMaterial_007", "foodMaterial_018", "foodMaterial_008",],],},
-    {id: "foods_054", name: "粗糠团子", type: "food", grade: 0, rarity: 1, obtain: "shop", value: 6, effects: {hunger: 11, hp: -1}, desc: "贫苦人家或者黑店卖的廉价干粮。", recipe: [["foodMaterial_009"], ["foodMaterial_009", "foodMaterial_007"], ["foodMaterial_009", "foodMaterial_008"],],},
-    {id: "foods_055", name: "稀米汤", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 7, effects: {hunger: 12, hp: 1}, desc: "一把米煮一锅水。（制作获得）", recipe: [["foodMaterial_002", "foodMaterial_007"], ["foodMaterial_002", "foodMaterial_007", "foodMaterial_008"], ["foodMaterial_019", "foodMaterial_007"], ["foodMaterial_002", "foodMaterial_019", "foodMaterial_007"],],},
-    {id: "foods_056", name: "清蒸鱼", type: "food", grade: 0, rarity: 2, obtain: "shop", value: 16, effects: {hunger: 20, hp: 10}, desc: "河边酒家特供。", recipe: [["foodMaterial_024", "foodMaterial_007", "foodMaterial_020", "foodMaterial_008",], ["foodMaterial_024", "foodMaterial_007", "foodMaterial_020", "foodMaterial_008", "foodMaterial_025",], ["foodMaterial_057", "foodMaterial_007", "foodMaterial_020", "foodMaterial_008",], ["fishes_base_02", "foodMaterial_007", "foodMaterial_020", "foodMaterial_008",], ["fishes_aut_01", "foodMaterial_007", "foodMaterial_020", "foodMaterial_008",],],},
-    {id: "foods_057", name: "酸菜鱼", type: "food", grade: 0, rarity: 2, obtain: "shop", value: 16, effects: {hunger: 22, hp: 8}, desc: "特色菜馆。", recipe: [["foodMaterial_024", "foodMaterial_022", "foodMaterial_026", "foodMaterial_008",], ["foodMaterial_024", "foodMaterial_022", "foodMaterial_025", "foodMaterial_026", "foodMaterial_008",], ["foodMaterial_057", "foodMaterial_022", "foodMaterial_026", "foodMaterial_008",], ["fishes_base_01", "foodMaterial_022", "foodMaterial_026", "foodMaterial_008",], ["fishes_base_05", "foodMaterial_022", "foodMaterial_026", "foodMaterial_008",],],},
-    {id: "foods_058", name: "烤肉", type: "food", grade: 0, rarity: 1, obtain: "shop", value: 13, effects: {hunger: 20, hp: 5}, desc: "普通鲜肉烤制而成，味道还过得去", recipe: [["foodMaterial_005"], ["foodMaterial_005", "foodMaterial_008"], ["foodMaterial_005", "foodMaterial_026"], ["foodMaterial_005", "foodMaterial_008", "foodMaterial_020"], ["foodMaterial_005", "foodMaterial_008", "foodMaterial_026", "foodMaterial_020",],],},
-    {id: "foods_059", name: "小糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 1}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],},
-    {id: "foods_060", name: "糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 3}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],},
     {
-        id: "foods_061", name: "大糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 5}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],
+        id: "foods_001", name: "清汤面", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 29 }, desc: "一碗简单的清汤面，加了盐提味。",
+        recipe: [["foodMaterial_021", "foodMaterial_007", "foodMaterial_008"]]
+        // 计算: R(1+1+1)*10 + H(3+0+0)*3 + Flavor(1)*5 = 30 + 9 + 5 = 44 (修正公式计算)
+    },
+    {
+        id: "foods_002", name: "阳春面", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 52 }, desc: "汤清味鲜，葱油的香气是灵魂。",
+        recipe: [["foodMaterial_021", "foodMaterial_007", "foodMaterial_059", "foodMaterial_020", "foodMaterial_072"]]
+    },
+    {
+        id: "foods_003", name: "蛋炒饭", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 52 }, desc: "粒粒分明，充满了鸡蛋的焦香味。",
+        recipe: [["foodMaterial_002", "foodMaterial_004", "foodMaterial_008", "foodMaterial_020"]]
+    },
+    {
+        id: "foods_004", name: "红烧肉", type: "food", cookType: "Sauteing", grade: 1, rarity: 2, obtain: "craft",
+        value: 48, effects: { hunger: 96 }, desc: "肥而不腻，软糯香甜。",
+        recipe: [["foodMaterial_005", "foodMaterial_018", "foodMaterial_059", "foodMaterial_065", "foodMaterial_062"]]
+    },
+    {
+        id: "foods_005", name: "烤鸡腿", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 35, effects: { hunger: 71 }, desc: "外焦里嫩，肉汁饱满。",
+        recipe: [["foodMaterial_029", "foodMaterial_008", "foodMaterial_074", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_006", name: "炸薯条", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 20, effects: { hunger: 41 }, desc: "金黄酥脆的土豆条。",
+        recipe: [["foodMaterial_042", "foodMaterial_008", "foodMaterial_069"]]
+    },
+    {
+        id: "foods_007", name: "地三鲜", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 35, effects: { hunger: 70 }, desc: "土豆、茄子和青椒的完美融合。",
+        recipe: [["foodMaterial_042", "foodMaterial_040", "foodMaterial_043", "foodMaterial_059", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_008", name: "酸辣土豆丝", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "爽脆开胃，酸辣适口。",
+        recipe: [["foodMaterial_042", "foodMaterial_060", "foodMaterial_026", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_009", name: "排骨炖粉条", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 42, effects: { hunger: 85 }, desc: "粉条吸收了肉汤的精华。",
+        recipe: [["foodMaterial_005", "foodMaterial_045", "foodMaterial_059", "foodMaterial_061", "foodMaterial_071"]]
+    },
+    {
+        id: "foods_010", name: "麻婆豆腐", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 28, effects: { hunger: 56 }, desc: "麻、辣、鲜、烫、酥。",
+        recipe: [["foodMaterial_027", "foodMaterial_068", "foodMaterial_064", "foodMaterial_026", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_011", name: "番茄炒蛋", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "国民级家常菜，酸甜适口。",
+        recipe: [["foodMaterial_022", "foodMaterial_004", "foodMaterial_018", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_012", name: "紫菜蛋花汤", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 20, effects: { hunger: 41 }, desc: "清爽解腻，汤鲜味美。",
+        recipe: [["foodMaterial_039", "foodMaterial_004", "foodMaterial_007", "foodMaterial_020", "foodMaterial_072"]]
+    },
+    {
+        id: "foods_013", name: "孜然烤羊肉", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 38, effects: { hunger: 76 }, desc: "强烈的孜然香气压住了羊肉的膻味。",
+        recipe: [["foodMaterial_048", "foodMaterial_074", "foodMaterial_026", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_014", name: "老鸭汤", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 38, effects: { hunger: 77 }, desc: "慢火熬煮，汤头浓郁鲜甜。",
+        recipe: [["foodMaterial_049", "foodMaterial_007", "foodMaterial_071", "foodMaterial_062"]]
+    },
+    {
+        id: "foods_015", name: "干煸豆角", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "豆角表皮微皱，咸鲜香辣。",
+        recipe: [["foodMaterial_041", "foodMaterial_026", "foodMaterial_070", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_016", name: "炸鸡块", type: "food", cookType: "Frying", grade: 1, rarity: 2, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "金黄酥脆的表皮下是鲜嫩的鸡肉。",
+        recipe: [["foodMaterial_029", "foodMaterial_001", "foodMaterial_008", "foodMaterial_073"]]
+    },
+    {
+        id: "foods_017", name: "蜜汁烤翅", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 40, effects: { hunger: 81 }, desc: "蜂蜜的甜美与肉香完美结合。",
+        recipe: [["foodMaterial_029", "foodMaterial_075", "foodMaterial_059", "foodMaterial_071"]]
+    },
+    {
+        id: "foods_018", name: "清蒸鱼", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "极简的烹饪，保留了鱼肉最原始的鲜美。",
+        recipe: [["foodMaterial_024", "foodMaterial_020", "foodMaterial_071", "foodMaterial_059"]]
+    },
+    {
+        id: "foods_019", name: "皮蛋瘦肉粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "口感滑顺，营养丰富。",
+        recipe: [["foodMaterial_002", "foodMaterial_030", "foodMaterial_005", "foodMaterial_007", "foodMaterial_020"]]
+    },
+    {
+        id: "foods_020", name: "松仁玉米", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 52 }, desc: "色泽金黄，口感甜脆。",
+        recipe: [["foodMaterial_011", "foodMaterial_018", "foodMaterial_008", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_021", name: "酱香饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "外焦里嫩，刷满了浓郁的特制酱料。",
+        recipe: [["foodMaterial_001", "foodMaterial_025", "foodMaterial_020", "foodMaterial_034"]]
+        // 计算: R(1+1+1+1)*10 + H(3+0+0+0)*3 + Flavor(3)*5 = 40 + 9 + 15 = 64 / 2 = 32 (修正此处计算误差，下同)
+    },
+    {
+        id: "foods_022", name: "拔丝红薯", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 21, effects: { hunger: 43 }, desc: "金黄酥脆，糖浆能拉出长长的细丝。",
+        recipe: [["foodMaterial_012", "foodMaterial_018", "foodMaterial_007"]]
+        // R(1+1+1)*10 + H(2+0+0)*3 + Flavor(1)*5 = 30 + 6 + 5 = 41
+    },
+    {
+        id: "foods_023", name: "杀猪菜", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 46, effects: { hunger: 93 }, desc: "酸菜与肥美鲜肉的豪迈结合。",
+        recipe: [["foodMaterial_005", "foodMaterial_046", "foodMaterial_007", "foodMaterial_071", "foodMaterial_008"]]
+        // R(2+1+1+1+1)*10 + H(2+1+0+0+0)*3 + Flavor(2)*5 = 60 + 9 + 10 = 79
+    },
+    {
+        id: "foods_024", name: "烤蛇肉串", type: "food", cookType: "Roasting", grade: 1, rarity: 1, obtain: "craft",
+        value: 40, effects: { hunger: 80 }, desc: "肉质极其细腻，撒上辣椒粉后异常鲜美。",
+        recipe: [["foodMaterial_052", "foodMaterial_026", "foodMaterial_008", "foodMaterial_070"]]
+        // R(1+1+1+1)*10 + H(10+0+0+0)*3 + Flavor(3)*5 = 40 + 30 + 15 = 85
+    },
+    {
+        id: "foods_025", name: "蘑菇炖鸡", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 41, effects: { hunger: 83 }, desc: "山珍与家禽的完美邂逅，鲜掉眉毛。",
+        recipe: [["foodMaterial_029", "foodMaterial_044", "foodMaterial_007", "foodMaterial_059", "foodMaterial_071"]]
+        // R(2+1+1+1+1)*10 + H(2+1+0+0+0)*3 + Flavor(2)*5 = 60 + 9 + 10 = 79
+    },
+    {
+        id: "foods_026", name: "油炸花生米", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 18, effects: { hunger: 37 }, desc: "下酒神菜，香脆无比。",
+        recipe: [["foodMaterial_028", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31
+    },
+    {
+        id: "foods_027", name: "酸辣萝卜丁", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 19, effects: { hunger: 38 }, desc: "简简单单的开胃小菜。",
+        recipe: [["foodMaterial_038", "foodMaterial_060", "foodMaterial_026", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_028", name: "桂花糕", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 20, effects: { hunger: 41 }, desc: "口感软糯，带着淡淡的桂花清香。",
+        recipe: [["foodMaterial_001", "foodMaterial_037", "foodMaterial_018"]]
+        // R(1+1+1)*10 + H(3+0+0)*3 + Flavor(2)*5 = 30 + 9 + 10 = 49
+    },
+    {
+        id: "foods_029", name: "红烧狼肉", type: "food", cookType: "Sauteing", grade: 2, rarity: 2, obtain: "craft",
+        value: 54, effects: { hunger: 108 }, desc: "虽然狼肉口感微酸，但红烧能极大程度掩盖缺点。",
+        recipe: [["foodMaterial_053", "foodMaterial_059", "foodMaterial_060", "foodMaterial_018", "foodMaterial_071"]]
+        // R(1+1+1+1+1)*10 + H(15+0+0+0+0)*3 + Flavor(4)*5 = 50 + 45 + 20 = 115
+    },
+    {
+        id: "foods_030", name: "炸鱼排", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 24, effects: { hunger: 49 }, desc: "将鲜鱼肉裹面油炸，酥脆鲜甜。",
+        recipe: [["foodMaterial_024", "foodMaterial_001", "foodMaterial_008", "foodMaterial_073"]]
+        // R(1+1+1+1)*10 + H(1+3+0+0)*3 + Flavor(2)*5 = 40 + 12 + 10 = 62
+    },
+    {
+        id: "foods_031", name: "生煸鳄鱼肉", type: "food", cookType: "Sauteing", grade: 2, rarity: 2, obtain: "craft",
+        value: 58, effects: { hunger: 115 }, desc: "口感介于鸡肉与鱼肉之间，极其紧实。",
+        recipe: [["foodMaterial_056", "foodMaterial_071", "foodMaterial_020", "foodMaterial_067", "foodMaterial_062"]]
+        // 计算: R(2+1+1+1+1)*10 + H(20+0+0+0+0)*3 + Flavor(4)*5 = 60 + 60 + 20 = 140 / 2 = 70 (按此公式重新核算)
+    },
+    {
+        id: "foods_032", name: "孜然野猪排", type: "food", cookType: "Roasting", grade: 2, rarity: 2, obtain: "craft",
+        value: 55, effects: { hunger: 110 }, desc: "野猪肉质粗犷，配上孜然简直绝配。",
+        recipe: [["foodMaterial_051", "foodMaterial_074", "foodMaterial_026", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(20+0+0+0)*3 + Flavor(3)*5 = 40 + 60 + 15 = 115
+    },
+    {
+        id: "foods_033", name: "爆炒虎肉片", type: "food", cookType: "Sauteing", grade: 3, rarity: 3, obtain: "craft",
+        value: 80, effects: { hunger: 160 }, desc: "顶级食材的简单碰撞，食之气血翻涌。",
+        recipe: [["foodMaterial_055", "foodMaterial_070", "foodMaterial_071", "foodMaterial_059", "foodMaterial_061"]]
+        // R(3+1+1+1+1)*10 + H(25+0+0+0+0)*3 + Flavor(4)*5 = 70 + 75 + 20 = 165
+    },
+    {
+        id: "foods_034", name: "蚝油生菜", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 19, effects: { hunger: 38 }, desc: "野菜鲜嫩，蚝油提鲜，清脆爽口。",
+        recipe: [["foodMaterial_006", "foodMaterial_067", "foodMaterial_070"]]
+        // R(1+1+1)*10 + H(1+0+0)*3 + Flavor(2)*5 = 30 + 3 + 10 = 43
+    },
+    {
+        id: "foods_035", name: "五香炸麻雀", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 53 }, desc: "炸至酥脆，连骨头都能嚼着吃。",
+        recipe: [["foodMaterial_014", "foodMaterial_073", "foodMaterial_008", "foodMaterial_062"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_036", name: "熊肉乱炖", type: "food", cookType: "Boiling", grade: 2, rarity: 2, obtain: "craft",
+        value: 75, effects: { hunger: 150 }, desc: "大块熊肉与土豆同炖，油脂丰富，极度耐饿。",
+        recipe: [["foodMaterial_054", "foodMaterial_042", "foodMaterial_007", "foodMaterial_065", "foodMaterial_008"]]
+        // R(2+1+1+1+1)*10 + H(30+2+0+0+0)*3 + Flavor(2)*5 = 60 + 96 + 10 = 166
+    },
+    {
+        id: "foods_037", name: "麻辣烫", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 36, effects: { hunger: 72 }, desc: "万物皆可煮，精髓全在汤底里。",
+        recipe: [["foodMaterial_045", "foodMaterial_027", "foodMaterial_006", "foodMaterial_068", "foodMaterial_026"]]
+        // R(1+1+1+1+1)*10 + H(3+2+1+1+0)*3 + Flavor(2)*5 = 50 + 21 + 10 = 81
+    },
+    {
+        id: "foods_038", name: "糖醋里脊", type: "food", cookType: "Frying", grade: 1, rarity: 2, obtain: "craft",
+        value: 30, effects: { hunger: 61 }, desc: "酸甜的外壳下包裹着鲜嫩的肉质。",
+        recipe: [["foodMaterial_005", "foodMaterial_018", "foodMaterial_060", "foodMaterial_001"]]
+        // R(2+1+1+1)*10 + H(2+0+0+3)*3 + Flavor(2)*5 = 50 + 15 + 10 = 75
+    },
+    {
+        id: "foods_039", name: "回锅肉", type: "food", cookType: "Sauteing", grade: 1, rarity: 2, obtain: "craft",
+        value: 40, effects: { hunger: 80 }, desc: "肥而不腻，豆瓣酱的香味入木三分。",
+        recipe: [["foodMaterial_005", "foodMaterial_068", "foodMaterial_020", "foodMaterial_070"]]
+        // R(2+1+1+1)*10 + H(2+1+0+0)*3 + Flavor(3)*5 = 50 + 9 + 15 = 74
+    },
+    {
+        id: "foods_040", name: "蜂蜜烤鱼", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 38, effects: { hunger: 77 }, desc: "刷了蜂蜜的鲜鱼，外皮焦甜。",
+        recipe: [["foodMaterial_024", "foodMaterial_075", "foodMaterial_008", "foodMaterial_071"]]
+        // R(1+2+1+1)*10 + H(1+5+0+0)*3 + Flavor(3)*5 = 50 + 18 + 15 = 83
+    },
+    {
+        id: "foods_041", name: "芝麻汤圆", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 29, effects: { hunger: 58 }, desc: "软糯的皮包着香甜的芝麻馅，象征团团圆圆。",
+        recipe: [["foodMaterial_001", "foodMaterial_036", "foodMaterial_018", "foodMaterial_007"]]
+        // R(1+1+1+1)*10 + H(3+2+0+0)*3 + Flavor(2)*5 = 40 + 15 + 10 = 65
+    },
+    {
+        id: "foods_042", name: "清香粽子", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 53 }, desc: "淡淡的粽叶香沁入粘米之中，口感扎实。",
+        recipe: [["foodMaterial_047", "foodMaterial_033", "foodMaterial_007", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(3+0+0+0)*3 + Flavor(1)*5 = 40 + 9 + 5 = 54
+    },
+    {
+        id: "foods_043", name: "青团", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 22, effects: { hunger: 44 }, desc: "艾草的清香与面粉融合，是春天的味道。",
+        recipe: [["foodMaterial_001", "foodMaterial_035", "foodMaterial_018"]]
+        // R(1+1+1)*10 + H(3+0+0)*3 + Flavor(1)*5 = 30 + 9 + 5 = 44
+    },
+    {
+        id: "foods_044", name: "红烧大虾", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 25, effects: { hunger: 51 }, desc: "虽然是生鱼片改制，但红烧后依然鲜甜。",
+        recipe: [["foodMaterial_057", "foodMaterial_059", "foodMaterial_018", "foodMaterial_071"]]
+        // R(1+1+1+1)*10 + H(8+0+0+0)*3 + Flavor(3)*5 = 40 + 24 + 15 = 79
+    },
+    {
+        id: "foods_045", name: "竹筒饭", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 28, effects: { hunger: 56 }, desc: "竹子的清香完全融入米饭，回味悠长。",
+        recipe: [["foodMaterial_002", "foodMaterial_032", "foodMaterial_008"]]
+        // R(1+1+1)*10 + H(3+0+0)*3 + Flavor(1)*5 = 30 + 9 + 5 = 44 (修正: 加上火烤风味)
+    },
+    {
+        id: "foods_046", name: "干锅狼肉", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 49, effects: { hunger: 99 }, desc: "重油重辣，极大程度提升了狼肉的口感。",
+        recipe: [["foodMaterial_053", "foodMaterial_026", "foodMaterial_068", "foodMaterial_070", "foodMaterial_074"]]
+        // R(1+1+1+1+1)*10 + H(15+0+1+0+0)*3 + Flavor(4)*5 = 50 + 48 + 20 = 118
+    },
+    {
+        id: "foods_047", name: "荷叶蒸鸡", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 36, effects: { hunger: 73 }, desc: "荷叶包裹下的鸡肉，鲜嫩多汁，不油不腻。",
+        recipe: [["foodMaterial_029", "foodMaterial_031", "foodMaterial_008", "foodMaterial_062"]]
+        // R(2+1+1+1)*10 + H(2+0+0+0)*3 + Flavor(2)*5 = 50 + 6 + 10 = 66
+    },
+    {
+        id: "foods_048", name: "剁椒鱼头", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 30, effects: { hunger: 60 }, desc: "火辣的剁椒覆在鲜嫩鱼头上，极度开胃。",
+        recipe: [["foodMaterial_024", "foodMaterial_026", "foodMaterial_071", "foodMaterial_059"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_049", name: "酱焖茄子", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 47 }, desc: "茄子吸饱了咸鲜的酱汁，非常下饭。",
+        recipe: [["foodMaterial_040", "foodMaterial_025", "foodMaterial_070", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_050", name: "宫保鸡丁", type: "food", cookType: "Sauteing", grade: 1, rarity: 2, obtain: "craft",
+        value: 41, effects: { hunger: 82 }, desc: "鸡丁滑嫩，花生酥脆，酸甜略带微辣。",
+        recipe: [["foodMaterial_029", "foodMaterial_028", "foodMaterial_018", "foodMaterial_060", "foodMaterial_026"]]
+        // R(2+1+1+1+1)*10 + H(2+2+0+0+0)*3 + Flavor(3)*5 = 60 + 12 + 15 = 87
+    },
+    {
+        id: "foods_051", name: "蜂蜜扒鸭", type: "food", cookType: "Roasting", grade: 2, rarity: 2, obtain: "craft",
+        value: 48, effects: { hunger: 97 }, desc: "鸭皮刷上蜂蜜烤至金黄，甜而不腻，滋味入骨。",
+        recipe: [["foodMaterial_049", "foodMaterial_075", "foodMaterial_059", "foodMaterial_062", "foodMaterial_065"]]
+        // 计算: R(2+2+1+1+1)*10 + H(2+5+0+0+0)*3 + Flavor(4)*5 = 70 + 21 + 20 = 111 (计算结果供参考)
+    },
+    {
+        id: "foods_052", name: "鱼香肉丝", type: "food", cookType: "Sauteing", grade: 1, rarity: 2, obtain: "craft",
+        value: 39, effects: { hunger: 79 }, desc: "虽无鱼肉，却有鱼味。酸辣鲜甜，极为下饭。",
+        recipe: [["foodMaterial_005", "foodMaterial_060", "foodMaterial_018", "foodMaterial_068", "foodMaterial_026"]]
+        // R(2+1+1+1+1)*10 + H(2+0+0+1+0)*3 + Flavor(4)*5 = 60 + 9 + 20 = 89
+    },
+    {
+        id: "foods_053", name: "葱油饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 47 }, desc: "层层酥脆，满口都是葱香和芝麻香。",
+        recipe: [["foodMaterial_001", "foodMaterial_020", "foodMaterial_072", "foodMaterial_008"]]
+        // R(1+1+2+1)*10 + H(3+0+0+0)*3 + Flavor(3)*5 = 50 + 9 + 15 = 74
+    },
+    {
+        id: "foods_054", name: "白灼生鱼片", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 27, effects: { hunger: 54 }, desc: "快速汆烫保留鱼肉极佳弹性，蘸点蚝油最是美味。",
+        recipe: [["foodMaterial_057", "foodMaterial_067", "foodMaterial_071", "foodMaterial_020"]]
+        // R(1+1+1+1)*10 + H(8+0+0+0)*3 + Flavor(3)*5 = 40 + 24 + 15 = 79
+    },
+    {
+        id: "foods_055", name: "红烧羊肉煲", type: "food", cookType: "Boiling", grade: 2, rarity: 2, obtain: "craft",
+        value: 54, effects: { hunger: 109 }, desc: "羊肉炖至酥烂，加入八角桂皮后香气扑鼻。",
+        recipe: [["foodMaterial_048", "foodMaterial_065", "foodMaterial_066", "foodMaterial_059", "foodMaterial_071"]]
+        // R(2+1+1+1+1)*10 + H(2+0+0+0+0)*3 + Flavor(4)*5 = 60 + 6 + 20 = 86
+    },
+    {
+        id: "foods_056", name: "椒盐蝎子", type: "food", cookType: "Frying", grade: 2, rarity: 2, obtain: "craft",
+        value: 39, effects: { hunger: 79 }, desc: "去毒后深海油炸，酥脆无比，是极佳的下酒菜。",
+        recipe: [["foodMaterial_058", "foodMaterial_008", "foodMaterial_063", "foodMaterial_064"]]
+        // R(2+1+1+1)*10 + H(5+0+0+0)*3 + Flavor(3)*5 = 50 + 15 + 15 = 80
+    },
+    {
+        id: "foods_057", name: "滑蛋虾仁", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 34, effects: { hunger: 69 }, desc: "蛋液包裹着Q弹的鱼片碎，口感丝滑。",
+        recipe: [["foodMaterial_004", "foodMaterial_057", "foodMaterial_008", "foodMaterial_061"]]
+        // R(1+1+1+1)*10 + H(1+8+0+0)*3 + Flavor(2)*5 = 40 + 27 + 10 = 77
+    },
+    {
+        id: "foods_058", name: "五香烧鹅", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 41, effects: { hunger: 82 }, desc: "利用鸭肉模拟鹅肉口感，五香粉的味道沁人心脾。",
+        recipe: [["foodMaterial_049", "foodMaterial_073", "foodMaterial_008", "foodMaterial_071", "foodMaterial_018"]]
+        // R(2+1+1+1+1)*10 + H(2+0+0+0+0)*3 + Flavor(4)*5 = 60 + 6 + 20 = 86
+    },
+    {
+        id: "foods_059", name: "麻辣鱼干", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 29, effects: { hunger: 58 }, desc: "生鱼炸干水份，又麻又辣，越嚼越香。",
+        recipe: [["foodMaterial_024", "foodMaterial_026", "foodMaterial_064", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_060", name: "糖醋鱼", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "外皮酥脆，酸甜的芡汁包裹着鲜嫩的鱼肉。",
+        recipe: [["foodMaterial_024", "foodMaterial_018", "foodMaterial_060", "foodMaterial_059", "foodMaterial_001"]]
+        // R(1+1+1+1+1)*10 + H(1+0+0+0+3)*3 + Flavor(3)*5 = 50 + 12 + 15 = 77
+    },
+    {
+        id: "foods_061", name: "生滚小米粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "金黄粘稠的小米粥，最是养人肠胃。",
+        recipe: [["foodMaterial_019", "foodMaterial_007", "foodMaterial_071", "foodMaterial_008"]]
+        // 计算: R(1+1+1+1)*10 + H(3+0+0+0)*3 + Flavor(2)*5 = 40 + 9 + 10 = 59 / 2 = 29
+    },
+    {
+        id: "foods_062", name: "麻辣狗肉火锅", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 55, effects: { hunger: 110 }, desc: "俗话说‘狗肉滚三滚，神仙站不稳’，大补驱寒。",
+        recipe: [["foodMaterial_050", "foodMaterial_026", "foodMaterial_064", "foodMaterial_071", "foodMaterial_008"]]
+        // R(1+1+1+1+1)*10 + H(15+0+0+0+0)*3 + Flavor(4)*5 = 50 + 45 + 20 = 115
+    },
+    {
+        id: "foods_063", name: "脆皮烤乳猪", type: "food", cookType: "Roasting", grade: 2, rarity: 1, obtain: "craft",
+        value: 63, effects: { hunger: 126 }, desc: "野猪肉烤至表皮红润酥脆，肉质细嫩。",
+        recipe: [["foodMaterial_051", "foodMaterial_018", "foodMaterial_072", "foodMaterial_073", "foodMaterial_008"]]
+        // R(1+1+2+1+1)*10 + H(20+0+0+0+0)*3 + Flavor(4)*5 = 60 + 60 + 20 = 140
+    },
+    {
+        id: "foods_064", name: "荷叶包裹烤肉", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 36, effects: { hunger: 73 }, desc: "用荷叶包住鲜肉烘烤，肉香中带着阵阵清香。",
+        recipe: [["foodMaterial_005", "foodMaterial_031", "foodMaterial_008", "foodMaterial_063"]]
+        // R(2+1+1+1)*10 + H(2+0+0+0)*3 + Flavor(2)*5 = 50 + 6 + 10 = 66
+    },
+    {
+        id: "foods_065", name: "爆炒蚕豆", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "简单的家常做法，却有着浓郁的豆香。",
+        recipe: [["foodMaterial_016", "foodMaterial_070", "foodMaterial_020", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(2+0+0+0)*3 + Flavor(3)*5 = 40 + 6 + 15 = 61
+    },
+    {
+        id: "foods_066", name: "孜然炒面", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 28, effects: { hunger: 57 }, desc: "街头风味，火气十足，孜然味重。",
+        recipe: [["foodMaterial_021", "foodMaterial_074", "foodMaterial_020", "foodMaterial_059", "foodMaterial_026"]]
+        // R(1+1+1+1+1)*10 + H(3+0+0+0+0)*3 + Flavor(4)*5 = 50 + 9 + 20 = 79
+    },
+    {
+        id: "foods_067", name: "紫菜鱼丸汤", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 36, effects: { hunger: 72 }, desc: "将生鱼剁碎制丸，汤头鲜美，老少皆宜。",
+        recipe: [["foodMaterial_024", "foodMaterial_039", "foodMaterial_007", "foodMaterial_061", "foodMaterial_072"]]
+        // R(1+1+1+1+2)*10 + H(1+1+0+0+0)*3 + Flavor(2)*5 = 60 + 6 + 10 = 76
+    },
+    {
+        id: "foods_068", name: "炸臭豆腐", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 24, effects: { hunger: 49 }, desc: "闻着臭，吃着香，配上辣椒酱一绝。",
+        recipe: [["foodMaterial_027", "foodMaterial_026", "foodMaterial_008", "foodMaterial_070"]]
+        // R(1+1+1+1)*10 + H(2+0+0+0)*3 + Flavor(3)*5 = 40 + 6 + 15 = 61
+    },
+    {
+        id: "foods_069", name: "酱爆鸭片", type: "food", cookType: "Sauteing", grade: 1, rarity: 2, obtain: "craft",
+        value: 39, effects: { hunger: 79 }, desc: "鸭肉片大火快炒，锁住肉汁，酱香浓郁。",
+        recipe: [["foodMaterial_049", "foodMaterial_025", "foodMaterial_070", "foodMaterial_062"]]
+        // R(2+1+1+1)*10 + H(2+0+0+0)*3 + Flavor(3)*5 = 50 + 6 + 15 = 71
+    },
+    {
+        id: "foods_070", name: "八宝饭", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "多种材料汇聚，软糯香甜，富含层次感。",
+        recipe: [["foodMaterial_047", "foodMaterial_015", "foodMaterial_018", "foodMaterial_037", "foodMaterial_007"]]
+        // R(1+1+1+1+1)*10 + H(3+2+0+0+0)*3 + Flavor(2)*5 = 50 + 15 + 10 = 75
+    },
+    {
+        id: "foods_071", name: "生菜拌肉片", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 36, effects: { hunger: 73 }, desc: "野菜的爽脆中和了鲜肉的油腻，简单且健康。",
+        recipe: [["foodMaterial_005", "foodMaterial_006", "foodMaterial_072", "foodMaterial_008", "foodMaterial_070"]]
+        // 计算: R(2+1+2+1+1)*10 + H(2+1+0+0+0)*3 + Flavor(3)*5 = 70 + 9 + 15 = 94 / 2 = 47 (修正结果)
+    },
+    {
+        id: "foods_072", name: "麦麸红薯粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "虽然口感略显粗糙，但极度耐饿，是生存良品。",
+        recipe: [["foodMaterial_023", "foodMaterial_012", "foodMaterial_007", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(1+2+0+0)*3 + Flavor(1)*5 = 40 + 9 + 5 = 54
+    },
+    {
+        id: "foods_073", name: "脆皮炸鲜奶", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 53 }, desc: "外层酥脆，内里如丝绸般顺滑甜香。",
+        recipe: [["foodMaterial_001", "foodMaterial_018", "foodMaterial_007", "foodMaterial_004"]]
+        // R(1+1+1+1)*10 + H(3+0+0+1)*3 + Flavor(1)*5 = 40 + 12 + 5 = 57
+    },
+    {
+        id: "foods_074", name: "凉拌皮蛋", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 29, effects: { hunger: 58 }, desc: "晶莹剔透的皮蛋配上特制酱汁，鲜美开胃。",
+        recipe: [["foodMaterial_030", "foodMaterial_059", "foodMaterial_060", "foodMaterial_072", "foodMaterial_020"]]
+        // R(1+1+1+2+1)*10 + H(2+0+0+0+0)*3 + Flavor(4)*5 = 60 + 6 + 20 = 86
+    },
+    {
+        id: "foods_075", name: "蚂蚁上树", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "肉末吸附在粉条上，形似蚂蚁上树，咸鲜适口。",
+        recipe: [["foodMaterial_045", "foodMaterial_005", "foodMaterial_068", "foodMaterial_071", "foodMaterial_020"]]
+        // R(1+2+1+1+1)*10 + H(3+2+1+0+0)*3 + Flavor(3)*5 = 60 + 18 + 15 = 93
+    },
+    {
+        id: "foods_076", name: "挂糊炸茄盒", type: "food", cookType: "Frying", grade: 1, rarity: 2, obtain: "craft",
+        value: 38, effects: { hunger: 77 }, desc: "茄子夹着鲜肉裹面油炸，口感层次极其丰富。",
+        recipe: [["foodMaterial_040", "foodMaterial_005", "foodMaterial_001", "foodMaterial_008", "foodMaterial_059"]]
+        // R(1+2+1+1+1)*10 + H(1+2+3+0+0)*3 + Flavor(2)*5 = 60 + 18 + 10 = 88
+    },
+    {
+        id: "foods_077", name: "糖醋荷包蛋", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 27, effects: { hunger: 55 }, desc: "炸过的蛋皮吸满了酸甜的汁水，咬一口就爆浆。",
+        recipe: [["foodMaterial_004", "foodMaterial_018", "foodMaterial_060", "foodMaterial_059"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_078", name: "辣炒蛇肉片", type: "food", cookType: "Sauteing", grade: 2, rarity: 1, obtain: "craft",
+        value: 41, effects: { hunger: 82 }, desc: "蛇肉的脆爽与辣椒的火热完美融合，越吃越过瘾。",
+        recipe: [["foodMaterial_052", "foodMaterial_026", "foodMaterial_070", "foodMaterial_071", "foodMaterial_067"]]
+        // R(1+1+1+1+1)*10 + H(10+0+0+0+0)*3 + Flavor(4)*5 = 50 + 30 + 20 = 100
+    },
+    {
+        id: "foods_079", name: "酸菜氽白肉", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 46, effects: { hunger: 93 }, desc: "酸菜解了白肉的腻，肉片入口即化，汤头鲜美。",
+        recipe: [["foodMaterial_046", "foodMaterial_005", "foodMaterial_007", "foodMaterial_071", "foodMaterial_008"]]
+        // R(1+2+1+1+1)*10 + H(1+2+0+0+0)*3 + Flavor(2)*5 = 60 + 9 + 10 = 79
+    },
+    {
+        id: "foods_080", name: "蜜汁烤排骨", type: "food", cookType: "Roasting", grade: 2, rarity: 2, obtain: "craft",
+        value: 48, effects: { hunger: 97 }, desc: "刷上厚厚一层蜂蜜，烤出的排骨色泽红亮，香甜可口。",
+        recipe: [["foodMaterial_005", "foodMaterial_075", "foodMaterial_073", "foodMaterial_062", "foodMaterial_008"]]
+        // R(2+2+1+1+1)*10 + H(2+5+0+0+0)*3 + Flavor(3)*5 = 70 + 21 + 15 = 106
+    },
+    {
+        id: "foods_081", name: "柿子饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "柿子去皮与面粉混合煎制，软糯香甜，满口果香。",
+        recipe: [["foodMaterial_017", "foodMaterial_001", "foodMaterial_018"]]
+        // 计算: R(1+1+1)*10 + H(1+3+0)*3 + Flavor(1)*5 = 30 + 12 + 5 = 47 / 2 = 23
+    },
+    {
+        id: "foods_082", name: "炭烤鲜玉米", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 19, effects: { hunger: 39 }, desc: "最原始的美味，外皮焦香，内里甜脆。",
+        recipe: [["foodMaterial_011", "foodMaterial_008", "foodMaterial_020"]]
+        // R(1+1+1)*10 + H(2+0+0)*3 + Flavor(2)*5 = 30 + 6 + 10 = 46
+    },
+    {
+        id: "foods_083", name: "干炒花生仁", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 18, effects: { hunger: 37 }, desc: "不用一滴油，干炒出的花生仁香气最是纯正。",
+        recipe: [["foodMaterial_028", "foodMaterial_008", "foodMaterial_018"]]
+        // R(1+1+1)*10 + H(2+0+0)*3 + Flavor(2)*5 = 30 + 6 + 10 = 46
+    },
+    {
+        id: "foods_084", name: "蚝油杏鲍菇", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 25, effects: { hunger: 51 }, desc: "蘑菇的鲜味被蚝油完美激发，口感厚实如肉。",
+        recipe: [["foodMaterial_044", "foodMaterial_067", "foodMaterial_070", "foodMaterial_059"]]
+        // R(1+1+1+1)*10 + H(1+0+0+0)*3 + Flavor(3)*5 = 40 + 3 + 15 = 58
+    },
+    {
+        id: "foods_085", name: "乱炖狗肉", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 51, effects: { hunger: 102 }, desc: "大锅慢炖，各种香料的味道透进每一丝肉理。",
+        recipe: [["foodMaterial_050", "foodMaterial_065", "foodMaterial_066", "foodMaterial_071", "foodMaterial_008"]]
+        // R(1+1+1+1+1)*10 + H(15+0+0+0+0)*3 + Flavor(4)*5 = 50 + 45 + 20 = 115
+    },
+    {
+        id: "foods_086", name: "拔丝苹果", type: "food", cookType: "Sauteing", grade: 1, rarity: 1, obtain: "craft",
+        value: 21, effects: { hunger: 43 }, desc: "虽然没有苹果，但用柿子代替也别有一番风味。",
+        recipe: [["foodMaterial_017", "foodMaterial_018", "foodMaterial_007", "foodMaterial_072"]]
+        // R(1+1+1+2)*10 + H(1+0+0+0)*3 + Flavor(2)*5 = 50 + 3 + 10 = 63
+    },
+    {
+        id: "foods_087", name: "五香炸鱼块", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "裹上一层薄薄的面粉，炸得酥酥脆脆。",
+        recipe: [["foodMaterial_024", "foodMaterial_001", "foodMaterial_073", "foodMaterial_008"]]
+        // R(1+1+1+1)*10 + H(1+3+0+0)*3 + Flavor(2)*5 = 40 + 12 + 10 = 62
+    },
+    {
+        id: "foods_088", name: "红烧鳄鱼掌", type: "food", cookType: "Boiling", grade: 2, rarity: 2, obtain: "craft",
+        value: 64, effects: { hunger: 129 }, desc: "珍贵的野味，胶质丰富，强筋壮骨。",
+        recipe: [["foodMaterial_056", "foodMaterial_059", "foodMaterial_065", "foodMaterial_066", "foodMaterial_062"]]
+        // R(2+1+1+1+1)*10 + H(20+0+0+0+0)*3 + Flavor(4)*5 = 60 + 60 + 20 = 140
+    },
+    {
+        id: "foods_089", name: "麻辣烫粉条", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 36, effects: { hunger: 73 }, desc: "粉条Q弹爽滑，汤底又麻又辣，吃完出一身汗。",
+        recipe: [["foodMaterial_045", "foodMaterial_026", "foodMaterial_064", "foodMaterial_008", "foodMaterial_007"]]
+        // R(1+1+1+1+1)*10 + H(3+0+0+0+0)*3 + Flavor(3)*5 = 50 + 9 + 15 = 74
+    },
+    {
+        id: "foods_090", name: "虎骨清汤", type: "food", cookType: "Boiling", grade: 3, rarity: 3, obtain: "craft",
+        value: 77, effects: { hunger: 155 }, desc: "虽然是用虎肉熬制，但这清汤依然气势磅礴。",
+        recipe: [["foodMaterial_055", "foodMaterial_007", "foodMaterial_071", "foodMaterial_062"]]
+        // R(3+1+1+1)*10 + H(25+0+0+0)*3 + Flavor(2)*5 = 60 + 75 + 10 = 145
+    },
+    {
+        id: "foods_091", name: "艾草香煎饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 47 }, desc: "艾草的苦甜与面粉的焦香在舌尖交织。",
+        recipe: [["foodMaterial_035", "foodMaterial_001", "foodMaterial_008", "foodMaterial_072"]]
+        // R(1+1+1+2)*10 + H(0+3+0+0)*3 + Flavor(2)*5 = 50 + 9 + 10 = 69 / 2 = 34 (调整价值保持平衡)
+    },
+    {
+        id: "foods_092", name: "皮蛋豆腐", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 30, effects: { hunger: 61 }, desc: "咸鲜爽口，是夏季最受欢迎的凉拌菜。",
+        recipe: [["foodMaterial_030", "foodMaterial_027", "foodMaterial_059", "foodMaterial_072", "foodMaterial_020"]]
+        // R(1+1+1+2+1)*10 + H(2+2+0+0+0)*3 + Flavor(3)*5 = 60 + 12 + 15 = 87
+    },
+    {
+        id: "foods_093", name: "虎肉叉烧", type: "food", cookType: "Roasting", grade: 3, rarity: 3, obtain: "craft",
+        value: 82, effects: { hunger: 165 }, desc: "涂满蜂蜜烤制的虎肉，每一口都是力量的证明。",
+        recipe: [["foodMaterial_055", "foodMaterial_075", "foodMaterial_059", "foodMaterial_018", "foodMaterial_073"]]
+        // R(3+2+1+1+1)*10 + H(25+5+0+0+0)*3 + Flavor(4)*5 = 80 + 90 + 20 = 190
+    },
+    {
+        id: "foods_094", name: "芝麻南瓜饼", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 52 }, desc: "虽然没有南瓜，但红薯与芝麻的组合同样软糯。",
+        recipe: [["foodMaterial_012", "foodMaterial_001", "foodMaterial_034", "foodMaterial_018"]]
+        // R(1+1+1+1)*10 + H(2+3+0+0)*3 + Flavor(2)*5 = 40 + 15 + 10 = 65
+    },
+    {
+        id: "foods_095", name: "黑芝麻糊", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 23, effects: { hunger: 46 }, desc: "浓郁顺滑，充满黑芝麻独特的醇厚香气。",
+        recipe: [["foodMaterial_036", "foodMaterial_007", "foodMaterial_018"]]
+        // R(1+1+1)*10 + H(2+0+0)*3 + Flavor(2)*5 = 30 + 6 + 10 = 46
+    },
+    {
+        id: "foods_096", name: "油炸蚕豆", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 18, effects: { hunger: 37 }, desc: "嚼劲十足，咸鲜酥脆，绝佳的干粮。",
+        recipe: [["foodMaterial_016", "foodMaterial_008", "foodMaterial_026"]]
+        // R(1+1+1)*10 + H(2+0+0)*3 + Flavor(2)*5 = 30 + 6 + 10 = 46
+    },
+    {
+        id: "foods_097", name: "熊掌焖面", type: "food", cookType: "Boiling", grade: 2, rarity: 2, obtain: "craft",
+        value: 71, effects: { hunger: 143 }, desc: "熊肉油脂浸透面条，分外鲜美，极其扎实。",
+        recipe: [["foodMaterial_054", "foodMaterial_021", "foodMaterial_059", "foodMaterial_071", "foodMaterial_065"]]
+        // R(2+1+1+1+1)*10 + H(30+3+0+0+0)*3 + Flavor(3)*5 = 60 + 99 + 15 = 174
+    },
+    {
+        id: "foods_098", name: "酱香鳄鱼丁", type: "food", cookType: "Sauteing", grade: 2, rarity: 2, obtain: "craft",
+        value: 58, effects: { hunger: 117 }, desc: "豆瓣酱与鳄鱼肉的激情碰撞，咸辣浓郁。",
+        recipe: [["foodMaterial_056", "foodMaterial_068", "foodMaterial_070", "foodMaterial_071"]]
+        // R(2+1+1+1)*10 + H(20+1+0+0)*3 + Flavor(3)*5 = 50 + 63 + 15 = 128
+    },
+    {
+        id: "foods_099", name: "桂花糖藕", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 26, effects: { hunger: 53 }, desc: "利用粘米模拟糯米，辅以桂花与蜂蜜，甜入心扉。",
+        recipe: [["foodMaterial_047", "foodMaterial_037", "foodMaterial_075", "foodMaterial_007"]]
+        // R(1+1+2+1)*10 + H(3+0+5+0)*3 + Flavor(2)*5 = 50 + 24 + 10 = 84
+    },
+    {
+        id: "foods_400", name: "至尊百味锅", type: "food", cookType: "Boiling", grade: 3, rarity: 3, obtain: "craft",
+        value: 110, effects: { hunger: 220 }, desc: "汇聚了虎肉与熊肉的顶级乱炖，食之可立地成神。",
+        recipe: [["foodMaterial_055", "foodMaterial_054", "foodMaterial_070", "foodMaterial_059", "foodMaterial_072"]]
+        // R(3+2+1+1+2)*10 + H(25+30+0+0+0)*3 + Flavor(3)*5 = 90 + 165 + 15 = 270
+    },
+    {
+        id: "foods_401", name: "烤红薯", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "最简单的美味，冬日里的温暖慰藉。",
+        recipe: [["foodMaterial_012"]]
+        // 计算: R(1)*10 + H(2)*3 + Flavor(0)*5 = 10 + 6 + 0 = 16 (基础分提升以防数值过低)
+    },
+    {
+        id: "foods_402", name: "白米饭", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 10, effects: { hunger: 20 }, desc: "晶莹剔透，虽然没有配菜也能吃下一大碗。",
+        recipe: [["foodMaterial_002", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29
+    },
+    {
+        id: "foods_403", name: "清炒野菜", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 9, effects: { hunger: 18 }, desc: "保留了山野间的清新气息。",
+        recipe: [["foodMaterial_006", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_404", name: "煎蛋", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 12, effects: { hunger: 24 }, desc: "边缘焦脆，内里蛋黄还带着流心。",
+        recipe: [["foodMaterial_004", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_405", name: "烤鱼", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 12, effects: { hunger: 25 }, desc: "架在火上烘烤的鲜鱼，香气四溢。",
+        recipe: [["foodMaterial_024", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_406", name: "水煮蛋", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "剥开壳后，是洁白滑嫩的蛋清。",
+        recipe: [["foodMaterial_004", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_407", name: "油炸花生", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 15, effects: { hunger: 31 }, desc: "每一粒都金黄酥脆。",
+        recipe: [["foodMaterial_015", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31
+    },
+    {
+        id: "foods_408", name: "煮玉米", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "软糯香甜，还原玉米最本真的味道。",
+        recipe: [["foodMaterial_011", "foodMaterial_007"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(0)*5 = 20 + 6 + 0 = 26
+    },
+    {
+        id: "foods_409", name: "烤鲜肉", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 18, effects: { hunger: 36 }, desc: "滋滋冒油的烤肉，最能补充体力。",
+        recipe: [["foodMaterial_005", "foodMaterial_008"]]
+        // R(2+1)*10 + H(2+0)*3 + Flavor(1)*5 = 30 + 6 + 5 = 41
+    },
+    {
+        id: "foods_410", name: "炸薯块", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 15, effects: { hunger: 31 }, desc: "外酥里嫩，简单却让人满足。",
+        recipe: [["foodMaterial_042", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31
+    },
+    {
+        id: "foods_411", name: "清炖肉汤", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 18, effects: { hunger: 36 }, desc: "只加了水炖煮出的鲜肉，汤头清淡。",
+        recipe: [["foodMaterial_005", "foodMaterial_007"]]
+        // R(2+1)*10 + H(2+0)*3 + Flavor(0)*5 = 30 + 6 + 0 = 36
+    },
+    {
+        id: "foods_412", name: "干烙面饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 10, effects: { hunger: 19 }, desc: "不放油，直接在热锅上烙熟的面饼。",
+        recipe: [["foodMaterial_001", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29 (取29/2并平衡)
+    },
+    {
+        id: "foods_413", name: "甜柿子", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "稍微温煮过的柿子，甜度更加凝聚。",
+        recipe: [["foodMaterial_017", "foodMaterial_018"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_414", name: "煮大豆", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "饱满的黄豆煮熟后透着一股清香。",
+        recipe: [["foodMaterial_003", "foodMaterial_007"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(0)*5 = 20 + 6 + 0 = 26
+    },
+    {
+        id: "foods_415", name: "炙烤禽肉", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "简单火烤的麻雀肉，虽小却香。",
+        recipe: [["foodMaterial_014", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_416", name: "白煮豆腐", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "原汁原味的水煮豆腐，口感清爽。",
+        recipe: [["foodMaterial_027", "foodMaterial_007"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(0)*5 = 20 + 6 + 0 = 26
+    },
+    {
+        id: "foods_417", name: "烤蘑菇", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "炭火烤出的蘑菇渗出了鲜美的汁水。",
+        recipe: [["foodMaterial_044", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_418", name: "清煮麦麸", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "极其简陋的麦麸糊，勉强果腹。",
+        recipe: [["foodMaterial_023", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_419", name: "油炸面筋", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 17, effects: { hunger: 34 }, desc: "面粉团炸至蓬松，金黄诱人。",
+        recipe: [["foodMaterial_001", "foodMaterial_008"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(1)*5 = 20 + 9 + 5 = 34
+    },
+    {
+        id: "foods_420", name: "烤土豆", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "丢进火堆里烤熟的土豆，皮焦肉粉。",
+        recipe: [["foodMaterial_042"]]
+        // R(1)*10 + H(2)*3 + Flavor(0)*5 = 10 + 6 + 0 = 16 (按单材料补正逻辑提升至26)
+    },
+    {
+        id: "foods_421", name: "清蒸萝卜", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "萝卜切片蒸熟，清甜多汁，非常爽口。",
+        recipe: [["foodMaterial_038", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_422", name: "烤茄子", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "整根茄子烤到表皮发皱，内里软糯，撒点盐就很香。",
+        recipe: [["foodMaterial_040", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_423", name: "白煮面条", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 29 }, desc: "最基础的面食，仅仅是为了填饱肚子。",
+        recipe: [["foodMaterial_021", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29
+    },
+    {
+        id: "foods_424", name: "水煮豆角", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "简单的白灼豆角，虽然清淡但保留了原味。",
+        recipe: [["foodMaterial_041", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_425", name: "粘米饭", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 29 }, desc: "口感软糯黏稠，比一般的大米饭更有嚼劲。",
+        recipe: [["foodMaterial_047", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29
+    },
+    {
+        id: "foods_426", name: "油炸豆腐", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 15, effects: { hunger: 31 }, desc: "豆腐炸至外表金黄，内里依旧柔嫩。",
+        recipe: [["foodMaterial_027", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31
+    },
+    {
+        id: "foods_427", name: "烤玉米粒", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "撒了点盐的烤玉米，每一粒都咸香甜脆。",
+        recipe: [["foodMaterial_011", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31 (修正Value)
+    },
+    {
+        id: "foods_428", name: "清煮粉条", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 29 }, desc: "晶莹剔透的粉条，口感顺滑。",
+        recipe: [["foodMaterial_045", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29
+    },
+    {
+        id: "foods_429", name: "蜜烤花生", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 20, effects: { hunger: 41 }, desc: "涂抹了蜂蜜的花生，酥脆中带着香甜。",
+        recipe: [["foodMaterial_015", "foodMaterial_075"]]
+        // R(1+2)*10 + H(2+5)*3 + Flavor(1)*5 = 30 + 21 + 5 = 56 (Value取28)
+    },
+    {
+        id: "foods_430", name: "白水煮鱼", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "完全没有去腥处理的煮鱼，味道一言难尽。",
+        recipe: [["foodMaterial_024", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_431", name: "火烧野猪肉", type: "food", cookType: "Roasting", grade: 1, rarity: 1, obtain: "craft",
+        value: 35, effects: { hunger: 71 }, desc: "粗犷的野猪肉直接火烤，虽然塞牙但很顶饱。",
+        recipe: [["foodMaterial_051", "foodMaterial_008"]]
+        // 计算: R(1+1)*10 + H(20+0)*3 + Flavor(1)*5 = 20 + 60 + 5 = 85 / 2 = 42 (根据描述微调价值)
+    },
+    {
+        id: "foods_432", name: "清炖狼肉", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "简单的白水煮狼肉，有一股浓重的野兽膻味。",
+        recipe: [["foodMaterial_053", "foodMaterial_007"]]
+        // R(1+1)*10 + H(15+0)*3 + Flavor(0)*5 = 20 + 45 + 0 = 65
+    },
+    {
+        id: "foods_433", name: "白灼狗肉", type: "food", cookType: "Boiling", grade: 1, rarity: 1, obtain: "craft",
+        value: 32, effects: { hunger: 65 }, desc: "不加修饰的狗肉，口感扎实，富有能量。",
+        recipe: [["foodMaterial_050", "foodMaterial_007"]]
+        // R(1+1)*10 + H(15+0)*3 + Flavor(0)*5 = 20 + 45 + 0 = 65
+    },
+    {
+        id: "foods_434", name: "火炙熊肉", type: "food", cookType: "Roasting", grade: 2, rarity: 2, obtain: "craft",
+        value: 62, effects: { hunger: 125 }, desc: "厚实的熊肉在火上滋滋冒油，每一口都是高热量。",
+        recipe: [["foodMaterial_054", "foodMaterial_008"]]
+        // R(2+1)*10 + H(30+0)*3 + Flavor(1)*5 = 30 + 90 + 5 = 125
+    },
+    {
+        id: "foods_435", name: "原味烤虎肉", type: "food", cookType: "Roasting", grade: 3, rarity: 3, obtain: "craft",
+        value: 57, effects: { hunger: 115 }, desc: "顶级食材无需复杂加工，直接炭火烤熟即可。",
+        recipe: [["foodMaterial_055"]]
+        // R(3)*10 + H(25)*3 + Flavor(0)*5 = 30 + 75 + 0 = 105 (单食材补正至115)
+    },
+    {
+        id: "foods_436", name: "白煮鳄鱼肉", type: "food", cookType: "Boiling", grade: 2, rarity: 2, obtain: "craft",
+        value: 45, effects: { hunger: 90 }, desc: "简单的水煮鳄鱼肉，口感像紧实的鸡肉。",
+        recipe: [["foodMaterial_056", "foodMaterial_007"]]
+        // R(2+1)*10 + H(20+0)*3 + Flavor(0)*5 = 30 + 60 + 0 = 90
+    },
+    {
+        id: "foods_437", name: "炸生鱼片", type: "food", cookType: "Frying", grade: 1, rarity: 1, obtain: "craft",
+        value: 27, effects: { hunger: 54 }, desc: "将鲜鱼片快速油炸，外焦里嫩。",
+        recipe: [["foodMaterial_057", "foodMaterial_008"]]
+        // R(1+1)*10 + H(8+0)*3 + Flavor(1)*5 = 20 + 24 + 5 = 49 (取54平衡价值)
+    },
+    {
+        id: "foods_438", name: "甜味汤面", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 29 }, desc: "加了糖的稀面条，味道独特。",
+        recipe: [["foodMaterial_021", "foodMaterial_018"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(1)*5 = 20 + 9 + 5 = 34
+    },
+    {
+        id: "foods_439", name: "酱萝卜", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "用酱翻炒过的萝卜，咸鲜开胃。",
+        recipe: [["foodMaterial_038", "foodMaterial_025"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_440", name: "椒香炸豆角", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "油炸过的豆角，撒上一层胡椒粉提味。",
+        recipe: [["foodMaterial_041", "foodMaterial_063"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_441", name: "清煮酸菜", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "酸菜直接水煮，虽然简陋但非常开胃。",
+        recipe: [["foodMaterial_046", "foodMaterial_007"]]
+        // 计算: R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 + 0 = 23
+    },
+    {
+        id: "foods_442", name: "炙烤鸭肉", type: "food", cookType: "Roasting", grade: 1, rarity: 2, obtain: "craft",
+        value: 18, effects: { hunger: 36 }, desc: "鸭肉在火上烤至冒油，香气扑鼻。",
+        recipe: [["foodMaterial_049", "foodMaterial_008"]]
+        // R(2+1)*10 + H(2+0)*3 + Flavor(1)*5 = 30 + 6 + 5 = 41 (取36平衡)
+    },
+    {
+        id: "foods_443", name: "白煮羊肉", type: "food", cookType: "Boiling", grade: 1, rarity: 2, obtain: "craft",
+        value: 18, effects: { hunger: 36 }, desc: "原汁原味的羊肉，大补之物。",
+        recipe: [["foodMaterial_048", "foodMaterial_007"]]
+        // R(2+1)*10 + H(2+0)*3 + Flavor(0)*5 = 30 + 6 + 0 = 36
+    },
+    {
+        id: "foods_444", name: "炸紫菜", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "紫菜过油后酥脆无比，像零食一样。",
+        recipe: [["foodMaterial_039", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_445", name: "油炸麻雀", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "小巧的麻雀肉炸至金黄酥脆。",
+        recipe: [["foodMaterial_014", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_446", name: "水煮皮蛋", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 26 }, desc: "整颗皮蛋温煮，口感更加Q弹。",
+        recipe: [["foodMaterial_030", "foodMaterial_007"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(0)*5 = 20 + 6 + 0 = 26
+    },
+    {
+        id: "foods_447", name: "烤蚕豆", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 15, effects: { hunger: 31 }, desc: "干烤出的蚕豆，是极佳的磨牙小嘴。",
+        recipe: [["foodMaterial_016", "foodMaterial_008"]]
+        // R(1+1)*10 + H(2+0)*3 + Flavor(1)*5 = 20 + 6 + 5 = 31
+    },
+    {
+        id: "foods_448", name: "清炒粉条", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 17, effects: { hunger: 34 }, desc: "粉条下锅快炒，口感劲道。",
+        recipe: [["foodMaterial_045", "foodMaterial_008"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(1)*5 = 20 + 9 + 5 = 34
+    },
+    {
+        id: "foods_449", name: "蜜汁烤玉米", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 20, effects: { hunger: 41 }, desc: "刷了蜂蜜的烤玉米，甜滋滋的。",
+        recipe: [["foodMaterial_011", "foodMaterial_075"]]
+        // R(1+2)*10 + H(2+5)*3 + Flavor(1)*5 = 30 + 21 + 5 = 56 (取41平衡)
+    },
+    {
+        id: "foods_450", name: "生拌西红柿", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "西红柿切块撒糖，最经典的吃法。",
+        recipe: [["foodMaterial_022", "foodMaterial_018"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_451", name: "清蒸艾草", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 10, effects: { hunger: 20 }, desc: "艾草直接蒸熟，虽带苦味但能勉强果腹。",
+        recipe: [["foodMaterial_035", "foodMaterial_007"]]
+        // R(1+1)*10 + H(0+0)*3 + Flavor(0)*5 = 20
+    },
+    {
+        id: "foods_452", name: "蜜渍桂花", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 23, effects: { hunger: 45 }, desc: "桂花与蜂蜜一同熬制，甜香四溢。",
+        recipe: [["foodMaterial_037", "foodMaterial_075"]]
+        // R(1+2)*10 + H(0+5)*3 + Flavor(1)*5 = 30 + 15 + 5 = 50 (取45平衡)
+    },
+    {
+        id: "foods_453", name: "火烤老鼠肉", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "生存极限下的选择，烤焦后能掩盖奇怪的味道。",
+        recipe: [["foodMaterial_013", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_454", name: "竹筒水", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 10, effects: { hunger: 20 }, desc: "用竹筒煮出的水，带着淡淡的竹木清香。",
+        recipe: [["foodMaterial_032", "foodMaterial_007"]]
+        // R(1+1)*10 + H(0+0)*3 + Flavor(0)*5 = 20
+    },
+    {
+        id: "foods_455", name: "荷叶水", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 10, effects: { hunger: 20 }, desc: "荷叶煮水，清热解暑。",
+        recipe: [["foodMaterial_031", "foodMaterial_007"]]
+        // R(1+1)*10 + H(0+0)*3 + Flavor(0)*5 = 20
+    },
+    {
+        id: "foods_456", name: "麦麸饼", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 14, effects: { hunger: 28 }, desc: "麦麸加少许水捏成饼煎熟，口感粗糙。",
+        recipe: [["foodMaterial_023", "foodMaterial_008"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(1)*5 = 20 + 3 + 5 = 28
+    },
+    {
+        id: "foods_457", name: "油炸芝麻", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 13, effects: { hunger: 25 }, desc: "炸香的芝麻，通常作为辅料，也可应急吃。",
+        recipe: [["foodMaterial_034", "foodMaterial_008"]]
+        // R(1+1)*10 + H(0+0)*3 + Flavor(1)*5 = 20 + 0 + 5 = 25
+    },
+    {
+        id: "foods_458", name: "白煮面糊", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 15, effects: { hunger: 29 }, desc: "面粉直接入水搅成的糊糊，极易消化。",
+        recipe: [["foodMaterial_001", "foodMaterial_007"]]
+        // R(1+1)*10 + H(3+0)*3 + Flavor(0)*5 = 20 + 9 + 0 = 29
+    },
+    {
+        id: "foods_459", name: "烤麻雀", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 11, effects: { hunger: 23 }, desc: "野外随处可见的解馋小食。",
+        recipe: [["foodMaterial_014", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 20 + 3 = 23
+    },
+    {
+        id: "foods_460", name: "清炸肉丁", type: "food", cookType: "Frying", grade: 1, rarity: 2, obtain: "craft",
+        value: 18, effects: { hunger: 36 }, desc: "鲜肉切丁直接油炸，肉香浓郁。",
+        recipe: [["foodMaterial_005", "foodMaterial_008"]]
+        // R(2+1)*10 + H(2+0)*3 + Flavor(1)*5 = 30 + 6 + 5 = 41 (取36平衡)
+    },
+    {
+        id: "foods_600", name: "炭黑树皮面", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 5, hp: -5 }, desc: "烤得焦黑的树皮混着面粉，这真的能吃吗？",
+        recipe: [["foodMaterial_010", "foodMaterial_001"]]
+        // 计算: R(1+1)*10 + H(0+3)*3 + Flavor(0)*5 = 29
+    },
+    {
+        id: "foods_601", name: "粗糠糊弄餐", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 8, hp: -3 }, desc: "全是粗糠和水煮成的糊糊，喇嗓子得厉害。",
+        recipe: [["foodMaterial_009", "foodMaterial_007"]]
+        // R(1+1)*10 + H(1+0)*3 + Flavor(0)*5 = 23
+    },
+    {
+        id: "foods_602", name: "乱炖老鼠尾", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -10, toxicity: 5 }, desc: "散发着下水道气息的汤，喝一口怀疑人生。",
+        recipe: [["foodMaterial_013", "foodMaterial_007", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_603", name: "齁咸生鱼块", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 10, hp: -2 }, desc: "放了半袋盐炒出的生鱼片，咸得让人脱水。",
+        recipe: [["foodMaterial_057", "foodMaterial_008", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_604", name: "蜜汁老鼠肉", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 15, hp: -5 }, desc: "甜腻的蜂蜜也掩盖不了老鼠肉的诡异口感。",
+        recipe: [["foodMaterial_013", "foodMaterial_075"]]
+    },
+    {
+        id: "foods_605", name: "辣椒拌树皮", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -8 }, desc: "除了辣味和木渣感，你什么也感觉不到。",
+        recipe: [["foodMaterial_010", "foodMaterial_026", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_606", name: "油炸粗糠球", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 12, hp: -4 }, desc: "虽然过油炸过，但本质依然是难以下咽的饲料。",
+        recipe: [["foodMaterial_009", "foodMaterial_001", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_607", name: "腥甜鱼肉粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 15, hp: -2 }, desc: "生鱼片、大米和过量的糖……一种令人作呕的腥甜。",
+        recipe: [["foodMaterial_057", "foodMaterial_002", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_608", name: "醋溜生蛋壳", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -5 }, desc: "仿佛在嚼碎玻璃，酸涩且扎嘴。",
+        recipe: [["foodMaterial_004", "foodMaterial_060"]]
+    },
+    {
+        id: "foods_609", name: "酱香老鼠干", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 10, hp: -6, toxicity: 2 }, desc: "炸得干瘪的老鼠肉，裹满了咸苦的酱料。",
+        recipe: [["foodMaterial_013", "foodMaterial_025", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_610", name: "苦涩树皮汤", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -10 }, desc: "树皮在水里久煮出的黑汤，苦涩且带有泥土味。",
+        recipe: [["foodMaterial_010", "foodMaterial_007", "foodMaterial_025"]]
+    },
+    {
+        id: "foods_611", name: "醋泡粗糠面", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -4 }, desc: "酸得刺骨的粗糠糊，每一口都在挑战食管的极限。",
+        recipe: [["foodMaterial_009", "foodMaterial_060", "foodMaterial_001"]]
+    },
+    {
+        id: "foods_612", name: "酱爆蝎子尾", type: "food", cookType: "Sauteing", grade: 0, rarity: 2, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -15, toxicity: 10 }, desc: "没去毒钩就直接下锅炒的蝎子，剧毒警告！",
+        recipe: [["foodMaterial_058", "foodMaterial_025", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_613", name: "拔丝老鼠头", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 5, effects: { hunger: 10, hp: -8 }, desc: "裹着厚厚糖浆的老鼠头，这种甜腻让人反胃。",
+        recipe: [["foodMaterial_013", "foodMaterial_018", "foodMaterial_072"]]
+    },
+    {
+        id: "foods_614", name: "油炸生姜块", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 1, hp: -2 }, desc: "整块生姜油炸，辛辣感在嘴里炸裂开来。",
+        recipe: [["foodMaterial_071", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_615", name: "胡椒树皮卷", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 4, hp: -7 }, desc: "撒满胡椒粉的火烧树皮，干硬得像是在嚼炭火。",
+        recipe: [["foodMaterial_010", "foodMaterial_063", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_616", name: "辣酱生鱼骨", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 8, hp: -12 }, desc: "坚硬的鱼骨头裹上辣椒酱油炸，极其扎嘴。",
+        recipe: [["foodMaterial_024", "foodMaterial_026", "foodMaterial_068"]]
+    },
+    {
+        id: "foods_617", name: "陈醋煮鸡蛋", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 6, effects: { hunger: 12, hp: -3 }, desc: "在纯醋里煮出来的蛋，蛋壳已经软化，味道极其酸楚。",
+        recipe: [["foodMaterial_004", "foodMaterial_060", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_618", name: "五香树干糊", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -6 }, desc: "即便加了五香粉，树皮终究也只是树皮。",
+        recipe: [["foodMaterial_010", "foodMaterial_073", "foodMaterial_001"]]
+    },
+    {
+        id: "foods_619", name: "糖盐混合粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 7, effects: { hunger: 15, hp: -5 }, desc: "放了致死量盐和糖的白粥，一种混乱的味觉折磨。",
+        recipe: [["foodMaterial_002", "foodMaterial_008", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_620", name: "生滚老鼠血粥", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 8, hp: -10, toxicity: 8 }, desc: "一股浓重的铁锈味和腥臭味，颜色暗红得诡异。",
+        recipe: [["foodMaterial_013", "foodMaterial_002", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_621", name: "辣椒油炸树皮", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 4, hp: -6 }, desc: "树皮吸饱了劣质油脂，又硬又腻，还带着火烧的刺痛感。",
+        recipe: [["foodMaterial_010", "foodMaterial_026", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_622", name: "粘米拌生鱼胆", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 10, hp: -15, toxicity: 12 }, desc: "鱼胆的极致苦涩浸透了粘米，足以让人当场呕吐。",
+        recipe: [["foodMaterial_047", "foodMaterial_024", "foodMaterial_025"]]
+    },
+    {
+        id: "foods_623", name: "酱香粗糠渣", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 9, hp: -5 }, desc: "全是碎渣的粗糠混合着发苦的陈酱，如同在嚼带咸味的木屑。",
+        recipe: [["foodMaterial_009", "foodMaterial_025", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_624", name: "焦黑麻雀爪", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 3, hp: -4 }, desc: "烤到完全炭化的麻雀爪子，只剩下苦涩的灰烬感。",
+        recipe: [["foodMaterial_014", "foodMaterial_064"]]
+    },
+    {
+        id: "foods_625", name: "蜂蜜腌死鱼", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 6, effects: { hunger: 12, hp: -8, toxicity: 5 }, desc: "甜腻的蜂蜜与腐败的鱼肉混合，散发着腐烂的香气。",
+        recipe: [["foodMaterial_024", "foodMaterial_075", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_626", name: "胡椒拌生蛋壳", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -9 }, desc: "大量胡椒粉包裹着坚硬的蛋壳，每一口都在割伤口腔。",
+        recipe: [["foodMaterial_004", "foodMaterial_063", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_627", name: "五香煮陈糠", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 7, hp: -4 }, desc: "香料味极重，却掩盖不了粗糠发霉的底味。",
+        recipe: [["foodMaterial_009", "foodMaterial_073", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_628", name: "盐浸老鼠爪", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 5, hp: -12, toxicity: 6 }, desc: "咸到发苦的老鼠残肢汤，漂浮着不明的油脂毛发。",
+        recipe: [["foodMaterial_013", "foodMaterial_008", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_629", name: "乱炖鳄鱼鳞", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 10, hp: -10 }, desc: "鳄鱼坚硬的表皮根本无法煮烂，就像在嚼老旧的皮革。",
+        recipe: [["foodMaterial_056", "foodMaterial_007", "foodMaterial_060"]]
+    },
+    {
+        id: "foods_630", name: "芝麻油炖树皮", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 4, effects: { hunger: 5, hp: -8 }, desc: "昂贵的芝麻油也没能拯救树皮的口感，反而变得油腻恶心。",
+        recipe: [["foodMaterial_010", "foodMaterial_072", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_631", name: "酱香老鼠脑", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -12, toxicity: 15 }, desc: "这种奇怪的糊状组织散发着令人绝望的腥臭味。",
+        recipe: [["foodMaterial_013", "foodMaterial_025", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_632", name: "炸生粉浆", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 5, effects: { hunger: 15, hp: -5 }, desc: "半生不熟的油炸面疙瘩，中心还是黏糊糊的生粉。",
+        recipe: [["foodMaterial_001", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_633", name: "醋溜生鱼肠", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -14, toxicity: 10 }, desc: "没洗干净的鱼内脏配上陈醋，酸臭味直冲脑门。",
+        recipe: [["foodMaterial_024", "foodMaterial_060", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_634", name: "红烧粗糠块", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 10, hp: -6 }, desc: "粗糠压实的硬块，除了咸味和纤维感别无他物。",
+        recipe: [["foodMaterial_009", "foodMaterial_059", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_635", name: "糖渍狼骨渣", type: "food", cookType: "Roasting", grade: 1, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 12, hp: -15 }, desc: "烧焦的碎骨头裹着化掉的糖，不仅扎嘴还极其难消化。",
+        recipe: [["foodMaterial_053", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_636", name: "辣椒煮生蛋液", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 5, effects: { hunger: 8, hp: -4 }, desc: "看起来像是一锅带有不明絮状物的辣味洗米水。",
+        recipe: [["foodMaterial_004", "foodMaterial_026", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_637", name: "五香老鼠皮", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -10, toxicity: 5 }, desc: "坚韧且带有毛刺感的干炸鼠皮，味道诡异。",
+        recipe: [["foodMaterial_013", "foodMaterial_073", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_638", name: "蜜汁生鱼骨", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 6, effects: { hunger: 10, hp: -9 }, desc: "蜂蜜粘在腥臭的碎骨头上，一种极度混乱的味觉折磨。",
+        recipe: [["foodMaterial_024", "foodMaterial_075"]]
+    },
+    {
+        id: "foods_639", name: "陈醋树皮丝", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -7 }, desc: "酸涩发苦的木质纤维，完全不能被肠胃吸收。",
+        recipe: [["foodMaterial_010", "foodMaterial_060"]]
+    },
+    {
+        id: "foods_640", name: "大蒜煮树皮", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -8 }, desc: "浓烈的蒜臭味也没能盖住树皮的霉味，令人作呕。",
+        recipe: [["foodMaterial_010", "foodMaterial_070", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_641", name: "麻辣碎骨糊", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 12, hp: -10 }, desc: "花椒的麻味让人舌头失去知觉，但这救不了那一锅烂骨头。",
+        recipe: [["foodMaterial_013", "foodMaterial_064", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_642", name: "豆瓣生鱼胆", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 7, hp: -14, toxicity: 12 }, desc: "生鱼胆在豆瓣酱里爆炒，苦辣腥臭混合在一起，堪比毒药。",
+        recipe: [["foodMaterial_024", "foodMaterial_068", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_643", name: "油炸老鼠尾", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -9, toxicity: 5 }, desc: "炸得干瘪焦黑的鼠尾，嚼起来像是在吃带毛的硬塑料。",
+        recipe: [["foodMaterial_013", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_644", name: "生滚蝎毒汤", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 4, hp: -20, toxicity: 25 }, desc: "没处理毒腺的蝎子直接下锅，这就是一锅致命的毒液。",
+        recipe: [["foodMaterial_058", "foodMaterial_007", "foodMaterial_071"]]
+    },
+    {
+        id: "foods_645", name: "胡椒拌粗糠", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 6, hp: -5 }, desc: "干燥的粗糠配上大量的胡椒粉，吃一口能让你咳嗽半天。",
+        recipe: [["foodMaterial_009", "foodMaterial_063"]]
+    },
+    {
+        id: "foods_646", name: "陈醋泡死蛇", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 6, effects: { hunger: 10, hp: -12, toxicity: 10 }, desc: "酸臭刺鼻，蛇肉已经腐烂发软，充满了病菌。",
+        recipe: [["foodMaterial_052", "foodMaterial_060", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_647", name: "火烧生蛋粉", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 15, hp: -4 }, desc: "面粉包着生蛋液直接扔火里烤，外面糊了里面还是生的。",
+        recipe: [["foodMaterial_001", "foodMaterial_004"]]
+    },
+    {
+        id: "foods_648", name: "酱香老鼠脚", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -10, toxicity: 7 }, desc: "包裹着浓郁酱汁的小爪子，那是对文明社会最后的挑战。",
+        recipe: [["foodMaterial_013", "foodMaterial_025", "foodMaterial_062"]]
+    },
+    {
+        id: "foods_649", name: "蜜汁树皮卷", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 10, hp: -8 }, desc: "蜂蜜被树皮吸收后烤干，变得像树脂一样坚硬且难以消化。",
+        recipe: [["foodMaterial_010", "foodMaterial_075"]]
+    },
+    {
+        id: "foods_650", name: "酱油煮树皮", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -9 }, desc: "树皮被酱油泡得黑亮，咬起来像是在嚼带咸味的废旧皮带。",
+        recipe: [["foodMaterial_010", "foodMaterial_059", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_651", name: "料酒渍生鱼肠", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -12, toxicity: 10 }, desc: "一股浓烈的酒精和腐臭混合的味道，令人作呕。",
+        recipe: [["foodMaterial_024", "foodMaterial_062", "foodMaterial_020"]]
+    },
+    {
+        id: "foods_652", name: "五香老鼠脊椎", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 4, hp: -13, toxicity: 8 }, desc: "火烤出的老鼠骨架，除了灰烬感就是细碎的骨刺。",
+        recipe: [["foodMaterial_013", "foodMaterial_073"]]
+    },
+    {
+        id: "foods_653", name: "浓糖老鼠干", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 10, hp: -7 }, desc: "甜腻的糖包裹着干瘪的老鼠肉，这种味道能让人记一辈子。",
+        recipe: [["foodMaterial_013", "foodMaterial_018"]]
+    },
+    {
+        id: "foods_654", name: "粗糠拌生姜", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -6 }, desc: "辣、干、硬。喉咙仿佛被一团火烧着的木屑塞满了。",
+        recipe: [["foodMaterial_009", "foodMaterial_071"]]
+    },
+    {
+        id: "foods_655", name: "八角煮碎鳞", type: "food", cookType: "Boiling", grade: 0, rarity: 2, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -10 }, desc: "满锅都是八角的怪味，还有煮不烂的硬鳞片。",
+        recipe: [["foodMaterial_056", "foodMaterial_065", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_656", name: "蜂蜜拌粗糠", type: "food", cookType: "Sauteing", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 12, hp: -5 }, desc: "蜂蜜把粗糠粘成了块状，吃起来像是在啃带甜味的砖头。",
+        recipe: [["foodMaterial_009", "foodMaterial_075"]]
+    },
+    {
+        id: "foods_657", name: "醋炒生面疙瘩", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 10, hp: -4 }, desc: "半生不熟的粉团冒着一股酸气，粘在牙齿上极其恶心。",
+        recipe: [["foodMaterial_001", "foodMaterial_060"]]
+    },
+    {
+        id: "foods_658", name: "盐爆鱼眼珠", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 5, hp: -11, toxicity: 6 }, desc: "炸裂的鱼眼和高浓度的盐，一种生理性的折磨。",
+        recipe: [["foodMaterial_024", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_659", name: "辣酱拌树屑", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -8 }, desc: "除了辣酱的咸辣，你只能感觉到木质纤维在刮擦口腔。",
+        recipe: [["foodMaterial_010", "foodMaterial_025", "foodMaterial_026"]]
+    },
+    {
+        id: "foods_660", name: "酱油泡生鸡蛋", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 5, hp: -3, toxicity: 4 }, desc: "未煮熟的蛋液混在咸腥的酱油里，不仅反胃还可能拉肚子。",
+        recipe: [["foodMaterial_004", "foodMaterial_059", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_661", name: "胡椒炸树皮", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -8 }, desc: "油炸后的树皮变得像钢板一样坚硬，胡椒粉呛得人直咳嗽。",
+        recipe: [["foodMaterial_010", "foodMaterial_063", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_662", name: "醋熘老鼠皮", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 4, hp: -10, toxicity: 6 }, desc: "带有毛刺感的鼠皮在醋汁里翻炒，散发着一股令人窒息的酸臭。",
+        recipe: [["foodMaterial_013", "foodMaterial_060", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_663", name: "盐焖生蛇胆", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 6, hp: -14, toxicity: 15 }, desc: "蛇胆被盐激出的苦水极其惊人，食之令人头晕目眩。",
+        recipe: [["foodMaterial_052", "foodMaterial_008", "foodMaterial_025"]]
+    },
+    {
+        id: "foods_664", name: "蜜汁死鱼肠", type: "food", cookType: "Roasting", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 8, hp: -11, toxicity: 9 }, desc: "蜂蜜粘着腐烂的内脏烤干，这种甜腥味简直是噩梦。",
+        recipe: [["foodMaterial_024", "foodMaterial_075", "foodMaterial_062"]]
+    },
+    {
+        id: "foods_665", name: "花椒煮粗糠", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 5, hp: -5 }, desc: "满锅的花椒让你嘴唇发麻，但这掩盖不了粗糠喇嗓子的事实。",
+        recipe: [["foodMaterial_009", "foodMaterial_064", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_666", name: "辣椒拌鳄鱼鳞", type: "food", cookType: "Sauteing", grade: 0, rarity: 2, obtain: "craft",
+        value: 4, effects: { hunger: 8, hp: -12 }, desc: "这些坚硬的鳞片根本不是人类肠胃能消化的东西。",
+        recipe: [["foodMaterial_056", "foodMaterial_026", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_667", name: "酱油面粉糊", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 10, hp: -2 }, desc: "黑乎乎、粘稠且过咸的面糊，看起来更像是工业浆糊。",
+        recipe: [["foodMaterial_001", "foodMaterial_059", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_668", name: "火烧变质狗肉", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 12, hp: -15, toxicity: 10 }, desc: "即使烤焦了，依然能闻到深处散发出来的腐败恶臭。",
+        recipe: [["foodMaterial_050", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_669", name: "五香树皮干", type: "food", cookType: "Frying", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 3, hp: -7 }, desc: "炸干的树皮碎屑，五香粉也无法改变它像在嚼木屑的本质。",
+        recipe: [["foodMaterial_010", "foodMaterial_073", "foodMaterial_008"]]
+    },
+    {
+        id: "foods_670", name: "芝麻油浸树皮", type: "food", cookType: "Frying", grade: 0, rarity: 2, obtain: "craft",
+        value: 4, effects: { hunger: 5, hp: -8 }, desc: "树皮吸饱了芝麻油，咬下去满嘴油腻，令人作呕。",
+        recipe: [["foodMaterial_010", "foodMaterial_072"]]
+    },
+    {
+        id: "foods_671", name: "料酒炖老鼠尾", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 4, hp: -12, toxicity: 8 }, desc: "酒气掩盖不了腐烂的味道，整锅汤呈现出诡异的灰褐色。",
+        recipe: [["foodMaterial_013", "foodMaterial_062", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_672", name: "糖渍变质肉丁", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 5, effects: { hunger: 10, hp: -10, toxicity: 5 }, desc: "甜得发腻的糖浆裹着酸败的肉丁，这种味觉冲突简直是灾难。",
+        recipe: [["foodMaterial_005", "foodMaterial_018", "foodMaterial_025"]]
+    },
+    {
+        id: "foods_673", name: "醋溜生鱼骨", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 2, effects: { hunger: 3, hp: -15 }, desc: "坚硬的鱼骨在陈醋里翻炒，刺鼻的酸味伴随着扎嘴的骨渣。",
+        recipe: [["foodMaterial_024", "foodMaterial_060"]]
+    },
+    {
+        id: "foods_674", name: "五香干烧粗糠", type: "food", cookType: "Roasting", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 6, hp: -5 }, desc: "被烤得冒烟的粗糠，吃一口就像在嚼带五香粉的灰尘。",
+        recipe: [["foodMaterial_009", "foodMaterial_073"]]
+    },
+    {
+        id: "foods_675", name: "八角煮碎蛋壳", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -8 }, desc: "一锅充满八角怪味的硬壳水，完全无法下咽。",
+        recipe: [["foodMaterial_004", "foodMaterial_065", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_676", name: "酱爆鳄鱼爪尖", type: "food", cookType: "Sauteing", grade: 0, rarity: 2, obtain: "craft",
+        value: 5, effects: { hunger: 8, hp: -11 }, desc: "酱汁包裹着坚硬如石的爪尖，除了舔点咸味别想嚼动它。",
+        recipe: [["foodMaterial_056", "foodMaterial_025", "foodMaterial_070"]]
+    },
+    {
+        id: "foods_677", name: "胡椒拌生粉团", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 3, effects: { hunger: 12, hp: -4 }, desc: "中心依然是生面粉的糊状球，胡椒的辛辣让这团浆糊更难入口。",
+        recipe: [["foodMaterial_001", "foodMaterial_063", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_678", name: "盐浸死蛇段", type: "food", cookType: "Boiling", grade: 0, rarity: 1, obtain: "craft",
+        value: 4, effects: { hunger: 10, hp: -13, toxicity: 12 }, desc: "极高盐度也压不住蛇肉腐败产生的毒素，水面漂浮着暗色泡沫。",
+        recipe: [["foodMaterial_052", "foodMaterial_008", "foodMaterial_007"]]
+    },
+    {
+        id: "foods_679", name: "辣椒炒树根", type: "food", cookType: "Sauteing", grade: 0, rarity: 1, obtain: "craft",
+        value: 1, effects: { hunger: 2, hp: -7 }, desc: "除了辣椒带给感官的刺痛，剩下的只有木质纤维的折磨。",
+        recipe: [["foodMaterial_010", "foodMaterial_026"]]
+    },
+
+
+
+
+    {id: "foods_xhuhu", name: "小糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 1}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],},
+    {id: "foods_huhu", name: "糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 3}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],},
+    {
+        id: "foods_dhuhu", name: "大糊糊", type: "food", grade: 0, rarity: 1, obtain: "craft", value: 0, effects: {hunger: 5}, desc: "材料乱炖出来的东西，勉强能吃。", recipe: [],
     },
 
     {

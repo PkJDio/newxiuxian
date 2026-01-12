@@ -1,10 +1,14 @@
 // js/action/time.js
-//console.log("加载 时间系统 (累计式精度优化版)");
+// console.log("加载 时间系统 (含大秦历史线版)");
+// 确保 DataTimeline 已经加载，如果没有加载则定义空对象防止报错
+const TimelineData = window.DataTimeline || { Major: [], Minor: [] };
 
 const TIME_CONFIG = {
     HUNGER_PER_HOUR: 2,
     FATIGUE_PER_HOUR: 1
 };
+
+
 
 const TimeSystem = {
     monthMap: ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"],
@@ -49,6 +53,11 @@ const TimeSystem = {
         if (!player) return;
         if (!player.time) player.time = { year: 37, month: 1, day: 1, hour: 0, minute: 0, useHour: 0 };
 
+        // 初始化 timeStart (如果存档里没有)
+        if (typeof player.timeStart === 'undefined') {
+            player.timeStart = 0;
+        }
+
         let t = player.time;
         const hoursToAdd = Number(hours) || 0;
         const totalMinsToAdd = hoursToAdd * 60;
@@ -75,6 +84,7 @@ const TimeSystem = {
             while (t.hour >= 24) {
                 t.hour -= 24;
                 t.day = (Number(t.day) || 1) + 1;
+                // 每天过完时，执行新的一天逻辑（含历史事件检查）
                 this._onNewDay();
             }
             while (t.day > 30) {
@@ -104,7 +114,6 @@ const TimeSystem = {
             // 扣除已使用的累计时间
             t.useHour -= (count * THRESHOLD);
 
-
             if (window.player && window.player.status && window.player.derived) {
                 // 1. 获取最大法力值 (防呆处理，由 derived.mpMax 提供)
                 const maxMp = player.derived.mpMax || 100;
@@ -120,7 +129,6 @@ const TimeSystem = {
                 // (可选) 如果你希望显示日志，可以加一句
                 if(window.LogManager) window.LogManager.add(`[周天运转] 法力自动回复了 ${Math.floor(recoverAmount)} 点。`);
             }
-
 
             // 执行 BUFF 扣减
             this._applyBuffReduction(totalReduction);
@@ -184,8 +192,91 @@ const TimeSystem = {
     },
 
     _onNewDay: function() {
+        // 1. 刷新悬赏
         if (window.BountyBoard && typeof window.BountyBoard.checkAllTasksStatus === 'function') {
             window.BountyBoard.checkAllTasksStatus();
+        }
+
+        // 2. 检查历史大事件 (Major Events)
+        this._checkMajorEvents();
+
+        // 3. 检查小事件/传闻 (Minor Events)
+        this._checkMinorEvents();
+    },
+    /**
+     * 检查并触发【历史大事件】
+     */
+    _checkMajorEvents: function() {
+        if (!player || !player.time || !TimelineData.Major) return;
+
+        let currentStage = player.timeStart || 0;
+        const t = player.time;
+
+        for (let event of TimelineData.Major) {
+            if (event.stage > currentStage) {
+                // 判断条件：年份超过，或者年份相同且月份日期均达到
+                // 为了严谨，这里精确到日
+                if (t.year > event.year ||
+                    (t.year === event.year && t.month > event.month) ||
+                    (t.year === event.year && t.month === event.month && t.day >= event.day)) {
+
+                    // 触发大事件
+                    player.timeStart = event.stage;
+
+                    // 弹窗
+                    if (window.UtilsModal && window.UtilsModal.showEventModal) {
+                        window.UtilsModal.showEventModal(event.title, event.desc);
+                    } else if (window.showToast) {
+                        window.showToast(`历史推进：${event.title}`);
+                    }
+
+                    // 日志
+                    if (window.LogManager) {
+                        window.LogManager.add(`【历史洪流】${event.title}：${event.desc}`, "important");
+                    }
+
+                    break; // 一次只触发一个大阶段
+                }
+            }
+        }
+    },
+
+    /**
+     * 检查并触发【历史小传闻】
+     */
+    _checkMinorEvents: function() {
+        if (!player || !player.time || !TimelineData.Minor) return;
+
+        const t = player.time;
+        // 使用一个简单的 Key 来标记今天是否已经触发过事件，防止重复 (可选，如果passTime保证每天只调一次onNewDay则不需要)
+        // 这里直接比对日期
+
+        // 查找今天发生的事件列表
+        const todayEvents = TimelineData.Minor.filter(e =>
+            e.year === t.year && e.month === t.month && e.day === t.day
+        );
+
+        if (todayEvents.length > 0) {
+            todayEvents.forEach(event => {
+                // 构造前缀
+                let prefix = "【传闻】";
+                if (event.type === 'court') prefix = "【朝廷】";
+                if (event.type === 'nature') prefix = "【天象】";
+                if (event.type === 'world') prefix = "【天下】";
+
+                // 1. 发送 Toast 提示 (轻量级)
+                if (window.showToast) {
+                    window.showToast(`${prefix} ${event.text}`);
+                }
+
+                // 2. 写入日志 (持久化查看)
+                    if (window.LogManager) {
+                    // 使用稍微特殊的颜色或样式
+                    window.LogManager.add(`${prefix} ${event.text}`, "normal");
+                }
+
+                console.log(`[Minor Timeline] ${event.year}-${event.month}-${event.day}: ${event.text}`);
+            });
         }
     }
 };

@@ -60,9 +60,9 @@ const LogManager = {
         // 使用单层 div 结构，减少 DOM 深度
         const div = document.createElement('div');
         // 内联样式比 class 更快一点点（在极大数量下），也可以用 class="log_row"
-        div.style.cssText = "line-height:1.4; margin-bottom:2px; font-size:14px; word-wrap:break-word;";
+        div.style.cssText = "line-height:1.4; margin-bottom:2px; font-size:18px; word-wrap:break-word;";
         // 这里的 innerHTML 是性能瓶颈所在，尽量保持 msgHtml 简短
-        div.innerHTML = `<span style="color:#999; margin-right:4px; font-size:12px; font-family:monospace;">${timeStr}</span>${msgHtml}`;
+        div.innerHTML = `<span style="color:#999; margin-right:4px; font-size:16px; font-family:monospace;">${timeStr}</span>${msgHtml}`;
         return div;
     },
 

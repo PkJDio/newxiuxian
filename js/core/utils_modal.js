@@ -50,7 +50,33 @@ const ModalManager = {
 
     // 4. 事件弹窗
     showEventModal: function(title, contentHtml) {
-        return this._showBaseModal('modal_event', title, contentHtml, null).body;
+        // 1. 调用基础弹窗，传入专用的 class 标记
+        const { box, body } = this._showBaseModal('history_modal_box', title, contentHtml, null);
+
+        // 2. 【核心修改】DOM 结构后处理，替换为 history_modal_ 风格的 id 和 class
+        // 这一步是为了让 CSS 完全匹配 history_modal_header 等选择器
+
+        // 替换 Header
+        const header = box.querySelector('.modal_header');
+        if (header) {
+            header.className = 'history_modal_header'; // 替换 class
+            header.innerHTML = title; // 移除原有的关闭按钮等杂项，保持纯净
+        }
+
+        // 替换 Body
+        const bodyEl = box.querySelector('.modal_body');
+        if (bodyEl) {
+            bodyEl.className = 'history_modal_body';
+        }
+
+        // 替换 Footer 为专用按钮
+        const footer = box.querySelector('.modal_footer');
+        if (footer) {
+            footer.className = 'history_modal_footer';
+            footer.innerHTML = `<button class="history_btn_confirm" onclick="window.closeModal()">阅毕</button>`;
+        }
+
+        return body;
     },
 
     // 5. 警告弹窗

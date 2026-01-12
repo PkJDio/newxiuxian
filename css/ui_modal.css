@@ -467,3 +467,96 @@
     font-size: 1.2em; /* 图标稍微大一点 */
     opacity: 0.8;
 }
+
+
+
+/* css/ui_modal.css - 追加历史大事件专用样式 */
+
+/* === 历史大事件专用容器 (History Modal) === */
+/* 覆盖基础盒子样式，使用 history_modal_ 前缀 */
+.ink_modal_box.history_modal_box {
+    background-color: #f2e6ce; /* 仿古宣纸底色 */
+    background-image:
+            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px); /* 隐约的纸张纹理 */
+    background-size: 20px 20px;
+    border: none;
+    border-top: 12px solid #2c1e1e; /* 模拟卷轴的上轴 */
+    border-bottom: 12px solid #2c1e1e; /* 模拟卷轴的下轴 */
+    box-shadow: 0 0 100px rgba(0, 0, 0, 0.9); /* 极重的阴影，聚焦视线 */
+    width: 60vw;
+    min-width: 400px;
+    max-width: 800px;
+    height: auto;
+    min-height: 40vh;
+    border-radius: 4px;
+    padding: 0;
+    overflow: visible; /* 允许装饰物溢出 */
+}
+
+/* 历史弹窗头部 - 居中大字 */
+.history_modal_box .history_modal_header {
+    background: transparent;
+    color: #2c1e1e; /* 墨色 */
+    padding: 30px 20px 10px 20px;
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 2px solid #8b0000; /* 朱砂红线 */
+    font-family: "Kaiti", "STKaiti", serif;
+    position: relative;
+    margin: 0 40px; /* 标题内缩 */
+}
+
+/* 装饰：标题两侧的云纹或印章感 */
+.history_modal_box .history_modal_header::before,
+.history_modal_box .history_modal_header::after {
+    content: "◈";
+    color: #8b0000;
+    margin: 0 15px;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+/* 历史弹窗内容 - 叙事感 */
+.history_modal_box .history_modal_body {
+    padding: 30px 50px;
+    font-size: 20px;
+    line-height: 1.8;
+    color: #3e3e3e;
+    font-family: "Kaiti", "STKaiti", serif;
+    text-align: justify; /* 两端对齐 */
+    text-indent: 2em;    /* 首行缩进 */
+    min-height: 150px;
+    display: flex;
+    align-items: center; /* 内容垂直居中 */
+}
+
+/* 历史弹窗底部 - 按钮区 */
+.history_modal_box .history_modal_footer {
+    padding: 20px 40px 30px 40px;
+    text-align: center; /* 按钮居中 */
+    border-top: none;
+    background: transparent;
+}
+
+/* 专用按钮：阅毕 (朱砂印章风格) */
+.history_btn_confirm {
+    background: #8b0000;
+    color: #fff;
+    font-family: "Kaiti", serif;
+    font-size: 18px;
+    padding: 8px 40px;
+    border: 2px solid #6d0000;
+    border-radius: 2px;
+    cursor: pointer;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+    letter-spacing: 5px;
+}
+
+.history_btn_confirm:hover {
+    background: #a00000;
+    transform: scale(1.05);
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.4);
+}

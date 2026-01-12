@@ -43,6 +43,25 @@ function bindMainMenuEvents() {
 
       if (action === "continue") {
         if (loadGame()) {
+
+            // ==========================================
+            // 【核心修改】检查是否是新的一世，如果是，补发弹窗
+            // ==========================================
+            if (window.player.isNewLife) {
+                // 1. 触发开局剧情
+                if (typeof triggerOpeningEvent === 'function') {
+                    triggerOpeningEvent();
+                }
+
+
+
+                // 2. 移除标记（防止刷新页面后再次弹窗）
+                window.player.isNewLife = false;
+
+                // 3. 再次保存（去掉标记后的状态）
+                saveGame();
+            }
+
           enterGameScene();
           if(window.showToast) window.showToast("欢迎回来，道友。");
         } else {
@@ -145,9 +164,12 @@ function startNewGame() {
 
     // 2. 动态生成欢迎语
     window.LogManager.add(`<span style="color:#b8860b; font-weight:bold;">轮回开启</span> 你出生于【${locName}】，${locDesc}`);
-    window.LogManager.add("大道三千，祝道友早证混元。");
+    // window.LogManager.add("大道三千，祝道友早证混元。");
   }
-
+// ==========================================
+    // 【新增】在这里调用开局剧情事件
+    // ==========================================
+    triggerOpeningEvent();
     // 【新增】调用引导检查
     // 使用 setTimeout 稍微延迟一点，确保界面DOM已经渲染完毕
     setTimeout(function() {
@@ -159,7 +181,51 @@ function startNewGame() {
   return true;
 }
 
+/**
+ * 游戏开局唯一事件：初入仙途
+ * 仅在游戏初始化时调用，独立于 _onNewDay
+ */
+function triggerOpeningEvent() {
+    // 1. 定义丰满的文本内容
+    const title = "【初入仙途】";
 
+    // 这里的文本保留换行符，以便在Modal中分段显示
+    const content =
+        "始皇帝三十七年，正月初一。\n\n" +
+        "凛冬未散，寒鸦枯树。此时天下初定，四海归一，然朝堂江湖皆传，祖龙亦惧天命，遣徐福率三千童男童女东渡瀛洲，只为求那虚无缥缈的长生不死药。\n\n" +
+        "吾生于微末，本是一介凡夫，然每念及此，心中块垒难平——帝王将相所求者，凡夫俗子难道便不配求？若这世间真有长生法，为何不能是我？若这天道有门，为何我不能叩？\n\n" +
+        "今日，吾决意散尽家财，负剑辞家。不为荣华，不问归期，只愿以此肉体凡胎，入世走一遭，去寻那长生大道！";
+
+    // 2. 记录到日志 (LogManager)
+    // 为了日志整洁，可以把多重换行替换成空格，或者直接原样输出，看你日志UI的支持程度
+    if (typeof LogManager !== 'undefined') {
+        LogManager.add(`[${title}] ${content.replace(/\n\n/g, " ")}`);
+    }
+
+    // 3. 调用之前写好的 ModalManager
+    // 假设 showEventModal 的签名是 (title, description, options)
+    if (typeof ModalManager !== 'undefined') {
+        ModalManager.showEventModal(
+            title,   // 标题
+            content, // 描述文本
+            [        // 选项数组
+                {
+                    text: "踏上征程",
+                    style: "confirm", // 这是一个确认类的操作，可以用高亮样式
+                    action: () => {
+                        console.log("【系统】玩家确认背景故事，游戏正式交互开始。");
+                        // 这里可以触发一些初始化后的逻辑，比如：
+                        // 1. 播放一个音效
+                        // 2. 引导高亮某个按钮
+                        // 3. 仅仅是关闭弹窗（ModalManager通常点击后会自动关闭，除非你有特殊设置）
+                    }
+                }
+            ]
+        );
+    } else {
+        console.error("ModalManager 未定义，无法显示开局剧情！");
+    }
+}
 
 // js/main.js - 添加在文件最末尾
 

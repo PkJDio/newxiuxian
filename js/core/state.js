@@ -31,6 +31,11 @@ window.performDirectRebirth = function() {
     newPlayer.name = "道友" + nextGen + "世";
     newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
 
+    // ==========================================
+    // 【核心修改】增加一个标记，表明这是新的一世
+    // ==========================================
+    newPlayer.isNewLife = true;
+
     // 2. 覆盖全局数据
     window.player = newPlayer;
 
