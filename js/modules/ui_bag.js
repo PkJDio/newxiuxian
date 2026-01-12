@@ -168,8 +168,8 @@ const UIBag = {
             ];
 
             let html = slots.map(slot => {
-                const itemId = p.equipment[slot.key];
-                const item = itemId ? GAME_DB.items.find(i => i.id === itemId) : null;
+                const item = p.equipment[slot.key];
+
 
                 let icon = slot.defaultIcon;
                 let activeClass = '';
@@ -199,8 +199,8 @@ const UIBag = {
 
             if (!p.consumables) p.consumables = [null, null, null];
 
-            p.consumables.forEach((itemId, idx) => {
-                const item = itemId ? GAME_DB.items.find(i => i.id === itemId) : null;
+            p.consumables.forEach((sid, idx) => {
+                const item = sid ? p.inventory.find(i => i.sid === sid) : null;
                 let icon = '';
                 let activeClass = '';
                 let name = `快捷${idx + 1}`;
@@ -281,9 +281,8 @@ const UIBag = {
     },
 
     renderDetailFromBag: function(index) {
-        const slot = player.inventory[index];
-        if(!slot) return;
-        const item = GAME_DB.items.find(i => i.id === slot.id);
+        const item = player.inventory[index];
+
         if(item) {
             this.renderDetail(item, { type: 'bag', index: index });
         }
@@ -291,23 +290,20 @@ const UIBag = {
 
     // 显示装备详情
     showEquippedDetail: function(slotKey) {
-        const itemId = player.equipment[slotKey];
-        if (!itemId) return;
-        const item = GAME_DB.items.find(i => i.id === itemId);
-        if (!item) return;
+        const item = player.equipment[slotKey];
+
         this.renderDetail(item, { type: 'equip', key: slotKey });
     },
 
     showConsumableDetail: function(index) {
-        const itemId = player.consumables[index];
-        if (!itemId) return;
-        const item = GAME_DB.items.find(i => i.id === itemId);
-        if (!item) return;
+        const sid = player.consumables[index];
+        const item=player.inventory.find(i => i.sid === sid)
         this.renderDetail(item, { type: 'consumable', index: index });
     },
 
     // 统一渲染详情页
     renderDetail: function(item, context) {
+        console.log('renderDetail', item, context)
         const container = document.getElementById('bag_detail_panel');
         if (!container) return;
 
@@ -460,22 +456,22 @@ const UIBag = {
 
         // 7. 按钮生成
         let btnsHtml = `<div class="bag_detail_actions">`;
-
+        const sid = item.sid;
         if (context.type === 'bag') {
-            const idx = context.index;
+
             if (['weapon','head','body','feet','mount','fishing_rod','tool'].includes(item.type)) {
-                btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction(${idx}, '${item.type}')">装备</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UIBag.handleEquipAction('${sid}', '${item.type}')">装备</button>`;
             } else if (item.type === 'pill') {
-                const carriedIndex = window.player.consumables ? window.player.consumables.indexOf(item.id) : -1;
+                const carriedIndex = window.player.consumables ? window.player.consumables.indexOf(item.sid) : -1;
                 if (carriedIndex !== -1) btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${carriedIndex})">解除携带</button>`;
-                else btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${item.id}')">随身携带</button>`;
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">服用</button>`;
+                else btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${sid}')">随身携带</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${sid})">服用</button>`;
             } else if (item.type === 'book') {
-                btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open('${item.id}')">研读</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open('${sid}')">研读</button>`;
             } else if (['food','foodMaterial','herb'].includes(item.type)) {
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${idx})">使用</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${sid})">使用</button>`;
             }
-            btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.discardItem(${idx})">丢弃</button>`;
+            btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.removeItem(${sid})">丢弃</button>`;
         }
         else if (context.type === 'equip') {
             const slotKey = context.key;
@@ -484,6 +480,7 @@ const UIBag = {
         }
         else if (context.type === 'consumable') {
             const slotIdx = context.index;
+            console.log('slotIdx', slotIdx)
             btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${slotIdx})">解除携带</button>`;
             const bagIdx = player.inventory.findIndex(s => s.id === item.id);
             if (bagIdx !== -1) {
@@ -506,18 +503,18 @@ const UIBag = {
     `;
     },
 
-    equipConsumable: function(itemId) {
+    equipConsumable: function(sid) {
         const p = window.player;
         if (!p.consumables) p.consumables = [null, null, null];
         const emptyIdx = p.consumables.indexOf(null);
         if (emptyIdx === -1) { if(window.showToast) window.showToast("随身位已满"); return; }
-        p.consumables[emptyIdx] = itemId;
+        p.consumables[emptyIdx] = sid;
         if(window.showToast) window.showToast("已放入随身快捷栏");
         if(window.saveGame) window.saveGame();
         this.refresh();
-        const slotIdx = p.inventory.findIndex(s => s.id === itemId);
+        const slotIdx = p.inventory.findIndex(s => s.sid === sid);
         if(slotIdx !== -1) {
-            const item = GAME_DB.items.find(i => i.id === itemId);
+            const item = p.inventory.find(s => s.sid === sid);
             this.renderDetail(item, { type: 'bag', index: slotIdx });
         }
     },
@@ -525,14 +522,14 @@ const UIBag = {
     unequipConsumable: function(slotIndex) {
         const p = window.player;
         if (!p.consumables || !p.consumables[slotIndex]) return;
-        const itemId = p.consumables[slotIndex];
+        const sid = p.consumables[slotIndex];
         p.consumables[slotIndex] = null;
         if(window.showToast) window.showToast("已取消携带");
         if(window.saveGame) window.saveGame();
         this.refresh();
-        const bagIdx = p.inventory.findIndex(s => s.id === itemId);
+        const bagIdx = p.inventory.findIndex(s => s.id === sid);
         if(bagIdx !== -1) {
-            const item = GAME_DB.items.find(i => i.id === itemId);
+            const item = p.inventory.find(i => i.id === sid);
             this.renderDetail(item, { type: 'bag', index: bagIdx });
         } else {
             const container = document.getElementById('bag_detail_panel');
@@ -540,9 +537,9 @@ const UIBag = {
         }
     },
 
-    handleEquipAction: function(inventoryIndex, itemType) {
+    handleEquipAction: function(sid, itemType) {
         const slotKey = UtilsItem.getEquipSlot(itemType);
-        UtilsItem.equipItem(inventoryIndex);
+        UtilsItem.equipItem(sid);
         this.showEquippedDetail(slotKey);
     },
 

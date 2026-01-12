@@ -1,126 +1,188 @@
 // js/core/utils_item.js
-// 物品核心逻辑工具箱 (修复物品使用效果：恢复/永久属性/Buff/弹窗优化)
+// 物品核心逻辑工具箱 v5.0 (Deterministic SID / 全SID驱动版)
+console.log("加载 物品工具箱 (Deterministic SID v5.0)");
 
 const UtilsItem = {
-    // 获取书籍状态
-    getBookStatus: function(itemId) {
-        if (player.skills && player.skills[itemId]) {
-            return { text: "已学会", color: "#4caf50", isLearned: true };
-        }
-        const progress = (player.bookProgress && player.bookProgress[itemId]) || 0;
-        if (progress > 0) {
-            return { text: `研读中: ${progress}`, color: "#2196f3", isReading: true };
-        }
-        return { text: "未读", color: "#999", isUnread: true };
-    },
-    useItemById : function(itemId) {
-        if (!player.inventory) return false;
+    // ============================================================
+    // 内部私有方法：根据内容生成唯一的 32位 Hex SID
+    // ============================================================
+    _generateDeterministicSid: function(obj) {
+        // 1. 递归排序所有 Key，同时排除掉 sid 等干扰字段
+        function sortObject(item) {
+            if (typeof item !== 'object' || item === null) return item;
+            if (Array.isArray(item)) return item.map(sortObject);
 
-        // 1. 在背包中查找该物品
-        const inventoryIndex = player.inventory.findIndex(slot => slot.id === itemId);
-
-        if (inventoryIndex === -1) {
-            if (window.showToast) window.showToast("数量不足，无法使用");
-            return false;
+            return Object.keys(item)
+                .sort()
+                .reduce((acc, key) => {
+                    // 【核心修改】排除 sid 和 count 字段，确保只针对物品原始属性加密
+                    if (key !== 'sid' && key !== 'count') {
+                        acc[key] = sortObject(item[key]);
+                    }
+                    return acc;
+                }, {});
         }
 
-        const itemSlot = player.inventory[inventoryIndex];
-        if (itemSlot.count <= 0) {
-            if (window.showToast) window.showToast("数量不足，无法使用");
-            return false;
+        // 得到一个不含 sid 且 key 排序一致的字符串
+        const sortedStr = JSON.stringify(sortObject(obj));
+
+        // 2. 快速哈希计算 (Times33 算法变体)
+        let hash = 0;
+        for (let i = 0; i < sortedStr.length; i++) {
+            const char = sortedStr.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0; // Convert to 32bit integer
         }
 
-        // 2. 直接复用原有的 useItem 逻辑
-        // 原有的 useItem 内部包含：获取数据、效果应用、数量扣除、UI刷新、存档
-        this.useItem(inventoryIndex);
-        return true;
-    },
-    // 获取技能等级名称
-    getSkillLimitName: function(level) {
-        if (window.SKILL_CONFIG && window.SKILL_CONFIG.levelNames) {
-            return window.SKILL_CONFIG.levelNames[level] || `Lv.${level}`;
-        }
-        return `Lv.${level}`;
+        // 转为 16 进制字符串，并加上前缀
+        return 'sid_' + (hash >>> 0).toString(16);
     },
 
-    // 物品类型 -> 装备槽位
-    getEquipSlot: function(itemType) {
-        switch (itemType) {
-            case 'weapon': return 'weapon';
-            case 'head': return 'head';
-            case 'body': return 'body';
-            case 'feet': return 'feet';
-            case 'mount': return 'mount';
-            case 'fishing_rod': return 'fishing_rod';
-            case 'tool': return 'weapon'; // 工具暂用武器槽
-            default: return null;
+    // ============================================================
+    // 1. 添加物品 (核心逻辑：自动计算 SID 实现智能堆叠)
+    // ============================================================
+    addItem: function(itemInput, amount = 1) {
+        if (!window.player) return;
+        if (!player.inventory) player.inventory = [];
+
+        let newItemData = null;
+
+        // 解析输入
+        if (typeof itemInput === 'string') {
+            if (window.GAME_DB && window.GAME_DB.items) {
+                const tmpl = window.GAME_DB.items.find(i => i.id === itemInput);
+                if (tmpl) {
+                    newItemData = JSON.parse(JSON.stringify(tmpl));
+                } else {
+                    console.error(`[UtilsItem] 未找到物品ID: ${itemInput}`);
+                    return;
+                }
+            }
+        } else if (typeof itemInput === 'object') {
+            newItemData = JSON.parse(JSON.stringify(itemInput));
         }
+
+        if (!newItemData) return;
+
+        // 【核心修改】根据物品当前的属性内容，计算确定性 SID
+        const sid = this._generateDeterministicSid(newItemData);
+        newItemData.sid = sid;
+
+        // 检查背包中是否已有该 SID
+        const existingSlot = player.inventory.find(slot => slot.sid === sid);
+
+        if (existingSlot) {
+            // SID 相同，说明属性完全一致，直接堆叠
+            existingSlot.count = (existingSlot.count || 0) + amount;
+        } else {
+            // SID 不同，说明是新物品或属性有差异（如强化等级不同），新开格子
+            newItemData.count = amount;
+            player.inventory.push(newItemData);
+        }
+
+        if (window.showToast) window.showToast(`获得了 ${newItemData.name} x${amount}`);
+        this._refreshAllUI();
+        if (window.saveGame) window.saveGame();
     },
 
-    /* ================= 动作逻辑 ================= */
+    // ============================================================
+    // 2. 使用物品 (基于 SID)
+    // ============================================================
+    useItem: function(sid, amount = 1) {
+        if (!player.inventory) return;
 
-    /**
-     * 使用物品 (吃丹药/食物)
-     * 【核心修复】支持 studyEff 研读效率 Buff 及多属性复合 Buff
-     */
-    useItem: function(inventoryIndex) {
-        const itemSlot = player.inventory[inventoryIndex];
-        if (!itemSlot) return;
+        // 通过 SID 精确定位
+        const slotIndex = player.inventory.findIndex(i => i.sid === sid);
 
-        const item = GAME_DB.items.find(i => i.id === itemSlot.id);
-        if (!item) return;
-
-        // 1. 类型检查
-        if (item.type === 'book') {
-            if (window.showToast) window.showToast(`请在主界面选择 [研读] 来阅读 ${item.name}`);
+        if (slotIndex === -1) {
+            if (window.showToast) window.showToast("物品不存在或已消耗");
             return;
         }
 
-        if (!['food', 'pill', 'foodMaterial', 'herb'].includes(item.type)) {
-            if (window.showToast) window.showToast("该物品无法直接使用");
+        let itemSlot = player.inventory[slotIndex];
+
+        // 检查类型 (书本)
+        if (itemSlot.type === 'book') {
+            if (window.showToast) window.showToast(`请在主界面选择 [研读] 来阅读 ${itemSlot.name}`);
             return;
         }
 
-        // 2. 应用效果
+        // 检查类型 (装备)
+        if (this.getEquipSlot(itemSlot.type)) {
+            if (window.showToast) window.showToast("请点击 [装备] 按钮进行穿戴");
+            return;
+        }
+
+        // 数量检查
+        if (itemSlot.count < amount) {
+            if (window.showToast) window.showToast("数量不足");
+            return;
+        }
+
+        // 应用效果
+        const consumed = this._applyItemEffect(itemSlot);
+
+        // 消耗逻辑
+        if (consumed) {
+            this.removeItem(sid, amount);
+
+            // 日志
+            if (window.LogManager && window.LogManager.add) {
+                const rarityColors = { 1: "#ffffff", 2: "#2ecc71", 3: "#3498db", 4: "#9b59b6", 5: "#f1c40f", 6: "#e74c3c" };
+                const color = rarityColors[itemSlot.rarity] || "#ffffff";
+                window.LogManager.add(`使用物品：<span style="color:${color}">${itemSlot.name}</span>`);
+            }
+        }
+    },
+
+    // 内部方法：应用效果
+    _applyItemEffect: function(item) {
         let applied = false;
-        let msg = `使用了 ${item.name}`;
+        let msg = "";
 
         if (item.effects) {
             const eff = item.effects;
 
-            // A. 基础恢复 (HP/MP/饱食度)
+            // A. 基础恢复
             if (eff.hp) {
-                player.status.hp = Math.min(player.derived.hpMax, player.status.hp + eff.hp);
+                player.derived.hp = Math.min(player.derived.hpMax, player.derived.hp + eff.hp);
+                msg += `生命+${eff.hp} `;
                 applied = true;
             }
             if (eff.mp) {
-                player.status.mp = Math.min(player.derived.mpMax, player.status.mp + eff.mp);
+                player.derived.mp = Math.min(player.derived.mpMax, (player.derived.mp||0) + eff.mp);
+                msg += `内力+${eff.mp} `;
                 applied = true;
             }
             if (eff.hunger) {
-                player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + eff.hunger);
+                if (!player.status) player.status = {};
+                player.status.hunger = Math.min(100, (player.status.hunger||0) + eff.hunger);
+                msg += `饱食+${eff.hunger} `;
                 applied = true;
             }
 
-            // B. 丹毒 (Toxicity)
+            // B. 丹毒
             if (eff.toxicity) {
-                if(player.status.toxicity === undefined) player.status.toxicity = 0;
-                player.status.toxicity += eff.toxicity;
-                if(player.status.toxicity < 0) player.status.toxicity = 0;
+                player.toxicity = Math.max(0, (player.toxicity || 0) + eff.toxicity);
+                msg += (eff.toxicity > 0) ? `中毒+${eff.toxicity} ` : `解毒${Math.abs(eff.toxicity)} `;
                 applied = true;
             }
 
-            // C. 永久属性加成 (exAttr)
+            // C. 永久属性
             const permAttrs = ['jing', 'qi', 'shen', 'atk', 'def', 'speed', 'hpMax', 'mpMax'];
+            let attrChanged = false;
             permAttrs.forEach(key => {
                 if (eff[key]) {
                     if (!player.exAttr) player.exAttr = {};
                     if (!player.exAttr[key]) player.exAttr[key] = 0;
                     player.exAttr[key] += eff[key];
+                    attrChanged = true;
                     applied = true;
                 }
             });
+            if (attrChanged) msg += "属性提升 ";
 
+            // D. Buff
             // D. 临时 Buff (buff)
             if (eff.buff) {
                 const b = eff.buff;
@@ -143,237 +205,282 @@ const UtilsItem = {
             }
         }
 
-        // 3. 消耗物品
-        // 3. 消耗物品
-        if (applied || item.type === 'food') {
-            itemSlot.count--;
-
-            // --- 【新增：日志记录逻辑】 ---
-            if (window.LogManager && window.LogManager.add) {
-                // 定义稀有度颜色映射
-                const rarityColors = {
-                    1: "#ffffff", // 普通 - 白色
-                    2: "#2ecc71", // 优秀 - 绿色
-                    3: "#3498db", // 精良 - 蓝色
-                    4: "#9b59b6", // 史诗 - 紫色
-                    5: "#f1c40f", // 传说 - 金色
-                    6: "#e74c3c"  // 神话 - 红色
-                };
-                const color = rarityColors[item.rarity] || "#ffffff";
-
-                // 输出日志，使用 span 标签包裹名称以实现颜色区分
-                window.LogManager.add(`腹中饥馁，你吃下了一份 <span style="color:${color}">${item.name}</span>。`);
-            }
-            // ---------------------------
-
-            if (itemSlot.count <= 0) {
-                player.inventory.splice(inventoryIndex, 1);
-            }
-
-            if (window.showToast) window.showToast(msg);
-
-            // 4. 刷新状态
-            if (window.recalcStats) window.recalcStats();
-            this._refreshAllUI();
-
-            // 5. 自动保存
-            if (window.saveGame) window.saveGame();
+        if (applied) {
+            if (msg && window.showToast) window.showToast(msg);
+            return true;
         }
+
+        if (item.type === 'food') {
+            if (window.showToast) window.showToast("味道不错");
+            return true;
+        }
+
+        if (window.showToast) window.showToast("该物品无法直接使用或状态已满");
+        return false;
     },
+
+    // ============================================================
+    // 3. 装备相关 (基于 SID)
+    // ============================================================
 
     /**
      * 装备物品
+     * @param {string} sid 物品SID
      */
-    equipItem: function(inventoryIndex) {
-        const itemSlot = player.inventory[inventoryIndex];
-        const item = GAME_DB.items.find(i => i.id === itemSlot.id);
-        if (!item) return;
+    equipItem: function(sid) {
+        console.log("装备物品: " + sid)
+        // 1. 通过 SID 查找背包
+        const inventoryIndex = player.inventory.findIndex(slot => slot.sid === sid);
 
-        // 1. 检查装备槽位
-        const slot = this.getEquipSlot(item.type);
+        if (inventoryIndex === -1) {
+            if (window.showToast) window.showToast("背包中未找到该装备");
+            return;
+        }
+
+        const itemSlot = player.inventory[inventoryIndex];
+
+        // 2. 检查槽位
+        const slot = this.getEquipSlot(itemSlot.type);
         if (!slot) {
             if (window.showToast) window.showToast("此物品无法装备");
             return;
         }
 
-        // 2. 检查属性要求 (使用 derived)
-        if (item.req) {
+        // 3. 检查属性要求
+        if (itemSlot.req) {
             const currentStats = player.derived || player.attr || {};
-            for (let key in item.req) {
-                const reqVal = item.req[key];
+            for (let key in itemSlot.req) {
+                const reqVal = itemSlot.req[key];
                 const myVal = currentStats[key] || 0;
-
                 if (myVal < reqVal) {
-                    const attrName = (typeof ATTR_MAPPING !== 'undefined' ? ATTR_MAPPING[key] : key);
-                    if(window.showToast) window.showToast(`修为不足：${attrName}需达到 ${reqVal}`);
+                    if(window.showToast) window.showToast(`修为不足：${key}需达到 ${reqVal}`);
                     return;
                 }
             }
         }
 
-        // 3. 执行装备逻辑
+        // 4. 执行装备
         if (!player.equipment) player.equipment = {};
-        const oldEquipId = player.equipment[slot];
 
-        // 卸下旧的 (自动回包)
-        if (oldEquipId) {
-            if (window.UtilsAdd) window.UtilsAdd.addItem(oldEquipId, 1);
+        // 卸下旧装备 (回包)
+        const oldEquip = player.equipment[slot];
+        if (oldEquip) {
+            // 旧装备直接 addItem，系统会重新计算它的 SID 并尝试堆叠
+            this.addItem(oldEquip, 1);
         }
 
-        player.equipment[slot] = item.id;
+        // 装备新物品 (深拷贝)
+        player.equipment[slot] = JSON.parse(JSON.stringify(itemSlot));
 
-        // 扣除新的
-        itemSlot.count--;
-        if (itemSlot.count <= 0) {
-            player.inventory.splice(inventoryIndex, 1);
-        }
+        // 5. 从背包移除 1 个
+        this.removeItem(sid, 1);
 
-        if (window.showToast) window.showToast(`装备了 ${item.name}`);
-        if (window.recalcStats) window.recalcStats();
-
+        if (window.showToast) window.showToast(`装备了 ${itemSlot.name}`);
         this._refreshAllUI();
-
-        // 存档
         if (window.saveGame) window.saveGame();
     },
 
     /**
      * 卸下物品
+     * @param {string} slotKey 装备槽位 (如 'weapon')
      */
     unequipItem: function(slotKey) {
         if (!player.equipment || !player.equipment[slotKey]) return;
-        const itemId = player.equipment[slotKey];
 
-        if (window.UtilsAdd) window.UtilsAdd.addItem(itemId, 1);
+        const item = player.equipment[slotKey]; // 完整对象
+
+        // 回包 (addItem 会处理 SID 和堆叠)
+        this.addItem(item, 1);
+
         player.equipment[slotKey] = null;
 
-        if (window.recalcStats) window.recalcStats();
+        if (window.showToast) window.showToast("已卸下");
         this._refreshAllUI();
         if (window.saveGame) window.saveGame();
     },
 
+    // ============================================================
+    // 4. 移除/丢弃逻辑 (基于 SID)
+    // ============================================================
+
     /**
-     * 丢弃物品 (适配 UtilsModal 自定义弹窗)
+     * 移除指定物品
+     * @param {string} sid 物品SID
+     * @param {number} amount 数量
      */
-    /**
-     * 丢弃物品 (已优化：小窗口、大字体)
-     */
-    discardItem: function(inventoryIndex) {
-        const itemSlot = player.inventory[inventoryIndex];
-        if (!itemSlot) return;
+    removeItem: function(sid, amount = 1) {
+        if (!player.inventory) return false;
 
-        const item = GAME_DB.items.find(i => i.id === itemSlot.id);
-        const itemName = item ? item.name : "未知物品";
-        const targetItemId = itemSlot.id;
+        const index = player.inventory.findIndex(item => item.sid === sid);
 
-        // 1. 优化排版：增大字体，增加上下间距
-        const contentHtml = `
-            <div style="text-align:center; padding: 30px 10px;">
-                <div style="font-size: 18px; color: #333; margin-bottom: 15px; line-height: 1.5;">
-                    确定要丢弃 <span style="color:#d32f2f; font-weight:bold; font-size: 20px; padding: 0 4px;">${itemName}</span> 吗？
-                </div>
-                <div style="font-size:14px; color:#888;">
-                    (丢弃后将化为天地灵气，无法找回)
-                </div>
-            </div>
-        `;
-
-        // 执行删除的逻辑
-        const doDiscard = () => {
-            const currentSlot = player.inventory[inventoryIndex];
-            if (currentSlot && currentSlot.id === targetItemId) {
-                player.inventory.splice(inventoryIndex, 1);
-                if(window.showToast) window.showToast(`已丢弃 ${itemName}`);
-                this._refreshAllUI();
-                if (window.saveGame) window.saveGame();
-            } else {
-                if(window.showToast) window.showToast("背包状态已变更，取消操作");
-                this._refreshAllUI();
+        if (index !== -1) {
+            const item = player.inventory[index];
+            item.count -= amount;
+            if (item.count <= 0) {
+                player.inventory.splice(index, 1);
             }
-        };
-
-        // 2. 调用弹窗：传入宽度(360px) 和 高度(auto)
-        if (window.UtilsModal && window.UtilsModal.showInteractiveModal && window.UtilsModal._createTempCallback) {
-            window.UtilsModal._createTempCallback(doDiscard, (funcName) => {
-                const footerHtml = `
-                    <div style="display:flex; justify-content: center; gap: 15px; padding-bottom: 10px;">
-                        <button class="ink_btn_normal" onclick="window.closeModal()" style="padding: 8px 25px;">取消</button>
-                        <button class="ink_btn_danger" onclick="window['${funcName}']()" style="padding: 8px 25px;">确定丢弃</button>
-                    </div>
-                `;
-
-                // 参数说明:
-                // title, content, footer,
-                // extraClass ('modal_compact' 用于特殊样式),
-                // width ('380px' 限制宽度),
-                // height ('auto' 让高度适应内容，去掉大量留白)
-                window.UtilsModal.showInteractiveModal(
-                    "丢弃确认",
-                    contentHtml,
-                    footerHtml,
-                    "modal_compact",
-                    "380px",
-                    "auto"
-                );
-            });
-        } else {
-            // 降级兼容
-            if (confirm(`确定要丢弃 ${itemName} 吗？`)) {
-                doDiscard();
-            }
+            this._refreshAllUI();
+            return true;
         }
+        return false;
     },
 
-    /* ================= 批量操作逻辑 ================= */
+    /**
+     * 批量丢弃
+     * @param {Array<string>} sids - SID 数组 [sid1, sid2, ...]
+     */
+    discardMultipleItems: function(sids) {
+        if (!player.inventory || !sids || sids.length === 0) return;
 
-    sortInventory: function() {
-        if (!player.inventory || player.inventory.length === 0) {
-            if(window.showToast) window.showToast("行囊空空如也");
-            return;
-        }
-        const typeOrder = {
-            'weapon': 10, 'head': 11, 'body': 12, 'feet': 13, 'mount': 14, 'fishing_rod': 15, 'tool': 16,
-            'pill': 20, 'food': 21, 'book': 22, 'herb': 23,
-            'material': 30, 'foodMaterial': 31
-        };
-        player.inventory.sort((a, b) => {
-            const itemA = GAME_DB.items.find(i => i.id === a.id);
-            const itemB = GAME_DB.items.find(i => i.id === b.id);
-            if (!itemA || !itemB) return 0;
-            const tA = typeOrder[itemA.type] || 99;
-            const tB = typeOrder[itemB.type] || 99;
-            if (tA !== tB) return tA - tB;
-            if (itemA.rarity !== itemB.rarity) return itemB.rarity - itemA.rarity;
-            const pA = itemA.value || itemA.price || 0;
-            const pB = itemB.value || itemB.price || 0;
-            if (pA !== pB) return pB - pA;
-            return itemA.id.localeCompare(itemB.id);
+        let deletedCount = 0;
+        const sidSet = new Set(sids);
+
+        // 遍历背包移除
+        // 使用 filter 方式一次性移除更高效
+        const initialLen = player.inventory.length;
+        player.inventory = player.inventory.filter(item => {
+            if (sidSet.has(item.sid)) {
+                // 如果在删除列表中，直接移除 (视为全部丢弃)
+                // 如果需要支持部分丢弃，逻辑会更复杂，目前批量丢弃通常是全丢
+                return false;
+            }
+            return true;
         });
-        if(window.showToast) window.showToast("行囊已整备完毕");
-        this._refreshAllUI();
-        if (window.saveGame) window.saveGame();
-    },
 
-    discardMultipleItems: function(indices) {
-        if (!player.inventory) return;
-        const indexSet = new Set(indices);
-        if (indexSet.size === 0) return;
-
-        const initialCount = player.inventory.length;
-        player.inventory = player.inventory.filter((_, index) => !indexSet.has(index));
-        const deletedCount = initialCount - player.inventory.length;
+        deletedCount = initialLen - player.inventory.length;
 
         if (deletedCount > 0) {
-            if(window.showToast) window.showToast(`已批量丢弃 ${deletedCount} 样物品`);
+            if(window.showToast) window.showToast(`已丢弃 ${deletedCount} 样物品`);
             this._refreshAllUI();
             if (window.saveGame) window.saveGame();
         }
     },
 
+    // ============================================================
+    // 辅助函数
+    // ============================================================
+
+    getBookStatus: function(itemId) {
+        if (player.skills && player.skills[itemId]) {
+            return { text: "已学会", color: "#4caf50", isLearned: true };
+        }
+        const progress = (player.bookProgress && player.bookProgress[itemId]) || 0;
+        if (progress > 0) {
+            return { text: `研读中: ${progress}`, color: "#2196f3", isReading: true };
+        }
+        return { text: "未读", color: "#999", isUnread: true };
+    },
+
+    getSkillLimitName: function(level) {
+        if (window.SKILL_CONFIG && window.SKILL_CONFIG.levelNames) {
+            return window.SKILL_CONFIG.levelNames[level] || `Lv.${level}`;
+        }
+        return `Lv.${level}`;
+    },
+
+    getEquipSlot: function(itemType) {
+        switch (itemType) {
+            case 'weapon': return 'weapon';
+            case 'head': return 'head';
+            case 'body': return 'body';
+            case 'feet': return 'feet';
+            case 'mount': return 'mount';
+            case 'accessory': return 'accessory';
+            case 'fishing_rod': return 'fishing_rod';
+            case 'tool': return 'weapon';
+            default: return null;
+        }
+    },
+
+    // 兼容旧接口
+    useItemById: function(itemId) {
+        // 尝试在背包中找一个匹配ID的物品SID来使用
+        if (player.inventory) {
+            const item = player.inventory.find(i => i.id === itemId);
+            if (item) {
+                this.useItem(item.sid, 1);
+            }
+        }
+    },
+
+    sortInventory: function() {
+        if (!player.inventory) return;
+        const typeOrder = {
+            "weapon": 1, "head": 2, "body": 3, "feet": 4, "accessory": 5, "mount": 6,
+            "pill": 10, "food": 11, "herb": 12, "material": 20, "book": 30, "tool": 40
+        };
+
+        player.inventory.sort((a, b) => {
+            const tA = typeOrder[a.type] || 99;
+            const tB = typeOrder[b.type] || 99;
+            if (tA !== tB) return tA - tB;
+
+            const rA = a.rarity || 1;
+            const rB = b.rarity || 1;
+            if (rA !== rB) return rB - rA;
+
+            if (a.id !== b.id) return a.id.localeCompare(b.id);
+
+            // 属性相同的物品 SID 相同，自然排在一起
+            return (a.sid || "").localeCompare(b.sid || "");
+        });
+
+        if (window.showToast) window.showToast("背包已整理");
+        this._refreshAllUI();
+        if (window.saveGame) window.saveGame();
+    },
+    // ============================================================
+    // 【新增】背包数据校对 (存档加载后调用)
+    // ============================================================
+    checkBagData: function() {
+        if (!player.inventory || player.inventory.length === 0) return;
+
+        console.log("[UtilsItem] 开始校对背包数据...");
+        let needFix = false;
+
+        // 检查是否有数据需要修复 (没有 sid 或者 sid 格式不对)
+        for (let item of player.inventory) {
+            if (!item.sid || !item.sid.startsWith('sid_')) {
+                needFix = true;
+                break;
+            }
+        }
+
+        if (needFix) {
+            console.log("[UtilsItem] 发现旧格式数据，正在重组背包...");
+            // 1. 深拷贝备份旧数据，防止引用问题
+            const oldItems = JSON.parse(JSON.stringify(player.inventory));
+
+            // 2. 清空当前背包，准备重新填充
+            player.inventory = [];
+
+            // 3. 重新添加
+            oldItems.forEach(item => {
+                const count = item.count || 1;
+                if (item.id) {
+                    // 【核心修改】这里只传入 item.id (字符串)
+                    // addItem 内部检测到字符串后，会自动从 GAME_DB 获取最新的完整物品数据
+                    // 然后自动生成 Deterministic SID 并执行堆叠逻辑
+                    this.addItem(item.id, count);
+                }
+            });
+
+            console.log("[UtilsItem] 背包数据重组完成。");
+
+            // 4. 修复完成后立即保存并刷新
+            this._refreshAllUI();
+            if (window.saveGame) window.saveGame();
+        } else {
+            console.log("[UtilsItem] 背包数据格式正常。");
+        }
+    },
     _refreshAllUI: function() {
         if (window.refreshBagUI) window.refreshBagUI();
         if (window.updateUI) window.updateUI();
+        if (window.recalcStats) window.recalcStats();
     }
 };
 
 window.UtilsItem = UtilsItem;
+// 兼容旧接口
+window.addItem = function(id, count) { UtilsItem.addItem(id, count); };

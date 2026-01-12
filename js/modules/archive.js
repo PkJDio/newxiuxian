@@ -92,6 +92,8 @@ const ArchiveSystem = {
 
             //console.log("读取存档成功", window.player);
 
+            UtilsItem.checkBagData();
+
             // 3. 恢复后的刷新
             if (window.recalcStats) window.recalcStats();
             if (window.updateUI) window.updateUI();
