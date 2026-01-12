@@ -1,0 +1,7 @@
+/* css/style.css */
+.act_btn:disabled, .btn_disabled {
+    background-color: #ccc !important;
+    color: #999 !important;
+    border-color: #bbb !important;
+    pointer-events: none;
+}

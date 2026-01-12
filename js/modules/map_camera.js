@@ -207,7 +207,8 @@ const MapCamera = {
 
         // --- 新增：根据坐标检测并保存区域信息 ---
         this._updateRegionInfo(tx, ty);
-
+        // --- 【核心修改】检测是否在城镇中，并更新 player.location ---
+        this._updatePlayerLocation(tx, ty);
         this._checkRegion(tx, ty);
         this._updateTerrainBuffs(tx, ty);
 
@@ -219,7 +220,7 @@ const MapCamera = {
         this.requestRender();
     },
 
-    // --- 新增辅助方法 ---
+    // --- 新增辅助方法：更新区域 region (如: r_c_1_1) ---
     _updateRegionInfo: function(x, y) {
         if (typeof REGION_LAYOUT === 'undefined') return;
 
@@ -231,9 +232,37 @@ const MapCamera = {
 
         if (region) {
             player.coord.region = region.id;
-            // console.log(`已进入区域: ${region.name} (${region.id})`);
         } else {
             player.coord.region = "unknown";
+        }
+    },
+
+    // --- 【核心修改】新增辅助方法：更新具体位置 location (如: t_xianyang) ---
+    _updatePlayerLocation: function(x, y) {
+        if (!window.player) return;
+
+        let locId = ""; // 默认不在任何城镇
+
+        if (typeof WORLD_TOWNS !== 'undefined') {
+            // 查找当前坐标是否在某个城镇的矩形范围内
+            const town = WORLD_TOWNS.find(t =>
+                x >= t.x && x < t.x + t.w &&
+                y >= t.y && y < t.y + t.h
+            );
+
+            if (town) {
+                locId = town.id;
+            }
+        }
+
+        // 只有位置发生变化时才更新（可选优化）
+        if (player.location !== locId) {
+            player.location = locId;
+
+            // 如果有“集市”按钮的状态更新函数，可以在这里触发
+            if (window.updateMarketButtonState) {
+                window.updateMarketButtonState();
+            }
         }
     },
 

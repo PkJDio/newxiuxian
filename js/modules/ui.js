@@ -88,6 +88,8 @@ function updateUI() {
     if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
 
     renderBuffs();
+    // 【新增】更新集市按钮状态
+    updateMarketButtonState();
 }
 
 /**
@@ -274,7 +276,38 @@ function showGalleryModal() {
     html += `</div>`;
     if (window.showGeneralModal) window.showGeneralModal(title, html, null, "modal_gallery_box");
 }
+// 【新增】独立的状态更新函数
+function updateMarketButtonState() {
+    const btn = document.getElementById('btn_action_market');
+    if (!btn) return;
 
+    let inTown = false;
+
+    // 检查当前位置是否在 WORLD_TOWNS 列表中
+    if (player.location && window.WORLD_TOWNS) {
+        const locationId = player.location;
+        // 只要是在列表里的，都算城镇/村落
+        const town = WORLD_TOWNS.find(t => t.id === locationId);
+        if (town) {
+            inTown = true;
+        }
+    }
+
+    if (inTown) {
+        btn.disabled = false;
+        btn.classList.remove('btn_disabled');
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+    } else {
+        btn.disabled = true;
+        btn.classList.add('btn_disabled'); // 配合 CSS 变灰
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+    }
+}
+
+// 别忘了把新函数挂载出去，或者直接写在 updateUI 里
+window.updateMarketButtonState = updateMarketButtonState;
 window.updateUI = updateUI;
 window.renderBuffs = renderBuffs;
 window.enterGameScene = enterGameScene;
