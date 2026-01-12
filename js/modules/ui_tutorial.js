@@ -134,6 +134,40 @@ window.UITutorial = {
             {target: 'bag_grid_content', title: '行囊格目', text: '这里存放着你所有的资源。点击物品可以查看详细属性，进行使用或丢弃。'},
             {target: 'bag_toolbar_container', title: '行囊管理', text: '点击【整理】可自动分类，【批量丢弃】则能快速清理不需要的杂物。'}
         ],
+        'skill': [
+            {
+                target: 'tab_body',
+                title: '外功招式',
+                text: '外功主要提升攻击、防御、速度等战斗属性。点击左侧卡片可进行“运功”装备。'
+            },
+            {
+                target: 'tab_cultivation',
+                title: '内功心法',
+                text: '内功主要提升精、气、神等人物基础属性。高深内功是修仙境界突破的基石。'
+            },
+            {
+                target: 'slots_dynamic_container',
+                title: '当前运功',
+                text: '这里显示你正在运行的功法。功法只有在此处激活，其加成属性才会正式生效。'
+            }
+        ],
+        'bounty_list': [
+            {
+                target: 'bounty_list_container', // 指向整个弹窗容器
+                title: '任务书卷',
+                text: '这里记录了你当前接取的所有悬赏任务。点击【快捷键 T】可随时查看。'
+            },
+            {
+                target: 'bounty_progress_container', // 指向第一个任务的进度条（如果存在）
+                title: '任务进度',
+                text: '务必关注这里的进度。当显示“可交付”时，需返回任务所属城镇的告示牌领取奖励。'
+            },
+            {
+                target: 'bounty_deadline',
+                title: '期限与惩罚',
+                text: '注意任务截止日期。若逾期未完成，任务将判定失败，可能会扣除一定的声望。'
+            }
+        ],
     },
     /**
      * 检查并触发建筑引导

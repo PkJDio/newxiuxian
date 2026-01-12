@@ -77,9 +77,22 @@ window.UIBounty = {
                 "70vw",
                 "80vh"
             );
+            // --- 修复部分：添加延时触发 ---
+            if (window.UITutorial && window.UITutorial.checkBuilding) {
+                const player = window.player;
+                // 只有当有任务时才触发引导
+                if (player && player.bounty && player.bounty.activeTasks && player.bounty.activeTasks.length > 0) {
+                    // 延时 300-500ms 确保 Modal 渲染完毕
+                    setTimeout(() => {
+                        window.UITutorial.checkBuilding('bounty_list');
+                    }, 400);
+                }
+            }
         } else {
             console.error("未找到 Modal 组件 (utils_modal.js)");
         }
+
+
     },
 
     // 辅助：获取任务对应的处理模块
@@ -177,6 +190,8 @@ window.UIBounty = {
     renderContent: function() {
         const player = window.State && window.State.player ? window.State.player : window.player;
 
+
+
         if (!player || !player.bounty || !player.bounty.activeTasks || player.bounty.activeTasks.length === 0) {
             return `
                 <div class="bounty_list_container">
@@ -217,7 +232,7 @@ window.UIBounty = {
 
             if (module && typeof module.getProgressHtml === 'function' && task.status !== 'abandoned') {
                 const moduleHtml = module.getProgressHtml(task);
-                if (moduleHtml) progressHtml = `<div class="bounty_progress_container">${moduleHtml}</div>`;
+                if (moduleHtml) progressHtml = `<div id="bounty_progress_container" class="bounty_progress_container">${moduleHtml}</div>`;
             }
 
             // 通用进度兜底
@@ -228,7 +243,7 @@ window.UIBounty = {
                     const isDone = current >= total;
                     const colorClass = isDone ? 'progress_done' : '';
                     progressHtml = `
-                    <div class="bounty_progress_container">
+                    <div  class="bounty_progress_container">
                         <div class="bounty_progress_row ${colorClass}">
                             当前进度：${current} / ${total}
                         </div>
@@ -265,7 +280,7 @@ window.UIBounty = {
                     <div>
                         <span class="bounty_reward">💰 ${task.rewardMoney}</span>
                         <span style="margin:0 15px; color:#ccc;">|</span>
-                        <span class="bounty_deadline">截止: ${deadlineStr}</span>
+                        <span id="bounty_deadline" class="bounty_deadline">截止: ${deadlineStr}</span>
                     </div>
                     
                     <div style="z-index: 10;">
@@ -275,6 +290,6 @@ window.UIBounty = {
             </div>`;
         });
 
-        return '<div class="bounty_list_container">' + listHtml + '</div>';
+        return '<div id="bounty_list_container" class="bounty_list_container">' + listHtml + '</div>';
     }
 };

@@ -76,10 +76,14 @@ function setStartItem() {
     UtilsAdd.addMoney(100);
     //添加初始食物
     UtilsAdd.addItem("foods_005", 2);
-    UtilsAdd.addItem("foods_053", 2);
+    UtilsAdd.addItem("foods_053", 1);
+    //添加初始功法
+    UtilsAdd.addItem("book_cultivation_r1_00_full", 1);
+
 
     //添加初始功法
-    UtilsAdd.addItem("book_body_r1_00_full", 1);
+    UtilsAdd.addSkill("book_body_r1_00_full");
+
 
 
 };

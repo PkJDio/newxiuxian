@@ -175,7 +175,110 @@ const ModalManager = {
         if (onOpenCallback) setTimeout(onOpenCallback, 50);
         return box;
     },
+// 9. 对话框弹窗 (NPC对话感)
+    // side: 'left' 或 'right'，决定人像在左还是在右
+    showDialogueModal: function(speakerName, contentHtml, side = 'left', onNext = null, isFinished = false) {
+        // 注入人像所需的样式
+        this._injectDialogueStyles();
 
+        // 根据是否结束动态设置按钮文字
+        const btnText = isFinished ? "结束对话" : "继续对话";
+        const footerHtml = `<button class="ink_btn_next">${btnText}</button>`;
+
+        // 调用基础弹窗
+        const { box, body } = this._showBaseModal('modal_dialogue', speakerName, contentHtml, footerHtml, `side_${side}`, 60, 30);
+
+        // 插入人像容器
+        const avatarHtml = `<div class="dialogue_avatar_wrap"><div class="ink_avatar"></div></div>`;
+        box.insertAdjacentHTML('afterbegin', avatarHtml);
+
+        // 处理点击逻辑：固定在右侧的按钮
+        const btn = box.querySelector('.ink_btn_next');
+        if (btn) {
+            btn.onclick = () => {
+                window.closeModal();
+                if (typeof onNext === 'function') onNext();
+            };
+        }
+
+        return body;
+    },
+
+    // 内部私有方法：注入对话框专用样式
+    _injectDialogueStyles: function() {
+        if (document.getElementById('ink_dialogue_style')) return;
+        const style = document.createElement('style');
+        style.id = 'ink_dialogue_style';
+        style.innerHTML = `
+            /* 对话框主体 */
+            .modal_dialogue {
+                background: #fffdfb !important;
+                border: 2px solid #333 !important;
+                padding-top: 40px !important;
+                position: relative;
+                overflow: visible !important;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* 强制底部工具栏靠右 */
+            .modal_dialogue .modal_footer {
+                justify-content: flex-end !important; /* 强制靠右 */
+                padding-right: 30px !important;
+                border-top: 1px dashed #ccc !important;
+                display: flex !important;
+            }
+
+            /* 人像容器逻辑保持不变 */
+            .dialogue_avatar_wrap {
+                position: absolute;
+                bottom: 0;
+                width: 180px;
+                height: 220px;
+                pointer-events: none;
+                z-index: 0;
+            }
+            .side_left .dialogue_avatar_wrap { left: -110px; }
+            .side_right .dialogue_avatar_wrap { right: -110px; transform: scaleX(-1); }
+
+            /* 水墨剪影 */
+            .ink_avatar {
+                width: 100%; height: 100%;
+                background: linear-gradient(to bottom, #444 0%, #111 80%, transparent 100%);
+                clip-path: polygon(50% 0%, 65% 5%, 70% 20%, 65% 35%, 55% 40%, 90% 50%, 100% 100%, 0% 100%, 10% 50%, 45% 40%, 35% 35%, 30% 20%, 35% 5%);
+                opacity: 0.9;
+                filter: blur(1px);
+            }
+
+            /* 对话文字 */
+            .modal_dialogue .modal_body {
+                position: relative;
+                z-index: 1;
+                font-size: 20px;
+                line-height: 1.8;
+                padding: 15px 25px;
+                font-family: "KaiTi", serif;
+                min-height: 100px;
+            }
+
+            /* 按钮样式 */
+            .ink_btn_next {
+                padding: 8px 25px;
+                background: #222;
+                color: #fff;
+                border: 1px solid #000;
+                cursor: pointer;
+                font-family: "KaiTi";
+                font-size: 18px;
+                transition: all 0.2s;
+            }
+            .ink_btn_next:hover {
+                background: #a94442;
+                box-shadow: 2px 2px 0 #333;
+            }
+        `;
+        document.head.appendChild(style);
+    },
     // ================= 核心逻辑 (不包含样式注入) =================
 
     _createTempCallback: function(callback, renderFn) {
@@ -343,3 +446,16 @@ window.showWarningModal = ModalManager.showWarningModal.bind(ModalManager);
 window.showConfirmModal = ModalManager.showConfirmModal.bind(ModalManager);
 window.showSelectionModal = ModalManager.showSelectionModal.bind(ModalManager);
 window.closeModal = () => ModalManager.closeTopModal();
+window.showDialogue = ModalManager.showDialogueModal.bind(ModalManager);
+/**
+ // 情况 1：未结束（显示 继续对话）
+ showDialogue("掌门", "徒儿，此次下山历练，务必小心行事。", "left", () => {
+ // 点击继续后的操作
+ }, false);
+
+ // 情况 2：结束了（显示 结束对话）
+ showDialogue("神秘人", "后会有期！", "right", () => {
+ console.log("对话彻底结束");
+ }, true);
+
+ **/

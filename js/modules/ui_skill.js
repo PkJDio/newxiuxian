@@ -130,6 +130,12 @@ const UISkill = {
     open: function() {
         this._injectStyles();
         this.showModal();
+        // --- 修改部分开始 ---
+        // 检查并触发技艺界面引导
+        if (window.UITutorial && window.UITutorial.checkBuilding) {
+            // 复用 checkBuilding 逻辑，传入 'skill' 标识
+            window.UITutorial.checkBuilding('skill');
+        }
     },
 
     showModal: function() {
