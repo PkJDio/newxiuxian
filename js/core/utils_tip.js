@@ -156,13 +156,13 @@ const TooltipManager = {
     },
 
     /* ================= 2. 普通物品详情 (恢复完整版) ================= */
-    showItem: function(e, itemId, instance = null, mode = 'normal') {
+    showItem: function(e, sid, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, itemId); return; }
         this._init();
         this._mouseX = e.clientX;
         this._mouseY = e.clientY;
 
-        const item = instance || (typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i =>i.id === itemId) : null);
+        const item = instance || ( window.player.inventory.find(i =>i.sid === sid) );
         if (!item) return;
 
         const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : {};
@@ -354,10 +354,10 @@ const TooltipManager = {
     },
 
     /* ================= 4. 图鉴详情 (保持通用逻辑) ================= */
-    showGalleryItem: function(e, itemId) {
+    showGalleryItem: function(e, sid) {
         // 由于图鉴逻辑较长且与普通物品类似，直接复用 showItem 逻辑或保留你原有的复杂逻辑
         // 这里为了确保你的图鉴样式也恢复，我复用 showItem 的核心，但在顶部加个区分
-        this.showItem(e, itemId, null, 'normal');
+        this.showItem(e, sid, null, 'normal');
     }
 };
 

@@ -190,25 +190,15 @@ const Combat = {
         if (!this._canAct()) return;
         if (this.itemCDs[slotIndex] > 0) return;
 
-        const itemId = this.player.consumables[slotIndex];
-        if (!itemId) return;
-        const invSlot = this.player.inventory.find(i => i.id === itemId);
-        if (!invSlot || invSlot.count <= 0) return;
+        const sid = this.player.consumables[slotIndex];
+        if (!sid) return;
 
-        const itemData = window.GAME_DB.items.find(i => i.id === itemId);
+        const itemData = this.player.inventory.find(i => i.sid === sid);
         if (!itemData) return;
 
         // 1. 消耗物品逻辑
-        invSlot.count--;
-        if (invSlot.count <= 0) {
-            this.player.inventory = this.player.inventory.filter(slot => slot.count > 0);
-            this.player.consumables[slotIndex] = null;
-            if (window.MapCamera && MapCamera.updateSidebar) MapCamera.updateSidebar();
-        } else {
-            const countEl = document.getElementById(`combat_item_count_${slotIndex}`);
-            if(countEl) countEl.innerText = `x${invSlot.count}`;
-        }
-
+        UtilsItem.useItem(sid,1);
+        if (window.MapCamera && MapCamera.updateSidebar) MapCamera.updateSidebar();
         // 2. 效果应用
         const subType = (itemData.subType || itemData.subtype || "").toLowerCase();
         if (subType === 'poison') {
@@ -848,7 +838,10 @@ const Combat = {
             if (drops.length > 0) {
                 rewardHtml += `<div style="font-weight:bold; margin-top:5px;">战利品:</div><div style="display:flex; flex-wrap:wrap; gap:5px;">`;
                 drops.forEach(drop => {
-                    if (window.UtilsAdd) UtilsAdd.addItem(drop.id, 1, false);
+                    let itemInfo = {};
+                    if (window.UtilsAdd){
+                        itemInfo=UtilsAdd.addItem(drop.id, 1, false);
+                    }
                     let name = drop.id;
                     let styleExtra = "";
                     let itemData = null;
@@ -865,7 +858,7 @@ const Combat = {
                     }
 
                     // 添加鼠标悬浮事件
-                    const tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${drop.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
+                    const tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${itemInfo.sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
                     rewardHtml += `<span ${tooltipEvents} style="cursor:help; background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${styleExtra}">${name}</span>`;
                 });
                 rewardHtml += `</div>`;

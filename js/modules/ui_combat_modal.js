@@ -370,24 +370,23 @@ const UICombatModal = {
         if (consContainer) {
             let html = '';
             const consumables = (window.player && window.player.consumables) ? window.player.consumables : [null, null, null];
-            consumables.forEach((itemId, idx) => {
+            consumables.forEach((sid, idx) => {
                 let inner = '';
                 let btnClassAdd = 'empty-slot-btn';
                 let onclick = '';
                 let tooltipEvents = '';
 
-                if (itemId) {
-                    const db = window.GAME_DB || { items: [] };
-                    const item = db.items ? db.items.find(i => i && i.id === itemId) : null;
+                if (sid) {
+                    const item = window.player.inventory.find(i => i && i.sid === sid) ;
                     if (item) {
                         let icon = item.icon || '💊';
                         if (window.getItemIcon) icon = getItemIcon(item);
-                        tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${itemId}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
+                        tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
 
                         inner = `
                             <div class="c-slot-item">
                                 <div class="c-icon">${icon}</div>
-                                <div class="c-count" id="combat_item_count_${idx}">x${this._getItemCount(itemId)}</div>
+                                <div class="c-count" id="combat_item_count_${idx}">x${this._getItemCount(sid)}</div>
                             </div>
                             <div class="c-name-label">${item.name}</div>
                         `;
@@ -450,9 +449,9 @@ const UICombatModal = {
         }
     },
 
-    _getItemCount: function(itemId) {
+    _getItemCount: function(sid) {
         if (!player || !player.inventory) return 0;
-        const slot = player.inventory.find(i => i &&  i.id === itemId);
+        const slot = player.inventory.find(i => i &&  i.sid === sid);
         return slot ? slot.count : 0;
     }
 };

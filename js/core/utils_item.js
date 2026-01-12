@@ -83,6 +83,8 @@ const UtilsItem = {
         if (window.showToast) window.showToast(`获得了 ${newItemData.name} x${amount}`);
         this._refreshAllUI();
         if (window.saveGame) window.saveGame();
+
+        return newItemData;
     },
 
     // ============================================================
@@ -128,8 +130,8 @@ const UtilsItem = {
 
             // 日志
             if (window.LogManager && window.LogManager.add) {
-                const rarityColors = { 1: "#ffffff", 2: "#2ecc71", 3: "#3498db", 4: "#9b59b6", 5: "#f1c40f", 6: "#e74c3c" };
-                const color = rarityColors[itemSlot.rarity] || "#ffffff";
+                const rarityColors = { 1: "#2D2B2BFF", 2: "#2ecc71", 3: "#3498db", 4: "#9b59b6", 5: "#f1c40f", 6: "#e74c3c" };
+                const color = rarityColors[itemSlot.rarity] || "#2d2b2b";
                 window.LogManager.add(`使用物品：<span style="color:${color}">${itemSlot.name}</span>`);
             }
         }
@@ -146,18 +148,32 @@ const UtilsItem = {
             // A. 基础恢复
             if (eff.hp) {
                 player.derived.hp = Math.min(player.derived.hpMax, player.derived.hp + eff.hp);
-                msg += `生命+${eff.hp} `;
+                if( eff.hp>0){
+                    msg += `生命+${eff.hp} `;
+                }else if( eff.hp<0){
+                    msg += `生命-${Math.abs(eff.hp)} `;
+                }
+
                 applied = true;
             }
             if (eff.mp) {
                 player.derived.mp = Math.min(player.derived.mpMax, (player.derived.mp||0) + eff.mp);
-                msg += `内力+${eff.mp} `;
+                if(eff.mp>0){
+                    msg += `内力+${eff.mp} `;
+                }else{
+                    msg += `内力-${Math.abs(eff.mp)} `;
+                }
                 applied = true;
             }
             if (eff.hunger) {
                 if (!player.status) player.status = {};
                 player.status.hunger = Math.min(100, (player.status.hunger||0) + eff.hunger);
-                msg += `饱食+${eff.hunger} `;
+                if (eff.hunger>0){
+                    msg += `饱食+${eff.hunger} `;
+                }else if(eff.hunger<0){
+                    msg += `饱食-${Math.abs(eff.hunger)} `;
+                }
+
                 applied = true;
             }
 
