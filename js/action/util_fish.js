@@ -150,7 +150,7 @@ const UtilFish = {
         this.lineTension = Math.max(0, this.lineTension);
 
         if (this.lineTension >= 100) {
-            this._finishGame(false, "崩！劲道过猛，鱼线断了！");
+            // this._finishGame(false, "崩！劲道过猛，鱼线断了！");
             return;
         }
 

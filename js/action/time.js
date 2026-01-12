@@ -127,7 +127,7 @@ const TimeSystem = {
                 player.status.mp = Math.min(maxMp, currentMp + recoverAmount);
 
                 // (可选) 如果你希望显示日志，可以加一句
-                if(window.LogManager) window.LogManager.add(`[周天运转] 法力自动回复了 ${Math.floor(recoverAmount)} 点。`);
+                // if(window.LogManager) window.LogManager.add(`[周天运转] 法力自动回复了 ${Math.floor(recoverAmount)} 点。`);
             }
 
             // 执行 BUFF 扣减

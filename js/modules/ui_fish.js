@@ -52,7 +52,7 @@ const UIFish = {
                     </div>
                     <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:10px; font-size:22px; color:#bdc3c7;">
                             <input type="checkbox" id="skip_fish_game" style="width:24px; height:24px; cursor:pointer;">
-                            <label for="skip_fish_game" style="cursor:pointer;">跳过搏弈过程 (消耗2小时)</label>
+                            <label for="skip_fish_game" style="cursor:pointer;">跳过搏弈过程 (消耗2小时)普通钓鱼（消耗1小时）</label>
                         </div>
                     <button id="fish_btn_action" class="ink_fish_btn">执 竿</button>
 
