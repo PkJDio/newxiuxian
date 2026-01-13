@@ -24,13 +24,22 @@ const CombatCore = {
         let isWin = false; let isDead = false;
 
         if (playerFirst) {
-            ctx.currentEHp -= CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
+
+            const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
+            ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg); // <--- 防止负数
+
             if (ctx.currentEHp <= 0) isWin = true;
             else { CombatAction.enemyAction(ctx, eStats, pStats); if (ctx.currentPHp <= 0) isDead = true; }
         } else {
             CombatAction.enemyAction(ctx, eStats, pStats);
             if (ctx.currentPHp <= 0) isDead = true;
-            else { ctx.currentEHp -= CombatCalc.performAttack(ctx, "你", pStats, eStats, true); if (ctx.currentEHp <= 0) isWin = true; }
+            else {
+
+                const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
+                ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg); // <--- 防止负数
+
+                if (ctx.currentEHp <= 0) isWin = true;
+            }
         }
 
         // 后置结算

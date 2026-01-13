@@ -479,7 +479,7 @@ const UtilsItem = {
     checkBagData: function() {
         if (!player.inventory || player.inventory.length === 0) return;
 
-        console.log("[UtilsItem] 开始校对背包数据...");
+        // console.log("[UtilsItem] 开始校对背包数据...");
         let needFix = false;
 
         // 检查是否有数据需要修复 (没有 sid 或者 sid 格式不对)
@@ -491,7 +491,7 @@ const UtilsItem = {
         }
 
         if (needFix) {
-            console.log("[UtilsItem] 发现旧格式数据，正在重组背包...");
+            // console.log("[UtilsItem] 发现旧格式数据，正在重组背包...");
             // 1. 深拷贝备份旧数据，防止引用问题
             const oldItems = JSON.parse(JSON.stringify(player.inventory));
 
@@ -509,7 +509,7 @@ const UtilsItem = {
                 }
             });
 
-            console.log("[UtilsItem] 背包数据重组完成。");
+            // console.log("[UtilsItem] 背包数据重组完成。");
 
             // 4. 修复完成后立即保存并刷新
             this._refreshAllUI();

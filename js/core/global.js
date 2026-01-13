@@ -5,7 +5,7 @@
 /* ================= 1. 游戏数据库 (GAME_DB) ================= */
 // ... (GAME_DB 和 initGameDB 部分保持不变，此处省略以节省空间) ...
 const GAME_DB = {
-    items: [], enemies: [], levels: ["凡人", "炼气", "筑基", "金丹", "元婴", "化神", "渡劫", "大乘", "飞升"], maps: [], equipments: [], eatables: [], herbs: []
+    items: [], enemies: [],all_enemies:[], levels: ["凡人", "炼气", "筑基", "金丹", "元婴", "化神", "渡劫", "大乘", "飞升"], maps: [], equipments: [], eatables: [], herbs: []
 };
 function initGameDB() {
     const itemSources = [
@@ -21,6 +21,8 @@ function initGameDB() {
     const herbItemSources = [ typeof herbs !== "undefined" ? herbs : [], typeof pills !== "undefined" ? pills : [] ];
     GAME_DB.herbs = []; herbItemSources.forEach(arr => GAME_DB.herbs = GAME_DB.herbs.concat(arr));
     if (typeof enemies !== 'undefined') GAME_DB.enemies = enemies;
+    const allEnemies = [ typeof enemies !== "undefined" ? enemies : [], typeof EVENT_RAID_ENEMIES !== "undefined" ? EVENT_RAID_ENEMIES : [] ];
+    GAME_DB.all_enemies = [];allEnemies.forEach(arr => GAME_DB.all_enemies = GAME_DB.all_enemies.concat(arr));
     if (typeof SUB_REGIONS !== 'undefined') GAME_DB.maps = SUB_REGIONS;
 }
 
@@ -34,7 +36,7 @@ function recalcStats() {
     if (!player) return;
 
     // 【调试】开启分组，方便折叠查看
-    console.groupCollapsed("📊 [属性计算] 详细追踪 log");
+    // console.groupCollapsed("📊 [属性计算] 详细追踪 log");
 
     // 1. 初始化 derived (最终属性)
     player.derived = {

@@ -26,10 +26,38 @@ const TimeSystem = {
     },
 
     getTimeString: function() {
-        if (!player || !player.time) return "加载中...";
-        const t = player.time;
-        const pad = (n) => n.toString().padStart(2, '0');
+        // 1. 基础保底：如果 player 或 player.time 完全不存在
+        if (!window.player || !window.player.time) {
+            // 如果存档里没时间，直接给一个初始化的默认值
+            window.player = window.player || {};
+            window.player.time = { year: 1, month: 1, day: 1, hour: 0, minute: 0 };
+            // console.warn("时间数据丢失，已初始化默认时间");
+        }
+
+        const t = window.player.time;
+
+        /**
+         * 2. 增强型 pad 函数 (防崩溃)
+         * 逻辑：如果 n 是 undefined 或 null，则返回 "01" 作为占位
+         */
+        const pad = (n) => {
+            const val = (n === undefined || n === null) ? 1 : n;
+            return val.toString().padStart(2, '0');
+        };
+
+        /**
+         * 3. 属性保底重置
+         * 如果检测到具体的月份、日期等是 undefined，直接将其重置为初始状态
+         */
+        if (t.month === undefined) t.month = 1;
+        if (t.day === undefined) t.day = 1;
+        if (t.hour === undefined) t.hour = 0;
+        if (t.minute === undefined) t.minute = 0;
+
+        // 4. 计算年份汉字
         const yearChar = this.toChineseNum(Number(t.year) || 1);
+
+        // 5. 返回格式化字符串
         return `秦始皇${yearChar}年 ${pad(t.month)}月 ${pad(t.day)}日 ${pad(t.hour)}:${pad(t.minute)}`;
     },
 

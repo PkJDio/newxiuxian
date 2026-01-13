@@ -81,7 +81,7 @@ const UICombatModal = {
             }
         }
         if (enemy.toxAtk === undefined) {
-            const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
+            const db = window.all_enemies || (window.GAME_DB ? window.GAME_DB.all_enemies : []);
             if (db && db.length > 0) {
                 const template = db.find(e => e.id === enemy.id);
                 if (template && template.stats && template.stats.toxicity) {
@@ -100,6 +100,7 @@ const UICombatModal = {
      */
     show: function(enemy, externalOnWin = null, options = { canEscape: true, isMultiWave: false }) {
         if (!window.Combat || !window.UtilsModal) return;
+        console.log("接收到的战斗配置:", options);
 
         this._injectStyles();
         this._patchEnemyData(enemy);
@@ -120,99 +121,99 @@ const UICombatModal = {
         const displayRank = rankMap[enemy.template || "minion"] || "普通";
 
         const contentHtml = `
-            <div class="combat-wrapper">
-                <div class="combat-header">
-                    <div class="fighter-card enemy">
-                        <div class="fighter-top">
-                            <div class="fighter-icon">${enemy.visual?.icon || '💀'}</div>
-                            <div class="fighter-info">
-                                <div class="fighter-name" style="color:${enemy.visual?.color || '#333'};">${enemy.name}</div>
-                                <span class="fighter-rank" style="border-color:${enemy.visual?.color || '#333'}; color:${enemy.visual?.color || '#333'};">${displayRank}</span>
-                            </div>
-                        </div>
-                        <div class="stats-panel">
-                            <div class="bar-row">
-                                <div class="hp-bar-container">
-                                    <div class="bar-label">❤</div>
-                                    <div class="hp-bar-bg">
-                                        <div id="combat_e_hp_bar" class="hp-bar-fill" style="width:${eHpPct}%"></div>
-                                        <div class="hp-text"><b id="combat_e_hp">${enemy.hp}</b>/${eMaxHp}</div>
-                                    </div>
-                                </div>
-                                <div class="tox-bar-container">
-                                    <div class="tox-label">☠</div>
-                                    <div class="tox-bar-bg"><div id="combat_e_tox_bar" class="tox-bar-fill" style="width:${enemy.toxicity || 0}%"></div></div>
-                                    <div id="combat_e_tox_val" class="tox-val">${enemy.toxicity || 0}</div>
-                                </div>
-                            </div>
-                            <div class="attr-row">
-                                <span class="attr-item" id="e_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${enemy.atk}</span></span>
-                                <span class="attr-item" id="e_attr_def"><span class="attr-text">防御</span><span class="attr-val">${enemy.def}</span></span>
-                                <span class="attr-item" id="e_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${enemy.speed}</span></span>
-                            </div>
+        <div class="combat-wrapper">
+            <div class="combat-header">
+                <div class="fighter-card enemy">
+                    <div class="fighter-top">
+                        <div class="fighter-icon">${enemy.visual?.icon || '💀'}</div>
+                        <div class="fighter-info">
+                            <div class="fighter-name" style="color:${enemy.visual?.color || '#333'};">${enemy.name}</div>
+                            <span class="fighter-rank" style="border-color:${enemy.visual?.color || '#333'}; color:${enemy.visual?.color || '#333'};">${displayRank}</span>
                         </div>
                     </div>
-
-                    <div class="vs-divider">VS</div>
-
-                    <div class="fighter-card player">
-                        <div class="fighter-top" style="flex-direction:row-reverse;">
-                            <div class="fighter-icon">🧘</div>
-                            <div class="fighter-info" style="align-items:flex-end;">
-                                <div class="fighter-name">${pName}</div>
-                                <span class="fighter-rank player-rank">修仙者</span>
+                    <div class="stats-panel">
+                        <div class="bar-row">
+                            <div class="hp-bar-container">
+                                <div class="bar-label">❤</div>
+                                <div class="hp-bar-bg">
+                                    <div id="combat_e_hp_bar" class="hp-bar-fill" style="width:${eHpPct}%"></div>
+                                    <div class="hp-text"><b id="combat_e_hp">${enemy.hp}</b>/${eMaxHp}</div>
+                                </div>
+                            </div>
+                            <div class="tox-bar-container">
+                                <div class="tox-label">☠</div>
+                                <div class="tox-bar-bg"><div id="combat_e_tox_bar" class="tox-bar-fill" style="width:${enemy.toxicity || 0}%"></div></div>
+                                <div id="combat_e_tox_val" class="tox-val">${enemy.toxicity || 0}</div>
                             </div>
                         </div>
-                        <div class="stats-panel">
-                            <div class="bar-row">
-                                <div class="hp-bar-container">
-                                    <div class="bar-label">❤</div>
-                                    <div class="hp-bar-bg">
-                                        <div id="combat_p_hp_bar" class="hp-bar-fill" style="width:${pHpPct}%"></div>
-                                        <div class="hp-text"><b id="combat_p_hp">${pDerived.hp}</b>/${pDerived.hpMax}</div>
-                                    </div>
-                                </div>
-                                <div class="tox-bar-container">
-                                    <div class="tox-label">☠</div>
-                                    <div class="tox-bar-bg"><div id="combat_p_tox_bar" class="tox-bar-fill" style="width:${currentPTox}%"></div></div>
-                                    <div id="combat_p_tox_val" class="tox-val">${currentPTox}</div>
-                                </div>
-                            </div>
-                            <div class="bar-row mp-row">
-                                <div class="hp-bar-container">
-                                    <div class="bar-label" style="color:#1976d2;">⚡</div>
-                                    <div class="hp-bar-bg" style="border-color:#90caf9;">
-                                        <div id="combat_p_mp_bar" class="hp-bar-fill" style="width:${pMpPct}%; background:linear-gradient(45deg, #1976d2, #42a5f5); animation:none;"></div>
-                                        <div class="hp-text"><b id="combat_p_mp">${Math.floor(pDerived.mp || 0)}</b>/${Math.floor(pDerived.mpMax || 100)}</div>
-                                    </div>
-                                </div>
-                                <div style="width:120px;"></div>
-                            </div>
-                            <div class="attr-row">
-                                <span class="attr-item" id="p_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${pDerived.atk}</span></span>
-                                <span class="attr-item" id="p_attr_def"><span class="attr-text">防御</span><span class="attr-val">${pDerived.def}</span></span>
-                                <span class="attr-item" id="p_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${pDerived.speed}</span></span>
-                            </div>
+                        <div class="attr-row">
+                            <span class="attr-item" id="e_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${enemy.atk}</span></span>
+                            <span class="attr-item" id="e_attr_def"><span class="attr-text">防御</span><span class="attr-val">${enemy.def}</span></span>
+                            <span class="attr-item" id="e_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${enemy.speed}</span></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="combat-body">
-                    <div id="combat_log_container_embed">
-                        <div id="combat_desc_initial" style="text-align:center; padding-top: 60px;">
-                            <div style="font-size:28px; line-height:1.5; color:#5d4037; font-weight:bold; margin-bottom: 30px;">“${enemy.desc || '强敌来袭！'}”</div>
-                            <div style="font-size:20px; color:#999;">(点击下方“拔剑迎敌”开始战斗)</div>
+                <div class="vs-divider">VS</div>
+
+                <div class="fighter-card player">
+                    <div class="fighter-top" style="flex-direction:row-reverse;">
+                        <div class="fighter-icon">🧘</div>
+                        <div class="fighter-info" style="align-items:flex-end;">
+                            <div class="fighter-name">${pName}</div>
+                            <span class="fighter-rank player-rank">修仙者</span>
                         </div>
-                        <div id="combat_logs_realtime"></div>
                     </div>
-                    <div id="combat_sidebar_content" class="combat-sidebar-split">
-                        <div class="sidebar-col"><div class="sidebar-title">丹药</div><div id="sidebar_consumables" class="sidebar-items-container"></div></div>
-                        <div class="sidebar-divider"></div>
-                        <div class="sidebar-col"><div class="sidebar-title">功法</div><div id="sidebar_skills" class="sidebar-items-container"></div></div>
+                    <div class="stats-panel">
+                        <div class="bar-row">
+                            <div class="hp-bar-container">
+                                <div class="bar-label">❤</div>
+                                <div class="hp-bar-bg">
+                                    <div id="combat_p_hp_bar" class="hp-bar-fill" style="width:${pHpPct}%"></div>
+                                    <div class="hp-text"><b id="combat_p_hp">${pDerived.hp}</b>/${pDerived.hpMax}</div>
+                                </div>
+                            </div>
+                            <div class="tox-bar-container">
+                                <div class="tox-label">☠</div>
+                                <div class="tox-bar-bg"><div id="combat_p_tox_bar" class="tox-bar-fill" style="width:${currentPTox}%"></div></div>
+                                <div id="combat_p_tox_val" class="tox-val">${currentPTox}</div>
+                            </div>
+                        </div>
+                        <div class="bar-row mp-row">
+                            <div class="hp-bar-container">
+                                <div class="bar-label" style="color:#1976d2;">⚡</div>
+                                <div class="hp-bar-bg" style="border-color:#90caf9;">
+                                    <div id="combat_p_mp_bar" class="hp-bar-fill" style="width:${pMpPct}%; background:linear-gradient(45deg, #1976d2, #42a5f5); animation:none;"></div>
+                                    <div class="hp-text"><b id="combat_p_mp">${Math.floor(pDerived.mp || 0)}</b>/${Math.floor(pDerived.mpMax || 100)}</div>
+                                </div>
+                            </div>
+                            <div style="width:120px;"></div>
+                        </div>
+                        <div class="attr-row">
+                            <span class="attr-item" id="p_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${pDerived.atk}</span></span>
+                            <span class="attr-item" id="p_attr_def"><span class="attr-text">防御</span><span class="attr-val">${pDerived.def}</span></span>
+                            <span class="attr-item" id="p_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${pDerived.speed}</span></span>
+                        </div>
                     </div>
                 </div>
             </div>
-        `;
+
+            <div class="combat-body">
+                <div id="combat_log_container_embed">
+                    <div id="combat_desc_initial" style="text-align:center; padding-top: 60px;">
+                        <div style="font-size:28px; line-height:1.5; color:#5d4037; font-weight:bold; margin-bottom: 30px;">“${enemy.desc || '强敌来袭！'}”</div>
+                        <div style="font-size:20px; color:#999;">(点击下方“拔剑迎敌”开始战斗)</div>
+                    </div>
+                    <div id="combat_logs_realtime"></div>
+                </div>
+                <div id="combat_sidebar_content" class="combat-sidebar-split">
+                    <div class="sidebar-col"><div class="sidebar-title">丹药</div><div id="sidebar_consumables" class="sidebar-items-container"></div></div>
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-col"><div class="sidebar-title">功法</div><div id="sidebar_skills" class="sidebar-items-container"></div></div>
+                </div>
+            </div>
+        </div>
+    `;
 
         const ts = Date.now();
         const startCB = 'cb_start_' + ts;
@@ -234,14 +235,14 @@ const UICombatModal = {
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
                 footerDiv.innerHTML = `
-                    <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-500)">⏫</button>
-                        <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](500)">⏬</button>
-                    </div>
-                    <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
-                    ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${stopCB}']()">🏃 拼死逃跑</button>` : ''}
-                `;
+                <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
+                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-500)">⏫</button>
+                    <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
+                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](500)">⏬</button>
+                </div>
+                <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
+                ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${stopCB}']()">🏃 拼死逃跑</button>` : ''}
+            `;
             }
 
             Combat.start(enemy, () => {
@@ -259,13 +260,32 @@ const UICombatModal = {
         };
 
         const footerHtml = `
-            <div id="map_combat_footer" style="display:flex; justify-content:space-between; width:100%; gap:15px;">
-                ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal()">🏃 撤退</button>` : ''}
-                <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${startCB}']()">⚔️ 拔剑迎敌</button>
-            </div>
-        `;
+        <div id="map_combat_footer" style="display:flex; justify-content:space-between; width:100%; gap:15px;">
+            ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal()">🏃 撤退</button>` : ''}
+            <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${startCB}']()">⚔️ 拔剑迎敌</button>
+        </div>
+    `;
 
-        UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, () => cleanCallbacks());
+        /**
+         * 【关键修复】
+         * 之前调用 showInteractiveModal 的参数位置完全乱了。
+         * 按照 v3.2 定义：(title, content, footer, extraClass, width, height, options)
+         */
+        const modalTitle = options.canEscape ? "遭遇强敌" : `🛑 殊死一搏 - ${enemy.name}`;
+
+        UtilsModal.showInteractiveModal(
+            modalTitle, // 使用动态标题
+            contentHtml,
+            footerHtml,
+            "combat_modal",
+            90,
+            null,
+            {
+                allowOutsideClick: options.allowOutsideClick !== undefined ? options.allowOutsideClick : options.canEscape,
+                allowEsc: options.allowEsc !== undefined ? options.allowEsc : options.canEscape,
+                onClose: () => cleanCallbacks()
+            }
+        );
 
         this.updateSidebar();
     },
