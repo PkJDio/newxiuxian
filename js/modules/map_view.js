@@ -30,6 +30,7 @@ const MapView = {
 
             road: "#a1887f",
             river: "#81d4fa",
+            lake: "#4fc3f7",
             mountainBg: "rgba(121, 85, 72, 0.3)",
             mountainBorder: "#5d4037",
 
@@ -244,7 +245,7 @@ const MapView = {
 
         const typeLabels = {
             'city': '主城', 'town': '重镇', 'village': '村落',
-            'mountain': '名山', 'river': '水系', 'road': '官道',
+            'mountain': '名山', 'river': '水系', 'lake': '湖泊', 'road': '官道',
             'grass': '草原', 'desert': '荒漠', 'ocean': '海域'
         };
         const typeName = typeLabels[info.type] || '地理';
@@ -418,6 +419,26 @@ const MapView = {
                     ctx.fillRect(z.x[0], z.y[0], w, h);
                     ctx.globalAlpha = 1.0;
                     break;
+                case 'lake': // 新增湖泊绘制逻辑
+                    // 湖泊颜色：建议使用比河流略深的颜色，或者给河流加个深色滤镜
+                    ctx.fillStyle = c.river;
+                    ctx.globalAlpha = 0.7; // 比河流(0.5)更浓郁，体现水深
+                    ctx.fillRect(z.x[0], z.y[0], w, h);
+
+                    // 增加一个简单的边框，让湖泊更有“汇聚”感
+                    ctx.strokeStyle = c.lake;
+                    ctx.lineWidth = 1 / scale;
+                    ctx.strokeRect(z.x[0], z.y[0], w, h);
+                    ctx.globalAlpha = 1.0;
+
+                    // 在国家层级显示湖泊名称
+                    if (this.camera.level === 'nation') {
+                        ctx.fillStyle = "rgba(255,255,255,0.6)"; // 文字半透明白色
+                        ctx.font = `italic 18px Kaiti`; // 斜体增加柔美感
+                        ctx.textAlign = "center";
+                        ctx.fillText(z.name, z.x[0] + w/2, z.y[0] + h/2);
+                    }
+                    break;
                 case 'mountain':
                     ctx.fillStyle = c.mountainBg;
                     ctx.fillRect(z.x[0], z.y[0], w, h);
@@ -467,14 +488,24 @@ const MapView = {
         ctx.textBaseline = "middle";
 
         WORLD_TOWNS.forEach(t => {
-            if (this.camera.level === 'world' && t.level !== 'city') return;
+            // --- 核心逻辑修改 ---
+            // 1. 如果是全览模式 (world)，且不是主城 (city)，则直接跳过不渲染
+            if (this.camera.level === 'world' && t.level !== 'city') {
+                return;
+            }
+
+            // 2. 如果是局部模式 (nation)，则会自动运行到这里，渲染包括 city, town, village 在内的所有点
+            // --------------------
 
             let bg, border, shape = 'rect';
+
+            // 根据等级设置样式
             if (t.level === 'city') {
                 bg = c.cityBg; border = c.cityBorder; shape = 'rect_large';
             } else if (t.level === 'town') {
                 bg = c.townBg; border = c.townBorder; shape = 'rect_mid';
             } else {
+                // 这里对应 level: 'village'
                 bg = c.villageBg; border = c.villageBorder; shape = 'circle';
             }
 
@@ -482,6 +513,7 @@ const MapView = {
             ctx.strokeStyle = border;
             ctx.lineWidth = 2 / scale;
 
+            // 绘制形状
             if (shape === 'circle') {
                 ctx.beginPath();
                 ctx.arc(t.x + t.w/2, t.y + t.h/2, t.w/2, 0, Math.PI*2);
@@ -492,15 +524,15 @@ const MapView = {
                 if (t.level === 'city') {
                     ctx.lineWidth = 4 / scale;
                     ctx.strokeRect(t.x, t.y, t.w, t.h);
-                    ctx.lineWidth = 1 / scale;
-                    ctx.strokeRect(t.x + 2/scale, t.y + 2/scale, t.w - 4/scale, t.h - 4/scale);
                 } else {
                     ctx.strokeRect(t.x, t.y, t.w, t.h);
                 }
             }
 
+            // 绘制文字
             ctx.fillStyle = "#000";
-            const fontSize = this.camera.level === 'world' ? 40 : (t.level === 'village' ? 16 : 24);
+            // 全览模式字大一些，局部模式下村庄字小一些
+            const fontSize = this.camera.level === 'world' ? 60 : (t.level === 'village' ? 36 : 44);
             ctx.font = `bold ${fontSize}px Kaiti`;
             ctx.fillText(t.name, t.x + t.w/2, t.y + t.h/2);
         });
@@ -508,12 +540,44 @@ const MapView = {
 
     _drawPlayer: function(ctx) {
         if (!window.player) return;
+
+        // 1. 兼容性处理：优先读取 player.coord，其次读取 player.x/y
+        const p = window.player;
+        const px = (p.coord && p.coord.x !== undefined) ? p.coord.x : p.x;
+        const py = (p.coord && p.coord.y !== undefined) ? p.coord.y : p.y;
+
+        if (px === undefined || py === undefined) return;
+
         const scale = this._getScale();
+
+        // 2. 动态计算半径：确保在屏幕上始终显示为 6px 半径的圆点
+        // 公式：世界半径 = 屏幕像素 / 缩放比例
+        const screenRadius = 6;
+        const worldRadius = screenRadius / scale;
+
+        ctx.save(); // 保存状态
+
+        // 绘制红点
         ctx.beginPath();
-        const radius = this.camera.level === 'world' ? 15 : 8;
-        ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
-        ctx.fillStyle = "#d50000"; ctx.fill();
-        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2 / scale; ctx.stroke();
+        ctx.arc(px, py, worldRadius, 0, Math.PI*2);
+        ctx.fillStyle = "#d50000"; // 鲜艳的红色
+        ctx.fill();
+
+        // 绘制白色描边 (防止在红色地形上看不清)
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2 / scale; // 保持屏幕上2px的边框宽度
+        ctx.stroke();
+
+        // 绘制外圈光晕 (仅在全览模式下显示，方便寻找)
+        if (this.camera.level === 'world') {
+            ctx.beginPath();
+            ctx.arc(px, py, worldRadius * 2.5, 0, Math.PI*2);
+            ctx.strokeStyle = "rgba(213, 0, 0, 0.4)"; // 半透明红圈
+            ctx.lineWidth = 2 / scale;
+            ctx.stroke();
+        }
+
+        ctx.restore();
     },
 
     // 【核心修改6】修正摄像机边界限制，允许移动到 5100

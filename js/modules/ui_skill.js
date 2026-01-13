@@ -140,28 +140,32 @@ const UISkill = {
 
     showModal: function() {
         const title = "修仙技艺";
-        const contentHtml = `
-            <div class="skill_container">
-                <div class="skill_library">
-                    <div class="skill_tabs">
-                        <button id="tab_body" class="skill_tab_btn active" onclick="UISkill.switchTab('body')">外功</button>
-                        <button id="tab_cultivation" class="skill_tab_btn" onclick="UISkill.switchTab('cultivation')">内功</button>
-                        <button id="tab_life" class="skill_tab_btn" onclick="UISkill.switchTab('life')">生活技艺</button>
-                    </div>
-                    <div id="skill_list_content" 
-                         onclick="UISkill.onListClick(event)" 
-                         onmouseover="UISkill.onListHover(event)" 
-                         onmouseout="UISkill.onListOut(event)"
-                         onmousemove="UISkill.onListMove(event)">
-                    </div>
-                </div>
 
-                <div class="skill_slots_panel">
-                    <div class="slots_header">当前运功</div>
-                    <div id="slots_dynamic_container" class="slots_container"></div>
+        // --- 修改点：根据当前 tab 动态计算 class ---
+        const getTabClass = (tab) => this.currentTab === tab ? "skill_tab_btn active" : "skill_tab_btn";
+
+        const contentHtml = `
+        <div class="skill_container">
+            <div class="skill_library">
+                <div class="skill_tabs">
+                    <button id="tab_body" class="${getTabClass('body')}" onclick="UISkill.switchTab('body')">外功</button>
+                    <button id="tab_cultivation" class="${getTabClass('cultivation')}" onclick="UISkill.switchTab('cultivation')">内功</button>
+                    <button id="tab_life" class="${getTabClass('life')}" onclick="UISkill.switchTab('life')">生活技艺</button>
+                </div>
+                <div id="skill_list_content" 
+                     onclick="UISkill.onListClick(event)" 
+                     onmouseover="UISkill.onListHover(event)" 
+                     onmouseout="UISkill.onListOut(event)"
+                     onmousemove="UISkill.onListMove(event)">
                 </div>
             </div>
-        `;
+
+            <div class="skill_slots_panel">
+                <div class="slots_header">当前运功</div>
+                <div id="slots_dynamic_container" class="slots_container"></div>
+            </div>
+        </div>
+    `;
 
         if (window.showGeneralModal) {
             window.showGeneralModal(title, contentHtml, null, "modal_skill", 90, 85);

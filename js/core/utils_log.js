@@ -113,7 +113,52 @@ const LogManager = {
             } catch (e) {}
         }, 1000);
     },
+// 新增：带 UI 交互的清空方法
+    uiClear: function() {
+        const title = "焚毁记录";
+        const content = `
+            <div style="text-align:center; padding:20px; font-family:'Kaiti'; line-height:1.6;">
+                <p style="font-size:20px; color:#3e2723; margin-bottom:10px;">确定要将过往传闻悉数焚毁吗？</p>
+                <p style="font-size:16px; color:#888;">此举将使尘缘尽散，不可追回。</p>
+            </div>
+        `;
 
+        const confirmCallbackName = 'confirm_clear_logs_cb';
+        window[confirmCallbackName] = () => {
+            // 1. 执行清空逻辑
+            this.clear();
+
+            // 2. 视觉反馈
+            if (window.showToast) window.showToast("往事已随风消散...");
+            if (this.el) {
+                this.el.innerHTML = '<div style="color:#bbb; font-size:16px; text-align:center; margin-top:20px; font-style:italic;">—— 旧闻已去，新章待续 ——</div>';
+            }
+
+            // 3. 【关键：关闭弹窗】
+            if (window.closeModal) window.closeModal();
+
+            // 4. 清理全局函数
+            delete window[confirmCallbackName];
+        };
+
+        // 按钮样式（保留之前的红色警告样式）
+        const footerHtml = `
+            <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+                <button class="ink_btn_medium" onclick="window.closeModal()" 
+                        style="background:#f5f5f5; color:#666; border:1px solid #ccc; cursor:pointer; padding:6px 15px; font-family:'Kaiti';">
+                    再想想
+                </button>
+                <button class="ink_btn_medium" onclick="window['${confirmCallbackName}']()" 
+                        style="background:#a94442; color:#fff; border:1px solid #8b0000; cursor:pointer; padding:6px 15px; font-weight:bold; border-radius:4px; font-family:'Kaiti';">
+                    确认焚毁
+                </button>
+            </div>
+        `;
+
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            window.UtilsModal.showInteractiveModal(title, content, footerHtml, "modal_clear_log", 40, 30);
+        }
+    },
     clear: function() {
         if (this.el) this.el.innerHTML = '';
         this.cache = [];

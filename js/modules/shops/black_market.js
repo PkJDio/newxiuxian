@@ -1,10 +1,5 @@
-// js/modules/shops/inn.js
-// 客栈功能模块 v2.8 (适配新版弹窗管理：DOM对象操作 + 局部刷新优化)
-//console.log("加载 黑市模块");
-
-
-
-
+// js/modules/shops/black_market.js
+// 黑市功能模块 v2.9 (UI风格重构：适配客栈亮色风格)
 
 const BlackMarket = {
     currentStock: [],
@@ -16,7 +11,7 @@ const BlackMarket = {
         this.currentTown = town;
         this._generateStock(town);
         this.uiBuy(); // 直接打开购买页面
-        // 【新增】触发集市引导
+        // 触发集市引导
         if (window.UITutorial) UITutorial.checkBuilding('market');
     },
 
@@ -24,13 +19,12 @@ const BlackMarket = {
         if (!window.getSeededRandom || !player) return;
 
         const monthIndex = player.time.month;
-        // 【要求2】Key抬头叫 blackShop_
         const shopKey = `blackShop_${town.id}_${monthIndex}`;
 
-        // 【要求3】种类10-30，总数10-50，最高稀有度6
+        // 种类10-30，总数10-50，最高稀有度6
         let config = { minType: 10, maxType: 30, minTotal: 10, maxTotal: 50, maxRarity: 6 };
 
-        // 获取所有物品（不再过滤食物，而是所有物品）
+        // 获取所有物品
         const allItems = Object.values(window.GAME_DB.items || {});
         const validItems = allItems.filter(item => {
             const r = item.rarity || 1;
@@ -51,7 +45,7 @@ const BlackMarket = {
         let targetTotalQty = Math.floor(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
-        // 【要求3】稀有度配比
+        // 稀有度配比
         const rarityWeights = { 1: 100, 2: 200, 3: 300, 4: 50, 5: 10, 6: 1 };
 
         const scoredItems = validItems.map(item => {
@@ -91,11 +85,7 @@ const BlackMarket = {
         this.currentStock.sort((a, b) => (b.item.rarity || 1) - (a.item.rarity || 1));
     },
 
-
-
-    // ================= 购买界面 =================
-    // 渲染购买界面
-    // ================= 购买界面 (修复版：解决重开失效问题) =================
+    // ================= 购买界面 (亮色风格修复版) =================
     uiBuy: function() {
         if (!this.currentStock || this.currentStock.length === 0) {
             window.showToast("货郎：今晚没捞到什么好宝贝，客官请回吧。");
@@ -107,12 +97,13 @@ const BlackMarket = {
             ? SKILL_CONFIG.levelNames
             : ["未入门", "入门", "进阶", "大成"];
 
-        // 1. 生成列表 HTML (保持逻辑不变)
+        // 1. 生成列表 HTML
         let listHtml = this.currentStock.map((entry, index) => {
             const item = entry.item;
             const isSoldOut = entry.qty <= 0;
             const canAfford = player.money >= entry.price;
-            const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#eee';
+            // 获取稀有度颜色，如果没有配置则给一个默认深色
+            const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
 
             let effectTags = '';
             if (item.effects) {
@@ -144,7 +135,8 @@ const BlackMarket = {
                 });
                 effectTags = tags.join('');
             }
-            // 【新增】获取物品类型中文名称
+
+            // 获取物品类型中文名称
             const typeMap = (window.TYPE_MAPPING) ? window.TYPE_MAPPING : {
                 "weapon": "兵器", "head": "头部", "body": "身体", "feet": "足部",
                 "mount": "坐骑", "pill": "丹药", "book": "秘籍", "food": "食物",
@@ -154,7 +146,7 @@ const BlackMarket = {
 
             let btnText = "购买";
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
-            let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer;`;
+            let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer; text-shadow: 0 1px 1px rgba(0,0,0,0.3);`;
 
             if (isSoldOut) {
                 btnText = "售罄";
@@ -164,28 +156,28 @@ const BlackMarket = {
                 btnStyle = `${btnBase} background: #e0e0e0; border-color: #bdbdbd; color: #9e9e9e; cursor: not-allowed;`;
             }
 
+            // 【风格修改】使用亮色背景 (斑马纹 #fafafa / #fff)
             return `
-        <div id="market_panel_main" class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #333; background:${index % 2 === 0 ? '#222' : '#1a1a1a'}; transition: background 0.2s;">
-            <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
-                <div style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 5px rgba(255,255,255,0.5);">
-                    <span style="font-size:18px; color:#ddd; font-weight:normal; text-shadow:none; margin-right:2px;">【${typeName}】</span>${item.name}
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index % 2 === 0 ? '#fafafa' : '#fff'}; transition: background 0.2s;">
+                    <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="color:${color}; font-weight:bold; font-size: 21px;">
+                            <span style="font-size:18px; color:#555; font-weight:normal; margin-right:2px;">【${typeName}】</span>${item.name}
+                        </div>
+                        <div>${effectTags}</div>
+                        <div style="font-size:17px; color:#888; font-style: italic;">${item.desc || '珍稀秘宝'}</div>
+                    </div>
+                    <div style="width:120px; text-align:right; margin-right: 20px; flex-shrink:0;">
+                        <div style="color:#d84315; font-weight:bold; font-size: 20px;">${entry.price} 文</div>
+                        <div style="font-size:16px; color:${isSoldOut ? 'red' : '#999'};">库存: ${entry.qty}</div>
+                    </div>
+                    <div style="width:90px; text-align:right; flex-shrink:0;">
+                        <button style="${btnStyle}" ${isSoldOut || !canAfford ? '' : `onclick="BlackMarket.handleBuy(${index})"`}>${btnText}</button>
+                    </div>
                 </div>
-                <div>${effectTags}</div>
-                <div style="font-size:15px; color:#aaa; font-style: italic;">${item.desc || '珍稀秘宝'}</div>
-            </div>
-            <div style="width:120px; text-align:right; margin-right: 20px; flex-shrink:0;">
-                <div style="color:#ffd54f; font-weight:bold; font-size: 20px;">${entry.price} 文</div>
-                <div style="font-size:16px; color:${isSoldOut ? '#f44336' : '#888'};">库存: ${entry.qty}</div>
-            </div>
-            <div style="width:90px; text-align:right; flex-shrink:0;">
-                <button style="${btnStyle}" ${isSoldOut || !canAfford ? '' : `onclick="BlackMarket.handleBuy(${index})"`}>${btnText}</button>
-            </div>
-        </div>
-    `;
+            `;
         }).join('');
 
-        // 2. 【核心修复逻辑】
-        // 检查当前 modalBody 是否在文档中，且是否真的可见（未被 hidden 类隐藏）
+        // 2. 检查并执行局部刷新
         const isModalVisible = this.modalBody &&
             document.body.contains(this.modalBody) &&
             !this.modalBody.closest('.modal_overlay')?.classList.contains('hidden');
@@ -198,17 +190,17 @@ const BlackMarket = {
                 listContainer.innerHTML = listHtml;
                 moneyEl.innerText = `💰 ${player.money}`;
                 requestAnimationFrame(() => { listContainer.scrollTop = scrollTop; });
-                return; // 成功局部刷新，拦截后面的初始化逻辑
+                return;
             }
         }
 
-        // 3. 全量刷新渲染 (如果上面没 return，说明需要重新打开窗口)
+        // 3. 全量刷新渲染 (亮色风格容器)
         const html = `
-            <div id="black-buy-root" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#1a1a1a; color:#eee; font-family:Kaiti;">
-                <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #444; display:flex; justify-content:space-between; align-items: center; background: #252525;">
-                    <span style="font-size: 24px; font-weight: bold; color: #ffb74d;">🌙 秘密黑市</span>
+            <div id="black-buy-root" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
+                <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                    <span style="font-size: 24px; font-weight: bold; color: #333;">🌙 秘密黑市</span>
                     <div style="display:flex; align-items:center; gap: 20px;">
-                        <span id="black-buy-money" style="color:#ffd54f; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                        <span id="black-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
                     </div>
                 </div>
                 <div id="black-buy-list" style="flex:1; overflow-y:auto; padding:0;">
@@ -250,13 +242,11 @@ const BlackMarket = {
             if (window.showToast) window.showToast("金钱不足！");
         }
     }
-
 };
 
 // 注册到系统
 if (window.ShopSystem) {
     ShopSystem.register("黑市", BlackMarket);
 }
-
 
 window.BlackMarket = BlackMarket;

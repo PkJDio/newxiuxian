@@ -110,12 +110,16 @@ const UIBag = {
     },
 
     toggleItemSelection: function(index) {
-        if (this.selectedIndices.has(index)) {
-            this.selectedIndices.delete(index);
+        // 获取当前格子的物品数据
+        const item = player.inventory[index];
+        if (!item || !item.sid) return;
+
+        const sid = item.sid;
+        if (this.selectedIndices.has(sid)) {
+            this.selectedIndices.delete(sid);
         } else {
-            this.selectedIndices.add(index);
+            this.selectedIndices.add(sid);
         }
-        // 局部刷新：只更新选中状态样式，不重绘整个 Grid（如果需要极致优化可以这样做，但这里为了简单先 refresh）
         this.refresh();
     },
 
@@ -148,6 +152,7 @@ const UIBag = {
     _doBatchDiscard: function() {
         window.closeModal();
         if (window.UtilsItem && UtilsItem.discardMultipleItems) {
+            // 此时 this.selectedIndices 里面存的全是 sid 了
             UtilsItem.discardMultipleItems(this.selectedIndices);
         }
         this.selectionMode = false;
@@ -262,12 +267,13 @@ const UIBag = {
 
         // 使用 map 生成 HTML 数组并 join
         const html = player.inventory.map((slot, index) => {
-            const item = GAME_DB.items.find(i => i.id === slot.id);
+            const item = player.inventory.find(i => i.id === slot.id);
             if (!item) return '';
 
             const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
             const rarityColor = (window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
-            const isSelected = this.selectedIndices.has(index) ? 'selected' : '';
+            const sid = slot.sid; // 获取唯一ID
+            const isSelected = this.selectedIndices.has(sid) ? 'selected' : ''; // 改用 sid 判断
             const isConsumableEquipped = player.consumables && player.consumables.includes(item.id);
             const markHtml = isConsumableEquipped ? `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>` : '';
 
@@ -471,13 +477,13 @@ const UIBag = {
                 const carriedIndex = window.player.consumables ? window.player.consumables.indexOf(item.sid) : -1;
                 if (carriedIndex !== -1) btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${carriedIndex})">解除携带</button>`;
                 else btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${sid}')">随身携带</button>`;
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${sid})">服用</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem('${sid}')">服用</button>`;
             } else if (item.type === 'book') {
                 btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open('${sid}')">研读</button>`;
             } else if (['food','foodMaterial','herb'].includes(item.type)) {
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${sid})">使用</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem('${sid}')">使用</button>`;
             }
-            btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.removeItem(${sid})">丢弃</button>`;
+            btnsHtml += `<button class="bag_btn_danger" onclick="UtilsItem.removeItem('${sid}')">丢弃</button>`;
         }
         else if (context.type === 'equip') {
             const slotKey = context.key;
@@ -487,10 +493,10 @@ const UIBag = {
         else if (context.type === 'consumable') {
             const slotIdx = context.index;
             console.log('slotIdx', slotIdx)
-            btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable(${slotIdx})">解除携带</button>`;
+            btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable('${slotIdx}')">解除携带</button>`;
             const bagIdx = player.inventory.findIndex(s => s.id === item.id);
             if (bagIdx !== -1) {
-                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem(${bagIdx})">服用</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem('${bagIdx}')">服用</button>`;
             }
         }
 

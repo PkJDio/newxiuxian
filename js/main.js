@@ -131,7 +131,9 @@ function startNewGame() {
   newPlayer.generation = 1;
   newPlayer.money = 100;
   newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
-
+    newPlayer.danger = 0;      // 危险度 (0-100)
+    newPlayer.need_kill = 0;   // 稳定期计数器 (0-100)
+    newPlayer.timeStart = 0;   // 确保初始阶段为0
   // 设定初始位置
   newPlayer.location = "t_xianyang"; // 默认咸阳
 

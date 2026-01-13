@@ -38,7 +38,7 @@ const TaskDelivery = {
         const dist = targetTown._combatDist;
 
         // 5. 奖励与期限
-        const reward = Math.floor(dist * 5);
+        const reward = Math.floor(dist * 3);
         let daysLimit = 7;
 
         // 返回的对象必须包含所有主控模块需要的字段

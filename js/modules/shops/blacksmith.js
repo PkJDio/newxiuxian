@@ -246,7 +246,7 @@ const BlacksmithShop = {
             if (!slot) return;
             const itemId = slot.id || slot;
             const count = slot.count || 1;
-            let itemData = window.GAME_DB.equipments.find(i => i.id === itemId) || window.GAME_DB.equipments?.[itemId];
+            let itemData = slot;
 
             if (itemData && itemData.value) {
                 // 【修改点】判断价格倍率

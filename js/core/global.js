@@ -182,7 +182,17 @@ function recalcStats() {
             }
         }
     }
+// ================= D.2 状态自动维护 (饱食度逻辑) =================
+    // 逻辑：当饱食度回升（大于30）时，自动解除“饥饿”BUFF
+    if (player.status && player.status.hunger > 30) {
+        if (player.buffs && player.buffs['debuff_hunger']) {
+            console.log("✨ 饱食度回升，移除饥饿状态");
+            delete player.buffs['debuff_hunger'];
 
+            // 如果你有通用的刷新左侧面板的方法，可以在这里调用，例如：
+            // renderBuffs();
+        }
+    }
     // ================= E. 状态惩罚 (疲劳/饥饿) =================
     let efficiency = 1.0;
     const hasFatigue = player.buffs && player.buffs['debuff_fatigue'];

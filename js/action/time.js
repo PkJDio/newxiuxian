@@ -172,6 +172,7 @@ const TimeSystem = {
         if (!player || !player.buffs) return;
         const maxFatigue = player.derived.fatigueMax || 100;
 
+        // 1. 疲惫 BUFF 处理
         if (player.status.fatigue >= maxFatigue) {
             if (!player.buffs['debuff_fatigue']) {
                 player.buffs['debuff_fatigue'] = { name: "疲惫", attr: "全属性", val: "减半", color: "#d32f2f", days: 9999, isDebuff: true };
@@ -181,27 +182,151 @@ const TimeSystem = {
             delete player.buffs['debuff_fatigue'];
         }
 
+        // 2. 饥饿 BUFF 处理 【核心逻辑修改处】
+        // 如果当前饱食度为0，且没有饥饿BUFF，则添加BUFF
         if (player.status.hunger <= 0) {
             if (!player.buffs['debuff_hunger']) {
                 player.buffs['debuff_hunger'] = { name: "饥饿", attr: "全属性", val: "减半", color: "#d32f2f", days: 9999, isDebuff: true };
                 if(window.showToast) window.showToast("腹中空空...");
             }
-        } else if (player.buffs['debuff_hunger']) {
+        }
+        // 如果存在饥饿BUFF，且饱食度回升到了 30 以上，则解除
+        else if (player.buffs['debuff_hunger'] && player.status.hunger > 30) {
             delete player.buffs['debuff_hunger'];
+            if(window.showToast) window.showToast("饥饿感消散了...");
+
+            // 同步刷新 UI (如果存在)
+            if (window.UI && window.UI.renderBuffs) window.UI.renderBuffs();
         }
     },
 
     _onNewDay: function() {
-        // 1. 刷新悬赏
-        if (window.BountyBoard && typeof window.BountyBoard.checkAllTasksStatus === 'function') {
-            window.BountyBoard.checkAllTasksStatus();
-        }
+        // 1. 原有逻辑
+        if (window.BountyBoard) window.BountyBoard.checkAllTasksStatus();
 
         // 2. 检查历史大事件 (Major Events)
         this._checkMajorEvents();
 
         // 3. 检查小事件/传闻 (Minor Events)
         this._checkMinorEvents();
+
+        // 2. 更新危险度稳定期
+        this._updateDangerStability();
+
+        // 4. 检查怪物来袭
+        this._checkEnemyRaid();
+    },
+    /**
+     * 更新危险度稳定期逻辑
+     */
+    _updateDangerStability: function() {
+        if (!player) return;
+        if (player.danger === undefined) player.danger = 0;
+        if (player.need_kill === undefined) player.need_kill = 0;
+
+        // 每天增加 20
+        player.need_kill += 20;
+
+        // 如果 5 天内没击杀怪物导致累计到 100，则危险度清零
+        if (player.need_kill >= 100) {
+            player.danger = 0;
+            player.need_kill = 0;
+            if(window.LogManager) window.LogManager.add("<span style='color:green'>[环境] 周遭的杀气似乎消散了，你感到一阵轻松。</span>");
+        }
+    },
+
+    /**
+     * 怪物来袭判断
+     */
+    _checkEnemyRaid: function() {
+        if (!player || player.timeStart < 1) return;
+
+        // A. 第一个大事件触发后的第二天：剧情必发来袭
+        // 我们用 flag 记录是否已处理过剧情来袭
+        if (player.timeStart === 1 && !player.flags?.scripted_raid_done) {
+            if (!player.flags) player.flags = {};
+            this._triggerScriptedRaid();
+            player.flags.scripted_raid_done = true;
+            return;
+        }
+
+        // B. 每日随机来袭 (100 - 危险度 的概率)
+        const raidChance = 100 - (player.danger || 0);
+        if (Math.random() * 100 < raidChance) {
+            this._triggerRandomRaid();
+        }
+    },
+
+    /**
+     * 剧情必发来袭 (多波次)
+     */
+    _triggerScriptedRaid: function() {
+        const danger = player.danger || 0;
+        // 波数 = 3 - 危险度/30 (向下取整)
+        let waves = Math.floor(3 - danger / 30);
+        if (waves < 1) waves = 1;
+
+        if (window.LogManager) window.LogManager.add(`<span style='color:red; font-weight:bold;'>[警报] 灵气异动引发了周围怪物的疯狂，它们向你冲过来了！</span>`);
+
+        // 构建波次序列
+        let waveConfig = [];
+        if (waves === 1) waveConfig = ["boss"];
+        else if (waves === 2) waveConfig = ["elite", "boss"];
+        else if (waves === 3) waveConfig = ["minion", "elite", "boss"];
+
+        this._startRaidChain(waveConfig);
+    },
+
+    /**
+     * 随机来袭 (单波次)
+     */
+    _triggerRandomRaid: function() {
+        const ranks = ["minion", "elite", "boss"];
+        const targetRank = ranks[Math.floor(Math.random() * ranks.length)];
+
+        if (window.LogManager) window.LogManager.add(`[传闻] 荒野中似乎有危险生物正在逼近...`);
+        this._startRaidChain([targetRank]);
+    },
+
+    /**
+     * 执行来袭战斗链
+     */
+    _startRaidChain: function(ranks) {
+        if (ranks.length === 0) return;
+
+        const currentRank = ranks.shift();
+        const enemy = UtilsEnemy.createEnemyByRank(currentRank);
+
+        if (!enemy) return;
+
+        // 锁定战斗模态，无法逃跑
+        setTimeout(() => {
+            if (window.ModalManager && window.ModalManager.showCombatModal) {
+                window.ModalManager.showCombatModal(enemy, () => {
+                    // 胜利回调：如果还有下一波，继续触发
+                    if (ranks.length > 0) {
+                        if (window.LogManager) window.LogManager.add(`[战斗] 还没结束，又一波怪物出现了！`);
+                        this._startRaidChain(ranks);
+                    }
+                }, { canEscape: false }); // 传入配置禁止逃跑
+            }
+        }, 1000);
+    },
+
+    /**
+     * 辅助：根据DataTimeline检查并更新阶段
+     */
+    _checkMajorEvents: function() {
+        if (typeof DataTimeline === 'undefined') return;
+        const t = player.time;
+        DataTimeline.Major.forEach(evt => {
+            if (t.year === evt.year && t.month === evt.month && t.day === evt.day) {
+                if (player.timeStart < evt.stage) {
+                    player.timeStart = evt.stage;
+                    // 这里通常会触发之前的 ModalManager.showEventModal(evt.title, evt.desc...)
+                }
+            }
+        });
     },
     /**
      * 检查并触发【历史大事件】

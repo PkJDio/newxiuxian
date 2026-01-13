@@ -187,5 +187,24 @@ const UtilsEnemy = {
         return "1_1";
     }
 };
+UtilsEnemy.createEnemyByRank = function(rank) {
+    if (!window.enemies || window.enemies.length === 0) return null;
 
+    // 1. 获取当前区域
+    const checkX = (window.player?.x || 400); // 默认坐标
+    const checkY = (window.player?.y || 300);
+    const regionId = this._getRegionId(checkX, checkY);
+
+    // 2. 筛选符合条件的模版
+    const pool = window.enemies.filter(e =>
+        (e.template || "minion") === rank &&
+        (e.region === 'all' || e.region === regionId)
+    );
+
+    const template = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : window.enemies[0];
+
+    // 3. 构建敌人实例 (复用 createRandomEnemy 里的构建逻辑，这里简化展示)
+    // 建议把 createRandomEnemy 中从 template 转换到 实例对象的逻辑 抽成一个公共私有函数 _buildEnemyInstance
+    return this._buildEnemyInstance(template, checkX, checkY);
+};
 window.UtilsEnemy = UtilsEnemy;

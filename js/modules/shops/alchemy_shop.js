@@ -243,7 +243,7 @@ const AlchemyShop = {
         inventory.forEach((slot, index) => {
             if (!slot) return;
             const itemId = slot.id || slot;
-            let itemData = window.GAME_DB.items.find(i => i.id === itemId) || window.GAME_DB.items?.[itemId];
+            let itemData = slot;
 
             if (itemData && itemData.value) {
                 // 【要求】灵草类 0.8，其他 0.5

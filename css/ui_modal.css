@@ -1,5 +1,20 @@
 /* css/ui_modal.css - 弹窗系统样式 (适配自定义宽高 + 大地图优化) */
+/* 红色警告按钮样式 */
+.ink_btn_danger {
+    background: #a94442 !important;
+    color: #ffffff !important;
+    border: 1px solid #8b0000 !important;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-family: "KaiTi";
+    border-radius: 4px;
+    transition: all 0.2s;
+}
 
+.ink_btn_danger:hover {
+    background: #c62828 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 /* --- 1. 全屏遮罩层 --- */
 .modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;

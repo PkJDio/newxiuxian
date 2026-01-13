@@ -1,9 +1,9 @@
 /**
  * js/modules/ui_cook.js
- * 烹饪 UI 模块 - 纯净水墨交互版
+ * 烹饪 UI 模块 - 技艺增强联动版
  */
-const UICook = {
-    selectedMaterials: [], // 当前选中的物品对象(含sid)
+let UICook = {
+    selectedMaterials: [],
     currentCookType: "Boiling",
 
     open: function() {
@@ -19,8 +19,17 @@ const UICook = {
             { id: "Frying", name: "油炸" }
         ];
 
+        // 获取当前境界显示
+        const levelData = window.UtilCook.getCookingLevelData();
+        const currentExp = (player.lifeSkills && player.lifeSkills.cooking) ? player.lifeSkills.cooking.exp : 0;
+
         const contentHtml = `
             <div class="ink_cook_root">
+                <div class="ink_cook_header" style="display:flex; justify-content:space-between; padding:10px 20px; background:rgba(0,0,0,0.03); border-bottom:1px solid #ddd; font-family:'Kaiti';">
+                    <span style="color:#5d4037;">境界：<b style="color:#d84315;">${levelData.name}</b></span>
+                    <span style="color:#5d4037;">技艺熟练：<b style="color:#d84315;">${currentExp}</b></span>
+                </div>
+
                 <div class="ink_cook_upper">
                     <div class="ink_preview_section">
                         <div class="ink_sub_title">▷ 预估所得</div>
@@ -54,7 +63,7 @@ const UICook = {
         `;
 
         if (window.UtilsModal) {
-            UtilsModal.showInteractiveModal("灶前参悟", contentHtml, null, "modal_cook", 800, 800);
+            UtilsModal.showInteractiveModal("灶前参悟", contentHtml, null, "modal_cook", 800, 850);
         }
         this._applyInkStyles();
         this.fullRefresh();
@@ -83,6 +92,20 @@ const UICook = {
         this.renderMaterialGrid();
         this.renderPotList();
         this.updateResultPreview();
+        this.updateHeaderInfo(); // 刷新顶部熟练度
+    },
+
+    // 动态更新境界文字
+    updateHeaderInfo: function() {
+        const levelData = window.UtilCook.getCookingLevelData();
+        const currentExp = (player.lifeSkills && player.lifeSkills.cooking) ? player.lifeSkills.cooking.exp : 0;
+        const header = document.querySelector('.ink_cook_header');
+        if (header) {
+            header.innerHTML = `
+                <span style="color:#5d4037;">境界：<b style="color:#d84315;">${levelData.name}</b></span>
+                <span style="color:#5d4037;">技艺熟练：<b style="color:#d84315;">${currentExp}</b></span>
+            `;
+        }
     },
 
     renderMaterialGrid: function() {
@@ -106,6 +129,7 @@ const UICook = {
 
     renderPotList: function() {
         const pot = document.getElementById('ink_pot_inventory');
+        if (!pot) return;
         document.getElementById('ink_pot_num').innerText = this.selectedMaterials.length;
         pot.innerHTML = this.selectedMaterials.map(m => `
             <div class="ink_pot_wrapper">
@@ -141,8 +165,9 @@ const UICook = {
             const hasLearned = player.cooking_info.includes(res.id);
             if (hasLearned) {
                 frame.innerHTML = `
-                    <div class="ink_res_item" onmouseover="UICook.showDetail('${res.id}', event)">
-                        <span class="ink_res_ico">🍖</span>
+                    <div class="ink_res_item" 
+                         onmouseover="UICook.showDetail('${res.id}', event)" 
+                         onmouseleave="if(window.hideTooltip) window.hideTooltip()"> <span class="ink_res_ico">🍖</span>
                         <div class="ink_res_info">
                             <div class="ink_res_name">${res.name}</div>
                             <div class="ink_res_desc">已参透此中滋味</div>
@@ -162,37 +187,60 @@ const UICook = {
             }
         }
     },
-
+    onListOut: function(e) {
+        // 无论鼠标移出的是卡片还是容器空白处，都调用全局隐藏函数
+        if (typeof hideTooltip === 'function') {
+            hideTooltip();
+        }
+    },
     onCookClick: function() {
+        // 调用核心逻辑，UtilCook.executeCook 内部已经处理了：
+        // 1. 食材扣除（包含节俭概率）
+        // 2. 熟练度增加
+        // 3. 概率双倍判定
+        // 4. 惊叹弹窗
         const result = window.UtilCook.executeCook(this.selectedMaterials, this.currentCookType);
-        if (result && result.success) {
-            const food = result.food;
-            this.selectedMaterials.forEach(m => window.UtilsItem.removeItem(m.sid, 1));
-            window.UtilsItem.addItem(food.id, 1);
-            if (!player.cooking_info.includes(food.id)) player.cooking_info.push(food.id);
-            if (window.showToast) window.showToast(`「${food.name}」已出锅`);
 
-            // 关键逻辑：用完的材料从鼎内移除
+        if (result && result.success) {
+            // 【新增】起锅成功瞬间，先强制隐藏可能存在的悬浮框
+            if (window.hideTooltip) window.hideTooltip();
+
+            const food = result.food;
+            const count = result.count; // 获取产出数量（可能是1或2）
+
+            // 产出物品添加
+            window.UtilsItem.addItem(food.id, count);
+
+            // 记录食谱
+            if (!player.cooking_info.includes(food.id)) player.cooking_info.push(food.id);
+            saveGame();
+            // 基础成功提示
+            if (window.showToast) {
+                window.showToast(`「${food.name}」x${count} 已出锅`);
+            }
+
+            // 刷新鼎内选中的材料状态：
+            // 这里的关键：因为可能触发了“食材不消耗”，我们要重新检查 inventory
             this.selectedMaterials = this.selectedMaterials.filter(m => {
                 const inv = player.inventory.find(slot => slot.sid === m.sid);
                 return inv && inv.count > 0;
             });
 
-            // 联动刷新：重新计算网格、鼎内列表和最重要的预览
+            // 联动刷新界面（包含顶部境界信息）
             this.fullRefresh();
         }
     },
 
     showDetail: function(id, e) {
         const item = foods.find(f => f.id === id);
-        if (item && window.UtilsTip) window.UtilsTip.show(item, e);
+        if (item && window.TooltipManager) window.TooltipManager.showShopItem(e, item.id);
     },
 
     _applyInkStyles: function() {
         if (document.getElementById('ink_pure_style')) return;
         const style = document.createElement('style');
         style.id = 'ink_pure_style';
-
+        // 原有样式代码...
         document.head.appendChild(style);
     }
 };

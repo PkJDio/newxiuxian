@@ -49,214 +49,197 @@ const SUB_REGIONS = {
 
 /* ================= 3. 地形配置 ================= */
 // 新增类型: grass (草原), desert (荒漠), ocean (大海)
+// js/data/data_world.js - 补充湖泊地形数据
+
 const TERRAIN_ZONES = [
-    /* === 1. 北方边疆 (y: 0-1700) === */
-    // 瀚海 (贝加尔湖)
-    { type: "river", name: "北海", x: [2267, 2833], y: [189, 378] },
-    // 蒙古大草原
-    { type: "grass", name: "漠北草原", x: [1511, 3022], y: [378, 1133] },
-    // 东北林海
-    { type: "mountain", name: "大兴安岭", x: [3022, 3211], y: [189, 1511] },
-    { type: "grass", name: "呼伦贝尔", x: [2644, 3022], y: [378, 944] },
+    /* ================= 1. 水系 (修正版：黄河入渤海) ================= */
+    { type: "river", name: "黄河上游", x: [800, 1400], y: [2400, 2350] },
+    { type: "river", name: "黄河(河套西)", x: [1350, 1400], y: [1350, 2350] },
+    { type: "river", name: "黄河(河套北)", x: [1400, 2400], y: [1350, 1400] },
+    { type: "river", name: "黄河(龙门段)", x: [2400, 2450], y: [1350, 2400] },
+    { type: "river", name: "黄河中游", x: [2400, 3300], y: [2400, 2450] },
+    { type: "river", name: "黄河下游", x: [3300, 3350], y: [1800, 2450] },
+    { type: "river", name: "渭水", x: [1800, 2550], y: [2550, 2600] },
+    { type: "river", name: "金沙江", x: [800, 1500], y: [3000, 3400] },
+    { type: "river", name: "长江(川江)", x: [1500, 2300], y: [3300, 3350] },
+    { type: "river", name: "长江下游", x: [2800, 3800], y: [3300, 3350] },
+    { type: "river", name: "珠江", x: [2500, 3200], y: [4200, 4400] },
+    { type: "river", name: "辽河", x: [3600, 3800], y: [1200, 1600] },
 
-    /* === 2. 西北/西域 (y: 1700附近) === */
-    // 塔克拉玛干沙漠
-    { type: "desert", name: "塔克拉玛干", x: [378, 1511], y: [1889, 2644] },
-    // 天山
-    { type: "mountain", name: "天山", x: [189, 1511], y: [1700, 1889] },
-    // 昆仑山
-    { type: "mountain", name: "昆仑山", x: [189, 1700], y: [2644, 2833] },
-    // 祁连山
-    { type: "mountain", name: "祁连山", x: [1322, 1889], y: [2267, 2456] },
-    // 河西走廊 (绿洲路)
-    { type: "grass", name: "河西牧场", x: [1511, 2078], y: [2361, 2550] },
+    /* ================= 2. 湖泊与大泽 (新增分类) ================= */
+    // 关中地区：始皇模拟仙境之作
+    { type: "lake", name: "兰池", x: [2100, 2300], y: [2500, 2550] },
 
-    /* === 3. 中原核心 (y: 1700-2833) === */
-    // 黄河几字弯
-    { type: "river", name: "黄河", x: [1889, 1983], y: [1889, 2267] }, // 上游
-    { type: "river", name: "黄河", x: [1983, 2928], y: [1889, 1983] }, // 河套顶端
-    { type: "river", name: "黄河", x: [2833, 2928], y: [1983, 2550] }, // 晋陕峡谷
-    { type: "river", name: "黄河", x: [2928, 3400], y: [2456, 2550] }, // 下游入海
+    // 西北地区：高山雪水汇聚
+    { type: "lake", name: "积石天池", x: [1000, 1200], y: [2200, 2350] },
 
-    // 秦岭
-    { type: "mountain", name: "秦岭", x: [1889, 2644], y: [2607, 2739] },
-    // 渭水 (关中)
-    { type: "river", name: "渭水", x: [2078, 2739], y: [2550, 2607] },
+    // 中原/赵地：古九泽之首
+    { type: "lake", name: "大陆泽", x: [2700, 2900], y: [1800, 2000] },
 
-    // 太行山
-    { type: "mountain", name: "太行山", x: [2739, 2833], y: [2078, 2456] },
+    // 齐鲁/东海：海边巨淀
+    { type: "lake", name: "巨淀湖", x: [3500, 3700], y: [2100, 2250] },
 
-    /* === 4. 南方/长江 (y: 2833-3400) === */
-    // 长江
-    { type: "river", name: "长江", x: [1700, 3400], y: [2928, 3117] },
-    // 洞庭/鄱阳
-    { type: "river", name: "云梦泽", x: [2456, 2739], y: [3117, 3306] },
-    // 巫山
-    { type: "mountain", name: "巫山", x: [2172, 2267], y: [2833, 3022] },
+    // 荆楚地区：灵气复苏的中心大泽
+    { type: "lake", name: "云梦大泽", x: [2300, 2800], y: [3100, 3500] },
+    { type: "lake", name: "洞庭湖", x: [2400, 2700], y: [3500, 3700] },
 
-    /* === 5. 岭南/西南 (y: 3400+) === */
-    // 五岭
-    { type: "mountain", name: "五岭", x: [2078, 2833], y: [3400, 3494] },
-    // 珠江
-    { type: "river", name: "珠江", x: [2267, 2833], y: [3589, 3683] },
-    // 西南大山
-    { type: "mountain", name: "横断山脉", x: [944, 1700], y: [2833, 3778] },
+    // 江南地区：水乡核心
+    { type: "lake", name: "震泽(太湖)", x: [3800, 4100], y: [3300, 3550] },
+    { type: "lake", name: "镜湖", x: [4200, 4350], y: [3600, 3750] },
 
-    /* === 6. 大海 (边缘) === */
-    // 东海
-    { type: "ocean", name: "东海", x: [3400, 5100], y: [2500, 3778] },
-    // 南海
-    { type: "ocean", name: "南海", x: [0, 5100], y: [3778, 5100] },
-    // 渤海
-    { type: "ocean", name: "渤海", x: [3022, 3400], y: [1889, 2267] },
-    { type: "ocean", name: "渤海", x: [3400, 5100], y: [1700, 2500] },
+    // 南岭地区：瘴气中的毒池
+    { type: "lake", name: "罗浮天池", x: [2700, 2900], y: [4150, 4300] },
 
-    /* === 7. 道路网 === */
-    // 秦直道
-    { type: "road", name: "秦直道", x: [2522, 2531], y: [1889, 2559] },
-    // 丝绸之路
-    { type: "road", name: "丝绸之路", x: [567, 2456], y: [2578, 2588] },
-    // 驰道 (向东)
-    { type: "road", name: "东方驰道", x: [2399, 3211], y: [2559, 2569] },
-    // 栈道 (入蜀)
-    { type: "road", name: "金牛道", x: [2040, 2049], y: [2739, 2928] }
+    /* ================= 3. 海洋 ================= */
+    { type: "ocean", name: "渤海", x: [3200, 5100], y: [1600, 2100] },
+    { type: "ocean", name: "东海", x: [4000, 5100], y: [2100, 4000] },
+    { type: "ocean", name: "南海", x: [2000, 5100], y: [4500, 5100] },
+
+    /* ================= 4. 山脉 (骨架) ================= */
+    { type: "mountain", name: "昆仑山脉", x: [200, 1500], y: [2400, 2800] },
+    { type: "mountain", name: "天山山脉", x: [200, 1500], y: [1200, 1500] },
+    { type: "mountain", name: "祁连山", x: [1000, 1600], y: [2000, 2200] },
+    { type: "mountain", name: "秦岭", x: [1600, 2600], y: [2650, 2850] },
+    { type: "mountain", name: "太行山", x: [2600, 2800], y: [1800, 2400] },
+    { type: "mountain", name: "泰山", x: [3400, 3600], y: [2200, 2400] },
+    { type: "mountain", name: "巫山", x: [2200, 2400], y: [3000, 3200] },
+    { type: "mountain", name: "南岭", x: [2400, 3200], y: [3900, 4100] },
+
+    /* ================= 5. 特殊地形 ================= */
+    { type: "desert", name: "大漠", x: [1200, 3000], y: [200, 1200] },
+    { type: "desert", name: "塔克拉玛干", x: [400, 1200], y: [1600, 2200] },
+    { type: "grass", name: "河套平原", x: [1500, 2300], y: [1400, 1700] },
+
+    /* ================= 6. 道路 ================= */
+    { type: "road", name: "秦直道", x: [2500, 2550], y: [1500, 2500] },
+    { type: "road", name: "东方驰道", x: [2800, 3800], y: [2600, 2650] },
+    { type: "road", name: "金牛道", x: [2250, 2300], y: [2700, 3000] }
 ];
 
 /* ================= 4. 城镇配置 (对应新坐标) ================= */
 const WORLD_TOWNS_PART_1 = [
-    // === 1. 关中 (帝都核心圈 Center: 2512, 2569) ===
-    { id: "t_xianyang", name: "咸阳", level: "city", x: 2512, y: 2569, w: 151, h: 113, subRegion: "r_c_1_1", desc: "大秦帝都，渭水之北，八水绕长安。" },
-    { id: "t_yong", name: "雍城", level: "city", x: 2342, y: 2569, w: 113, h: 113, subRegion: "r_c_1_1", desc: "秦国旧都，宗庙所在，穆公霸业之地。" },
-    { id: "t_chencang", name: "陈仓", level: "town", x: 1150, y: 1360, w: 76, h: 76, subRegion: "r_c_1_1", desc: "关中西大门，明修栈道暗度陈仓。" },
-    { id: "t_lantian", name: "蓝田", level: "town", x: 2607, y: 2739, w: 76, h: 76, subRegion: "r_c_1_1", desc: "美玉产地，军事重镇，秦楚蓝田之战。" },
-    { id: "t_meixian", name: "白家庄", level: "village", x: 2267, y: 2720, w: 57, h: 57, subRegion: "r_c_1_1", desc: "武安君白起故里，民风彪悍，尚武之乡。" },
-    { id: "t_liquan", name: "甘泉村", level: "village", x: 2456, y: 2399, w: 57, h: 57, subRegion: "r_c_1_1", desc: "泉水甘甜如醴，旁有甘泉宫遗址。" },
+    // === 帝都圈 (关中平原) ===
+    { id: "t_xianyang", name: "咸阳", level: "city", x: 2520, y: 2580, w: 160, h: 120, subRegion: "r_c_1_1", desc: "【大秦帝都】天下之中，八水绕长安，金城千里。" },
+    { id: "t_yong", name: "雍城", level: "city", x: 2300, y: 2550, w: 100, h: 100, subRegion: "r_c_1_1", desc: "秦国旧都，宗庙所在，穆公霸业肇始之地。" },
+    { id: "t_lantian", name: "蓝田", level: "town", x: 2650, y: 2750, w: 80, h: 80, subRegion: "r_c_1_1", desc: "秦岭北麓，美玉产地，扼守东南要道。" },
+    { id: "t_chencang", name: "陈仓", level: "town", x: 2150, y: 2600, w: 80, h: 80, subRegion: "r_c_1_1", desc: "关中西大门，暗度陈仓之地。" },
+    { id: "t_weinan", name: "渭南", level: "town", x: 2700, y: 2530, w: 60, h: 60, subRegion: "r_c_1_1", desc: "渭水之南，粮草转运要津。" },
+    { id: "t_meixian", name: "郿县", level: "village", x: 2250, y: 2650, w: 50, h: 50, subRegion: "r_c_1_1", desc: "白起故里，民风彪悍。" },
+    { id: "t_liquan", name: "甘泉宫", level: "village", x: 2520, y: 2400, w: 50, h: 50, subRegion: "r_c_1_1", desc: "林木葱郁，秦皇避暑祭天胜地。" },
+    { id: "t_huayin", name: "华阴", level: "village", x: 2750, y: 2620, w: 50, h: 50, subRegion: "r_c_1_1", desc: "华山脚下，游侠聚集之地。" },
 
-    // === 2. 豫州/三晋 (East of Guanzhong) ===
-    { id: "t_hangu", name: "函谷关", level: "town", x: 2758, y: 2569, w: 94, h: 94, subRegion: "r_c_2_1", desc: "天下第一险关，锁钥重地，一夫当关。" },
-    { id: "t_luoyang", name: "洛阳", level: "city", x: 2928, y: 2569, w: 132, h: 113, subRegion: "r_c_2_1", desc: "周室故都，天下之中，九鼎所在。" },
-    { id: "t_xinzheng", name: "新郑", level: "town", x: 2984, y: 2739, w: 94, h: 94, subRegion: "r_c_2_1", desc: "韩国故都，法家申不害变法之地。" },
-    { id: "t_handan", name: "邯郸", level: "city", x: 2984, y: 2399, w: 113, h: 113, subRegion: "r_c_2_0", desc: "赵国故都，胡服骑射，慷慨悲歌。" },
-    { id: "t_jinyang", name: "晋阳", level: "city", x: 2796, y: 2267, w: 113, h: 113, subRegion: "r_c_2_0", desc: "赵氏龙兴之地，太原古城，汾水之畔。" },
-    { id: "t_pingyang", name: "平阳", level: "town", x: 2644, y: 2418, w: 76, h: 76, subRegion: "r_c_2_1", desc: "尧都平阳，河东大郡。" },
-    { id: "t_shangdang", name: "上党", level: "town", x: 2796, y: 2437, w: 76, h: 76, subRegion: "r_c_2_0", desc: "天下之脊，地势高险，长平之战前线。" },
-    { id: "t_changping", name: "冤魂谷", level: "village", x: 2890, y: 2474, w: 57, h: 57, subRegion: "r_c_2_0", desc: "昔日长平古战场，夜半常闻兵戈之声。" },
-
-    // === 3. 齐鲁 (Far East) ===
-    { id: "t_linzi", name: "临淄", level: "city", x: 3306, y: 2418, w: 132, h: 113, subRegion: "r_e_0_1", desc: "齐国故都，稷下学宫，海内第一繁华。" },
-    { id: "t_qufu", name: "曲阜", level: "town", x: 3173, y: 2607, w: 94, h: 94, subRegion: "r_e_0_1", desc: "鲁国故都，孔圣故里，礼乐之邦。" },
-    { id: "t_langya", name: "琅琊", level: "town", x: 3400, y: 2607, w: 94, h: 94, subRegion: "r_e_0_1", desc: "东海胜境，秦皇勒石，徐福出海处。" },
-    { id: "t_dengzhou", name: "芝罘渔村", level: "village", x: 3494, y: 2361, w: 57, h: 57, subRegion: "r_e_0_1", desc: "半岛顶端，始皇三次登临，海市蜃楼。" },
-    { id: "t_taishan", name: "岱麓村", level: "village", x: 3117, y: 2493, w: 57, h: 57, subRegion: "r_e_0_1", desc: "泰山脚下的古村落，历代封禅必经之地。" },
-    { id: "t_jimo", name: "即墨", level: "town", x: 3457, y: 2493, w: 76, h: 76, subRegion: "r_e_0_1", desc: "齐国东都，田单火牛阵复国。" }
+    // === 三晋之地 (山西/河南北部) ===
+    { id: "t_hangu", name: "函谷关", level: "town", x: 2850, y: 2600, w: 90, h: 90, subRegion: "r_c_2_1", desc: "【天下第一关】一夫当关，万夫莫开，锁钥重地。" },
+    { id: "t_luoyang", name: "洛阳", level: "city", x: 3050, y: 2620, w: 120, h: 100, subRegion: "r_c_2_1", desc: "周室故都，九鼎所在，天下交通枢纽。" },
+    { id: "t_jinyang", name: "晋阳", level: "city", x: 2900, y: 2100, w: 100, h: 100, subRegion: "r_c_2_0", desc: "赵国龙兴之地，汾水之畔，太原古城。" },
+    { id: "t_handan", name: "邯郸", level: "city", x: 3200, y: 2200, w: 110, h: 100, subRegion: "r_c_2_0", desc: "赵国都城，胡服骑射，慷慨悲歌之士云集。" },
+    { id: "t_daliang", name: "大梁", level: "city", x: 3300, y: 2650, w: 100, h: 100, subRegion: "r_c_2_1", desc: "魏国都城，引黄河水灌溉，极其繁华。" },
+    { id: "t_shangdang", name: "上党", level: "town", x: 2950, y: 2300, w: 70, h: 70, subRegion: "r_c_2_0", desc: "天下之脊，地势极高，兵家必争。" },
+    { id: "t_changping", name: "长平", level: "village", x: 3100, y: 2450, w: 50, h: 50, subRegion: "r_c_2_0", desc: "古战场遗址，夜闻鬼哭，杀气未散。" }
 ];
 const WORLD_TOWNS_PART_2 = [
-    // === 4. 荆楚 (Central South) ===
-    { id: "t_ying", name: "郢都", level: "city", x: 2550, y: 3022, w: 132, h: 113, subRegion: "r_c_1_2", desc: "楚国故都，长江要冲，云梦大泽之畔。" },
-    { id: "t_shouchun", name: "寿春", level: "city", x: 2928, y: 2928, w: 113, h: 113, subRegion: "r_c_1_2", desc: "战国后期楚都，淮南重镇。" },
-    { id: "t_wancheng", name: "宛城", level: "city", x: 2550, y: 2833, w: 113, h: 113, subRegion: "r_c_1_2", desc: "南阳大郡，冶铁中心，商贾云集。" },
-    { id: "t_changsha", name: "长沙", level: "town", x: 2550, y: 3306, w: 94, h: 94, subRegion: "r_c_1_2", desc: "湘楚之地，屈贾之乡，星沙古城。" },
-    { id: "t_jiangling", name: "江陵", level: "town", x: 2361, y: 3022, w: 76, h: 76, subRegion: "r_c_1_2", desc: "千里江陵一日还，兵家必争之地。" },
-    { id: "t_chibi", name: "乌林寨", level: "village", x: 2739, y: 3060, w: 57, h: 57, subRegion: "r_c_1_2", desc: "长江边的小水寨，背靠乌林，地势险要。" },
-    { id: "t_xiangyang", name: "襄阳", level: "town", x: 2418, y: 2871, w: 76, h: 76, subRegion: "r_c_1_2", desc: "南船北马，汉水重镇。" },
+    // === 齐鲁大地 (山东半岛 - 修正版) ===
+    // 临淄：靠北，临近渤海湾
+    { id: "t_linzi", name: "临淄", level: "city", x: 3500, y: 2250, w: 140, h: 120, subRegion: "r_e_0_1", desc: "【海内第一城】北临渤海，齐国故都，稷下学宫。" },
+    // 泰山：在临淄西南
+    { id: "t_taishan", name: "泰山", level: "village", x: 3350, y: 2350, w: 60, h: 60, subRegion: "r_e_0_1", desc: "五岳独尊，封禅之地，俯瞰齐鲁。" },
+    // 曲阜：在泰山以南
+    { id: "t_qufu", name: "曲阜", level: "town", x: 3450, y: 2500, w: 90, h: 90, subRegion: "r_e_0_1", desc: "鲁国故都，孔孟之乡。" },
+    // 琅琊：在东南沿海（东海）
+    { id: "t_langya", name: "琅琊", level: "town", x: 3800, y: 2600, w: 80, h: 80, subRegion: "r_e_0_1", desc: "东海胜境，秦皇登临勒石，徐福出海处。" },
+    // 即墨：半岛东端
+    { id: "t_jimo", name: "即墨", level: "town", x: 3900, y: 2300, w: 80, h: 80, subRegion: "r_e_0_1", desc: "齐国东都，田单火牛阵复国传奇之地。" },
 
-    // === 5. 吴越 (South East) ===
-    { id: "t_wu", name: "吴城", level: "city", x: 3211, y: 2984, w: 132, h: 113, subRegion: "r_c_2_2", desc: "姑苏城外寒山寺，阖闾大城。" },
-    { id: "t_kuaiji", name: "会稽", level: "city", x: 3211, y: 3173, w: 113, h: 113, subRegion: "r_c_2_2", desc: "越王勾践卧薪尝胆之地，兰亭集序。" },
-    { id: "t_yuzhang", name: "豫章", level: "town", x: 2833, y: 3173, w: 76, h: 76, subRegion: "r_c_2_2", desc: "落霞与孤鹜齐飞，秋水共长天一色。" },
-    { id: "t_jinling", name: "金陵", level: "town", x: 3060, y: 2871, w: 94, h: 94, subRegion: "r_c_2_2", desc: "虎踞龙盘，六朝古都，秦淮风月。" },
-    { id: "t_guangling", name: "广陵", level: "town", x: 3211, y: 2796, w: 76, h: 76, subRegion: "r_c_2_2", desc: "烟花三月下扬州，广陵散绝响。" },
+    // ... (荆楚和吴越的代码保持不变，之前发的可以用)
+    // === 荆楚之地 (两湖/长江中游) ===
+    { id: "t_ying", name: "郢都", level: "city", x: 2600, y: 3200, w: 120, h: 100, subRegion: "r_c_1_2", desc: "楚国故都，江汉平原，云梦大泽之畔。" },
+    { id: "t_shouchun", name: "寿春", level: "city", x: 3200, y: 3000, w: 100, h: 100, subRegion: "r_c_1_2", desc: "楚国最后都城，淮南重镇。" },
+    { id: "t_changsha", name: "长沙", level: "town", x: 2600, y: 3500, w: 80, h: 80, subRegion: "r_c_1_2", desc: "星沙古城，屈贾之乡，湘水北去。" },
+    { id: "t_xiangyang", name: "襄阳", level: "town", x: 2500, y: 2900, w: 80, h: 80, subRegion: "r_c_1_2", desc: "南船北马，汉水锁钥，兵家必争。" },
+    { id: "t_jiangling", name: "江陵", level: "town", x: 2550, y: 3300, w: 70, h: 70, subRegion: "r_c_1_2", desc: "朝辞白帝彩云间，千里江陵一日还。" },
 
-    // === 6. 巴蜀 (South West) ===
-    { id: "t_chengdu", name: "成都", level: "city", x: 1983, y: 2928, w: 132, h: 113, subRegion: "r_c_0_2", desc: "天府之国，锦官城，沃野千里。" },
-    { id: "t_jiangzhou", name: "江州", level: "town", x: 2172, y: 3022, w: 94, h: 94, subRegion: "r_c_0_2", desc: "巴国故地，两江交汇，山城重庆。" },
-    { id: "t_hanzhong", name: "汉中", level: "town", x: 2078, y: 2739, w: 94, h: 94, subRegion: "r_c_0_2", desc: "汉水之滨，秦蜀咽喉，兵家必争。" },
-    { id: "t_jianmen", name: "剑阁道", level: "village", x: 1983, y: 2796, w: 57, h: 57, subRegion: "r_c_0_2", desc: "蜀道难，难于上青天，一夫当关万夫莫开。" },
-    { id: "t_zigong", name: "公井寨", level: "village", x: 1983, y: 3117, w: 57, h: 57, subRegion: "r_c_0_2", desc: "村中遍布盐井，卤水长流。" },
-
-    // === 7. 岭南/西南 (Far South) ===
-    { id: "t_panyu", name: "番禺", level: "city", x: 2739, y: 3778, w: 113, h: 113, subRegion: "r_s_2_1", desc: "岭南都会，海上丝路起点，广州。" },
-    { id: "t_guilin", name: "桂林", level: "town", x: 2456, y: 3589, w: 76, h: 76, subRegion: "r_s_1_1", desc: "山水甲天下，灵渠沟通湘漓。" },
-    { id: "t_cangwu", name: "苍梧", level: "town", x: 2607, y: 3683, w: 76, h: 76, subRegion: "r_s_1_1", desc: "舜帝南巡崩于苍梧之野。" },
-    { id: "t_dian", name: "滇国", level: "town", x: 1700, y: 3400, w: 76, h: 76, subRegion: "r_s_1_1", desc: "彩云之南，青铜文明，滇池之畔。" },
-    { id: "t_yelang", name: "夜郎", level: "town", x: 2078, y: 3400, w: 76, h: 76, subRegion: "r_s_1_1", desc: "崇山峻岭，夜郎自大，竹崇拜。" },
-    { id: "t_jiaozhi", name: "交趾", level: "town", x: 2361, y: 4061, w: 76, h: 76, subRegion: "r_s_2_1", desc: "极南之地，象郡所在。" },
-    { id: "t_hepu", name: "珠母村", level: "village", x: 2550, y: 3967, w: 57, h: 57, subRegion: "r_s_2_1", desc: "海边采珠人聚居之地，南珠产地。" }
+    // === 吴越 (江南) ===
+    { id: "t_wu", name: "吴城", level: "city", x: 3600, y: 3100, w: 110, h: 100, subRegion: "r_c_2_2", desc: "姑苏城，小桥流水，干将莫邪铸剑处。" },
+    { id: "t_kuaiji", name: "会稽", level: "city", x: 3700, y: 3300, w: 100, h: 100, subRegion: "r_c_2_2", desc: "越王勾践卧薪尝胆，兰亭修禊。" },
+    { id: "t_jinling", name: "金陵", level: "town", x: 3400, y: 3050, w: 90, h: 90, subRegion: "r_c_2_2", desc: "楚威王埋金以镇王气，虎踞龙盘。" },
+    { id: "t_guangling", name: "广陵", level: "town", x: 3500, y: 2900, w: 80, h: 80, subRegion: "r_c_2_2", desc: "邗沟入江处，烟花三月下扬州。" }
 ];
 const WORLD_TOWNS_PART_3 = [
-    // === 7. 北境 (North of Guanzhong) ===
-    // 九原
-    { id: "t_jiuyuan", name: "九原", level: "city", x: 2456, y: 2078, w: 132, h: 113, subRegion: "r_c_0_0", desc: "秦直道北端，北击匈奴前线大本营。" },
-    // 云中
-    { id: "t_yunzhong", name: "云中", level: "town", x: 2644, y: 2078, w: 94, h: 94, subRegion: "r_c_0_0", desc: "魏尚守云中，匈奴不敢南下。" },
-    // 雁门关
-    { id: "t_yanmen", name: "雁门关", level: "town", x: 2833, y: 2116, w: 94, h: 94, subRegion: "r_c_2_0", desc: "中华第一关，飞将军李广驻地。" },
-    // 代郡
-    { id: "t_dai", name: "代郡", level: "town", x: 2984, y: 2116, w: 76, h: 76, subRegion: "r_c_2_0", desc: "赵国北境，李牧大破匈奴处。" },
-    // 蓟城
-    { id: "t_jicheng", name: "蓟城", level: "city", x: 3117, y: 2172, w: 132, h: 113, subRegion: "r_c_2_0", desc: "燕国故都，幽燕之地，北京。" },
-    // 渔阳
-    { id: "t_yuyang", name: "渔阳", level: "town", x: 3249, y: 2116, w: 76, h: 76, subRegion: "r_c_2_0", desc: "渔阳鼙鼓动地来，边防重地。" },
-    // 右北平
-    { id: "t_beiping", name: "右北平", level: "town", x: 3400, y: 2116, w: 76, h: 76, subRegion: "r_c_2_0", desc: "飞将军射石处，苦寒之地。" },
+    // === 巴蜀 (四川盆地) ===
+    { id: "t_chengdu", name: "成都", level: "city", x: 1800, y: 3000, w: 120, h: 100, subRegion: "r_c_0_2", desc: "【天府之国】沃野千里，李冰治水，锦官城。" },
+    { id: "t_jiangzhou", name: "江州", level: "town", x: 2100, y: 3150, w: 90, h: 90, subRegion: "r_c_0_2", desc: "巴国故地，两江交汇，山城重庆。" },
+    { id: "t_hanzhong", name: "汉中", level: "town", x: 2000, y: 2800, w: 80, h: 80, subRegion: "r_c_0_2", desc: "秦蜀咽喉，栈道连云，刘邦兴汉之地。" },
+    { id: "t_jianmen", name: "剑门关", level: "village", x: 1900, y: 2900, w: 50, h: 50, subRegion: "r_c_0_2", desc: "蜀道之难，难于上青天。" },
+    { id: "t_zigong", name: "公井", level: "village", x: 1850, y: 3200, w: 50, h: 50, subRegion: "r_c_0_2", desc: "盐井林立，火井煮盐。" },
 
-    // === 8. 辽东/东胡 (North East) ===
-    // 襄平
-    { id: "t_xiangping", name: "襄平", level: "city", x: 3589, y: 2172, w: 113, h: 113, subRegion: "r_ne_0_1", desc: "辽东郡治，公孙氏割据之地。" },
-    // 扶余
-    { id: "t_fuyu", name: "扶余", level: "town", x: 3589, y: 1889, w: 76, h: 76, subRegion: "r_ne_1_1", desc: "东北古国，松嫩平原。" },
-    // 鲜卑山 -> 鲜卑帐 (部落营地)
-    { id: "t_xianbei", name: "鲜卑帐", level: "village", x: 3306, y: 1794, w: 57, h: 57, subRegion: "r_ne_0_1", desc: "鲜卑族发源地，大兴安岭深处的游牧营地。" },
-    // 肃慎 -> 挹娄寨 (古民族聚居点)
-    { id: "t_sushen", name: "挹娄寨", level: "village", x: 3778, y: 1983, w: 57, h: 57, subRegion: "r_ne_2_1", desc: "白山黑水，女真先祖，穴居而野处。" },
-    // 王险城
-    { id: "t_chaoxian", name: "王险城", level: "town", x: 3627, y: 2361, w: 76, h: 76, subRegion: "r_ne_0_1", desc: "卫满朝鲜都城，平壤。" },
-
-    // === 9. 漠北 (Far North) ===
-    // 龙城
-    { id: "t_longcheng", name: "龙城", level: "town", x: 2456, y: 1322, w: 94, h: 94, subRegion: "r_n_1_1", desc: "匈奴单于庭，祭天圣地，奇袭龙城。" },
-    // 狼居胥 -> 封狼台 (祭坛遗址)
-    { id: "t_langjuxu", name: "封狼台", level: "village", x: 2456, y: 1039, w: 57, h: 57, subRegion: "r_n_1_1", desc: "霍去病封狼居胥，大漠深处的祭天高台。" },
-    // 北海 -> 牧羊地 (苏武牧羊处)
-    { id: "t_beihai", name: "牧羊地", level: "village", x: 2644, y: 567, w: 57, h: 57, subRegion: "r_n_1_0", desc: "苏武牧羊十九年，苦寒之地的简陋羊圈。" },
-    // 燕然山 -> 燕然寨
-    { id: "t_yanran", name: "燕然寨", level: "village", x: 2078, y: 1228, w: 57, h: 57, subRegion: "r_n_1_1", desc: "勒石燕然，汉军留下的驻屯营寨。" },
-
-    // === 10. 海外仙山 (Far East Ocean) ===
-    // 蓬莱
-    { id: "t_penglai", name: "蓬莱", level: "city", x: 4156, y: 2456, w: 113, h: 113, subRegion: "r_e_2_1", desc: "传说中的海外仙山，徐福东渡寻找长生药。" },
-    // 瀛洲
-    { id: "t_yingzhou", name: "瀛洲", level: "town", x: 4533, y: 2644, w: 76, h: 76, subRegion: "r_e_2_1", desc: "海外三仙山之一，虚无缥缈。" },
-    // 方丈
-    { id: "t_fangzhang", name: "方丈", level: "town", x: 4344, y: 2078, w: 76, h: 76, subRegion: "r_e_2_1", desc: "海外三仙山之一，不可接近。" }
+    // === 北境防线 (长城沿线) ===
+    { id: "t_jiuyuan", name: "九原", level: "city", x: 2400, y: 1750, w: 100, h: 100, subRegion: "r_c_0_0", desc: "秦直道终点，蒙恬北击匈奴大本营。" },
+    { id: "t_yunzhong", name: "云中", level: "town", x: 2700, y: 1800, w: 80, h: 80, subRegion: "r_c_0_0", desc: "赵武灵王所置，魏尚守云中。" },
+    { id: "t_yanmen", name: "雁门关", level: "town", x: 2900, y: 1900, w: 80, h: 80, subRegion: "r_c_2_0", desc: "中华第一关，飞将军李广驻守。" },
+    { id: "t_jicheng", name: "蓟城", level: "city", x: 3300, y: 1950, w: 110, h: 100, subRegion: "r_c_2_0", desc: "燕国故都，幽燕之地，通往辽东的咽喉。" },
+    { id: "t_liaodong", name: "襄平", level: "city", x: 3900, y: 1800, w: 90, h: 90, subRegion: "r_ne_0_1", desc: "辽东重镇，公孙氏割据之地。" },
+    { id: "t_longcheng", name: "龙城", level: "town", x: 2200, y: 1200, w: 80, h: 80, subRegion: "r_n_1_1", desc: "匈奴单于庭，祭天圣地。" }
 ];
 const WORLD_TOWNS_PART_4 = [
-    // === 10. 河西走廊 (West of Chencang/Guanzhong) ===
-    { id: "t_wuwei", name: "武威", level: "town", x: 1794, y: 2456, w: 76, h: 76, subRegion: "r_w_2_1", desc: "凉州重镇，霍去病击败匈奴休屠王处。" },
-    { id: "t_zhangye", name: "张掖", level: "town", x: 1624, y: 2418, w: 76, h: 76, subRegion: "r_w_2_1", desc: "张国臂掖，以通西域，黑水国所在。" },
-    { id: "t_jiuquan", name: "酒泉", level: "town", x: 1473, y: 2380, w: 76, h: 76, subRegion: "r_w_2_1", desc: "城下有泉，其水若酒，霍去病倒酒入泉犒赏三军。" },
-    { id: "t_dunhuang", name: "敦煌", level: "town", x: 1284, y: 2361, w: 94, h: 94, subRegion: "r_w_2_1", desc: "西出阳关无故人，莫高窟，丝路西端枢纽。" },
-    { id: "t_yumenguan", name: "玉门屯", level: "village", x: 1171, y: 2267, w: 57, h: 57, subRegion: "r_w_2_1", desc: "羌笛何须怨杨柳，关下屯田的小村落。" },
-    { id: "t_yangguan", name: "阳关屯", level: "village", x: 1171, y: 2456, w: 57, h: 57, subRegion: "r_w_2_1", desc: "西出阳关无故人，大漠边缘的歇脚地。" },
+    // === 西域 (丝绸之路) ===
+    { id: "t_dunhuang", name: "敦煌", level: "town", x: 1200, y: 2200, w: 90, h: 90, subRegion: "r_w_2_1", desc: "西出阳关无故人，丝路西端枢纽。" },
+    { id: "t_wuwei", name: "武威", level: "town", x: 1600, y: 2300, w: 80, h: 80, subRegion: "r_w_2_1", desc: "凉州词，霍去病击败匈奴休屠王处。" },
+    { id: "t_loulan", name: "楼兰", level: "town", x: 800, y: 2200, w: 70, h: 70, subRegion: "r_w_1_1", desc: "罗布泊旁，黄沙百战穿金甲。" },
+    { id: "t_qiuci", name: "龟兹", level: "city", x: 600, y: 1900, w: 80, h: 80, subRegion: "r_w_1_1", desc: "西域乐舞之都，佛音袅袅。" },
+    { id: "t_shule", name: "疏勒", level: "town", x: 200, y: 2100, w: 80, h: 80, subRegion: "r_w_0_1", desc: "喀什，丝路交汇，盘橐城。" },
 
-    // === 11. 西域南道 (Southern Route) ===
-    { id: "t_ruoqiang", name: "若羌", level: "town", x: 1039, y: 2550, w: 76, h: 76, subRegion: "r_w_1_1", desc: "楼兰古国旧地，若羌国王城。" },
-    { id: "t_qiemo", name: "且末", level: "town", x: 850, y: 2607, w: 76, h: 76, subRegion: "r_w_1_1", desc: "沙漠绿洲，且末国王城。" },
-    { id: "t_niya", name: "精绝村", level: "village", x: 718, y: 2644, w: 57, h: 57, subRegion: "r_w_1_1", desc: "精绝古国遗民聚居地，五星出东方。" },
-    { id: "t_yutian", name: "于阗", level: "town", x: 529, y: 2682, w: 76, h: 76, subRegion: "r_w_0_1", desc: "美玉之乡，佛教东传第一站，尉迟家族。" },
-    { id: "t_shache", name: "莎车", level: "town", x: 340, y: 2720, w: 76, h: 76, subRegion: "r_w_0_1", desc: "叶尔羌河畔，莎车国王城。" },
-
-    // === 12. 西域北道 (Northern Route) ===
-    { id: "t_loulan", name: "楼兰", level: "town", x: 1039, y: 2229, w: 76, h: 76, subRegion: "r_w_1_1", desc: "罗布泊旁，丝路枢纽，黄沙百战穿金甲。" },
-    { id: "t_yanqi", name: "焉耆", level: "town", x: 850, y: 2191, w: 76, h: 76, subRegion: "r_w_1_1", desc: "博斯腾湖畔，焉耆马闻名天下。" },
-    { id: "t_qiuci", name: "龟兹", level: "city", x: 661, y: 2153, w: 94, h: 94, subRegion: "r_w_1_1", desc: "西域乐舞之都，鸠摩罗什故里。" },
-    { id: "t_gumo", name: "姑墨", level: "town", x: 472, y: 2172, w: 76, h: 76, subRegion: "r_w_1_1", desc: "阿克苏，白水之城。" },
-    { id: "t_shule", name: "疏勒", level: "town", x: 283, y: 2267, w: 94, h: 94, subRegion: "r_w_0_1", desc: "丝路交汇点，喀什，盘橐城。" },
-
-    // === 13. 天山以北 (Far North West) ===
-    { id: "t_wusun", name: "赤谷城", level: "town", x: 378, y: 1889, w: 76, h: 76, subRegion: "r_nw_2_0", desc: "乌孙国都，伊犁河谷，天马故乡。" },
-    { id: "t_dayuan", name: "大宛", level: "city", x: 151, y: 2456, w: 94, h: 94, subRegion: "r_w_0_1", desc: "汗血宝马产地，贰师城。" }
+    // === 南蛮/百越 ===
+    { id: "t_panyu", name: "番禺", level: "city", x: 2800, y: 4300, w: 100, h: 100, subRegion: "r_s_2_1", desc: "岭南都会，南越王赵佗建都处。" },
+    { id: "t_guilin", name: "桂林", level: "town", x: 2600, y: 4000, w: 70, h: 70, subRegion: "r_s_1_1", desc: "灵渠沟通湘漓，山水甲天下。" },
+    { id: "t_dian", name: "滇国", level: "town", x: 1500, y: 3800, w: 70, h: 70, subRegion: "r_s_1_1", desc: "彩云之南，青铜文明，滇池。" },
+    { id: "t_yelang", name: "夜郎", level: "town", x: 2000, y: 3600, w: 60, h: 60, subRegion: "r_s_1_1", desc: "崇山峻岭，夜郎自大。" },
+    { id: "t_jiaozhi", name: "交趾", level: "town", x: 2200, y: 4600, w: 70, h: 70, subRegion: "r_s_2_1", desc: "极南之地，象郡所在。" }
 ];
+const WORLD_TOWNS_PART_5 = [
+    { id: "t_v_1", name: "桃源村", level: "village", x: 1112, y: 404, w: 40, h: 40, subRegion: "r_nw_1_0", desc: "民风淳朴，世外桃源，桃花盛开之季美不胜收。" },
+    { id: "t_v_2", name: "杏花村", level: "village", x: 2453, y: 2206, w: 40, h: 40, subRegion: "r_c_1_0", desc: "酿酒名村，十里飘香，过往客商必饮之所。" },
+    { id: "t_v_3", name: "垂柳里", level: "village", x: 2028, y: 1343, w: 40, h: 40, subRegion: "r_n_0_2", desc: "河岸柳树成荫，风景如画，文人墨客常聚于此。" },
+    { id: "t_v_4", name: "枫叶坞", level: "village", x: 1039, y: 4667, w: 40, h: 40, subRegion: "r_sw_1_2", desc: "满山红叶，如火如荼，隐世高人出没之所。" },
+    { id: "t_v_5", name: "青竹堡", level: "village", x: 912, y: 3656, w: 40, h: 40, subRegion: "r_sw_1_0", desc: "翠竹环绕，清爽宜人，盛产上等竹材。" },
+    { id: "t_v_6", name: "云来镇", level: "village", x: 460, y: 444, w: 40, h: 40, subRegion: "r_nw_0_0", desc: "云雾缭绕，仿若仙境，常有仙家子弟落脚。" },
+    { id: "t_v_7", name: "落霞村", level: "village", x: 967, y: 1991, w: 40, h: 40, subRegion: "r_w_1_0", desc: "夕阳余晖，美轮美奂，因晚霞绚烂而闻名。" },
+    { id: "t_v_8", name: "寒江里", level: "village", x: 2105, y: 4339, w: 40, h: 40, subRegion: "r_s_0_1", desc: "江水寒彻入骨，盛产寒潭之鱼，远近闻名。" },
+    { id: "t_v_9", name: "古槐里", level: "village", x: 417, y: 4797, w: 40, h: 40, subRegion: "r_sw_0_2", desc: "村口千年古槐，枝繁叶茂，为村中守护之神。" },
+    { id: "t_v_10", name: "百花村", level: "village", x: 1828, y: 4664, w: 40, h: 40, subRegion: "r_s_0_2", desc: "百花齐放，香气袭人，宛如人间花园。" },
+    { id: "t_v_11", name: "卧龙里", level: "village", x: 3636, y: 2005, w: 40, h: 40, subRegion: "r_e_0_0", desc: "相传曾有神龙在此卧眠，地灵人杰之所。" },
+    { id: "t_v_12", name: "栖凤坞", level: "village", x: 253, y: 1507, w: 40, h: 40, subRegion: "r_nw_0_2", desc: "梧桐成林，传闻有金凤曾来此栖息。" },
+    { id: "t_v_13", name: "灵泉村", level: "village", x: 2476, y: 1473, w: 40, h: 40, subRegion: "r_n_1_2", desc: "泉水甘甜，饮之延年益寿，村人皆长寿。" },
+    { id: "t_v_14", name: "石碾里", level: "village", x: 1037, y: 959, w: 40, h: 40, subRegion: "r_nw_1_1", desc: "古老的石碾见证了数代人的劳作与欢笑。" },
+    { id: "t_v_15", name: "桑梓村", level: "village", x: 3312, y: 992, w: 40, h: 40, subRegion: "r_n_2_1", desc: "家乡桑梓之地，在外游子魂牵梦绕之所。" },
+    { id: "t_v_16", name: "鹿鸣坞", level: "village", x: 2366, y: 555, w: 40, h: 40, subRegion: "r_n_1_0", desc: "林深处偶闻鹿鸣，宛如仙音，恬静淡雅。" },
+    { id: "t_v_17", name: "鹤羽里", level: "village", x: 3963, y: 4592, w: 40, h: 40, subRegion: "r_se_0_2", desc: "白鹤常聚之地，羽翼如雪，祥瑞之兆。" },
+    { id: "t_v_18", name: "龙吟坞", level: "village", x: 1222, y: 3300, w: 40, h: 40, subRegion: "r_w_2_2", desc: "峡谷回响若龙吟，因奇特的风声而得名。" },
+    { id: "t_v_19", name: "潜龙里", level: "village", x: 845, y: 4722, w: 40, h: 40, subRegion: "r_sw_1_2", desc: "深潭无底，传有潜龙在渊，深不可测。" },
+    { id: "t_v_20", name: "瑞雪村", level: "village", x: 1775, y: 769, w: 40, h: 40, subRegion: "r_n_0_1", desc: "终年积雪不化，别有一番寒岭风情。" },
+];
+const WORLD_TOWNS_PART_6 = [
+    { id: "t_v_21", name: "清风里", level: "village", x: 3824, y: 1412, w: 40, h: 40, subRegion: "r_ne_0_2", desc: "清风徐来，水波不兴，环境极佳的隐居地。" },
+    { id: "t_v_22", name: "红泥岗", level: "village", x: 2788, y: 2843, w: 40, h: 40, subRegion: "r_c_1_2", desc: "红泥小火炉，晚来天欲雪。以产优质陶土闻名。" },
+    { id: "t_v_23", name: "织星坞", level: "village", x: 1456, y: 4231, w: 40, h: 40, subRegion: "r_sw_2_1", desc: "地势极高，夜晚繁星似锦，宛如伸手可摘。" },
+    { id: "t_v_24", name: "鸣蝉里", level: "village", x: 3122, y: 3876, w: 40, h: 40, subRegion: "r_s_2_0", desc: "古木参天，盛夏蝉鸣阵阵，富有山野情趣。" },
+    { id: "t_v_25", name: "半坡村", level: "village", x: 2145, y: 2367, w: 40, h: 40, subRegion: "r_c_0_1", desc: "坐落在黄河古道半坡之上，古老且神秘。" },
+    { id: "t_v_26", name: "望海墩", level: "village", x: 4450, y: 1823, w: 40, h: 40, subRegion: "r_e_1_0", desc: "东海边缘的高地村落，可远眺碧波万顷。" },
+    { id: "t_v_27", name: "牧马滩", level: "village", x: 832, y: 1245, w: 40, h: 40, subRegion: "r_w_1_2", desc: "水草丰美，曾是秦人祖先牧马繁衍之地。" },
+    { id: "t_v_28", name: "翠微坞", level: "village", x: 1956, y: 3456, w: 40, h: 40, subRegion: "r_s_0_0", desc: "群山环抱，翠色欲滴，云雾缭绕其间。" },
+    { id: "t_v_29", name: "灵犀里", level: "village", x: 3345, y: 4821, w: 40, h: 40, subRegion: "r_s_2_2", desc: "相传村中有一通灵石，常有异兽出没。" },
+    { id: "t_v_30", name: "稻香里", level: "village", x: 2890, y: 3654, w: 40, h: 40, subRegion: "r_s_2_0", desc: "江南水乡，稻浪翻滚，一派丰收景象。" },
+    { id: "t_v_31", name: "断桥里", level: "village", x: 3712, y: 3102, w: 40, h: 40, subRegion: "r_e_0_2", desc: "古桥半残，流水人家，透着一股凄美之感。" },
+    { id: "t_v_32", name: "金沙滩", level: "village", x: 456, y: 2845, w: 40, h: 40, subRegion: "r_w_0_2", desc: "河岸遍布金色的细沙，落日下熠熠生辉。" },
+    { id: "t_v_33", name: "白鸽坞", level: "village", x: 1234, y: 845, w: 40, h: 40, subRegion: "r_nw_2_1", desc: "白鸽翔集，象征着此地永恒的安宁。" },
+    { id: "t_v_34", name: "清泉里", level: "village", x: 4123, y: 2245, w: 40, h: 40, subRegion: "r_e_1_0", desc: "村中清泉常涌，水质甘冽，远近客商争相取水。" },
+    { id: "t_v_35", name: "铁匠堡", level: "village", x: 2845, y: 1567, w: 40, h: 40, subRegion: "r_n_2_2", desc: "民风剽悍，人人尚武，村中铁匠铺日夜开工。" },
+    { id: "t_v_36", name: "渔舟坞", level: "village", x: 2234, y: 4890, w: 40, h: 40, subRegion: "r_s_0_2", desc: "南海渔民的聚居地，桅杆林立，海味飘香。" },
+    { id: "t_v_37", name: "幽兰里", level: "village", x: 4789, y: 356, w: 40, h: 40, subRegion: "r_ne_2_0", desc: "深谷之中多生幽兰，香气清远，沁人心脾。" },
+    { id: "t_v_38", name: "听涛哨", level: "village", x: 3567, y: 4234, w: 40, h: 40, subRegion: "r_se_0_1", desc: "建立在海边断崖上的哨所村落，波涛声不绝于耳。" },
+    { id: "t_v_39", name: "沉香坞", level: "village", x: 1567, y: 1789, w: 40, h: 40, subRegion: "r_nw_2_2", desc: "因盛产名贵香料而得名，空气中常带幽香。" },
+    { id: "t_v_40", name: "斜阳里", level: "village", x: 678, y: 4234, w: 40, h: 40, subRegion: "r_sw_1_1", desc: "西山斜阳照入村中，将村落镀上一层古铜色。" }
+];
+
 // ================= 合并所有城镇数据 =================
 // 注意：请将之前发送的 WORLD_TOWNS_PART_1, PART_2, PART_3 和上面的 PART_4
 // 按顺序合并到最终的 WORLD_TOWNS 数组中。
@@ -265,7 +248,9 @@ const WORLD_TOWNS = [
     ...WORLD_TOWNS_PART_1,
     ...WORLD_TOWNS_PART_2,
     ...WORLD_TOWNS_PART_3,
-    ...WORLD_TOWNS_PART_4
+    ...WORLD_TOWNS_PART_4,
+    ...WORLD_TOWNS_PART_5,
+    ...WORLD_TOWNS_PART_6 // 加入新的村落数据
 ];
 // 将 WORLD_TOWNS 暴露给全局 (如果是最后一段代码)
 window.WORLD_TOWNS = WORLD_TOWNS;

@@ -28,6 +28,9 @@ window.performDirectRebirth = function() {
     newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
     newPlayer.currentStudyTarget = window.player.currentStudyTarget || null;
 
+    newPlayer.danger = 0;
+    newPlayer.need_kill = 0;
+    newPlayer.timeStart = 0; // 兵解后重置世界阶段
 
     newPlayer.generation = nextGen;
     newPlayer.name = "道友" + nextGen + "世";

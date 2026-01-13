@@ -77,7 +77,7 @@ const PLAYER_TEMPLATE = {
     //当前时间阶段
     timeStart: 0,
     // 位置
-    coord   : {x: 1350, y: 1350}, // 对应新地图关中区域
+    coord   : {x: 2770, y: 2653}, // 对应新地图关中区域
     location: 'guanzhong', mapUnlocked: false,
 // 【新增】随身消耗品 (3个格子)
     consumables: [null, null, null],

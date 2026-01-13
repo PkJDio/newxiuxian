@@ -145,6 +145,11 @@ const Combat = {
     },
 
     stop: function() {
+        if (this.options && this.options.canEscape === false) {
+            if(window.showToast) window.showToast("强敌环伺，无路可退！");
+            return;
+        }
+
         this.isStopped = true;
         this.isEnded = true;
         if (this.timer) clearTimeout(this.timer);
@@ -819,6 +824,23 @@ const Combat = {
 
     _handleVictory: function() {
         this.isEnded = true;
+
+        // === 【新增：危险度逻辑】 ===
+        if (window.player) {
+            const rank = this.enemy.template || "minion";
+            const dangerGain = { "minion": 5, "elite": 10, "boss": 50, "lord": 100 }[rank] || 0;
+
+            // 增加危险度
+            window.player.danger = Math.min(100, (window.player.danger || 0) + dangerGain);
+            // 只要击杀了怪，need_kill 立即清 0
+            window.player.need_kill = 0;
+
+            if (window.LogManager) {
+                window.LogManager.add(`[系统] 击杀${rank}级目标，当前危险度: ${window.player.danger}`);
+            }
+        }
+
+
         this._log(`<div style="color:green; font-weight:bold; margin-top:10px; font-size:16px;">🏆 战斗胜利！</div>`);
         const money = this._randomInt(this.enemy.money[0], this.enemy.money[1]);
         if (money > 0) {

@@ -155,6 +155,7 @@ const UtilsItem = {
                 window.LogManager.add(`你${verb} <span style="color:${color}">${itemSlot.name}</span>。`);
             }
         }
+
     },
 
     // 内部方法：应用效果
@@ -187,11 +188,17 @@ const UtilsItem = {
             }
             if (eff.hunger) {
                 if (!player.status) player.status = {};
-                player.status.hunger = Math.min(100, (player.status.hunger||0) + eff.hunger);
-                if (eff.hunger>0){
-                    msg += `饱食度增加 ${eff.hunger} 点`;
-                }else if(eff.hunger<0){
-                    msg += `饱食度减少 ${Math.abs(eff.hunger)} 点`;
+
+                // 获取饱食度上限，如果 derived 中不存在则默认为 100
+                const maxHunger = (player.derived && player.derived.hungerMax) ? player.derived.hungerMax : 100;
+
+                // 使用动态上限进行截断
+                player.status.hunger = Math.min(maxHunger, (player.status.hunger || 0) + eff.hunger);
+
+                if (eff.hunger > 0) {
+                    msg += `饱食度增加 ${eff.hunger} 点 `;
+                } else if (eff.hunger < 0) {
+                    msg += `饱食度减少 ${Math.abs(eff.hunger)} 点 `;
                 }
 
                 applied = true;
@@ -366,6 +373,7 @@ const UtilsItem = {
      * @param {Array<string>} sids - SID 数组 [sid1, sid2, ...]
      */
     discardMultipleItems: function(sids) {
+        console.log("批量丢弃: ", sids)
         if (!player.inventory || !sids || sids.length === 0) return;
 
         let deletedCount = 0;
@@ -511,9 +519,11 @@ const UtilsItem = {
         }
     },
     _refreshAllUI: function() {
+
+        if (window.recalcStats) window.recalcStats();
         if (window.refreshBagUI) window.refreshBagUI();
         if (window.updateUI) window.updateUI();
-        if (window.recalcStats) window.recalcStats();
+
     }
 };
 

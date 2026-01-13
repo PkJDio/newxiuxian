@@ -468,9 +468,7 @@ const InnShop = {
             if (!slot) return;
             const itemId = slot.id || slot;
             const count = slot.count || 1;
-            let itemData = null;
-            if (window.GAME_DB && foods) itemData = foods.find(i => i &&  i.id === itemId);
-            if (!itemData) itemData = foods?.[itemId];
+            let itemData = slot;
 
             if (itemData && itemData.value) {
                 sellableItems.push({ index: index, id: itemId, data: itemData, count: count });
