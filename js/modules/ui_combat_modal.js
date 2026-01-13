@@ -1,11 +1,11 @@
 // js/modules/ui_combat_modal.js
-// 战斗弹窗UI管理器 v2.3 (性能优化版：CSS单例化，防止DOM堆叠)
+// 战斗弹窗UI管理器 v3.1 (样式完全还原 + 模块化逻辑适配)
 
 const UICombatModal = {
     // 内部标记：样式是否已注入
     _isStyleInjected: false,
 
-    // 【优化1】将样式提取为独立方法，确保全生命周期只注入一次
+    // 【还原样式】保留所有原本的动画与视觉细节
     _injectStyles: function() {
         if (this._isStyleInjected) return;
 
@@ -44,14 +44,12 @@ const UICombatModal = {
             #combat_log_container_embed { flex: 1; background: #fffbf0; padding: 20px; overflow-y: auto; border-right: 2px solid #e0d0b0; will-change: scroll-position; }
             #combat_logs_realtime { font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.6; color: #333; }
             
-            /* 侧边栏布局 */
             .combat-sidebar-split { width: 190px; background: #f8f1e0; display: flex; box-shadow: -4px 0 10px rgba(0,0,0,0.05); z-index: 10; }
             .sidebar-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px; }
             .sidebar-divider { width: 1px; background: #d7ccc8; margin: 5px 0; }
             .sidebar-title { font-size: 18px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; padding-bottom: 4px; margin-bottom: 8px; }
             .sidebar-items-container { display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; overflow-y: auto; }
 
-            /* 消耗品/技能 槽位样式 */
             .c-slot-wrapper { width: 76px; height: 86px; background: #fff; border: 2px solid #d7ccc8; border-radius: 6px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
             .c-slot-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa; border: 1px dashed #ddd; border-radius: 2px; overflow: hidden; position: relative; }
             .c-icon { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; font-size: 26px; line-height: 1; transform: translateY(-2px); }
@@ -59,10 +57,8 @@ const UICombatModal = {
             .c-count { position: absolute; top: 1px; right: 1px; background: rgba(0,0,0,0.7); color: #fff; font-size: 9px; padding: 0 3px; border-radius: 2px; }
             .c-slot-empty { font-size: 12px; color: #ccc; }
             .c-use-btn { width: 100%; font-size: 11px; padding: 2px 0; margin-top: 2px; }
-            .c-use-btn:disabled { background: #e0e0e0; color: #aaa; border-color: #ccc; cursor: not-allowed; }
             .c-cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #333; z-index: 5; cursor: not-allowed; }
             
-            /* 给动画重命名，防止与其他模块冲突 */
             @keyframes combat-liquid-move { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
             @keyframes combat-float { 0% {transform: translateY(0px);} 50% {transform: translateY(-6px);} 100% {transform: translateY(0px);} }
         `;
@@ -71,11 +67,12 @@ const UICombatModal = {
         styleEl.id = 'style-ui-combat-modal';
         styleEl.textContent = cssContent;
         document.head.appendChild(styleEl);
-
         this._isStyleInjected = true;
-        //console.log("战斗UI样式已注入 (单例)");
     },
 
+    /**
+     * 还原补丁逻辑
+     */
     _patchEnemyData: function(enemy) {
         if (enemy.basePen === undefined) {
             const tmplKey = enemy.template || "minion";
@@ -83,7 +80,6 @@ const UICombatModal = {
                 enemy.basePen = ENEMY_TEMPLATES[tmplKey].basePen;
             }
         }
-
         if (enemy.toxAtk === undefined) {
             const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
             if (db && db.length > 0) {
@@ -93,24 +89,19 @@ const UICombatModal = {
                     if (enemy.toxicity === undefined) enemy.toxicity = 0;
                     if (!enemy.stats) enemy.stats = {};
                     enemy.stats.toxAtk = template.stats.toxicity;
-                } else {
-                    enemy.toxAtk = 0;
-                    if (enemy.toxicity === undefined) enemy.toxicity = 0;
-                }
-                if (template && template.basePen !== undefined) {
-                    enemy.basePen = template.basePen;
                 }
             }
         }
-        if (enemy.basePen === undefined) enemy.basePen = 0;
+        enemy.basePen = enemy.basePen || 0;
     },
 
-    show: function(enemy) {
+    /**
+     * 显示逻辑：适配波次与逃跑控制
+     */
+    show: function(enemy, externalOnWin = null, options = { canEscape: true, isMultiWave: false }) {
         if (!window.Combat || !window.UtilsModal) return;
 
-        // 1. 确保样式存在 (只执行一次)
         this._injectStyles();
-
         this._patchEnemyData(enemy);
 
         if (window.recalcStats) window.recalcStats();
@@ -119,53 +110,24 @@ const UICombatModal = {
         const pName = window.player.name || "少侠";
         const currentPTox = window.player.toxicity || 0;
 
-        const pStats = {
-            hp: pDerived.hp,
-            maxHp: pDerived.hpMax,
-            mp: pDerived.mp || 0,
-            maxMp: pDerived.mpMax || 100,
-            atk: pDerived.atk,
-            def: pDerived.def,
-            speed: pDerived.speed,
-            toxicity: currentPTox
-        };
-
-        const eName = enemy.name || "未知敌人";
-        const currentETox = enemy.toxicity || 0;
-
-        const eStats = {
-            hp: (enemy.stats && enemy.stats.hp !== undefined) ? enemy.stats.hp : (enemy.hp || 0),
-            maxHp: (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 0),
-            atk: (enemy.stats && enemy.stats.atk !== undefined) ? enemy.stats.atk : (enemy.atk || 0),
-            def: (enemy.stats && enemy.stats.def !== undefined) ? enemy.stats.def : (enemy.def || 0),
-            speed: (enemy.stats && enemy.stats.speed !== undefined) ? enemy.stats.speed : (enemy.speed || 0)
-        };
-
-        const eDesc = enemy.desc || "这家伙看起来不怀好意...";
-        const eIcon = (enemy.visual && enemy.visual.icon) ? enemy.visual.icon : "💀";
-        const eColor = (enemy.visual && enemy.visual.color) ? enemy.visual.color : "#333";
+        // 数值计算
+        const eMaxHp = (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 100);
+        const eHpPct = Math.max(0, Math.min(100, (enemy.hp / eMaxHp) * 100));
+        const pHpPct = Math.max(0, Math.min(100, (pDerived.hp / pDerived.hpMax) * 100));
+        const pMpPct = Math.max(0, Math.min(100, ((pDerived.mp || 0) / (pDerived.mpMax || 100)) * 100));
 
         const rankMap = { "minion": "普通", "elite": "【精英】", "boss": "【头目】", "lord": "【领主】" };
-        const rankKey = enemy.template || "minion";
-        const displayRank = rankMap[rankKey] || enemy.levelType || "普通";
+        const displayRank = rankMap[enemy.template || "minion"] || "普通";
 
-        const eHpPct = Math.max(0, Math.min(100, (eStats.hp / eStats.maxHp) * 100));
-        const pHpPct = Math.max(0, Math.min(100, (pStats.hp / pStats.maxHp) * 100));
-        const pMpPct = Math.max(0, Math.min(100, (pStats.mp / pStats.maxMp) * 100));
-
-        const pToxPct = Math.min(100, currentPTox);
-        const eToxPct = Math.min(100, currentETox);
-
-        // 【优化2】移除了 <style> 标签，纯净 HTML 结构
         const contentHtml = `
             <div class="combat-wrapper">
                 <div class="combat-header">
                     <div class="fighter-card enemy">
                         <div class="fighter-top">
-                            <div class="fighter-icon">${eIcon}</div>
+                            <div class="fighter-icon">${enemy.visual?.icon || '💀'}</div>
                             <div class="fighter-info">
-                                <div class="fighter-name" style="color:${eColor};">${eName}</div>
-                                <span class="fighter-rank" style="border-color:${eColor}; color:${eColor};">${displayRank}</span>
+                                <div class="fighter-name" style="color:${enemy.visual?.color || '#333'};">${enemy.name}</div>
+                                <span class="fighter-rank" style="border-color:${enemy.visual?.color || '#333'}; color:${enemy.visual?.color || '#333'};">${displayRank}</span>
                             </div>
                         </div>
                         <div class="stats-panel">
@@ -174,21 +136,19 @@ const UICombatModal = {
                                     <div class="bar-label">❤</div>
                                     <div class="hp-bar-bg">
                                         <div id="combat_e_hp_bar" class="hp-bar-fill" style="width:${eHpPct}%"></div>
-                                        <div class="hp-text"><b id="combat_e_hp">${eStats.hp}</b>/${eStats.maxHp}</div>
+                                        <div class="hp-text"><b id="combat_e_hp">${enemy.hp}</b>/${eMaxHp}</div>
                                     </div>
                                 </div>
-                                <div class="tox-bar-container" title="中毒深度">
+                                <div class="tox-bar-container">
                                     <div class="tox-label">☠</div>
-                                    <div class="tox-bar-bg">
-                                        <div id="combat_e_tox_bar" class="tox-bar-fill" style="width:${eToxPct}%"></div>
-                                    </div>
-                                    <div id="combat_e_tox_val" class="tox-val">${currentETox}</div>
+                                    <div class="tox-bar-bg"><div id="combat_e_tox_bar" class="tox-bar-fill" style="width:${enemy.toxicity || 0}%"></div></div>
+                                    <div id="combat_e_tox_val" class="tox-val">${enemy.toxicity || 0}</div>
                                 </div>
                             </div>
-                            <div class="attr-row" id="enemy_attr_row">
-                                <span class="attr-item" id="e_attr_atk"><span class="attr-icon">⚔</span><span class="attr-text">攻击</span><span class="attr-val">${eStats.atk}</span></span>
-                                <span class="attr-item" id="e_attr_def"><span class="attr-icon">🛡</span><span class="attr-text">防御</span><span class="attr-val">${eStats.def}</span></span>
-                                <span class="attr-item" id="e_attr_spd"><span class="attr-icon">🦶</span><span class="attr-text">速度</span><span class="attr-val">${eStats.speed}</span></span>
+                            <div class="attr-row">
+                                <span class="attr-item" id="e_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${enemy.atk}</span></span>
+                                <span class="attr-item" id="e_attr_def"><span class="attr-text">防御</span><span class="attr-val">${enemy.def}</span></span>
+                                <span class="attr-item" id="e_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${enemy.speed}</span></span>
                             </div>
                         </div>
                     </div>
@@ -209,14 +169,12 @@ const UICombatModal = {
                                     <div class="bar-label">❤</div>
                                     <div class="hp-bar-bg">
                                         <div id="combat_p_hp_bar" class="hp-bar-fill" style="width:${pHpPct}%"></div>
-                                        <div class="hp-text"><b id="combat_p_hp">${pStats.hp}</b>/${pStats.maxHp}</div>
+                                        <div class="hp-text"><b id="combat_p_hp">${pDerived.hp}</b>/${pDerived.hpMax}</div>
                                     </div>
                                 </div>
-                                <div class="tox-bar-container" title="自身中毒">
+                                <div class="tox-bar-container">
                                     <div class="tox-label">☠</div>
-                                    <div class="tox-bar-bg">
-                                        <div id="combat_p_tox_bar" class="tox-bar-fill" style="width:${pToxPct}%"></div>
-                                    </div>
+                                    <div class="tox-bar-bg"><div id="combat_p_tox_bar" class="tox-bar-fill" style="width:${currentPTox}%"></div></div>
                                     <div id="combat_p_tox_val" class="tox-val">${currentPTox}</div>
                                 </div>
                             </div>
@@ -225,15 +183,15 @@ const UICombatModal = {
                                     <div class="bar-label" style="color:#1976d2;">⚡</div>
                                     <div class="hp-bar-bg" style="border-color:#90caf9;">
                                         <div id="combat_p_mp_bar" class="hp-bar-fill" style="width:${pMpPct}%; background:linear-gradient(45deg, #1976d2, #42a5f5); animation:none;"></div>
-                                        <div class="hp-text"><b id="combat_p_mp">${Math.floor(pStats.mp)}</b>/${Math.floor(pStats.maxMp)}</div>
+                                        <div class="hp-text"><b id="combat_p_mp">${Math.floor(pDerived.mp || 0)}</b>/${Math.floor(pDerived.mpMax || 100)}</div>
                                     </div>
                                 </div>
-                                <div style="width:120px;"></div> </div>
-
-                            <div class="attr-row" id="player_attr_row">
-                                <span class="attr-item" id="p_attr_atk"><span class="attr-icon">⚔</span><span class="attr-text">攻击</span><span class="attr-val">${pStats.atk}</span></span>
-                                <span class="attr-item" id="p_attr_def"><span class="attr-icon">🛡</span><span class="attr-text">防御</span><span class="attr-val">${pStats.def}</span></span>
-                                <span class="attr-item" id="p_attr_spd"><span class="attr-icon">🦶</span><span class="attr-text">速度</span><span class="attr-val">${pStats.speed}</span></span>
+                                <div style="width:120px;"></div>
+                            </div>
+                            <div class="attr-row">
+                                <span class="attr-item" id="p_attr_atk"><span class="attr-text">攻击</span><span class="attr-val">${pDerived.atk}</span></span>
+                                <span class="attr-item" id="p_attr_def"><span class="attr-text">防御</span><span class="attr-val">${pDerived.def}</span></span>
+                                <span class="attr-item" id="p_attr_spd"><span class="attr-text">速度</span><span class="attr-val">${pDerived.speed}</span></span>
                             </div>
                         </div>
                     </div>
@@ -242,127 +200,74 @@ const UICombatModal = {
                 <div class="combat-body">
                     <div id="combat_log_container_embed">
                         <div id="combat_desc_initial" style="text-align:center; padding-top: 60px;">
-                            <div style="font-size:28px; line-height:1.5; color:#5d4037; font-weight:bold; margin-bottom: 30px;">
-                                “${eDesc}”
-                            </div>
-                            <div style="font-size:20px; color:#999;">
-                                (点击下方“拔剑迎敌”开始战斗)
-                            </div>
+                            <div style="font-size:28px; line-height:1.5; color:#5d4037; font-weight:bold; margin-bottom: 30px;">“${enemy.desc || '强敌来袭！'}”</div>
+                            <div style="font-size:20px; color:#999;">(点击下方“拔剑迎敌”开始战斗)</div>
                         </div>
                         <div id="combat_logs_realtime"></div>
                     </div>
-
                     <div id="combat_sidebar_content" class="combat-sidebar-split">
-                        <div class="sidebar-col">
-                            <div class="sidebar-title">丹药</div>
-                            <div id="sidebar_consumables" class="sidebar-items-container"></div>
-                        </div>
+                        <div class="sidebar-col"><div class="sidebar-title">丹药</div><div id="sidebar_consumables" class="sidebar-items-container"></div></div>
                         <div class="sidebar-divider"></div>
-                        <div class="sidebar-col">
-                            <div class="sidebar-title">功法</div>
-                            <div id="sidebar_skills" class="sidebar-items-container"></div>
-                        </div>
+                        <div class="sidebar-col"><div class="sidebar-title">功法</div><div id="sidebar_skills" class="sidebar-items-container"></div></div>
                     </div>
                 </div>
             </div>
         `;
 
         const ts = Date.now();
-        const combatCallbackName = 'cb_start_' + ts;
-        const escapeCallbackName = 'cb_stop_' + ts;
-        const pauseCallbackName = 'cb_pause_' + ts;
-        const speedCallbackName = 'cb_spd_' + ts; // 缩短函数名
+        const startCB = 'cb_start_' + ts;
+        const stopCB = 'cb_stop_' + ts;
+        const pauseCB = 'cb_pause_' + ts;
+        const spdCB = 'cb_spd_' + ts;
 
-        // 绑定临时全局函数
-        window[escapeCallbackName] = () => { if (window.Combat && window.Combat.stop) window.Combat.stop(); };
-        window[pauseCallbackName] = () => { if (window.Combat && window.Combat.togglePause) window.Combat.togglePause(); };
-        window[speedCallbackName] = (delta) => { if (window.Combat && window.Combat.changeSpeed) window.Combat.changeSpeed(delta); };
+        window[stopCB] = () => { if(window.Combat) Combat.stop(); };
+        window[pauseCB] = () => { if(window.Combat) Combat.togglePause(); };
+        window[spdCB] = (delta) => { if(window.Combat) Combat.changeSpeed(delta); };
 
-        // 统一清理函数：确保窗口关闭时删除这些临时属性
         const cleanCallbacks = () => {
-            delete window[combatCallbackName];
-            delete window[escapeCallbackName];
-            delete window[pauseCallbackName];
-            delete window[speedCallbackName];
+            delete window[startCB]; delete window[stopCB]; delete window[pauseCB]; delete window[spdCB];
         };
 
-        window[combatCallbackName] = () => {
+        window[startCB] = () => {
             const descEl = document.getElementById('combat_desc_initial');
-            const logEl = document.getElementById('combat_logs_realtime');
             if(descEl) descEl.style.display = 'none';
-            if(logEl) logEl.innerHTML = '<div style="color:#888; text-align:center; padding:10px; border-bottom:1px dashed #ccc; margin-bottom:10px;">--- 战斗开始 ---</div>';
-
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
                 footerDiv.innerHTML = `
                     <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="window['${speedCallbackName}'](-500)">⏫</button>
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-500)">⏫</button>
                         <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
-                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0; line-height:22px;" onclick="window['${speedCallbackName}'](500)">⏬</button>
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](500)">⏬</button>
                     </div>
-                    <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCallbackName}']()">
-                        ⏸ 暂停
-                    </button>
-                    <button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${escapeCallbackName}']()">
-                        🏃 拼死逃跑
-                    </button>
+                    <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
+                    ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${stopCB}']()">🏃 拼死逃跑</button>` : ''}
                 `;
-                // 初始化速度文本
-                setTimeout(() => {
-                    const spdEl = document.getElementById('combat_speed_display');
-                    if(spdEl && window.Combat && window.Combat.turnSpeed) {
-                        spdEl.innerText = (1000 / window.Combat.turnSpeed).toFixed(1) + "x";
-                    }
-                }, 0);
             }
 
             Combat.start(enemy, () => {
-                if (window.BountyBoard && window.BountyBoard.onEnemyKilled) {
-                    window.BountyBoard.onEnemyKilled(enemy.id);
-                }
-                if (window.GlobalEnemies) {
-                    window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
-                }
-                if (window.MapCamera && window.MapCamera.renderMap) {
-                    window.MapCamera.renderMap();
-                } else if(window.MapCamera && window.MapCamera.ctx && window.MapAtlas) {
-                    MapAtlas.render(window.MapCamera.ctx, window.MapCamera, window.GlobalEnemies);
-                }
+                if (window.BountyBoard) window.BountyBoard.onEnemyKilled(enemy.id);
+                if (window.GlobalEnemies) window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
+                if (window.MapCamera && window.MapCamera.renderMap) window.MapCamera.renderMap();
 
-                if (footerDiv) footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
+                if (externalOnWin) externalOnWin();
 
-                // 战斗结束清理回调（虽然关闭模态框时也会清理，但双重保险）
+                if (!options.isMultiWave && footerDiv) {
+                    footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
+                }
                 cleanCallbacks();
-            }, 'combat_logs_realtime');
+            }, 'combat_logs_realtime', options);
         };
 
         const footerHtml = `
             <div id="map_combat_footer" style="display:flex; justify-content:space-between; width:100%; gap:15px;">
-                <button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal()">🏃 撤退</button>
-                <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${combatCallbackName}']()">⚔️ 拔剑迎敌</button>
+                ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window.closeModal()">🏃 撤退</button>` : ''}
+                <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${startCB}']()">⚔️ 拔剑迎敌</button>
             </div>
         `;
 
-        // 传入 onClose 回调 (UtilsModal 需要支持第7个参数或修改 showInteractiveModal 逻辑，这里假设通过全局监听或后续清理)
-        // 简单处理：给 Modal 关闭事件挂个钩子（如果 UtilsModal 没提供，可以在这里手动 hack 一个）
-        const originalClose = window.closeModal;
-        window.closeModal = function() {
-            if (originalClose) originalClose();
-            cleanCallbacks(); // 只要关窗就清理垃圾
-            window.closeModal = originalClose; // 还原
-        };
-
-        UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, null);
+        UtilsModal.showInteractiveModal("遭遇强敌", contentHtml, footerHtml, "", 90, () => cleanCallbacks());
 
         this.updateSidebar();
-
-        // 【新增】触发战斗教程
-        // 使用 setTimeout 确保 DOM 已经完全渲染
-        setTimeout(() => {
-            if (window.UITutorial) {
-                UITutorial.start(false, 'combat');
-            }
-        }, 600);
     },
 
     updateSidebar: function() {
@@ -372,37 +277,21 @@ const UICombatModal = {
             const consumables = (window.player && window.player.consumables) ? window.player.consumables : [null, null, null];
             consumables.forEach((sid, idx) => {
                 let inner = '';
-                let btnClassAdd = 'empty-slot-btn';
+                let btnClass = 'empty-slot-btn';
                 let onclick = '';
-                let tooltipEvents = '';
+                let tooltip = '';
 
                 if (sid) {
-                    const item = window.player.inventory.find(i => i && i.sid === sid) ;
+                    const item = window.player.inventory.find(i => i && i.sid === sid);
                     if (item) {
-                        let icon = item.icon || '💊';
-                        if (window.getItemIcon) icon = getItemIcon(item);
-                        tooltipEvents = `onmouseenter="TooltipManager.showItem(event, '${sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
-
-                        inner = `
-                            <div class="c-slot-item">
-                                <div class="c-icon">${icon}</div>
-                                <div class="c-count" id="combat_item_count_${idx}">x${this._getItemCount(sid)}</div>
-                            </div>
-                            <div class="c-name-label">${item.name}</div>
-                        `;
+                        tooltip = `onmouseenter="TooltipManager.showItem(event, '${sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
+                        inner = `<div class="c-slot-item"><div class="c-icon">${item.icon || '💊'}</div><div class="c-count">x${item.count}</div></div><div class="c-name-label">${item.name}</div>`;
                         onclick = `Combat.useConsumable(${idx})`;
-                        btnClassAdd = '';
+                        btnClass = '';
                     }
                 }
                 if (!inner) inner = `<div class="c-slot-empty">空</div>`;
-
-                html += `
-                    <div class="c-slot-wrapper" ${tooltipEvents}>
-                        <div class="c-slot-box">${inner}</div>
-                        <button id="combat_btn_use_${idx}" class="ink_btn_small c-use-btn ${btnClassAdd}" disabled onclick="${onclick}">使用</button>
-                        <div id="combat_cd_overlay_${idx}" class="c-cd-overlay" style="display:none;"></div>
-                    </div>
-                `;
+                html += `<div class="c-slot-wrapper" ${tooltip}><div class="c-slot-box">${inner}</div><button id="combat_btn_use_${idx}" class="ink_btn_small c-use-btn ${btnClass}" disabled onclick="${onclick}">使用</button><div id="combat_cd_overlay_${idx}" class="c-cd-overlay" style="display:none;"></div></div>`;
             });
             consContainer.innerHTML = html;
         }
@@ -413,46 +302,24 @@ const UICombatModal = {
             const activeSkills = [];
             if (player.equipment && player.equipment.gongfa) {
                 player.equipment.gongfa.forEach(id => {
-                    if (!id) return;
                     const book = window.GAME_DB.items.find(i => i.id === id);
-                    if (book && book.action) {
-                        activeSkills.push({ id: id, data: book });
-                    }
+                    if (book && book.action) activeSkills.push({ id, data: book });
                 });
             }
-
             if (activeSkills.length === 0) {
                 html = `<div style="color:#aaa; font-size:12px; text-align:center; margin-top:20px;">无主动功法</div>`;
             } else {
                 activeSkills.forEach((entry, idx) => {
-                    const book = entry.data;
-                    const action = book.action;
-                    const icon = book.icon || '📘';
-                    const tooltipEvents = `onmouseenter="TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
-                    const onclick = `Combat.useSkill('${entry.id}', ${idx})`;
-
                     html += `
-                        <div class="c-slot-wrapper" ${tooltipEvents}>
-                            <div class="c-slot-box" style="border-color:#5d4037;">
-                                <div class="c-slot-item">
-                                    <div class="c-icon">${icon}</div>
-                                </div>
-                                <div class="c-name-label" style="color:#5d4037;">${action.name.substring(0,4)}</div>
-                            </div>
-                            <button id="combat_btn_skill_${entry.id}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="${onclick}">释放</button>
+                        <div class="c-slot-wrapper" onmouseenter="TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)">
+                            <div class="c-slot-box" style="border-color:#5d4037;"><div class="c-slot-item"><div class="c-icon">${entry.data.icon || '📘'}</div></div><div class="c-name-label" style="color:#5d4037;">${entry.data.action.name.substring(0,4)}</div></div>
+                            <button id="combat_btn_skill_${entry.id}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="Combat.useSkill('${entry.id}', ${idx})">释放</button>
                             <div id="combat_skill_cd_overlay_${entry.id}" class="c-cd-overlay" style="display:none;"></div>
-                        </div>
-                    `;
+                        </div>`;
                 });
             }
             skillContainer.innerHTML = html;
         }
-    },
-
-    _getItemCount: function(sid) {
-        if (!player || !player.inventory) return 0;
-        const slot = player.inventory.find(i => i &&  i.sid === sid);
-        return slot ? slot.count : 0;
     }
 };
 
