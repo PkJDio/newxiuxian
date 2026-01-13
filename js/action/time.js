@@ -1,14 +1,11 @@
 // js/action/time.js
-// console.log("加载 时间系统 (含大秦历史线版)");
-// 确保 DataTimeline 已经加载，如果没有加载则定义空对象防止报错
-const TimelineData = window.DataTimeline || { Major: [], Minor: [] };
+// 时间系统总控 v10.0
+// 职责：处理物理时间累加、日历进位、状态基础消耗、调用事件调度器
 
 const TIME_CONFIG = {
     HUNGER_PER_HOUR: 2,
     FATIGUE_PER_HOUR: 1
 };
-
-
 
 const TimeSystem = {
     monthMap: ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"],
@@ -17,15 +14,12 @@ const TimeSystem = {
         const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
         const units = ['', '十', '百', '千', '万'];
         if (num === 0) return digits[0];
-        let str = '';
-        let i = 0;
-        let n = Math.floor(num);
+        let str = '', i = 0, n = Math.floor(num);
         while (n > 0) {
             let d = n % 10;
             if (d !== 0) str = digits[d] + units[i] + str;
             else if (str.length > 0 && str[0] !== digits[0]) str = digits[0] + str;
-            n = Math.floor(n / 10);
-            i++;
+            n = Math.floor(n / 10); i++;
         }
         if (str.startsWith('一十')) str = str.substring(1);
         return str;
@@ -34,375 +28,76 @@ const TimeSystem = {
     getTimeString: function() {
         if (!player || !player.time) return "加载中...";
         const t = player.time;
-        const pad = (n) => {
-            const num = parseInt(n);
-            return isNaN(num) ? "00" : num.toString().padStart(2, '0');
-        };
-
+        const pad = (n) => n.toString().padStart(2, '0');
         const yearChar = this.toChineseNum(Number(t.year) || 1);
-        const hh = pad(t.hour);
-        const mm = pad(t.minute);
-
-        return `秦始皇${yearChar}年 ${pad(t.month)}月 ${pad(t.day)}日 ${hh}:${mm}`;
+        return `秦始皇${yearChar}年 ${pad(t.month)}月 ${pad(t.day)}日 ${pad(t.hour)}:${pad(t.minute)}`;
     },
 
     /**
-     * 时间流逝核心
+     * 推进游戏时间
+     * @param {number} hours 流逝的小时数
      */
     passTime: function(hours, extraHungerCost = 0, extraFatigueCost = 0) {
         if (!player) return;
+        // 初始化时间结构
         if (!player.time) player.time = { year: 37, month: 1, day: 1, hour: 0, minute: 0, useHour: 0 };
-
-        // 初始化 timeStart (如果存档里没有)
-        if (typeof player.timeStart === 'undefined') {
-            player.timeStart = 0;
-        }
+        if (typeof player.timeStart === 'undefined') player.timeStart = 0;
 
         let t = player.time;
         const hoursToAdd = Number(hours) || 0;
-        const totalMinsToAdd = hoursToAdd * 60;
 
-        // 1. 状态消耗
-        const totalHungerCost = (hoursToAdd * TIME_CONFIG.HUNGER_PER_HOUR) + extraHungerCost;
-        const totalFatigueInc = (hoursToAdd * TIME_CONFIG.FATIGUE_PER_HOUR) + extraFatigueCost;
-        player.status.hunger = Math.max(0, (Number(player.status.hunger) || 0) - totalHungerCost);
-        player.status.fatigue = Math.min(200, (Number(player.status.fatigue) || 0) + totalFatigueInc);
-        this._checkStatusDebuffs();
+        // 1. 处理状态消耗 (饥饿/疲惫)
+        player.status.hunger = Math.max(0, (player.status.hunger || 0) - (hoursToAdd * TIME_CONFIG.HUNGER_PER_HOUR + extraHungerCost));
+        player.status.fatigue = Math.min(200, (player.status.fatigue || 0) + (hoursToAdd * TIME_CONFIG.FATIGUE_PER_HOUR + extraFatigueCost));
 
-        // 2. 游戏日历时间累加
-        t.accMins = (Number(t.accMins) || 0) + totalMinsToAdd;
-        const gameMinsToApply = Math.floor(t.accMins);
+        // 调度器：检查是否需要添加饥饿/疲惫Debuff
+        TimeEvents.checkStatusDebuffs();
 
-        if (gameMinsToApply >= 1) {
-            t.accMins -= gameMinsToApply;
-            t.minute = (Number(t.minute) || 0) + gameMinsToApply;
+        // 2. 物理时间进位演算
+        t.accMins = (t.accMins || 0) + hoursToAdd * 60;
+        const minsToApply = Math.floor(t.accMins);
+
+        if (minsToApply >= 1) {
+            t.accMins -= minsToApply;
+            t.minute += minsToApply;
 
             while (t.minute >= 60) {
                 t.minute -= 60;
-                t.hour = (Number(t.hour) || 0) + 1;
+                t.hour += 1;
             }
             while (t.hour >= 24) {
                 t.hour -= 24;
-                t.day = (Number(t.day) || 1) + 1;
-                // 每天过完时，执行新的一天逻辑（含历史事件检查）
-                this._onNewDay();
+                t.day += 1;
+                // 【核心调度】触发新的一天
+                TimeEvents.onNewDay();
             }
             while (t.day > 30) {
                 t.day -= 30;
-                t.month = (Number(t.month) || 1) + 1;
-                player.shopLogs = {};
+                t.month += 1;
+                // 【核心调度】触发新的一月
+                TimeEvents.onNewMonth();
             }
             while (t.month > 12) {
                 t.month = 1;
-                t.year = (Number(t.year) || 1) + 1;
-                player.age = (Number(player.age) || 16) + 1;
+                t.year += 1;
+                player.age = (player.age || 16) + 1;
+                // 【核心调度】触发新的一年
+                TimeEvents.onNewYear();
             }
         }
 
-        // 3. 【核心修复】BUFF 持续时间累计逻辑
-        // 初始化或获取累计小时字段
-        t.useHour = (Number(t.useHour) || 0) + hoursToAdd;
-
-        // 设置触发阈值：0.1天 = 2.4小时
-        const THRESHOLD = 2.4;
-
-        if (t.useHour >= THRESHOLD) {
-            // 计算本次应该扣除多少个 0.1天
-            const count = Math.floor(t.useHour / THRESHOLD);
-            const totalReduction = count * 0.1; // 扣除的总天数
-
-            // 扣除已使用的累计时间
-            t.useHour -= (count * THRESHOLD);
-
-            if (window.player && window.player.status && window.player.derived) {
-                // 1. 获取最大法力值 (防呆处理，由 derived.mpMax 提供)
-                const maxMp = player.derived.mpMax || 100;
-
-                // 2. 计算回复量 (1/10)
-                const recoverAmount = maxMp / 10;
-
-                // 3. 执行回复 (当前mp + 回复量，但不超过 maxMp)
-                // 注意：确保 player.status.mp 存在，不存在则初始化为 0
-                let currentMp = player.status.mp || 0;
-                player.status.mp = Math.min(maxMp, currentMp + recoverAmount);
-
-                // (可选) 如果你希望显示日志，可以加一句
-                // if(window.LogManager) window.LogManager.add(`[周天运转] 法力自动回复了 ${Math.floor(recoverAmount)} 点。`);
-            }
-
-            // 执行 BUFF 扣减
-            this._applyBuffReduction(totalReduction);
+        // 3. 处理周期性逻辑 (每 2.4 小时结算一次 Buff 和 回复)
+        t.useHour = (t.useHour || 0) + hoursToAdd;
+        if (t.useHour >= 2.4) {
+            const count = Math.floor(t.useHour / 2.4);
+            t.useHour -= count * 2.4;
+            // 调度器：执行自然恢复
+            TimeEvents.applyNaturalRecovery();
+            // 调度器：执行 Buff 剩余天数扣减
+            TimeEvents.applyBuffReduction(count * 0.1);
         }
 
         if (window.updateUI) window.updateUI();
-    },
-
-    /**
-     * 执行具体的 BUFF 天数扣减
-     */
-    _applyBuffReduction: function(reductionDays) {
-        if (!player.buffs) return;
-        let hasChange = false;
-
-        for (let id in player.buffs) {
-            let buff = player.buffs[id];
-
-            // 跳过永久 BUFF（如饥饿、疲惫判定产生的）
-            if (buff.days > 9000) continue;
-
-            if (buff.days > 0) {
-                buff.days -= reductionDays;
-
-                // 修正浮点数精度问题，保留一位小数
-                buff.days = Math.round(buff.days * 10) / 10;
-
-                if (buff.days <= 0) {
-                    buff.days = 0;
-                    if(window.showToast) window.showToast(`[${buff.name || '状态'}] 已消散`);
-                    delete player.buffs[id];
-                    hasChange = true;
-                }
-            }
-        }
-
-        if (hasChange && window.recalcStats) window.recalcStats();
-    },
-
-    _checkStatusDebuffs: function() {
-        if (!player || !player.buffs) return;
-        const maxFatigue = player.derived.fatigueMax || 100;
-
-        // 1. 疲惫 BUFF 处理
-        if (player.status.fatigue >= maxFatigue) {
-            if (!player.buffs['debuff_fatigue']) {
-                player.buffs['debuff_fatigue'] = { name: "疲惫", attr: "全属性", val: "减半", color: "#d32f2f", days: 9999, isDebuff: true };
-                if(window.showToast) window.showToast("体力透支...");
-            }
-        } else if (player.buffs['debuff_fatigue']) {
-            delete player.buffs['debuff_fatigue'];
-        }
-
-        // 2. 饥饿 BUFF 处理 【核心逻辑修改处】
-        // 如果当前饱食度为0，且没有饥饿BUFF，则添加BUFF
-        if (player.status.hunger <= 0) {
-            if (!player.buffs['debuff_hunger']) {
-                player.buffs['debuff_hunger'] = { name: "饥饿", attr: "全属性", val: "减半", color: "#d32f2f", days: 9999, isDebuff: true };
-                if(window.showToast) window.showToast("腹中空空...");
-            }
-        }
-        // 如果存在饥饿BUFF，且饱食度回升到了 30 以上，则解除
-        else if (player.buffs['debuff_hunger'] && player.status.hunger > 30) {
-            delete player.buffs['debuff_hunger'];
-            if(window.showToast) window.showToast("饥饿感消散了...");
-
-            // 同步刷新 UI (如果存在)
-            if (window.UI && window.UI.renderBuffs) window.UI.renderBuffs();
-        }
-    },
-
-    _onNewDay: function() {
-        // 1. 原有逻辑
-        if (window.BountyBoard) window.BountyBoard.checkAllTasksStatus();
-
-        // 2. 检查历史大事件 (Major Events)
-        this._checkMajorEvents();
-
-        // 3. 检查小事件/传闻 (Minor Events)
-        this._checkMinorEvents();
-
-        // 2. 更新危险度稳定期
-        this._updateDangerStability();
-
-        // 4. 检查怪物来袭
-        this._checkEnemyRaid();
-    },
-    /**
-     * 更新危险度稳定期逻辑
-     */
-    _updateDangerStability: function() {
-        if (!player) return;
-        if (player.danger === undefined) player.danger = 0;
-        if (player.need_kill === undefined) player.need_kill = 0;
-
-        // 每天增加 20
-        player.need_kill += 20;
-
-        // 如果 5 天内没击杀怪物导致累计到 100，则危险度清零
-        if (player.need_kill >= 100) {
-            player.danger = 0;
-            player.need_kill = 0;
-            if(window.LogManager) window.LogManager.add("<span style='color:green'>[环境] 周遭的杀气似乎消散了，你感到一阵轻松。</span>");
-        }
-    },
-
-    /**
-     * 怪物来袭判断
-     */
-    _checkEnemyRaid: function() {
-        if (!player || player.timeStart < 1) return;
-
-        // A. 第一个大事件触发后的第二天：剧情必发来袭
-        // 我们用 flag 记录是否已处理过剧情来袭
-        if (player.timeStart === 1 && !player.flags?.scripted_raid_done) {
-            if (!player.flags) player.flags = {};
-            this._triggerScriptedRaid();
-            player.flags.scripted_raid_done = true;
-            return;
-        }
-
-        // B. 每日随机来袭 (100 - 危险度 的概率)
-        const raidChance = 100 - (player.danger || 0);
-        if (Math.random() * 100 < raidChance) {
-            this._triggerRandomRaid();
-        }
-    },
-
-    /**
-     * 剧情必发来袭 (多波次)
-     */
-    _triggerScriptedRaid: function() {
-        const danger = player.danger || 0;
-        // 波数 = 3 - 危险度/30 (向下取整)
-        let waves = Math.floor(3 - danger / 30);
-        if (waves < 1) waves = 1;
-
-        if (window.LogManager) window.LogManager.add(`<span style='color:red; font-weight:bold;'>[警报] 灵气异动引发了周围怪物的疯狂，它们向你冲过来了！</span>`);
-
-        // 构建波次序列
-        let waveConfig = [];
-        if (waves === 1) waveConfig = ["boss"];
-        else if (waves === 2) waveConfig = ["elite", "boss"];
-        else if (waves === 3) waveConfig = ["minion", "elite", "boss"];
-
-        this._startRaidChain(waveConfig);
-    },
-
-    /**
-     * 随机来袭 (单波次)
-     */
-    _triggerRandomRaid: function() {
-        const ranks = ["minion", "elite", "boss"];
-        const targetRank = ranks[Math.floor(Math.random() * ranks.length)];
-
-        if (window.LogManager) window.LogManager.add(`[传闻] 荒野中似乎有危险生物正在逼近...`);
-        this._startRaidChain([targetRank]);
-    },
-
-    /**
-     * 执行来袭战斗链
-     */
-    _startRaidChain: function(ranks) {
-        if (ranks.length === 0) return;
-
-        const currentRank = ranks.shift();
-        const enemy = UtilsEnemy.createEnemyByRank(currentRank);
-
-        if (!enemy) return;
-
-        // 锁定战斗模态，无法逃跑
-        setTimeout(() => {
-            if (window.ModalManager && window.ModalManager.showCombatModal) {
-                window.ModalManager.showCombatModal(enemy, () => {
-                    // 胜利回调：如果还有下一波，继续触发
-                    if (ranks.length > 0) {
-                        if (window.LogManager) window.LogManager.add(`[战斗] 还没结束，又一波怪物出现了！`);
-                        this._startRaidChain(ranks);
-                    }
-                }, { canEscape: false }); // 传入配置禁止逃跑
-            }
-        }, 1000);
-    },
-
-    /**
-     * 辅助：根据DataTimeline检查并更新阶段
-     */
-    _checkMajorEvents: function() {
-        if (typeof DataTimeline === 'undefined') return;
-        const t = player.time;
-        DataTimeline.Major.forEach(evt => {
-            if (t.year === evt.year && t.month === evt.month && t.day === evt.day) {
-                if (player.timeStart < evt.stage) {
-                    player.timeStart = evt.stage;
-                    // 这里通常会触发之前的 ModalManager.showEventModal(evt.title, evt.desc...)
-                }
-            }
-        });
-    },
-    /**
-     * 检查并触发【历史大事件】
-     */
-    _checkMajorEvents: function() {
-        if (!player || !player.time || !TimelineData.Major) return;
-
-        let currentStage = player.timeStart || 0;
-        const t = player.time;
-
-        for (let event of TimelineData.Major) {
-            if (event.stage > currentStage) {
-                // 判断条件：年份超过，或者年份相同且月份日期均达到
-                // 为了严谨，这里精确到日
-                if (t.year > event.year ||
-                    (t.year === event.year && t.month > event.month) ||
-                    (t.year === event.year && t.month === event.month && t.day >= event.day)) {
-
-                    // 触发大事件
-                    player.timeStart = event.stage;
-
-                    // 弹窗
-                    if (window.UtilsModal && window.UtilsModal.showEventModal) {
-                        window.UtilsModal.showEventModal(event.title, event.desc);
-                    } else if (window.showToast) {
-                        window.showToast(`历史推进：${event.title}`);
-                    }
-
-                    // 日志
-                    if (window.LogManager) {
-                        window.LogManager.add(`【历史洪流】${event.title}：${event.desc}`, "important");
-                    }
-
-                    break; // 一次只触发一个大阶段
-                }
-            }
-        }
-    },
-
-    /**
-     * 检查并触发【历史小传闻】
-     */
-    _checkMinorEvents: function() {
-        if (!player || !player.time || !TimelineData.Minor) return;
-
-        const t = player.time;
-        // 使用一个简单的 Key 来标记今天是否已经触发过事件，防止重复 (可选，如果passTime保证每天只调一次onNewDay则不需要)
-        // 这里直接比对日期
-
-        // 查找今天发生的事件列表
-        const todayEvents = TimelineData.Minor.filter(e =>
-            e.year === t.year && e.month === t.month && e.day === t.day
-        );
-
-        if (todayEvents.length > 0) {
-            todayEvents.forEach(event => {
-                // 构造前缀
-                let prefix = "【传闻】";
-                if (event.type === 'court') prefix = "【朝廷】";
-                if (event.type === 'nature') prefix = "【天象】";
-                if (event.type === 'world') prefix = "【天下】";
-
-                // 1. 发送 Toast 提示 (轻量级)
-                if (window.showToast) {
-                    window.showToast(`${prefix} ${event.text}`);
-                }
-
-                // 2. 写入日志 (持久化查看)
-                    if (window.LogManager) {
-                    // 使用稍微特殊的颜色或样式
-                    window.LogManager.add(`${prefix} ${event.text}`, "normal");
-                }
-
-                console.log(`[Minor Timeline] ${event.year}-${event.month}-${event.day}: ${event.text}`);
-            });
-        }
     }
 };
 
