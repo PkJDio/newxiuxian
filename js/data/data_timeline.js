@@ -64,3 +64,5 @@ const DataTimeline = {
         { year: 40, month: 8, day: 1,  type: "court", text: "赵高在朝堂指鹿为马。群臣惊恐地发现，那并非简单的政治站队。在赵高那双泛着紫芒的妖瞳注视下，那匹鹿的骨骼咔咔作响，皮毛脱落，竟真的在众目睽睽之下扭曲变成了一匹似马非马的怪物。这不是指鹿为马，这是‘言出法随’的妖术！大秦的朝堂，已彻底沦为妖魔的玩物。" }
     ]
 };
+
+window.DataTimeline=DataTimeline;

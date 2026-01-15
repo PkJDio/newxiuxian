@@ -483,7 +483,7 @@ const UIBag = {
                 else btnsHtml += `<button class="bag_btn_action" onclick="UIBag.equipConsumable('${sid}')">随身携带</button>`;
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem('${sid}')">服用</button>`;
             } else if (item.type === 'book') {
-                btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open('${sid}')">研读</button>`;
+                btnsHtml += `<button class="bag_btn_action" onclick="window.UIStudy.open()('${sid}')">研读</button>`;
             } else if (['food','foodMaterial','herb','fish','fish'].includes(item.type)) {
                 btnsHtml += `<button class="bag_btn_action" onclick="UtilsItem.useItem('${sid}')">使用</button>`;
             }

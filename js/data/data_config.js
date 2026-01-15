@@ -76,6 +76,7 @@ const PLAYER_TEMPLATE = {
     worldSeed: 20251227, // 默认种子，开始游戏时会随机覆盖
     //当前时间阶段
     timeStart: 0,
+    startDanger:0,
     // 位置
     coord   : {x: 2770, y: 2653}, // 对应新地图关中区域
     location: 'guanzhong', mapUnlocked: false,

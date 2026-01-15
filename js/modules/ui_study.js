@@ -131,6 +131,7 @@ const UIStudy = {
                 this.selectedBookId = entry.id;
                 // 【新增】保存选择记录
                 player.lastStudyId = entry.id;
+                saveGame();
                 // 点击切换不触发滚动
                 this.shouldScroll = false;
                 this.refresh();
@@ -176,17 +177,18 @@ const UIStudy = {
     renderRightPanel: function() {
         const container = document.getElementById('study_dashboard');
         container.innerHTML = "";
-
+        console.log('renderRightPanel', this.selectedBookId);
         if (!this.selectedBookId) {
             container.innerHTML = `<div class="empty_tip">请选择要研读的典籍</div>`;
             return;
         }
 
         const bookId = this.selectedBookId;
-        const item = GAME_DB.items.find(i => i.id === bookId);
+        const item = player.inventory.find(i => i.id === bookId);
 
         // 获取详细计算数据 (来自 util_study.js 的 predictGain)
-        const predict = window.UtilStudy.predictGain(bookId);
+        console.log('predictGain', bookId)
+        const predict = window.UtilStudy.calcGain(item);
         const progress = (player.studyProgress && player.studyProgress[bookId]) || 0;
         const max = item.studyCost || 100;
 

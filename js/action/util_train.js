@@ -36,7 +36,7 @@ const UtilTrain = {
      * 预测修炼收益 (用于UI显示和实际计算)
      */
     predictGain: function(skillId) {
-        const item = typeof GAME_DB !== 'undefined' ? GAME_DB.items.find(i => i.id === skillId) : null;
+        const item = typeof books !== 'undefined' ? books.find(i => i.id === skillId) : null;
         if (!item) return { gain: 0, efficiency: 0, breakdown: [], formulaDesc: "" };
 
         const p = window.player;

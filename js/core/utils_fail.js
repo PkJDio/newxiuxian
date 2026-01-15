@@ -25,7 +25,7 @@ const UtilsFail = {
             if (hasNearDeath || hasDyingMark) {
                 console.warn("[UtilsFail] 触发死亡判定流程");
 
-                let deathReason = "伤势过重，旧疾复发，终是无力回天。";
+                let deathReason = "伤势过重，终是无力回天。";
                 let deathTitle = "身死道消";
 
                 if (hasDyingMark) {

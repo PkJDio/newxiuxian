@@ -275,139 +275,139 @@ console.log("RAID数据初始化完成:", window.EVENT_RAID_ENEMIES);
  * [测试工具] 怪物来袭模拟器 v3.2 (完美合并版)
  * ============================================================
  */
-window.testRaid = function(rank = 'minion', waves = 1,isDeath = true) {
-    console.log(`%c[Raid Test] 启动模拟：级别=${rank}, 波次=${waves}`, "color: #1e88e5; font-weight: bold;");
-
-    if (!window.EVENT_RAID_ENEMIES) {
-        console.error("错误: 未找到 EVENT_RAID_ENEMIES 配置。");
-        return;
-    }
-    if (isDeath && window.player) {
-        if (!window.player.buffs) window.player.buffs = {};
-
-        // 定义濒死BUFF
-        const NEAR_DEATH_ID = 'buff_near_death';
-        if (window.addBuff) {
-            window.addBuff(NEAR_DEATH_ID, {
-                name: "濒死",
-                attr: "状态",
-                val: "重伤",
-                days: 7,
-                source: "战斗失败",
-                isDebuff: true,
-                desc: "你刚从鬼门关回来，身体极度虚弱。若在此期间再次重伤，恐有性命之忧。"
-            });
-        }
-
-        if(window.showToast) window.showToast("⚠️ 遭遇强敌，陷入【濒死】状态！战败即死！");
-        console.log("已添加濒死BUFF:", window.player.buffs[NEAR_DEATH_ID]);
-
-        // 刷新一下UI，确保BUFF栏显示
-        if(window.updateUI) window.updateUI();
-    }
-
-    const startWave = (currentWave, totalWaves, currentRank) => {
-        // 1. 获取敌人数据
-        const pool = window.EVENT_RAID_ENEMIES[currentRank];
-        console.log(`当前波数: ${currentWave}/${totalWaves}, 当前等级: ${currentRank}`)
-        console.log(`敌人池: ${pool}`,pool)
-        if (!pool || pool.length === 0) {
-            console.error(`错误: 级别 [${currentRank}] 的敌人池为空`);
-            return;
-        }
-
-        const template = pool[Math.floor(Math.random() * pool.length)];
-        console.log(`当前敌人: ${template}`,template)
-        const enemyInstance = UtilsEnemy._buildEnemyInstance(template, 400, 300);
-
-        console.log(`%c[波次 ${currentWave}/${totalWaves}] 敌人: ${enemyInstance.name}`, "color: #43a047;",enemyInstance);
-
-        const isLastWave = currentWave >= totalWaves;
-
-        // 2. 配置参数
-        const finalOptions = {
-            canEscape: false,
-            // 关键：告诉底层这是多波次战斗，胜利后不要显示默认的“关闭”按钮
-            // 我们会在回调里自己画“下一波”按钮
-            isMultiWave: !isLastWave,
-            allowOutsideClick: false,
-            allowEsc: false,
-            // =========== 【新增】 ===========
-            // 标记为“死斗”模式：战败即兵解
-            isDeathBattle: true
-        };
-
-        // 3. 定义通用的胜利回调逻辑
-        const onWinCallback = () => {
-            // 如果不是最后一波，显示“下一波”按钮
-            if (!isLastWave) {
-
-                console.log(`%c[波次 ${currentWave}] 胜利！等待玩家手动开启下一波...`, "color: #fb8c00;");
-
-                // 计算下一波难度
-                let nextRank = currentRank;
-                // 简单的阶梯逻辑：
-                // 打赢第1波 -> 下一波是 Elite
-                if (currentWave === 1) nextRank = 'elite';
-                // 打赢第2波 -> 下一波是 Boss (这样第3波就是Boss了)
-                if (currentWave === 2) nextRank = 'boss';
-                // 如果有第4波 -> 下一波是 Lord
-                if (currentWave >= 3) nextRank = 'lord';
-                console.log(`%c[波次 ${currentWave}] 下一波难度：${nextRank}`, "color: #4caf50;");
-                // --- 【核心修改】 ---
-                // 1. 获取底部按钮区域
-                const footer = document.getElementById('map_combat_footer');
-                if (footer) {
-                    // 2. 生成唯一的按钮ID，防止冲突
-                    const nextBtnId = 'btn_next_wave_' + Date.now();
-
-                    // 3. 渲染“迎战下一波”按钮
-                    footer.innerHTML = `
-                        <div style="width:100%; text-align:center; color:#f57f17; font-weight:bold; margin-bottom:5px; font-size:16px;">
-                            ⚠️ 敌军援军已至，请整顿备战！
-                        </div>
-                        <button id="${nextBtnId}" class="ink_btn_danger" style="width:100%; height:45px; font-size:20px; font-weight:bold; box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);">
-                            ⚔️ 迎战下一波
-                        </button>
-                    `;
-
-                    // 4. 绑定点击事件：点击后立即开始下一波
-                    document.getElementById(nextBtnId).onclick = function() {
-                        // 播放一个简单的点击反馈（可选）
-                        this.innerText = "正在加载...";
-                        this.disabled = true;
-
-                        // 启动下一波
-                        startWave(currentWave + 1, totalWaves, nextRank);
-                    };
-                }
-
-            } else {
-                // 如果是最后一波，显示最终胜利信息
-                console.log("%c[测试结束] 最终胜利！所有波次已清除。", "color: #fdd835; font-weight: bold;");
-                if(window.showToast) window.showToast("🎉 守城成功！");
-
-                // 因为 finalOptions.isMultiWave 为 false，底层 CombatCore 会自动渲染“凯旋而归”按钮，
-                // 所以这里不需要我们要手动操作 footer
-            }
-        };
-
-        // 4. 调用显示/刷新方法
-        if (window.UICombatModal) {
-            if (currentWave === 1) {
-                UICombatModal.show(enemyInstance, onWinCallback, finalOptions);
-            } else {
-                UICombatModal.nextWave(enemyInstance, onWinCallback, finalOptions);
-            }
-        } else {
-            console.error("错误: 未找到 UICombatModal 模块。");
-        }
-    };
-
-    // 启动第一波
-    const initialRank = waves > 1 ? 'minion' : rank;
-    startWave(1, waves, initialRank);
-};
+// window.testRaid = function(rank = 'minion', waves = 1,isDeath = true) {
+//     console.log(`%c[Raid Test] 启动模拟：级别=${rank}, 波次=${waves}`, "color: #1e88e5; font-weight: bold;");
+//
+//     if (!window.EVENT_RAID_ENEMIES) {
+//         console.error("错误: 未找到 EVENT_RAID_ENEMIES 配置。");
+//         return;
+//     }
+//     if (isDeath && window.player) {
+//         if (!window.player.buffs) window.player.buffs = {};
+//
+//         // 定义濒死BUFF
+//         const NEAR_DEATH_ID = 'buff_near_death';
+//         if (window.addBuff) {
+//             window.addBuff(NEAR_DEATH_ID, {
+//                 name: "濒死",
+//                 attr: "状态",
+//                 val: "重伤",
+//                 days: 7,
+//                 source: "战斗失败",
+//                 isDebuff: true,
+//                 desc: "你刚从鬼门关回来，身体极度虚弱。若在此期间再次重伤，恐有性命之忧。"
+//             });
+//         }
+//
+//         if(window.showToast) window.showToast("⚠️ 遭遇强敌，陷入【濒死】状态！战败即死！");
+//         console.log("已添加濒死BUFF:", window.player.buffs[NEAR_DEATH_ID]);
+//
+//         // 刷新一下UI，确保BUFF栏显示
+//         if(window.updateUI) window.updateUI();
+//     }
+//
+//     const startWave = (currentWave, totalWaves, currentRank) => {
+//         // 1. 获取敌人数据
+//         const pool = window.EVENT_RAID_ENEMIES[currentRank];
+//         console.log(`当前波数: ${currentWave}/${totalWaves}, 当前等级: ${currentRank}`)
+//         console.log(`敌人池: ${pool}`,pool)
+//         if (!pool || pool.length === 0) {
+//             console.error(`错误: 级别 [${currentRank}] 的敌人池为空`);
+//             return;
+//         }
+//
+//         const template = pool[Math.floor(Math.random() * pool.length)];
+//         console.log(`当前敌人: ${template}`,template)
+//         const enemyInstance = UtilsEnemy._buildEnemyInstance(template, 400, 300);
+//
+//         console.log(`%c[波次 ${currentWave}/${totalWaves}] 敌人: ${enemyInstance.name}`, "color: #43a047;",enemyInstance);
+//
+//         const isLastWave = currentWave >= totalWaves;
+//
+//         // 2. 配置参数
+//         const finalOptions = {
+//             canEscape: false,
+//             // 关键：告诉底层这是多波次战斗，胜利后不要显示默认的“关闭”按钮
+//             // 我们会在回调里自己画“下一波”按钮
+//             isMultiWave: !isLastWave,
+//             allowOutsideClick: false,
+//             allowEsc: false,
+//             // =========== 【新增】 ===========
+//             // 标记为“死斗”模式：战败即兵解
+//             isDeathBattle: true
+//         };
+//
+//         // 3. 定义通用的胜利回调逻辑
+//         const onWinCallback = () => {
+//             // 如果不是最后一波，显示“下一波”按钮
+//             if (!isLastWave) {
+//
+//                 console.log(`%c[波次 ${currentWave}] 胜利！等待玩家手动开启下一波...`, "color: #fb8c00;");
+//
+//                 // 计算下一波难度
+//                 let nextRank = currentRank;
+//                 // 简单的阶梯逻辑：
+//                 // 打赢第1波 -> 下一波是 Elite
+//                 if (currentWave === 1) nextRank = 'elite';
+//                 // 打赢第2波 -> 下一波是 Boss (这样第3波就是Boss了)
+//                 if (currentWave === 2) nextRank = 'boss';
+//                 // 如果有第4波 -> 下一波是 Lord
+//                 if (currentWave >= 3) nextRank = 'lord';
+//                 console.log(`%c[波次 ${currentWave}] 下一波难度：${nextRank}`, "color: #4caf50;");
+//                 // --- 【核心修改】 ---
+//                 // 1. 获取底部按钮区域
+//                 const footer = document.getElementById('map_combat_footer');
+//                 if (footer) {
+//                     // 2. 生成唯一的按钮ID，防止冲突
+//                     const nextBtnId = 'btn_next_wave_' + Date.now();
+//
+//                     // 3. 渲染“迎战下一波”按钮
+//                     footer.innerHTML = `
+//                         <div style="width:100%; text-align:center; color:#f57f17; font-weight:bold; margin-bottom:5px; font-size:16px;">
+//                             ⚠️ 敌军援军已至，请整顿备战！
+//                         </div>
+//                         <button id="${nextBtnId}" class="ink_btn_danger" style="width:100%; height:45px; font-size:20px; font-weight:bold; box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);">
+//                             ⚔️ 迎战下一波
+//                         </button>
+//                     `;
+//
+//                     // 4. 绑定点击事件：点击后立即开始下一波
+//                     document.getElementById(nextBtnId).onclick = function() {
+//                         // 播放一个简单的点击反馈（可选）
+//                         this.innerText = "正在加载...";
+//                         this.disabled = true;
+//
+//                         // 启动下一波
+//                         startWave(currentWave + 1, totalWaves, nextRank);
+//                     };
+//                 }
+//
+//             } else {
+//                 // 如果是最后一波，显示最终胜利信息
+//                 console.log("%c[测试结束] 最终胜利！所有波次已清除。", "color: #fdd835; font-weight: bold;");
+//                 if(window.showToast) window.showToast("🎉 守城成功！");
+//
+//                 // 因为 finalOptions.isMultiWave 为 false，底层 CombatCore 会自动渲染“凯旋而归”按钮，
+//                 // 所以这里不需要我们要手动操作 footer
+//             }
+//         };
+//
+//         // 4. 调用显示/刷新方法
+//         if (window.UICombatModal) {
+//             if (currentWave === 1) {
+//                 UICombatModal.show(enemyInstance, onWinCallback, finalOptions);
+//             } else {
+//                 UICombatModal.nextWave(enemyInstance, onWinCallback, finalOptions);
+//             }
+//         } else {
+//             console.error("错误: 未找到 UICombatModal 模块。");
+//         }
+//     };
+//
+//     // 启动第一波
+//     const initialRank = waves > 1 ? 'minion' : rank;
+//     startWave(1, waves, initialRank);
+// };
 console.log("%c怪物来袭测试工具已载入！", "color: #8e24aa; font-weight: bold;");
 console.log("输入 testRaid('minion') 测试普通怪");
 console.log("输入 testRaid('elite') 测试精英怪");

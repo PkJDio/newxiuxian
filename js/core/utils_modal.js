@@ -48,28 +48,46 @@ const ModalManager = {
     },
 
     // 4. 事件弹窗 (默认允许关闭)
-    showEventModal: function(title, contentHtml) {
-        const { box, body } = this._showBaseModal('history_modal_box', title, contentHtml, null);
+    // 4. 事件弹窗 (修改：支持回调 + 强制互动)
+    showEventModal: function(title, contentHtml, onConfirm = null) {
 
-        // DOM 结构后处理
-        const header = box.querySelector('.modal_header');
-        if (header) {
-            header.className = 'history_modal_header';
-            header.innerHTML = title;
+        // 内部渲染函数，接受临时的回调函数名 (如果有)
+        const renderWithCallback = (funcName) => {
+            // 如果有回调名，则调用它；否则直接关闭
+            const clickAction = funcName ? `window['${funcName}']()` : "window.closeModal()";
+
+            // 强制禁止点击外部关闭 (options = { allowOutsideClick: false })
+            // 确保玩家只能点击按钮，保证回调一定执行
+            const { box, body } = this._showBaseModal('history_modal_box', title, contentHtml, null, "", null, null, { allowOutsideClick: false });
+
+            // --- DOM 样式后处理 (保持原有的历史事件样式) ---
+            const header = box.querySelector('.modal_header');
+            if (header) {
+                header.className = 'history_modal_header';
+                header.innerHTML = title;
+            }
+
+            const bodyEl = box.querySelector('.modal_body');
+            if (bodyEl) {
+                bodyEl.className = 'history_modal_body';
+            }
+
+            const footer = box.querySelector('.modal_footer');
+            if (footer) {
+                footer.className = 'history_modal_footer';
+                // 绑定点击事件
+                footer.innerHTML = `<button class="history_btn_confirm" onclick="${clickAction}">阅毕</button>`;
+            }
+        };
+
+        // 如果传入了回调，使用 ModalManager 自带的临时回调生成器
+        if (onConfirm) {
+            this._createTempCallback(onConfirm, renderWithCallback);
+        } else {
+            renderWithCallback(null);
         }
 
-        const bodyEl = box.querySelector('.modal_body');
-        if (bodyEl) {
-            bodyEl.className = 'history_modal_body';
-        }
-
-        const footer = box.querySelector('.modal_footer');
-        if (footer) {
-            footer.className = 'history_modal_footer';
-            footer.innerHTML = `<button class="history_btn_confirm" onclick="window.closeModal()">阅毕</button>`;
-        }
-
-        return body;
+        // 注意：showEventModal 通常不需要返回 body，因为它主要是展示
     },
 
     // 5. 警告弹窗 (强制禁止 ESC 和 点击外部关闭)
