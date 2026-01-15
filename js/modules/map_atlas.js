@@ -190,9 +190,22 @@ const MapAtlas = {
             ctx.beginPath();
             if (isNight) {
                 ctx.save();
-                ctx.shadowBlur = 30;
+
+                // 增加发光强度，让它在晚上更亮
+                ctx.shadowBlur = 25;
+                // 发光颜色使用怪物的配置颜色
                 ctx.shadowColor = v.color;
-                ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+
+                // =========== 【核心修改开始】 ===========
+                // 如果怪物配置了特殊的阴影颜色（说明是精英/BOSS），就用那个颜色填充
+                // 如果是普通怪（shadowBlur通常比较小），就用淡白色，稍微有点幽灵感
+                if (v.shadowBlur > 5 && v.shadowColor) {
+                    ctx.fillStyle = v.shadowColor; // 这里会使用配置的 rgba(..., ...) 颜色
+                } else {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.15)"; // 普通怪保持淡白
+                }
+                // =========== 【核心修改结束】 ===========
+
                 ctx.arc(sx, sy, size * 0.8, 0, PI2);
                 ctx.fill();
                 ctx.restore();

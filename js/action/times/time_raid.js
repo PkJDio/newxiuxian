@@ -12,7 +12,7 @@ const TimeRaid = {
         if (player.need_kill >= 100) {
             player.danger = 0;
             player.need_kill = 0;
-            if(window.LogManager) window.LogManager.add("<span style='color:green'>[环境] 缠绕在你周身的杀气消散了，你感到一阵莫名的轻松。</span>");
+            if(window.LogManager) window.LogManager.add("<span style='color:green'>[环境] 缠绕在你周身的杀气消散了</span>");
         }
     },
 

@@ -42,91 +42,65 @@ const UtilStudy = {
      * 预测研读收益 (核心计算逻辑)
      * 公式：基础点数 × (疲劳?0.5) × (饥饿?0.5) × (1 + Buff加成)
      */
-    predictGain: function(bookId) {
+    /**
+     * 执行研读动作
+     */
+    performStudy: function(bookId) {
         const book = window.GAME_DB.items.find(i => i.id === bookId);
-        if (!book) return { gain: 0, efficiency: 0, breakdown: [], formulaDesc: "" };
+        if (!book) return false;
 
         const p = window.player;
-        const attr = p.derived || p.attributes || { jing:10, qi:10, shen:10 };
+        const maxFatigue = (p.derived && p.derived.fatigueMax) ? p.derived.fatigueMax : 100;
 
-        // 1. 基础值计算
-        const baseResult = this._calculateBaseOutput(book, attr);
-        let baseGainRaw = baseResult.val;
+        // =========== 【新增检查】 ===========
+        // 如果疲劳值已满，禁止研读
+        if (p.status.fatigue >= maxFatigue) {
+            if (window.showToast) window.showToast("精神困乏，头昏脑涨，实在读不进去了。（疲劳已满）");
+            return false;
+        }
+        // ===================================
 
-        // 2. 状态检测
-        let buffBonus = 0; // 正面Buff总加成
-        let hasFatigue = false;
-        let hasHunger = false;
-        let breakdown = [];
-
-        // 【修正】根据功法类型显示具体的基础点数公式
-        let baseLabel = "";
-        if (book.subType === 'body') {
-            baseLabel = "基础点数 (10 + 精/2)";
-        } else {
-            baseLabel = "基础点数 (10 + (气+神)/2)";
+        // 1. 消耗时间
+        if (window.TimeSystem) {
+            window.TimeSystem.passTime(this.COST_HOUR);
+        } else if (window.Time) { // 兼容旧版 Time
+            window.Time.passTime(this.COST_HOUR);
         }
 
-        // 初始基础显示
-        breakdown.push({ label: baseLabel, val: Math.floor(baseResult.base) });
-        breakdown.push({ label: `稀有度系数 (1 + ${book.rarity || 1}×0.1)`, val: `÷ ${baseResult.rarityFactor.toFixed(1)}` });
+        // 2. 增加疲劳 (手动处理)
+        // 这里可以直接使用上面获取到的 maxFatigue
+        p.status.fatigue = Math.min(maxFatigue, p.status.fatigue + this.FATIGUE_GAIN);
 
-        if (p.buffs) {
-            const buffList = Array.isArray(p.buffs) ? p.buffs : Object.values(p.buffs);
-            buffList.forEach(b => {
-                if (!b) return;
+        // 3. 增加进度
+        if (!p.studyProgress) p.studyProgress = {};
+        if (p.studyProgress[bookId] === undefined) p.studyProgress[bookId] = 0;
 
-                // 研读效率 Buff (studyEff) -> 累加
-                if (b.attr === 'studyEff') {
-                    let val = parseFloat(b.val);
-                    if (String(b.val).includes('%')) val /= 100;
-                    if (val > 0) {
-                        buffBonus += val;
-                        breakdown.push({ label: b.name, val: `+${Math.round(val*100)}%`, color: "#4caf50" });
-                    }
-                }
+        const predict = this.predictGain(bookId);
+        p.studyProgress[bookId] += predict.gain;
 
-                // 负面状态检测
-                if (b.id === 'debuff_fatigue' || (b.name && b.name.includes('疲'))) hasFatigue = true;
-                if (b.id === 'debuff_hunger' || (b.name && b.name.includes('饿'))) hasHunger = true;
-            });
+        // 4. 反馈
+        if (window.showToast) {
+            const effPct = Math.round(predict.efficiency * 100);
+            window.showToast(`研读结束，[${book.name}] 进度 +${predict.gain} (效率${effPct}%)`);
+        }
+        if (window.LogManager) {
+            window.LogManager.add(`挑灯夜读 [${book.name}] ${this.COST_HOUR} 个时辰，感悟良多，进度提升 ${predict.gain}。`);
         }
 
-        // 3. 综合效率计算
-        let efficiency = 1.0;
-
-        // 应用负面 (乘法)
-        if (hasFatigue) {
-            efficiency *= 0.5;
-            breakdown.push({ label: "精神疲惫", val: "x 50%", color: "#f44336" });
-        }
-        if (hasHunger) {
-            efficiency *= 0.5;
-            breakdown.push({ label: "腹中饥饿", val: "x 50%", color: "#f44336" });
+        // 5. 检查是否完成
+        const maxProgress = book.studyCost || 100;
+        if (p.studyProgress[bookId] >= maxProgress) {
+            this.onLearnSuccess(book);
+            return true;
         }
 
-        // 应用正面 (加法后乘入)
-        if (buffBonus > 0) {
-            efficiency *= (1 + buffBonus);
+        // 6. 存档与刷新
+        if (window.saveGame) window.saveGame();
+        if (window.UIStudy && typeof window.UIStudy.refresh === 'function') {
+            window.UIStudy.refresh();
         }
 
-        // 保底效率 10%
-        if (efficiency < 0.1) efficiency = 0.1;
-
-        // 4. 最终计算
-        const finalGain = Math.max(1, Math.floor(baseGainRaw * efficiency));
-
-        // 5. 生成公式描述字符串 (用于UI底部小字)
-        let attrDesc = book.subType === 'body' ? "精/2" : "(气+神)/2";
-        let formulaDesc = `(10 + ${attrDesc}) ÷ (1 + 稀有度×0.1) × 效率`;
-
-        return {
-            gain: finalGain,
-            baseGain: Math.floor(baseGainRaw),
-            efficiency: efficiency,
-            breakdown: breakdown,
-            formulaDesc: formulaDesc
-        };
+        return false;
     },
 
     /**

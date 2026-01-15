@@ -306,7 +306,13 @@ const UICombatModal = {
                     if (item) {
                         tooltip = `onmouseenter="TooltipManager.showItem(event, '${sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)"`;
                         inner = `<div class="c-slot-item"><div class="c-icon">${item.icon || '💊'}</div><div class="c-count">x${item.count}</div></div><div class="c-name-label">${item.name}</div>`;
-                        onclick = `Combat.useConsumable(${idx})`;
+
+                        // =========== 【修复点 1】 ===========
+                        // 在调用 Use 方法前，先强制调用 TooltipManager.hide()
+                        // 这样即使 DOM 马上被销毁，悬浮窗也会先关掉
+                        onclick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useConsumable('${idx}')`;
+                        // ===================================
+
                         btnClass = '';
                     }
                 }
@@ -330,17 +336,178 @@ const UICombatModal = {
                 html = `<div style="color:#aaa; font-size:12px; text-align:center; margin-top:20px;">无主动功法</div>`;
             } else {
                 activeSkills.forEach((entry, idx) => {
+                    // =========== 【修复点 2】 ===========
+                    // 技能按钮同理，点击释放时强制关闭悬浮窗
+                    const skillOnClick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useSkill('${entry.id}', '${idx}')`;
+                    // ===================================
                     html += `
                         <div class="c-slot-wrapper" onmouseenter="TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)">
                             <div class="c-slot-box" style="border-color:#5d4037;"><div class="c-slot-item"><div class="c-icon">${entry.data.icon || '📘'}</div></div><div class="c-name-label" style="color:#5d4037;">${entry.data.action.name.substring(0,4)}</div></div>
-                            <button id="combat_btn_skill_${entry.id}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="Combat.useSkill('${entry.id}', ${idx})">释放</button>
+                            <button id="combat_btn_skill_${entry.id}" class="ink_btn_small c-use-btn" style="border-color:#5d4037; color:#5d4037;" disabled onclick="${skillOnClick}">释放</button>
                             <div id="combat_skill_cd_overlay_${entry.id}" class="c-cd-overlay" style="display:none;"></div>
                         </div>`;
                 });
             }
             skillContainer.innerHTML = html;
         }
-    }
+    },
+    /**
+     * 【新增】连战/多波次切换方法
+     * 这里的逻辑是：不关闭窗口，直接更新界面上的敌人数据，然后重启战斗
+     */
+    /**
+     * 【调试版】连战/多波次切换方法
+     */
+        /**
+         * 【最终修复版】连战/多波次切换方法
+         * 包含弹窗查找的保底逻辑
+         */
+        nextWave: function(enemy, nextOnWin = null, options = { canEscape: false, isMultiWave: false }) {
+            // 1. 尝试锁定现有的战斗窗口
+            let modalEl = document.getElementById('combat_modal');
+
+            // 【保底逻辑】如果 ID 没找到，尝试通过内部类名查找
+            // 这能防止 UtilsModal 修改 ID 导致找不到窗口
+            if (!modalEl) {
+                const wrapper = document.querySelector('.combat-wrapper');
+                if (wrapper) {
+                    // 通常 wrapper 的父级或爷级就是 modal 容器，只要确认 wrapper 存在就说明窗口还在
+                    modalEl = wrapper.closest('.ink-modal') || wrapper.parentElement;
+                }
+            }
+
+            // 2. 如果还是找不到，说明窗口真的关了，回退到创建新窗口
+            if (!modalEl) {
+                this.show(enemy, nextOnWin, options);
+                return;
+            }
+
+            // --- 以下是正常的更新逻辑 ---
+
+            this._patchEnemyData(enemy);
+
+            const eMaxHp = (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 100);
+            const rankMap = { "minion": "普通", "elite": "【精英】", "boss": "【头目】", "lord": "【领主】" };
+            const displayRank = rankMap[enemy.template || "minion"] || "普通";
+
+            // 更新标题 (如果有的话)
+            try {
+                const titleEl = modalEl.querySelector('.ink-modal-title') || document.querySelector('.modal-header h3');
+                if (titleEl) {
+                    titleEl.innerText = options.canEscape ? "遭遇强敌" : `🛑 殊死一搏 - ${enemy.name}`;
+                }
+            } catch(e) {}
+
+            // 更新 UI 元素
+            const enemyCard = document.querySelector('.fighter-card.enemy');
+            if (enemyCard) {
+                const iconEl = enemyCard.querySelector('.fighter-icon');
+                if(iconEl) iconEl.innerHTML = enemy.visual?.icon || '💀';
+
+                const nameEl = enemyCard.querySelector('.fighter-name');
+                if(nameEl) {
+                    nameEl.innerText = enemy.name;
+                    nameEl.style.color = enemy.visual?.color || '#333';
+                }
+
+                const rankEl = enemyCard.querySelector('.fighter-rank');
+                if(rankEl) {
+                    rankEl.innerText = displayRank;
+                    rankEl.style.borderColor = enemy.visual?.color || '#333';
+                    rankEl.style.color = enemy.visual?.color || '#333';
+                }
+            }
+
+            // 更新数值
+            const eHpBar = document.getElementById('combat_e_hp_bar');
+            const eHpText = document.getElementById('combat_e_hp');
+            if (eHpBar) eHpBar.style.width = '100%';
+            if (eHpText) {
+                eHpText.innerText = enemy.hp;
+                eHpText.nextSibling.nodeValue = '/' + eMaxHp;
+            }
+
+            const eToxBar = document.getElementById('combat_e_tox_bar');
+            const eToxVal = document.getElementById('combat_e_tox_val');
+            if (eToxBar) eToxBar.style.width = '0%';
+            if (eToxVal) eToxVal.innerText = '0';
+
+            const updateAttr = (id, val) => {
+                const el = document.getElementById(id);
+                if(el) {
+                    const valEl = el.querySelector('.attr-val');
+                    if(valEl) valEl.innerText = val;
+                    const buffEl = el.querySelector('.attr-buff-val');
+                    if(buffEl) buffEl.remove();
+                }
+            };
+            updateAttr('e_attr_atk', enemy.atk || enemy.stats.atk);
+            updateAttr('e_attr_def', enemy.def || enemy.stats.def);
+            updateAttr('e_attr_spd', enemy.speed || enemy.stats.speed);
+
+            // 重置日志
+            const logContainer = document.getElementById('combat_logs_realtime');
+            if (logContainer) logContainer.innerHTML = '';
+
+            // 显示遮罩
+            const descEl = document.getElementById('combat_desc_initial');
+            if(descEl) {
+                descEl.style.display = 'block';
+                const titleEl = descEl.querySelector('div:first-child');
+                if(titleEl) titleEl.innerText = `“${enemy.desc || '又一波敌人逼近……'}”`;
+            }
+
+            // 重新绑定按钮
+            const ts = Date.now();
+            const startCB = 'cb_start_wave_' + ts;
+            const stopCB = 'cb_stop_wave_' + ts;
+
+            window[stopCB] = () => { if(window.Combat) Combat.stop(); };
+            window[startCB] = () => {
+                if(descEl) descEl.style.display = 'none';
+
+                const footerDiv = document.getElementById('map_combat_footer');
+                if (footerDiv) {
+                    const pauseCB = 'cb_pause_' + ts;
+                    const spdCB = 'cb_spd_' + ts;
+                    window[pauseCB] = () => { if(window.Combat) Combat.togglePause(); };
+                    window[spdCB] = (delta) => { if(window.Combat) Combat.changeSpeed(delta); };
+
+                    footerDiv.innerHTML = `
+                <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
+                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-500)">⏫</button>
+                    <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
+                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](500)">⏬</button>
+                </div>
+                <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
+                ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${stopCB}']()">🏃 拼死逃跑</button>` : ''}
+                `;
+                }
+
+                Combat.start(enemy, () => {
+                    if (window.BountyBoard) window.BountyBoard.onEnemyKilled(enemy.id);
+                    if (window.GlobalEnemies) window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
+
+                    if (nextOnWin) nextOnWin();
+
+                    if (!options.isMultiWave && footerDiv) {
+                        footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 凯旋而归</button>`;
+                    }
+                }, 'combat_logs_realtime', options);
+            };
+
+            const footerDiv = document.getElementById('map_combat_footer');
+            if(footerDiv) {
+                footerDiv.innerHTML = `
+             <div style="width:100%; text-align:center; color:#d32f2f; font-weight:bold; margin-bottom:5px;">⚠️ 连战警告：下一波敌人已到达！</div>
+             <div style="display:flex; justify-content:space-between; width:100%; gap:15px;">
+                ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${stopCB}']()">🏃 撤退</button>` : ''}
+                <button class="ink_btn_danger" style="flex:1; height:40px; font-weight:bold; font-size:18px;" onclick="window['${startCB}']()">⚔️ 开启下一波对战</button>
+            </div>`;
+            }
+
+            this.updateSidebar();
+        },
 };
 
 window.UICombatModal = UICombatModal;

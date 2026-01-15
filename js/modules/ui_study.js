@@ -1,26 +1,32 @@
 // js/modules/ui_study.js
-// 研读界面 UI v3.5 (优化自动选中逻辑：优先记忆，失效则选第一本)
+// 研读界面 UI v3.6 (记忆上次选择 + 自动滚动)
 
 const UIStudy = {
     selectedBookId: null, // 这里存储当前选中的书籍ID
     modalBody: null,
+    shouldScroll: false,  // 新增：控制是否需要滚动定位
 
     // 入口
     open: function() {
-        // 这里不再强制清空 selectedBookId，保留上次的选择（如果有）
+        this.shouldScroll = true; // 标记：打开时允许自动滚动
         this.autoSelectBook();
         this.renderModal();
     },
 
     // 自动选中逻辑
     autoSelectBook: function() {
-        // 1. 优先检查当前记录的 selectedBookId 是否有效
-        if (this.selectedBookId && this._isBookAvailable(this.selectedBookId)) {
-            // 如果上次选的书还在背包且没读完，就保持选中它，不做改变
+        // 1. 优先读取上次记录 (如果存在且玩家确实拥有该书且未读完)
+        if (player.lastStudyId && this._isBookAvailable(player.lastStudyId)) {
+            this.selectedBookId = player.lastStudyId;
             return;
         }
 
-        // 2. 如果没有记录，或者记录的书无效（已读完/丢弃），则重新获取列表
+        // 2. 其次检查当前内存中的选中项是否有效
+        if (this.selectedBookId && this._isBookAvailable(this.selectedBookId)) {
+            return;
+        }
+
+        // 3. 如果没有记录，或者记录的书无效，则重新获取列表
         const list = this._getReadableBooks();
 
         if (list.length > 0) {
@@ -123,14 +129,16 @@ const UIStudy = {
             // 点击事件
             el.onclick = () => {
                 this.selectedBookId = entry.id;
+                // 【新增】保存选择记录
+                player.lastStudyId = entry.id;
+                // 点击切换不触发滚动
+                this.shouldScroll = false;
                 this.refresh();
             };
 
             // 悬浮框事件
             el.onmouseenter = (e) => {
-
-                    window.showSkillTooltip(e, entry.id);
-
+                if(window.showSkillTooltip) window.showSkillTooltip(e, entry.id);
             };
             el.onmouseleave = () => {
                 if (window.hideTooltip) window.hideTooltip();
@@ -153,6 +161,14 @@ const UIStudy = {
                 </div>
             `;
             container.appendChild(el);
+
+            // 【新增】自动滚动逻辑
+            if (isActive && this.shouldScroll) {
+                setTimeout(() => {
+                    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 100);
+                this.shouldScroll = false;
+            }
         });
     },
 
@@ -238,7 +254,7 @@ const UIStudy = {
                     🕯️ 秉烛夜读
                 </button>
                 <div class="study_cost_tip">
-                    消耗: 2时辰 / +8疲劳
+                    消耗: 2时辰 / -10饱食度 / +10疲劳
                 </div>
             </div>
         `;

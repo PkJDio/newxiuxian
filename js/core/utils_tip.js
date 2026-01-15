@@ -334,7 +334,7 @@ const TooltipManager = {
             let dmgStr = "";
             if (act.dmgMult) dmgStr = `造成 <span style="color:#ff5252; font-weight:bold;">${Math.round(act.dmgMult * 100)}%</span> 伤害`;
             let costStr = "";
-            if (act.mpCost) costStr = `消耗 <span style="color:#2196f3;">${act.mpCost}</span> 内力`;
+            if (act.mpCost) costStr = `消耗 <span style="color:#2196f3;">${act.mpCost}</span> 灵力`;
             let cdStr = "";
             if (act.cd) cdStr = `冷却 <span style="color:#ff9800;">${act.cd}</span> 回合`;
 

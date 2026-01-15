@@ -313,7 +313,7 @@ const InnShop = {
 
             let effectTags = '';
             if (item.effects) {
-                const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
+                const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "灵力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
                 const tags = [];
 
                 Object.entries(item.effects).forEach(([key, val]) => {
@@ -479,7 +479,7 @@ const InnShop = {
         if (sellableItems.length === 0) {
             listHtml = `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">你的包袱里空空如也，没什么可卖的。</div>`;
         } else {
-            const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
+            const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "灵力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
             const makeTag = (label, val, isBuff = false) => {
                 let valStr = val > 0 ? `+${val}` : `${val}`;
                 let style = isBuff ? "background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;" : "background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;";

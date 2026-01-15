@@ -1762,7 +1762,7 @@ const body = [
         durability: 185,
         effects   : {def: 31, speed: 2, hp_max: 98},
         req       : {jing: 15, shen: 21},
-        desc      : "【轻】火烧云般通红的轻甲，能将对手的内力转化为热能散发，削弱伤害。",
+        desc      : "【轻】火烧云般通红的轻甲，能将对手的灵力转化为热能散发，削弱伤害。",
     },
     {
         id        : "body_145",

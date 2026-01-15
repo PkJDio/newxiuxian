@@ -1391,7 +1391,7 @@ const head = [
         durability: 250,
         effects: { def: 22, speed: 15, hp_max: 70 },
         req: { jing: 0, shen: 15 },
-        desc: "【布】空间祖巫遗留的法力，能让佩戴者短距离穿梭虚空。",
+        desc: "【布】空间祖巫遗留的灵力，能让佩戴者短距离穿梭虚空。",
     },
     {
         id: "head_117",

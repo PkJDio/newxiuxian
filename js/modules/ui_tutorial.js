@@ -41,7 +41,7 @@ window.UITutorial = {
         {
             target: 'btn_action_rest',
             title: '7. 休憩养神',
-            text: '【消除疲劳】恢复血量、法力并消除疲劳值。客栈比野外更安全，但需要花费银两。'
+            text: '【消除疲劳】恢复血量、灵力并消除疲劳值。客栈比野外更安全，但需要花费银两。'
         },
         {
             target: 'btn_action_fish',
@@ -85,7 +85,7 @@ window.UITutorial = {
         {
             target: 'combat_p_hp_bar',
             title: '自身状态',
-            text: '时刻关注自己的气血和法力。法力耗尽将无法释放技能。'
+            text: '时刻关注自己的气血和灵力。灵力耗尽将无法释放技能。'
         },
         {
             target: 'sidebar_consumables',

@@ -1149,7 +1149,7 @@ const weapons = [
         sharpness: 0,
         effects: { atk: 25, speed: -1 },
         req: { jing: 13, shen: 12 },
-        desc: "千年冰蚕丝织就，需内力深厚者方能抵御寒毒。",
+        desc: "千年冰蚕丝织就，需灵力深厚者方能抵御寒毒。",
     },
     {
         id: "weapons_076",

@@ -2697,7 +2697,7 @@ const booksBody_R5 = [
         studyTarget: "jing",
         difficultyScale: 1.9,
         effects: { atk: 8, def: 3 },
-        desc: "【残卷】记载了剑谱的中坚招式，强调内力的吞吐与剑刃的破坏力。",
+        desc: "【残卷】记载了剑谱的中坚招式，强调灵力的吞吐与剑刃的破坏力。",
     },
     {
         id: "book_body_r5_20_lower",
@@ -3640,9 +3640,9 @@ const booksCultivation_R1 = [
             dmgMult: 0.68,
             mpCost: 10,
             cd: 1,
-            desc: "【效率型】引燃法力，高频灼烧。",
+            desc: "【效率型】引燃灵力，高频灼烧。",
         },
-        desc: "残简上带着一丝火气，修炼后法力燥热。",
+        desc: "残简上带着一丝火气，修炼后灵力燥热。",
     },
     {
         id: "book_cultivation_r1_02_full",
@@ -3684,7 +3684,7 @@ const booksCultivation_R1 = [
             cd: 3,
             desc: "【平衡型】寒气逼人，威力适中。",
         },
-        desc: "水属性变种功法，法力带有寒意。",
+        desc: "水属性变种功法，灵力带有寒意。",
     },
     {
         id: "book_cultivation_r1_04_full",
@@ -3747,7 +3747,7 @@ const booksCultivation_R1 = [
             cd: 4,
             desc: "【平衡型】青木化藤，困敌伤身。",
         },
-        desc: "青木法力转化，兼具困敌效果。",
+        desc: "青木灵力转化，兼具困敌效果。",
     },
     {
         id: "book_cultivation_r1_07_full",
@@ -3924,7 +3924,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4 },
-        desc: "法力显著增长。",
+        desc: "灵力显著增长。",
     },
     {
         id: "book_cultivation_r1_18_full",
@@ -3974,7 +3974,7 @@ const booksCultivation_R2 = [
             dmgMult: 0.9,
             mpCost: 20,
             cd: 1,
-            desc: "【效率型】内力绵如云霞，连绵不断。",
+            desc: "【效率型】灵力绵如云霞，连绵不断。",
         },
         desc: "华山气宗镇山之宝，初发时若有若无。",
     },
@@ -3997,7 +3997,7 @@ const booksCultivation_R2 = [
             cd: 2,
             desc: "【效率型】寒气侵袭，频率极高。",
         },
-        desc: "至阴至寒的内力，可将自身冻结成冰。",
+        desc: "至阴至寒的灵力，可将自身冻结成冰。",
     },
     {
         id: "book_cultivation_r2_02_full",
@@ -4039,7 +4039,7 @@ const booksCultivation_R2 = [
             cd: 3,
             desc: "【平衡型】毒气攻心，威力适中。",
         },
-        desc: "五毒教秘传，内力蕴含剧毒。",
+        desc: "五毒教秘传，灵力蕴含剧毒。",
     },
     {
         id: "book_cultivation_r2_04_full",
@@ -4060,7 +4060,7 @@ const booksCultivation_R2 = [
             cd: 6,
             desc: "【爆发型】焚尽一切的高热掌力。",
         },
-        desc: "西域昆仑派内功，法力如火。",
+        desc: "西域昆仑派内功，灵力如火。",
     },
     {
         id: "book_cultivation_r2_05_full",
@@ -4081,7 +4081,7 @@ const booksCultivation_R2 = [
             cd: 3,
             desc: "【平衡型】爆发力极强的雷鸣之击。",
         },
-        desc: "运转内力时隐有雷鸣之声。",
+        desc: "运转灵力时隐有雷鸣之声。",
     },
     {
         id: "book_cultivation_r2_06_full",
@@ -4165,7 +4165,7 @@ const booksCultivation_R2 = [
             cd: 8,
             desc: "【爆发型】魔威盖世的血气打击。",
         },
-        desc: "魔道嗜血功法，以气血催动内力。",
+        desc: "魔道嗜血功法，以气血催动灵力。",
     },
 
     /* ================= [10-19] 防御型内功 (属性全额) ================= */
@@ -4209,7 +4209,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, speed: 4 },
-        desc: "峨眉祖师所创，内力轻灵。",
+        desc: "峨眉祖师所创，灵力轻灵。",
     },
     {
         id: "book_cultivation_r2_13_full",
@@ -4265,7 +4265,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5, shen: 5 },
-        desc: "虽然粗浅，但能模拟各家内力。",
+        desc: "虽然粗浅，但能模拟各家灵力。",
     },
     {
         id: "book_cultivation_r2_17_full",
@@ -4331,7 +4331,7 @@ const booksCultivation_R3 = [
             cd: 1,
             desc: "【效率型】吸收敌方精元，高频转化。",
         },
-        desc: "可以吸取他人内力为己用，霸道异常。",
+        desc: "可以吸取他人灵力为己用，霸道异常。",
     },
     {
         id: "book_cultivation_r3_01_full",
@@ -4350,9 +4350,9 @@ const booksCultivation_R3 = [
             dmgMult: 1.23,
             mpCost: 40,
             cd: 2,
-            desc: "【效率型】连绵阴劲，消融敌方内力。",
+            desc: "【效率型】连绵阴劲，消融敌方灵力。",
         },
-        desc: "消融敌方内力，歹毒无比。",
+        desc: "消融敌方灵力，歹毒无比。",
     },
     {
         id: "book_cultivation_r3_02_full",
@@ -7561,7 +7561,7 @@ const fullBooks = [
         studyCost: 3253,
         effects: { atk: 20, def: 80, qi: 50 },
         isCombined: true,
-        desc: "内力自生，防御反震。【全篇精义】",
+        desc: "灵力自生，防御反震。【全篇精义】",
     },
 
     {
@@ -8176,7 +8176,7 @@ const fullBooks = [
             cd: 2,
             desc: "【效率型】袖风如刀，点人穴道。",
         },
-        desc: "极寒内力拂动衣袖。【全篇精义】",
+        desc: "极寒灵力拂动衣袖。【全篇精义】",
     },
     {
         id: "book_cultivation_r4_07_full",
@@ -8214,9 +8214,9 @@ const fullBooks = [
             dmgMult: 1.75,
             mpCost: 60,
             cd: 2,
-            desc: "【效率型】化解敌方内力，高频反震。",
+            desc: "【效率型】化解敌方灵力，高频反震。",
         },
-        desc: "将内力吸入大地。【全篇精义】",
+        desc: "将灵力吸入大地。【全篇精义】",
     },
     {
         id: "book_cultivation_r4_09_full",
@@ -8662,7 +8662,7 @@ const fullBooks = [
         studyCost: 3338,
         effects: { qi: 130, jing: 20 },
         isCombined: true,
-        desc: "内结金丹，法力无边，源源不绝。【全篇精义】",
+        desc: "内结金丹，灵力无边，源源不绝。【全篇精义】",
     },
     {
         id: "book_cultivation_r5_17_full",

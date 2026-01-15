@@ -15,7 +15,7 @@ const CombatAction = {
 
         const action = book.action;
         if (ctx.currentPMp < action.mpCost) {
-            if(window.showToast) window.showToast("内力不足！");
+            if(window.showToast) window.showToast("灵力不足！");
             return;
         }
 
@@ -28,7 +28,10 @@ const CombatAction = {
         const attacker = { ...pStats, skillMult: action.dmgMult || 1.0, skillName: action.name };
 
         ctx._log(`> 你施展了 <b style="color:#ffb74d;">${action.name}</b>！`);
-        ctx.currentEHp -= CombatCalc.calcDamage(ctx, attacker, eStats, true, "技能");
+
+        const dmg = CombatCalc.calcDamage(ctx, attacker, eStats, true, "技能");
+        ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg);
+
         ctx._updateUIStats();
     },
 
@@ -70,32 +73,103 @@ const CombatAction = {
                 if (!canCast || Math.random() > skill.rate) continue;
 
                 if (skill.type === 1) {
-                    ctx._log(`${ctx.enemy.name} 施展了 <b style="color:#d32f2f;">${skill.id}</b>！`);
-                    let atk = { ...eStats, skillFlat: (skill.damage || 0), skillName: skill.id };
-                    ctx.currentPHp -= CombatCalc.calcDamage(ctx, atk, pStats, false, "技能");
+                    // 伤害技能 (红色)
+                    const skillHtml = this._buildSkillLogHtml(skill, "#d32f2f");
+                    ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
+
+                    // 【修正点】
+                    // 原逻辑：skillFlat叠加在atk上 (atk + damage)
+                    // 新逻辑：直接将 atk 覆盖为 damage，并忽略 skillFlat (damage + 0)
+                    // 这样计算伤害时，基础数值就是 damage，但依然会应用穿甲、防御减免等计算
+                    let atk = { ...eStats, atk: (skill.damage || 0), skillFlat: 0, skillName: skill.id };
+
+                    const dmg = CombatCalc.calcDamage(ctx, atk, pStats, false, "技能");
+                    ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
+
                 } else if (skill.type === 2) {
-                    ctx._log(`${ctx.enemy.name} 施展了 <b style="color:#f57f17;">${skill.id}</b>！`);
+                    // Debuff技能 (橙色)
+                    const skillHtml = this._buildSkillLogHtml(skill, "#f57f17");
+                    ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
+
                     this.applyBuff(ctx, 'player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id);
+
                 } else if (skill.type === 3) {
-                    ctx._log(`${ctx.enemy.name} 施展了 <b style="color:#388e3c;">${skill.id}</b>！`);
+                    // Buff技能 (绿色)
+                    const skillHtml = this._buildSkillLogHtml(skill, "#388e3c");
+                    ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
+
                     this.applyBuff(ctx, 'enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id);
                 }
                 actionDone = true; break;
             }
         }
-        if (!actionDone) ctx.currentPHp -= CombatCalc.performAttack(ctx, ctx.enemy.name, eStats, pStats, false);
+
+        // 如果没有放技能，则进行普攻
+        if (!actionDone) {
+            const dmg = CombatCalc.performAttack(ctx, ctx.enemy.name, eStats, pStats, false);
+            ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
+        }
+    },
+
+    /** 【新增】构造带有悬浮 Tooltip 的技能日志 HTML */
+    _buildSkillLogHtml: function(skill, color) {
+        let details = "";
+        const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '灵力' };
+
+        // 根据技能类型生成详细描述
+        if (skill.type === 1) {
+            details = `
+                <div class="tip-row"><span>类型</span> <span>伤害技能</span></div>
+                <div class="tip-row"><span>附加威力</span> <span style="color:#ff5252;">${skill.damage||0}</span></div>
+            `;
+        } else if (skill.type === 2) {
+            details = `
+                <div class="tip-row"><span>类型</span> <span style="color:#f57f17;">削弱 (Debuff)</span></div>
+                <div class="tip-row"><span>效果</span> <span>${attrMap[skill.debuffAttr]||skill.debuffAttr} -${skill.debuffValue}</span></div>
+                <div class="tip-row"><span>持续</span> <span>${skill.debuffTimes} 回合</span></div>
+            `;
+        } else if (skill.type === 3) {
+            details = `
+                <div class="tip-row"><span>类型</span> <span style="color:#388e3c;">强化 (Buff)</span></div>
+                <div class="tip-row"><span>效果</span> <span>${attrMap[skill.buffAttr]||skill.buffAttr} +${skill.buffValue}</span></div>
+                <div class="tip-row"><span>持续</span> <span>${skill.buffTimes} 回合</span></div>
+            `;
+        }
+
+        // 补充触发概率或描述
+        let extraInfo = "";
+        if (skill.desc) {
+            extraInfo = skill.desc;
+        } else if (skill.rate) {
+            extraInfo = `触发几率: ${(skill.rate*100).toFixed(0)}%`;
+        }
+
+        if (extraInfo) {
+            details += `<div class="tip-divider"></div><div style="color:#ccc; font-size:12px; line-height:1.4;">${extraInfo}</div>`;
+        }
+
+        // 组装最终 HTML
+        const tooltipHtml = `
+            <div class="combat-tooltip-content">
+                <div class="tip-row"><span style="font-weight:bold; color:${color}; font-size:15px;">${skill.id}</span></div>
+                <div class="tip-divider"></div>
+                ${details}
+            </div>`;
+
+        // 返回包含 tooltip 的 span 结构
+        return `<span class="combat-tooltip-trigger" style="color:${color}; font-weight:bold; cursor:help; border-bottom:1px dotted ${color}; position:relative;">${skill.id}${tooltipHtml}</span>`;
     },
 
     /** 应用 Buff/Debuff */
     applyBuff: function(ctx, targetKey, attr, val, turns, type, name) {
         ctx.buffs[targetKey][attr] = { val, turns, type, name, isNew: true };
-        const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '内力' };
+        const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '灵力' };
         const targetName = targetKey === 'player' ? '你' : ctx.enemy.name;
         if (attr === 'hp' || attr === 'mp') {
             const desc = (val < 0) ? `每回合损失 ${Math.abs(val)} ${attrMap[attr]}` : `每回合恢复 ${val} ${attrMap[attr]}`;
-            ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b>: ${desc} (${turns}回合)`);
+            ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b> 影响: ${desc} (${turns}回合)`);
         } else {
-            ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b>: ${attrMap[attr]} ${val>0?'+':''}${val} (${turns}回合)`);
+            ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b> 影响: ${attrMap[attr]} ${val>0?'+':''}${val} (${turns}回合)`);
         }
         ctx._updateUIStats();
     },
@@ -115,7 +189,7 @@ const CombatAction = {
                     ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${Math.abs(b.val)} 生命`);
                 } else if (attr === 'mp' && target === 'player') {
                     ctx.currentPMp = Math.max(0, Math.min(ctx.player.derived.mpMax, ctx.currentPMp + b.val));
-                    ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${Math.abs(b.val)} 内力`);
+                    ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${Math.abs(b.val)} 灵力`);
                 }
                 if (attr === 'hp' || attr === 'mp') b.turns--; else if (b.isNew) b.isNew = false; else b.turns--;
                 if (b.turns <= 0) { ctx._log(`<span style="color:#888;">> ${targetName} 的 [${b.name}] 消失了。</span>`); delete buffList[attr]; }

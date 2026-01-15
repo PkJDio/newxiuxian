@@ -1,196 +1,297 @@
 // js/action/util_fish.js
-// 垂钓核心逻辑 v4.1 (精细化速度控制 + 稀有度倍率)
+// 垂钓核心逻辑 v9.0 (水草封锁机制 + 次数调整)
 
 const UtilFish = {
     // ================= 配置区域 =================
     CONFIG: {
-        COST_STAMINA: 5,
-        TENSION_DECAY: 1.5,
-        TENSION_RISE: 2.0,
-        STAMINA_DROP: 0.5,
-        ESCAPE_RISE: 1.0,
-        ESCAPE_DROP: 0.5,
-        UPDATE_RATE: 20,
+        COST_TIME: 1,
+        COST_SATIETY: 10,
+        COST_FATIGUE: 5,
 
-        // --- 核心速度设置 ---
-        // 建议值：3.0 到 10.0 之间。数值越大，移动越快。
-        // 你现在的 BASE_MOVE_SPEED: 0.5 太小了，因为逻辑里是用 除法，导致结果巨大（移动极慢）
-        MOVE_SPEED_LEVEL: 7.0,
-        // R1 = 1.0倍, R6 = 2.5倍
-        SPEED_MULT_MIN: 1.0,
-        SPEED_MULT_MAX: 2.5,
+        BASE_HIT_CHANCE: 0.2,
+        BASE_RARITY_WEIGHTS: [100, 60, 30, 10, 5, 1],
 
-        BASE_BITE_CHANCE: 0.3,
+        USE_TEXT_HINTS: true,
+        HINT_TEXTS: [
+            "死水微澜<br>寂静无声",
+            "偶见涟漪<br>似有孤鱼",
+            "水纹微动<br>鱼影绰绰",
+            "波光粼粼<br>暗流涌动",
+            "水花轻溅<br>鱼群往来",
+            "浪涌频现<br>鱼跃欢腾",
+            "水沸鱼腾<br>热闹非凡",
+            "群鱼争食<br>水面翻涌",
+            "万鱼朝宗<br>满塘皆活"
+        ],
+
+        // 【修改】熟练度配置：次数调整为 25/20/16/12
+        MASTERY_TIERS: [
+            { exp: 999, rate: 0.3, attempts: 25, hintProb: 1.0, name: "大成" },
+            { exp: 400, rate: 0.2, attempts: 20, hintProb: 0.7, name: "进阶" },
+            { exp: 100, rate: 0.1, attempts: 16, hintProb: 0.6, name: "入门" },
+            { exp: 0,   rate: 0.0, attempts: 12, hintProb: 0.5, name: "初学" }
+        ],
+
+        GRID_COLS: 12,
+        GRID_ROWS: 8,
     },
 
-    state: "IDLE",
-    gameTimer: null,
-    loopTimer: null,
-    fishStamina: 100,
-    fishEscapeProgress: 0,
-    lineTension: 0,
-    fishStrength: 1,
-    isReeling: false,
-    currentLoot: null,
-    currentMoveSpeed: 6.0, // 记录当前鱼的实际移动速度
+    flippedCount: 0,
+    totalCells: 96,
+    gridState: [],
 
-    reset: function() {
-        this.state = "IDLE";
-        this.lineTension = 0;
-        this.fishStamina = 100;
-        this.fishEscapeProgress = 0;
-        this.isReeling = false;
-        this.currentLoot = null;
-        this._clearTimers();
-        if (window.UIFish) window.UIFish.resetView();
+    currentAttempts: 0,
+    maxAttempts: 12,
+
+    init: function() {
+        this.totalCells = this.CONFIG.GRID_COLS * this.CONFIG.GRID_ROWS;
+        if (!this.gridState || this.gridState.length !== this.totalCells) {
+            this.refreshPond();
+        }
     },
 
-    handleSceneClick: function() {
-        if (this.state === "RESULT") { this.reset(); return; }
-        if (this.state === "IDLE") this._doCastLine();
-        else if (this.state === "HOOKED") this._doHookFish();
-    },
+    refreshPond: function() {
+        this.flippedCount = 0;
+        this.gridState = [];
 
-    _doCastLine: function() {
+        const tier = this._getMasteryTier();
+        this.maxAttempts = tier.attempts;
+        this.currentAttempts = this.maxAttempts;
+
         const p = window.player;
-        // 获取 UI 上的开关状态
-        const skipGame = document.getElementById('skip_fish_game')?.checked || false;
+        const region = (p.coord ? p.coord.region : "all");
+        const season = this.getCurrentSeason();
+        const hitRate = this.calculateHitRate();
 
-        // 【修改】根据是否跳过决定消耗时间
-        const timeCost = skipGame ? 2 : 1;
+        let hasHighRarityFish = false; // 标记是否有 R4+ 鱼
 
-        if (window.TimeSystem && window.TimeSystem.passTime) {
-            window.TimeSystem.passTime(timeCost);
-        }
+        // 1. 生成基础网格
+        for (let i = 0; i < this.totalCells; i++) {
+            const isHit = Math.random() < hitRate;
+            let loot = null;
 
-        const region = p.coord ? p.coord.region : "all";
-        const season = this._getCurrentSeason();
-        const rod = this._getEquippedRodData();
-        const rodRateBonus = (rod.catchRate || 0) * 0.01;
-        let biteChance = this.CONFIG.BASE_BITE_CHANCE + rodRateBonus;
-        biteChance = Math.min(1.0, biteChance);
+            if (isHit) {
+                loot = this._rollFish(region, season);
+                if (!loot) isHit = false;
 
-        this.state = "WAITING";
-        if (window.UIFish) window.UIFish.onCastLine();
-
-        const isSuccessfulBite = Math.random() < biteChance;
-        const waitTime = skipGame ? 500 : (2000 + Math.random() * 3000); // 跳过游戏时缩短等待感
-
-        this.gameTimer = setTimeout(() => {
-            if (isSuccessfulBite) {
-                this.currentLoot = this._getRandomFish(region, season);
-                if (this.currentLoot) {
-                    // --- 【核心修改点】 ---
-                    if (skipGame) {
-                        // 如果跳过游戏：咬钩即代表成功，直接结算
-                        this._finishGame(true);
-                    } else {
-                        // 正常游戏：触发咬钩提醒，等待玩家反应
-                        this._triggerBite();
-                    }
-                } else {
-                    this._finishGame(false, "此地水灵枯竭，鱼儿皆已远去...");
+                // 检查稀有度
+                if (loot && loot.rarity >= 4) {
+                    hasHighRarityFish = true;
                 }
+            }
+
+            this.gridState.push({
+                hasFish: isHit,
+                loot: loot,
+                nearCount: 0,
+                isFlipped: false,
+                hintRevealed: false,
+                isBlocked: false // 【新增】封锁状态
+            });
+        }
+
+        // 2. 【新增】水草封锁逻辑
+        if (hasHighRarityFish) {
+            // 随机 4-6 个
+            const blockCount = Math.floor(Math.random() * 3) + 4;
+
+            // 筛选候选格子：(无鱼) 或 (鱼稀有度 <= 3)
+            const candidates = [];
+            for (let i = 0; i < this.totalCells; i++) {
+                const cell = this.gridState[i];
+                if (!cell.hasFish) {
+                    candidates.push(i);
+                } else if (cell.loot && cell.loot.rarity <= 3) {
+                    candidates.push(i);
+                }
+            }
+
+            // 洗牌并选取
+            this._shuffleArray(candidates);
+            for (let i = 0; i < Math.min(blockCount, candidates.length); i++) {
+                const idx = candidates[i];
+                this.gridState[idx].isBlocked = true;
+                // console.log(`[Fishing] 格子 ${idx} 被水草封锁`);
+            }
+        }
+
+        // 3. 计算周围雷数
+        this._updateAllHints();
+
+        console.log(`[Fishing] 池塘刷新: 次数=${this.maxAttempts}, 高级鱼=${hasHighRarityFish}`);
+    },
+
+    // 内部洗牌算法
+    _shuffleArray: function(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    },
+
+    // 计算周围鱼数 (排除 blocked 格子里的鱼吗？通常扫雷逻辑是不排除的，这里暂不排除，保持逻辑一致)
+    // 之前逻辑是：只计算"未翻开"的鱼。这里保持不变。
+    _countSurroundingFish: function(index) {
+        const cols = this.CONFIG.GRID_COLS;
+        const rows = this.CONFIG.GRID_ROWS;
+        const x = index % cols;
+        const y = Math.floor(index / cols);
+        let count = 0;
+
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                    const nIndex = ny * cols + nx;
+                    if (this.gridState[nIndex].hasFish && !this.gridState[nIndex].isFlipped) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    },
+
+    _updateAllHints: function() {
+        for (let i = 0; i < this.totalCells; i++) {
+            if (!this.gridState[i].hasFish) {
+                this.gridState[i].nearCount = this._countSurroundingFish(i);
+            }
+        }
+    },
+
+    tryFlip: function(index) {
+        if (!this.gridState[index]) return { error: true, msg: "数据异常" };
+        const cell = this.gridState[index];
+
+        if (cell.isFlipped) return { error: true, msg: "已翻开" };
+        // 【新增】封锁检查
+        if (cell.isBlocked) return { error: true, msg: "此处水草丛生，无法下竿" };
+
+        if (this.currentAttempts <= 0) {
+            return { error: true, msg: "本次尝试次数已用尽" };
+        }
+
+        const p = window.player;
+        const curSat = (p.status && p.status.hunger) || 0;
+        const curFat = (p.status && p.status.fatigue) || 0;
+        const maxFat = (p.derived && p.derived.fatigueMax) ? p.derived.fatigueMax : 100;
+
+        if (curSat < this.CONFIG.COST_SATIETY) return { error: true, msg: "饱食度不足" };
+        if (curFat + this.CONFIG.COST_FATIGUE > maxFat) return { error: true, msg: "精神困顿" };
+
+        if (p.status) {
+            p.status.hunger = Math.max(0, curSat - this.CONFIG.COST_SATIETY);
+            p.status.fatigue = Math.min(maxFat, curFat + this.CONFIG.COST_FATIGUE);
+        }
+        if (window.TimeSystem && window.TimeSystem.passTime) window.TimeSystem.passTime(this.CONFIG.COST_TIME);
+
+        // --- 执行翻牌 ---
+        cell.isFlipped = true;
+        this.flippedCount++;
+        this.currentAttempts--;
+
+        let result = {
+            success: false,
+            loot: null,
+            nearCount: 0,
+            showHint: false,
+            attemptsLeft: this.currentAttempts,
+            isPondEmpty: false
+        };
+
+        if (cell.hasFish && cell.loot) {
+            result.success = true;
+            result.loot = cell.loot;
+            if (window.UtilsAdd) window.UtilsAdd.addItem(cell.loot.id, 1);
+            this._addFishingExp(1);
+            this._updateAllHints(); // 钓走鱼后更新全场提示
+        } else {
+            result.success = false;
+            cell.nearCount = this._countSurroundingFish(index); // 即使没鱼也要更新一下当前格子的计数
+            result.nearCount = cell.nearCount;
+
+            const tier = this._getMasteryTier();
+            if (Math.random() < tier.hintProb) {
+                cell.hintRevealed = true;
+                result.showHint = true;
             } else {
-                this._finishGame(false, "寒江寂寂，终无鱼儿上钩...");
+                cell.hintRevealed = false;
+                result.showHint = false;
             }
-        }, waitTime);
+        }
+
+        if (this.currentAttempts <= 0) {
+            result.isPondEmpty = true;
+        }
+
+        return result;
     },
 
-    _triggerBite: function() {
-        if (this.state !== "WAITING") return;
-        this.state = "HOOKED";
-
-        // 【修改点】获取当前鱼的稀有度并传给 UI 层
-        const rarity = this.currentLoot ? this.currentLoot.rarity : 1;
-        if (window.UIFish) window.UIFish.onBite(rarity);
-
-        // 根据稀有度设置反应时间
-        let reactionTime = 5000;
-        if (rarity === 3) reactionTime = 4000;
-        else if (rarity === 4) reactionTime = 3000;
-        else if (rarity >= 5) reactionTime = 2000;
-
-        this.gameTimer = setTimeout(() => {
-            if (this.state === "HOOKED") {
-                this._finishGame(false, "鱼儿机警，已衔饵遁入深潭！");
-            }
-        }, reactionTime);
+    calculateHitRate: function() {
+        const tier = this._getMasteryTier();
+        return Math.min(1.0, this.CONFIG.BASE_HIT_CHANCE + tier.rate);
     },
 
-    _doHookFish: function() {
-        if (this.state !== "HOOKED") return;
-        this._clearTimers();
-        this.state = "REELING";
-
-        const rarity = this.currentLoot ? this.currentLoot.rarity : 1;
-        this.fishStrength = 0.4 + (rarity * 0.4) + Math.random() * 0.5;
-        this.lineTension = 40;
-        this.fishEscapeProgress = 0;
-
-        // --- 重新设计计算公式 ---
-        const rarityFactor = (Math.min(6, rarity) - 1) / 5;
-        const speedMultiplier = this.CONFIG.SPEED_MULT_MIN + (rarityFactor * (this.CONFIG.SPEED_MULT_MAX - this.CONFIG.SPEED_MULT_MIN));
-
-        // 最终动画时长(秒) = 15 / (基础速度等级 * 稀有度倍率)
-        // 这样 MOVE_SPEED_LEVEL 越大，分母越大，时长越短，速度就越快！
-        this.currentMoveSpeed = 15 / (this.CONFIG.MOVE_SPEED_LEVEL * speedMultiplier);
-
-        if (window.UIFish) window.UIFish.onReelingStart();
-
-        this.loopTimer = setInterval(() => {
-            this._gameLoop();
-        }, this.CONFIG.UPDATE_RATE);
+    _getMasteryTier: function() {
+        const p = window.player;
+        const exp = (p.lifeSkills && p.lifeSkills.fishing) ? p.lifeSkills.fishing.exp : 0;
+        for (let tier of this.CONFIG.MASTERY_TIERS) {
+            if (exp >= tier.exp) return tier;
+        }
+        return this.CONFIG.MASTERY_TIERS[this.CONFIG.MASTERY_TIERS.length - 1];
     },
 
-    _gameLoop: function() {
-        if (this.isReeling) this.lineTension += this.CONFIG.TENSION_RISE;
-        else this.lineTension -= this.CONFIG.TENSION_DECAY;
-        this.lineTension += (Math.random() - 0.5) * this.fishStrength;
-        this.lineTension = Math.max(0, this.lineTension);
-
-        if (this.lineTension >= 100) {
-            // this._finishGame(false, "崩！劲道过猛，鱼线断了！");
-            return;
-        }
-
-        const safeZoneEl = document.getElementById('ink_safe_zone');
-        let isInSafeZone = false;
-        if (safeZoneEl) {
-            const parentWidth = safeZoneEl.parentElement.offsetWidth;
-            const zoneLeftPct = (safeZoneEl.offsetLeft / parentWidth) * 100;
-            const zoneWidthPct = (safeZoneEl.offsetWidth / parentWidth) * 100;
-            const zoneRightPct = zoneLeftPct + zoneWidthPct;
-            if (this.lineTension >= zoneLeftPct && this.lineTension <= zoneRightPct) isInSafeZone = true;
-        }
-
-        if (isInSafeZone) {
-            this.fishStamina -= this.CONFIG.STAMINA_DROP;
-            this.fishEscapeProgress = Math.max(0, this.fishEscapeProgress - (this.CONFIG.ESCAPE_DROP * this.CONFIG.UPDATE_RATE / 1000));
-        } else {
-            this.fishEscapeProgress += (this.CONFIG.ESCAPE_RISE * this.CONFIG.UPDATE_RATE / 1000);
-        }
-
-        if (this.fishEscapeProgress >= 10) {
-            this._finishGame(false, "挣扎太久，鱼儿挣脱鱼钩逃走了！");
-            return;
-        }
-        if (this.fishStamina <= 0) { this._finishGame(true); return; }
-
-        if (window.UIFish) window.UIFish.updateReeling(this.lineTension, this.fishStamina, this.fishEscapeProgress);
+    _getEquippedRodData: function() {
+        const p = window.player;
+        const id = (p.equipment && p.equipment.fishing_rod) ? p.equipment.fishing_rod : null;
+        if (!id) return null;
+        if (typeof fishingRods === 'undefined') return null;
+        const data = fishingRods.find(r => r.id === id);
+        return data ? { catchRate: (data.effects ? data.effects.catchRate : 0) } : null;
     },
 
-    _finishGame: function(isWin, failReason) {
-        this._clearTimers();
-        this.state = "RESULT";
-        if (isWin && this.currentLoot) {
-            this._addFishingExp(this.currentLoot.rarity || 1);
-            if (window.UtilsAdd) window.UtilsAdd.addItem(this.currentLoot.id, 1);
-            LogManager.add(`【鱼儿】你钓到 <span class="text_item quality_${this.currentLoot.rarity}">${this.currentLoot.name}</span>！`);
-            if (window.UIFish) window.UIFish.onResult(true, this.currentLoot);
-        } else {
-            if (window.UIFish) window.UIFish.onResult(false, failReason || "鱼儿逃之夭夭...");
+    _rollFish: function(region, season) {
+        if (typeof fishes === 'undefined') return null;
+
+        let rarity = this._rollRarity();
+        const filterPool = (r) => fishes.filter(f => {
+            const regionMatch = (f.region === "all" || f.region === region);
+            const seasonMatch = (!f.seasons || f.seasons.includes(season));
+            const rarityMatch = f.rarity === r;
+            return regionMatch && seasonMatch && rarityMatch;
+        });
+
+        let pool = filterPool(rarity);
+        if (pool.length === 0 && (rarity === 5 || rarity === 6)) {
+            rarity = 4;
+            pool = filterPool(rarity);
         }
+
+        if (pool.length === 0) return null;
+        return pool[Math.floor(Math.random() * pool.length)];
+    },
+
+    _rollRarity: function() {
+        let weights = [...this.CONFIG.BASE_RARITY_WEIGHTS];
+        const rodData = this._getEquippedRodData();
+        if (rodData && rodData.catchRate > 0) {
+            const r = rodData.catchRate;
+            weights[2] += r * 0.5;
+            weights[3] += r * 0.3;
+            weights[4] += r * 0.1;
+            weights[5] += r * 0.05;
+        }
+
+        const totalW = weights.reduce((a, b) => a + b, 0);
+        let random = Math.random() * totalW;
+        for (let i = 0; i < weights.length; i++) {
+            random -= weights[i];
+            if (random <= 0) return i + 1;
+        }
+        return 1;
     },
 
     _addFishingExp: function(amt) {
@@ -199,15 +300,7 @@ const UtilFish = {
         window.player.lifeSkills.fishing.exp += amt;
     },
 
-    getFishingLevelData: function() {
-        const exp = (window.player.lifeSkills && window.player.lifeSkills.fishing) ? window.player.lifeSkills.fishing.exp : 0;
-        if (exp >= 999) return { name: "大成", width: 35 };
-        if (exp >= 400) return { name: "进阶", width: 30 };
-        if (exp >= 100) return { name: "入门", width: 25 };
-        return { name: "未入门", width: 20 };
-    },
-
-    _getCurrentSeason: function() {
+    getCurrentSeason: function() {
         const month = (window.player.time && window.player.time.month) ? window.player.time.month : 1;
         if (month >= 3 && month <= 5) return 0;
         if (month >= 6 && month <= 8) return 1;
@@ -215,44 +308,28 @@ const UtilFish = {
         return 3;
     },
 
-    _getRandomFish: function(region, season) {
-        if (typeof fishes === 'undefined') return null;
-        const pool = fishes.filter(f => {
-            const regionMatch = (f.region === "all" || f.region === region);
-            const seasonMatch = f.seasons.includes(season);
-            return regionMatch && seasonMatch;
-        });
-        console.log(pool)
-        if (pool.length === 0) return null;
-        const totalWeight = pool.reduce((acc, f) => acc + (1 / Math.pow(f.rarity, 2)), 0);
-        let random = Math.random() * totalWeight;
-        for (const fish of pool) {
-            const weight = (1 / Math.pow(fish.rarity, 2));
-            if (random < weight) return fish;
-            random -= weight;
+    getRemainingFishCount: function() {
+        if (!this.gridState) return 0;
+        let count = 0;
+        for (let cell of this.gridState) {
+            if (cell.hasFish && !cell.isFlipped) {
+                count++;
+            }
         }
-        return pool[0];
+        return count;
     },
 
-    _getEquippedRodData: function() {
-        const p = window.player;
-        const id = (p.equipment && p.equipment.fishing_rod) ? p.equipment.fishing_rod : null;
-        if (!id) return { catchRate: 0 };
-        const data = fishingRods.find(r => r.id === id);
-        return data ? { catchRate: data.effects.catchRate } : { catchRate: 0 };
+    getInfo: function() {
+        const tier = this._getMasteryTier();
+        return {
+            levelName: tier.name,
+            remainingFish: this.getRemainingFishCount(),
+            attempts: this.currentAttempts,
+            maxAttempts: this.maxAttempts
+        };
     },
 
-    _clearTimers: function() {
-        if (this.gameTimer) clearTimeout(this.gameTimer);
-        if (this.loopTimer) clearInterval(this.loopTimer);
-    },
-
-    startReeling: function() {
-        if (this.state === "IDLE" || this.state === "RESULT") this.handleSceneClick();
-        else if (this.state === "HOOKED") this.handleSceneClick();
-        else if (this.state === "REELING") this.isReeling = true;
-    },
-
-    stopReeling: function() { if (this.state === "REELING") this.isReeling = false; }
+    getTotalCells: function() { return this.totalCells; }
 };
+
 window.UtilFish = UtilFish;

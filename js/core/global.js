@@ -36,7 +36,7 @@ function recalcStats() {
     if (!player) return;
 
     // 【调试】开启分组，方便折叠查看
-    // console.groupCollapsed("📊 [属性计算] 详细追踪 log");
+    //console.groupCollapsed("📊 [属性计算] 详细追踪 log");
 
     // 1. 初始化 derived (最终属性)
     player.derived = {
@@ -47,18 +47,14 @@ function recalcStats() {
         fatigueMax: 100,  // 基础值：100
         space: 200,
     };
-    console.log("1. 初始化基础值:", JSON.parse(JSON.stringify(player.derived)));
 
     // 初始化统计详情
     player.statBreakdown = {};
 
     // --- 内部辅助函数：累加属性并记录来源 ---
     const add = (key, val, source, extra = null) => {
-        if (val === 0) return;
+        if (!val || val === 0) return; // 过滤0或null
         if (player.derived[key] === undefined) player.derived[key] = 0;
-
-        // 【调试】打印每一条加成
-        console.log(`➕ [${key}] +${val} \t来源: ${source} \t(当前: ${player.derived[key] + val})`);
 
         player.derived[key] += val;
 
@@ -69,7 +65,7 @@ function recalcStats() {
     };
 
     // ================= A. 基础数值层 =================
-    console.log("--- A. 基础属性 ---");
+    //console.log("--- A. 基础属性 ---");
     for (let k in player.attr) {
         add(k, player.attr[k], "基础属性");
     }
@@ -81,25 +77,23 @@ function recalcStats() {
     }
 
     // ================= B. 装备层 (扁平数值) =================
-    console.log("--- B. 装备加成 ---");
+    //console.log("--- B. 装备加成 ---");
     if (player.equipment) {
         const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'fishing_rod'];
         slots.forEach(slot => {
-            const itemId = player.equipment[slot];
-            if (itemId) {
-                const item = GAME_DB.items.find(i => i.id === itemId);
-                if (item) {
-                    if (slot === 'weapon') {
-                        const wpSharp = item.sharpness || (item.effects && item.effects.sharpness) || 0;
-                        player.derived.sharpness = wpSharp;
-                    }
-                    if (item.effects) {
-                        for (let k in item.effects) {
-                            add(k, item.effects[k], `装备-[${item.name}]`);
-                        }
+            const item = player.equipment[slot];
+            if (item) {
+                if (slot === 'weapon') {
+                    const wpSharp = item.sharpness || (item.effects && item.effects.sharpness) || 0;
+                    player.derived.sharpness = wpSharp;
+                }
+                if (item.effects) {
+                    for (let k in item.effects) {
+                        add(k, item.effects[k], `装备-[${item.name}]`);
                     }
                 }
             }
+
         });
 
         // 功法被动
@@ -128,13 +122,39 @@ function recalcStats() {
         });
     }
 
+    // ================= 【新增】 B.2 参悟/轮回加成层 =================
+    // 逻辑：遍历所有大成功法，分类统计属性并叠加
+    if (player.skills) {
+        const masteryBonuses = {}; // 临时聚合容器 { atk: 10, def: 5 ... }
+
+        for (let skillId in player.skills) {
+            const skill = player.skills[skillId];
+            // 检查条件：已大成 + 拥有attr字段 + 拥有value字段
+            if (skill.mastered && skill.attr && skill.value) {
+                if (!masteryBonuses[skill.attr]) masteryBonuses[skill.attr] = 0;
+                masteryBonuses[skill.attr] += skill.value;
+            }
+        }
+
+        // 将统计结果应用到属性中
+        // 这样如果同一种属性有多个来源，会合并显示为一条 "参悟加成"
+        for (let attr in masteryBonuses) {
+            const totalVal = masteryBonuses[attr];
+            if (totalVal > 0) {
+                // 如果是小数（如1.5），这里保留一位小数显示
+                // add函数本身支持小数，最终显示由UI层决定，这里直接传值即可
+                add(attr, totalVal, "参悟加成");
+            }
+        }
+    }
+    // ==========================================================
+
     // ================= C. 转化层 (精气神 -> 二级属性) =================
-    console.log("--- C. 属性转化 ---");
+    //console.log("--- C. 属性转化 ---");
+    // 注意：这里获取的是已经包含【参悟加成】后的总精气神
     const totalJing = player.derived.jing || 0;
     const totalQi   = player.derived.qi || 0;
     const totalShen = player.derived.shen || 0;
-
-    console.log(`ℹ️ 当前面板三维: 精[${totalJing}] 气[${totalQi}] 神[${totalShen}]`);
 
     add('hpMax', totalJing * 10, "转化(精x10)");
     add('def',   Math.floor(totalJing * 0.5), "转化(精x0.5)");
@@ -145,12 +165,9 @@ function recalcStats() {
     // 生存上限动态转化
     add('hungerMax', totalJing * 5, "转化(精x5)");
     add('fatigueMax', totalJing * 2, "转化(精x2)");
-    add('fatigueMax', totalShen * 1, "转化(神x1)");
-
+    // add('fatigueMax', totalShen * 1, "转化(神x1)"); // 原代码似乎有这句重复的，视你需求保留
 
     // ================= D. 状态层 (Buff 加成) =================
-    console.log("--- D. Buff/Debuff ---");
-    console.log("1. 状态层:", player.buffs)
     if (player.buffs) {
         for (let buffId in player.buffs) {
             const buff = player.buffs[buffId];
@@ -161,15 +178,15 @@ function recalcStats() {
             if (buff.effects) {
                 if (buff.effects.atkPct) {
                     const val = Math.floor(player.derived.atk * buff.effects.atkPct);
-                    add('atk', val, `${buffName}(${buff.effects.atkPct*100}%)`);
+                    add('atk', val, `${buffName}(${Math.round(buff.effects.atkPct*100)}%)`);
                 }
                 if (buff.effects.defPct) {
                     const val = Math.floor(player.derived.def * buff.effects.defPct);
-                    add('def', val, `${buffName}(${buff.effects.defPct*100}%)`);
+                    add('def', val, `${buffName}(${Math.round(buff.effects.defPct*100)}%)`);
                 }
                 if (buff.effects.spdPct) {
                     const val = Math.floor(player.derived.speed * buff.effects.spdPct);
-                    add('speed', val, `${buffName}(${buff.effects.spdPct*100}%)`);
+                    add('speed', val, `${buffName}(${Math.round(buff.effects.spdPct*100)}%)`);
                 }
 
                 for (let key in buff.effects) {
@@ -184,17 +201,14 @@ function recalcStats() {
             }
         }
     }
-// ================= D.2 状态自动维护 (饱食度逻辑) =================
-    // 逻辑：当饱食度回升（大于30）时，自动解除“饥饿”BUFF
+
+    // ================= D.2 状态自动维护 (饱食度逻辑) =================
     if (player.status && player.status.hunger > 30) {
         if (player.buffs && player.buffs['debuff_hunger']) {
-            console.log("✨ 饱食度回升，移除饥饿状态");
             delete player.buffs['debuff_hunger'];
-
-            // 如果你有通用的刷新左侧面板的方法，可以在这里调用，例如：
-            // renderBuffs();
         }
     }
+
     // ================= E. 状态惩罚 (疲劳/饥饿) =================
     let efficiency = 1.0;
     const hasFatigue = player.buffs && player.buffs['debuff_fatigue'];
@@ -204,7 +218,6 @@ function recalcStats() {
     if (hasHunger) efficiency *= 0.5;
 
     if (efficiency < 1.0) {
-        console.log(`⚠️ 触发虚弱状态，当前效率: ${efficiency * 100}%`);
         const lossRatio = 1.0 - efficiency;
         const currentAtk = player.derived.atk || 0;
         const currentDef = player.derived.def || 0;
@@ -220,8 +233,6 @@ function recalcStats() {
     }
 
     // ================= F. 收尾 =================
-
-    // 状态修正 (Clamp)
     if (player.status.hp > player.derived.hpMax) player.status.hp = player.derived.hpMax;
     if (player.status.mp > player.derived.mpMax) player.status.mp = player.derived.mpMax;
 
@@ -237,8 +248,7 @@ function recalcStats() {
     player.derived.hunger = player.status.hunger;
     player.derived.fatigue = player.status.fatigue;
 
-    console.log("✅ 计算结束，最终面板:", JSON.parse(JSON.stringify(player.derived)));
-    console.groupEnd(); // 结束分组
+    //console.groupEnd();
 }
 
 // 暴露给全局

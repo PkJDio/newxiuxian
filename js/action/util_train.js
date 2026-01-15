@@ -113,11 +113,15 @@ const UtilTrain = {
     /**
      * 执行修炼动作
      */
+    /**
+     * 执行修炼动作
+     */
     train: function(skillId) {
         const p = window.player;
         const item = GAME_DB.items.find(i => i.id === skillId);
 
-        // 2. 瓶颈/满级检查
+        // 1. 基础检查：瓶颈/满级
+        // 注意：这里的检查是为了防止已经大成的功法重复修炼
         const info = window.UtilsSkill.getSkillInfo(skillId);
         if (info.isCapped) {
             if(window.showToast) window.showToast("已达当前瓶颈，无法精进，请寻找后续篇章或参悟。");
@@ -128,18 +132,31 @@ const UtilTrain = {
             return;
         }
 
+        // =========== 【新增检查】 ===========
+
+        // A. 检查饱食度 (不能为0)
+        if (p.status.hunger <= 0) {
+            if(window.showToast) window.showToast("腹中饥饿，四肢无力，无法进行修炼。（饱食度不足）");
+            return;
+        }
+
+        // B. 检查疲劳度 (不能已满)
+        const maxFatigue = (p.derived && p.derived.fatigueMax) ? p.derived.fatigueMax : 100;
+        if (p.status.fatigue >= maxFatigue) {
+            if(window.showToast) window.showToast("精神困乏，心神不宁，容易走火入魔。（疲劳已满）");
+            return;
+        }
+        // ===================================
+
         // 3. 扣除消耗
         if (window.TimeSystem) {
             window.TimeSystem.passTime(this.COST_TIME);
-        } else if (window.Time) { // 兼容
+        } else if (window.Time) {
             window.Time.passTime(this.COST_TIME);
         }
 
         // 消耗逻辑
         p.status.hunger = Math.max(0, p.status.hunger - this.HUNGER_COST);
-
-        // 疲劳增加逻辑 (使用 derived.fatigueMax)
-        const maxFatigue = (p.derived && p.derived.fatigueMax) ? p.derived.fatigueMax : 100;
         p.status.fatigue = Math.min(maxFatigue, p.status.fatigue + this.FATIGUE_ADD);
 
         // 4. 获取收益
@@ -147,10 +164,29 @@ const UtilTrain = {
 
         // 5. 应用熟练度
         if (window.UtilsSkill) {
+            // 第三个参数 true 表示静默模式，我们在下面手动处理提示
             window.UtilsSkill.learnSkill(skillId, predict.gain, true);
+
+            // =========== 【核心修改：大成判定】 ===========
+            // 再次获取技能信息，检查熟练度增加后的状态
+            const afterInfo = window.UtilsSkill.getSkillInfo(skillId);
+            const skillData = p.skills[skillId];
+
+            // 如果练完之后达到了瓶颈(满级)，且还没标记大成，则强制标记为大成
+            // (isCapped 为 true 说明等级已达上限)
+            if (afterInfo && afterInfo.isCapped && !skillData.mastered) {
+                skillData.mastered = true;
+
+                // 播放大成提示
+                const msg = `✨ 醍醐灌顶！《${item.name}》已修炼至大成境界！`;
+                if(window.showToast) window.showToast(msg);
+                if(window.LogManager) window.LogManager.add(`[系统] ${msg}`);
+            }
+            // ===========================================
         }
 
-        // 6. 反馈提示
+        // 6. 反馈提示 (普通修炼提示)
+        // 如果刚刚大成了，这里依然显示一次修炼结算，或者你可以加个判断不显示
         if (window.showToast) {
             const effPct = Math.round(predict.efficiency * 100);
             window.showToast(`修炼结束，[${item.name}] 熟练度 +${predict.gain} (效率${effPct}%)`);

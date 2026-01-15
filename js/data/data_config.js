@@ -20,7 +20,7 @@ const ATTR_MAPPING = {
     "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
 
     // 战斗属性
-    "hpMax": "生命上限", "hp_max": "生命上限", "mpMax": "法力上限", "hp": "生命", "mp": "法力", "atk": "攻击", "def": "防御", "speed": "速度", "critRate": "暴击率", "critDmg": "暴击伤害", "dodge": "闪避", "toxicity": "毒性", "space": "背包空间", "catchRate": "钓鱼成功机率",
+    "hpMax": "生命上限", "hp_max": "生命上限", "mpMax": "灵力上限", "hp": "生命", "mp": "灵力", "atk": "攻击", "def": "防御", "speed": "速度", "critRate": "暴击率", "critDmg": "暴击伤害", "dodge": "闪避", "toxicity": "毒性", "space": "背包空间", "catchRate": "钓鱼成功机率",
 
     // 生活/特殊
     "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运", "storage": "背包空间", //饱食度
@@ -57,7 +57,7 @@ const SKILL_CONFIG = {
     // 这里的数值会直接乘在升级所需经验上
     // 例如：外功 0.85 意味着只需要 85% 的熟练度就能升级
     typeExpRate: {
-        "body"       : 0.85,       // 外功：修炼要求降低
+        "body"       : 1.0,       // 外功：修炼要求降低
         "cultivation": 1.0  // 内功：标准要求
     }
 };

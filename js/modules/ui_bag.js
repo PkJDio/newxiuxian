@@ -212,6 +212,10 @@ const UIBag = {
 
             p.consumables.forEach((sid, idx) => {
                 const item = sid ? p.inventory.find(i => i.sid === sid) : null;
+
+                if(item === null || item === undefined){
+                    p.consumables[idx]=null;
+                }
                 let icon = '';
                 let activeClass = '';
                 let name = `快捷${idx + 1}`;

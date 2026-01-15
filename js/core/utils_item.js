@@ -155,7 +155,7 @@ const UtilsItem = {
                 window.LogManager.add(`你${verb} <span style="color:${color}">${itemSlot.name}</span>。`);
             }
         }
-
+        saveGame();
     },
 
     // 内部方法：应用效果
@@ -165,6 +165,13 @@ const UtilsItem = {
 
         if (item.effects) {
             const eff = item.effects;
+            //如果是得到钱
+            if(eff.money){
+                player.money+=eff.money;
+                msg += `获得了 ${eff.money} 文 `;
+                applied = true;
+            }
+
 
             // A. 基础恢复
             if (eff.hp) {
@@ -180,9 +187,9 @@ const UtilsItem = {
             if (eff.mp) {
                 player.derived.mp = Math.min(player.derived.mpMax, (player.derived.mp||0) + eff.mp);
                 if(eff.mp>0){
-                    msg += `法力回复${eff.mp} `;
+                    msg += `灵力回复${eff.mp} `;
                 }else{
-                    msg += `法力减少-${Math.abs(eff.mp)} `;
+                    msg += `灵力减少-${Math.abs(eff.mp)} `;
                 }
                 applied = true;
             }
@@ -227,22 +234,40 @@ const UtilsItem = {
 
             // D. Buff
             // D. 临时 Buff (buff)
+            // D. 临时 Buff (buff)
+            // 【核心修改】支持复合属性分割与分别添加
             if (eff.buff) {
                 const b = eff.buff;
                 if (b.attr && b.val && b.days) {
                     if (!player.buffs) player.buffs = {};
 
-                    const newBuff = {
-                        name: item.name,
-                        days: b.days,
-                        attr: b.attr,
-                        val: b.val,
-                        isDebuff: false,
-                        desc: item.desc || ""
-                    };
+                    // 1. 将 attr 和 val 转为字符串并用 '_' 分割
+                    const attrs = String(b.attr).split('_');
+                    const vals = String(b.val).split('_');
+                    const days = b.days; // 天数共享
 
-                    // 使用 item.id 作为唯一 Key 确保同类丹药刷新时间
-                    player.buffs[item.id] = newBuff;
+                    // 2. 遍历所有属性并添加
+                    attrs.forEach((subAttr, index) => {
+                        // 防止 val 数量少于 attr 数量，缺省取第一个
+                        const subVal = vals[index] !== undefined ? vals[index] : vals[0];
+
+                        // 3. 生成唯一 Key
+                        // 如果是单属性，使用 item.id (兼容旧逻辑)
+                        // 如果是多属性，使用 item.id + "_" + subAttr (防止Key冲突)
+                        const buffKey = attrs.length > 1 ? `${item.id}_${subAttr}` : item.id;
+
+                        const newBuff = {
+                            name: item.name,
+                            days: days,
+                            attr: subAttr,
+                            val: Number(subVal), // 确保转为数字
+                            isDebuff: false,
+                            desc: item.desc || ""
+                        };
+
+                        player.buffs[buffKey] = newBuff;
+                    });
+
                     applied = true;
                 }
             }

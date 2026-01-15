@@ -1,18 +1,27 @@
 // js/modules/ui_train.js
-// 修炼界面 UI v1.5 (字体放大版 - 全局px+2)
+// 修炼界面 UI v1.6 (记忆上次选择 + 自动滚动)
 
 const UITrain = {
     selectedSkillId: null,
     modalBody: null,
+    shouldScroll: false, // 新增：控制是否需要滚动定位
 
     // 入口
     open: function() {
+        this.shouldScroll = true; // 标记：打开时允许自动滚动
         this.autoSelectSkill();
         this.renderModal();
     },
 
-    // 自动选中一个未满级的功法
+    // 自动选中逻辑 (优化版)
     autoSelectSkill: function() {
+        // 1. 优先读取上次记录 (如果存在且玩家确实拥有该技能)
+        if (player.lastTrainId && player.skills && player.skills[player.lastTrainId]) {
+            this.selectedSkillId = player.lastTrainId;
+            return;
+        }
+
+        // 2. 如果没有记录，才走默认逻辑
         if (this.selectedSkillId) return;
         if (!player.skills) return;
 
@@ -70,9 +79,24 @@ const UITrain = {
         }).filter(x => x.item && (x.item.subType === 'body' || x.item.subType === 'cultivation'));
 
         // 排序：未满级优先 > 稀有度高优先
+        // 排序：未满级优先 > 稀有度高优先 > 名字排序
         list.sort((a, b) => {
-            if (a.data.mastered !== b.data.mastered) return a.data.mastered ? 1 : -1;
-            return (b.item.rarity || 1) - (a.item.rarity || 1);
+            // 1. 未满级优先 (Mastered: false 排在前面)
+            // if (a.data.mastered !== b.data.mastered) {
+            //     return a.data.mastered ? 1 : -1;
+            // }
+
+            // 2. 稀有度高优先 (Rarity: 大的排在前面)
+            const rarityDiff = (b.item.rarity || 1) - (a.item.rarity || 1);
+            if (rarityDiff !== 0) {
+                return rarityDiff;
+            }
+
+            // 3. 名字排序 (中文拼音顺序)
+            // 使用 localeCompare 确保中文按拼音排序，而不是按Unicode编码
+            const nameA = a.item.name || "";
+            const nameB = b.item.name || "";
+            return nameA.localeCompare(nameB, 'zh-CN');
         });
 
         list.forEach(entry => {
@@ -82,28 +106,28 @@ const UITrain = {
 
             const el = document.createElement('div');
             el.className = `train_skill_item ${isActive ? 'active' : ''}`;
+            // 标记ID方便调试或查找
+            el.dataset.id = entry.id;
 
             // 点击选择
             el.onclick = () => {
                 this.selectedSkillId = entry.id;
+                // 【新增】保存选择记录到 player 对象
+                player.lastTrainId = entry.id;
+                // 点击切换时不需要自动滚动
+                this.shouldScroll = false;
                 this.refresh();
             };
 
             // 添加鼠标悬浮事件
             el.onmouseenter = (e) => {
-                if (window.showSkillTooltip) {
-                    window.showSkillTooltip(e, entry.id);
-                }
+                if (window.showSkillTooltip) window.showSkillTooltip(e, entry.id);
             };
             el.onmouseleave = () => {
-                if (window.hideTooltip) {
-                    window.hideTooltip();
-                }
+                if (window.hideTooltip) window.hideTooltip();
             };
             el.onmousemove = (e) => {
-                if (window.moveTooltip) {
-                    window.moveTooltip(e);
-                }
+                if (window.moveTooltip) window.moveTooltip(e);
             };
 
             const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[entry.item.rarity] : { color: '#333' };
@@ -120,9 +144,21 @@ const UITrain = {
                 </div>
             `;
             container.appendChild(el);
+
+            // 【新增】自动滚动逻辑
+            // 只有当这是激活项，且处于“应该滚动”的状态（即刚打开界面时）
+            if (isActive && this.shouldScroll) {
+                // 使用 setTimeout 确保 DOM 已经渲染完毕
+                setTimeout(() => {
+                    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 100);
+                // 滚动一次后关闭标记，避免后续点击刷新时乱跳
+                this.shouldScroll = false;
+            }
         });
     },
 
+    // 渲染右侧详情
     // 渲染右侧详情
     renderRightPanel: function() {
         const container = document.getElementById('train_dashboard');
@@ -136,23 +172,20 @@ const UITrain = {
         const skillId = this.selectedSkillId;
         const item = GAME_DB.items.find(i => i.id === skillId);
 
-        // 获取实时数据
+        // 获取实时数据：这里包含了 mastered 和 isCapped
         const info = window.UtilsSkill.getSkillInfo(skillId);
 
-        // 【安全调用】确保 predictGain 返回有效对象
+        // 【数据获取】预测收益
         let predict = { gain: 0, efficiency: 1.0, breakdown: [], baseGain: 0, formulaDesc: "" };
         if (window.UtilTrain && window.UtilTrain.predictGain) {
             predict = window.UtilTrain.predictGain(skillId);
         }
 
-        // 【数值安全】确保 efficiency 是有效数字
-        let effValue = predict.efficiency;
-        if (isNaN(effValue) || effValue === undefined || effValue === null) {
-            effValue = 1.0; // 默认 100%
-        }
+        // 【数值安全】效率计算
+        let effValue = predict.efficiency || 1.0;
         const effPercent = Math.round(effValue * 100);
 
-        // 1. 标题头
+        // 1. 标题头 (保持不变)
         const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#333', name: '普通' };
         const headerHtml = `
             <div class="td_header">
@@ -161,11 +194,9 @@ const UITrain = {
             </div>
         `;
 
-        // 2. 进度条
+        // 2. 进度条区域
         const currentCap = info.nextExp !== -1 ? info.nextExp : info.exp;
         const pct = currentCap > 0 ? Math.min(100, (info.exp / currentCap) * 100).toFixed(1) : 0;
-
-        // 预测增益进度
         const gainPct = (info.nextExp !== -1 && currentCap > 0) ? Math.min(100, (predict.gain / currentCap) * 100).toFixed(1) : 0;
 
         const progressHtml = `
@@ -178,19 +209,15 @@ const UITrain = {
                     <div class="td_bar_fill" style="width:${pct}%"></div>
                     <div class="td_bar_gain" style="left:${pct}%; width:${gainPct}%"></div>
                 </div>
-                ${info.isCapped ? '<div class="td_cap_tip">⚠️ 已达瓶颈，请寻找后续篇章或参悟</div>' : ''}
+                ${info.isCapped ? '<div class="td_cap_tip">⚠️ 已达进阶瓶颈，请寻找后续篇章或参悟</div>' : ''}
+                ${info.mastered ? '<div class="td_cap_tip" style="color:#4caf50;">✨ 功法已臻大成，无需继续修炼</div>' : ''}
             </div>
         `;
 
-        // 3. 效率详情
-        let breakdownHtml = "";
-        if (predict.breakdown && Array.isArray(predict.breakdown)) {
-            breakdownHtml = predict.breakdown.map(b => {
-                const valStr = b.val;
-                const color = b.color || '#666';
-                return `<div class="eff_row"><span>${b.label}</span><span style="color:${color}">${valStr}</span></div>`;
-            }).join('');
-        }
+        // 3. 效率详情 (保持不变)
+        let breakdownHtml = (predict.breakdown || []).map(b => {
+            return `<div class="eff_row"><span>${b.label}</span><span style="color:${b.color || '#666'}">${b.val}</span></div>`;
+        }).join('');
 
         const effHtml = `
             <div class="td_stats_grid">
@@ -207,20 +234,30 @@ const UITrain = {
             </div>
         `;
 
-        // 4. 按钮
+        // 4. 【核心修改】按钮逻辑
+        // 只有当既没有大成(mastered)，也没有遇到瓶颈(isCapped)时，才可以点击
         const canTrain = !info.isCapped && !info.mastered;
+
         let btnText = "🧘 开始修炼";
-        if (info.mastered) btnText = "✅ 已臻化境";
-        else if (info.isCapped) btnText = "🚫 瓶颈限制";
+        let btnClass = "train_big_btn";
+
+        if (info.mastered) {
+            btnText = "✅ 已臻大成";
+            btnClass += " disabled"; // 变灰
+        } else if (info.isCapped) {
+            btnText = "🚫 进阶瓶颈";
+            btnClass += " disabled"; // 变灰
+        }
 
         const btnHtml = `
             <div class="td_actions">
-                <button class="train_big_btn ${!canTrain ? 'disabled' : ''}" 
-                    onclick="${canTrain ? `window.UtilTrain.train('${skillId}')` : ''}">
+                <button class="${btnClass}" 
+                    ${canTrain ? `onclick="window.UtilTrain.train('${skillId}')"` : ''}
+                    ${!canTrain ? 'disabled' : ''}>
                     ${btnText}
                 </button>
                 <div class="train_cost_tip">
-                    消耗: 4时辰 / -20饱食度 / +20疲劳
+                    ${canTrain ? '消耗: 4时辰 / -20饱食度 / +20疲劳' : '当前状态无法修炼'}
                 </div>
             </div>
         `;

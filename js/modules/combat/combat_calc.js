@@ -66,7 +66,8 @@ const CombatCalc = {
         finalDamage = Math.max(1, finalDamage);
 
         // 构建 Tooltip 文本 (为了保持原有样式，代码较长)
-        const tooltipHtml = this._buildDamageTooltip(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage);
+        // 【修改点】调用时增加 variance 参数
+        const tooltipHtml = this._buildDamageTooltip(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage, variance);
 
         const color = isPlayerAttacking ? "#d32f2f" : "#1976d2";
         const dmgSpan = `<span class="combat-tooltip-trigger" style="color:${color}; font-weight:bold; cursor:help; border-bottom:1px dotted ${color}; position:relative;">${finalDamage}${tooltipHtml}</span>`;
@@ -108,27 +109,46 @@ const CombatCalc = {
         return base;
     },
 
-    /** 构造伤害 Tooltip 的内部辅助 */
-    _buildDamageTooltip: function(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage) {
-        const sharpPct = Math.floor((1 - (100 / (100 + (atkStats.sharpness || 0)))) * 100);
-        const reductionPct = Math.floor((1 - (100 / (100 + defVal))) * 100);
 
+    /** 构造伤害 Tooltip 的内部辅助 */
+    _buildDamageTooltip: function(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage, variance) {
+        // --- 1. 预计算 ---
+        const reductionMult = 100 / (100 + defVal);
+        const reductionPct = ((1 - reductionMult) * 100).toFixed(1);
+        const preCritDamage = Math.floor(finalAtkVal * reductionMult);
+        const sharpPct = atkStats.sharpness ? Math.floor((1 - (100 / (100 + atkStats.sharpness))) * 100) : 0;
+
+        // 计算浮动百分比显示
+        const varPct = Math.round(variance * 100);
+        // 设置颜色：大于100%绿色，小于100%灰色/橙色
+        let varColor = "#666";
+        if (varPct > 100) varColor = "#4caf50"; // 运气好
+        else if (varPct < 100) varColor = "#ff9800"; // 运气差
+
+        // --- 2. 构建 HTML ---
         return `
             <div class="combat-tooltip-content">
-                <div class="tip-row"><span>🗡️ 最终攻击</span> <span>${Math.floor(finalAtkVal)}</span></div>
-                ${atkStats.skillMult ? `<div class="tip-row tip-dim"><span>└ 基础</span> <span>${baseAtk} x ${atkStats.skillMult}</span></div>` : ''}
+                <div class="tip-row"><span>🗡️ 本次初始伤害</span> <span>${Math.floor(finalAtkVal)}</span></div>
                 <div class="tip-divider"></div>
-                <div class="tip-row"><span>🛡️ 原始防御</span> <span>${originDef}</span></div>
-                ${atkStats.sharpness > 0 ? `
-                    <div class="tip-row" style="color:#ffb74d;"><span>✨ 锐利度</span> <span>${atkStats.sharpness} <span class="tip-dim">(-${sharpPct}%)</span></span></div>
-                    <div class="tip-row tip-dim"><span>└ 有效防御</span> <span>${defVal.toFixed(1)} <span style="color:#ff5252;">(-${reductionPct}%)</span></span></div>
-                ` : `<div class="tip-row"><span>└ 减伤率</span> <span class="tip-dim">-${reductionPct}%</span></div>`}
-                ${pen > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>⚡ 穿甲</span> <span>${pen}</span></div>` : ''}
+                
+                <div class="tip-row"><span>🛡️ 原始防御</span> <span>${Math.floor(originDef)}</span></div>
+                ${atkStats.sharpness > 0 ? `<div class="tip-row" style="color:#ffb74d;"><span>✨ 武器锐利度</span> <span>${atkStats.sharpness} <span class="tip-dim">(-${sharpPct}%防御)</span></span></div>` : ''}
+                ${pen > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>⚡ 防御穿透</span> <span>-${pen}</span></div>` : ''}
+                <div class="tip-row"><span>🛡️ 实际防御</span> <span>${defVal.toFixed(1)}</span></div>
+                <div class="tip-row"><span>📉 实际防御减伤</span> <span style="color:#ef5350;">-${reductionPct}%</span></div>
+                
                 <div class="tip-divider"></div>
+                
+                <div class="tip-row"><span>💔 暴击前伤害</span> <span>${preCritDamage}</span></div>
                 <div class="tip-row"><span>🎯 暴击率</span> <span>${(critRate*100).toFixed(1)}%</span></div>
                 ${isCrit ? `<div class="tip-row tip-crit"><span>💥 暴击伤害</span> <span>x1.5</span></div>` : ''}
+                
                 <div class="tip-divider"></div>
-                <div class="tip-row tip-total"><span>最终伤害</span> <span>${finalDamage}</span></div>
+                
+                ${/* 【新增】显示伤害浮动 */ ''}
+                <div class="tip-row"><span>🎲 伤害浮动</span> <span style="color:${varColor}">${varPct}%</span></div>
+
+                <div class="tip-row tip-total"><span>🩸 实际伤害</span> <span>${finalDamage}</span></div>
             </div>`;
     }
 };

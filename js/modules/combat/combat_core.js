@@ -9,7 +9,7 @@ const CombatCore = {
         let pStats = CombatCalc.getDynamicStats(ctx, 'player');
         let eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
 
-        if (ctx.currentTurn === 1) ctx._log(`遭遇了 ${ctx.enemy.name} (HP: ${ctx.currentEHp})！`);
+        if (ctx.currentTurn === 1) ctx._log(`<br>遭遇了 ${ctx.enemy.name} (HP: ${ctx.currentEHp})！<br>`);
         if (ctx.currentTurn > ctx.maxTurns) { ctx._log("双方罢兵..."); this.handleEnd(ctx, "平局"); return; }
 
         ctx._log(`<div class="turn-divider">--- 第 ${ctx.currentTurn} 回合 ---</div>`);
@@ -82,7 +82,7 @@ const CombatCore = {
             const gain = { "minion": 5, "elite": 10, "boss": 50, "lord": 100 }[rank] || 0;
             window.player.danger = Math.min(100, (window.player.danger || 0) + gain);
             window.player.need_kill = 0;
-            if (window.LogManager) window.LogManager.add(`[系统] 击杀${rank}级目标，当前危险度: ${window.player.danger}`);
+            // if (window.LogManager) window.LogManager.add(`[系统] 击杀${rank}级目标，当前危险度: ${window.player.danger}`);
         }
 
         ctx._log(`<div style="color:green; font-weight:bold; margin-top:10px; font-size:16px;">🏆 战斗胜利！</div>`);
@@ -112,11 +112,47 @@ const CombatCore = {
     handleDefeat: function(ctx) {
         ctx.isEnded = true;
         ctx._log(`<div style="color:red; font-weight:bold; margin-top:10px;">💀 战斗失败...</div>`);
-        if (window.player.status) { window.player.status.hp = 1; window.player.status.mp = 0; }
-        if (window.UtilsFail && window.UtilsFail.onCombatDefeat) window.UtilsFail.onCombatDefeat(ctx.enemy);
+
+        // 1. 渲染失败界面（界面变灰、停止动画，但不关闭）
         CombatUI.renderEnd(ctx, "失败");
+
+        // 2. 生成底部按钮，但不要直接调用 closeModal
         const footer = document.getElementById('map_combat_footer');
-        if (footer) footer.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px;" onclick="window.closeModal()">黯然离去</button>`;
+        if (footer) {
+            // 生成唯一ID，确保事件绑定正确
+            const btnId = 'btn_defeat_confirm_' + Date.now();
+
+            footer.innerHTML = `<button id="${btnId}" class="ink_btn_normal" style="width:100%; height:40px;">黯然离去</button>`;
+
+            // 3. 绑定点击事件：点击后才真正执行结算
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.onclick = () => {
+                    this._finalizeDefeat(ctx);
+                };
+            }
+        }
+    },
+
+    /** * 【新增】内部方法：执行失败惩罚并关闭
+     * (只有用户点击了“黯然离去”才会执行这里)
+     */
+    _finalizeDefeat: function(ctx) {
+        // 1. 执行数值惩罚 (HP变为1, MP清空)
+        if (window.player.status) {
+            window.player.status.hp = 1;
+            window.player.status.mp = 0;
+        }
+
+        // 2. 执行外部失败逻辑 (如掉落物品、传送到重生点等)
+        if (window.UtilsFail && window.UtilsFail.onCombatDefeat) {
+            window.UtilsFail.onCombatDefeat(ctx.enemy);
+        }
+
+        // 3. 关闭弹窗
+        if (window.closeModal) window.closeModal();
+
+        // 4. 清理战斗缓存
         ctx.clearCache();
     },
 

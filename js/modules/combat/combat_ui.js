@@ -8,7 +8,9 @@ const CombatUI = {
         if (!container) return;
         const line = document.createElement('div');
         line.style.marginBottom = '4px';
+
         line.innerHTML = msg;
+
         container.appendChild(line);
         if (container.children.length > 60) container.removeChild(container.firstChild);
         setTimeout(() => { line.scrollIntoView({ behavior: "smooth", block: "end" }); }, 0);
@@ -89,7 +91,7 @@ const CombatUI = {
             const buff = buffs[suffix === 'spd' ? 'speed' : suffix];
             if (buff) {
                 const isDebuff = buff.type === 'debuff';
-                const html = `<span class="attr-buff-val" style="color:${isDebuff?'#d32f2f':'#388e3c'}; margin-left:5px;"> ${isDebuff?"-":"+"} ${Math.abs(buff.val)} ${attrMap[suffix]}</span>`;
+                const html = `<span class="attr-buff-val" style="color:${isDebuff?'#d32f2f':'#388e3c'}; margin-left:5px; margin-top:-4px;"> ${isDebuff?"-":"+"} ${Math.abs(buff.val)} ${attrMap[suffix]}</span>`;
                 el.insertAdjacentHTML('beforeend', html);
             }
         });

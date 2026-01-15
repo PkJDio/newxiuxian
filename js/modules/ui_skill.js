@@ -95,7 +95,7 @@ const UISkill = {
             .skill_name { font-weight:bold; color:#333; font-size: 17px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .skill_level { font-size:14px; color:#666; }
 
-            .card_badge { position: absolute; top: 0; right: 0; background: #a94442; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-bottom-left-radius: 6px; z-index: 10; box-shadow: -1px 1px 2px rgba(0,0,0,0.2); pointer-events: none; }
+            .card_badge { position: absolute; top: 0; left: 0; background: #a94442; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-bottom-left-radius: 6px; z-index: 10; box-shadow: -1px 1px 2px rgba(0,0,0,0.2); pointer-events: none; }
             .skill_stamp { position: absolute; bottom: -13px; right: -5%; width: 60px; height: 60px; line-height: 54px; border: 3px solid #8b0000; color: #8b0000; opacity: 0.8; border-radius: 50%; text-align: center; font-size: 34px; font-weight: 900; transform: rotate(-25deg); pointer-events: none; z-index: 0; }
 
             /* 右侧面板 */

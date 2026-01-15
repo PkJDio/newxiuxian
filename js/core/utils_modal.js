@@ -193,7 +193,93 @@ const ModalManager = {
 
         return body;
     },
+// 10. 死亡通知弹窗 (水墨武侠风，强制单按钮)
+    // 10. 死亡通知弹窗 (修复版：宽屏布局)
+    showDeathModal: function(title, contentHtml, onConfirm) {
+        // 1. 注入死亡弹窗专属样式
+        this._injectDeathStyles();
 
+        // 2. 创建回调
+        this._createTempCallback(onConfirm, (funcName) => {
+            const footer = `
+                <div class="ink_modal_footer" style="justify-content: center !important; border-top: none !important;">
+                    <button class="ink_btn_death" onclick="window['${funcName}']()">
+                        <span class="btn_icon">🕯️</span><span class="btn_text">重新来过</span>
+                    </button>
+                </div>`;
+
+            const strictOptions = { allowOutsideClick: false, allowEsc: false };
+
+            // 【核心修改】这里第6个参数改为 45，确保它是横向宽弹窗
+            this._showBaseModal('modal_death', title, contentHtml, footer, "", 45, null, strictOptions);
+        });
+    },
+
+    _injectDeathStyles: function() {
+        if (document.getElementById('style-modal-death')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-death';
+        style.innerHTML = `
+            /* 整体容器：水墨纸张质感，加宽 */
+            .modal_death {
+                border: 2px solid #5d4037 !important;
+                background-color: #fdfbf7 !important;
+                box-shadow: 0 0 25px rgba(0,0,0,0.85) !important;
+                min-width: 450px !important; /* 增加最小宽度 */
+            }
+            /* 标题栏：黑底红字，压抑感 */
+            .modal_death .modal_header {
+                background: #1a1a1a !important;
+                color: #d32f2f !important;
+                border-bottom: 2px solid #5d4037 !important;
+                text-align: center !important;
+                font-family: "KaiTi", serif;
+                font-size: 26px !important; /* 加大字号 */
+                letter-spacing: 4px;
+                padding: 15px 0 !important;
+            }
+            /* 内容区：居中，大字体，增加留白 */
+            .modal_death .modal_body {
+                text-align: center;
+                font-family: "KaiTi", serif;
+                font-size: 22px;
+                padding: 40px 30px !important; /* 增加内边距 */
+                color: #333;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                line-height: 1.6;
+            }
+            /* 按钮：深红主题 */
+            .ink_btn_death {
+                background: linear-gradient(to bottom, #b71c1c, #800000);
+                color: #fce4ec;
+                border: 1px solid #500;
+                padding: 12px 60px; /* 加宽按钮 */
+                font-size: 22px;
+                font-family: "KaiTi";
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+                border-radius: 4px;
+                transition: transform 0.1s;
+                text-shadow: 1px 1px 0 #000;
+                margin-bottom: 10px;
+            }
+            .ink_btn_death:hover {
+                background: linear-gradient(to bottom, #c62828, #b71c1c);
+                color: #fff;
+            }
+            .ink_btn_death:active {
+                transform: translateY(2px);
+                box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+            }
+            .btn_icon { margin-right: 10px; font-size: 24px; vertical-align: middle; }
+            .btn_text { vertical-align: middle; }
+        `;
+        document.head.appendChild(style);
+    },
     _injectDialogueStyles: function() {
         if (document.getElementById('ink_dialogue_style')) return;
         const style = document.createElement('style');
@@ -211,7 +297,90 @@ const ModalManager = {
         `;
         document.head.appendChild(style);
     },
+// 11. 战败通知弹窗 (灰色颓废风，只有确认按钮)
+    // 11. 战败通知弹窗 (修复版：加宽布局)
+    showDefeatModal: function(title, contentHtml, onConfirm) {
+        // 1. 注入战败专属样式
+        this._injectDefeatStyles();
 
+        // 2. 创建回调
+        this._createTempCallback(onConfirm, (funcName) => {
+            const footer = `
+                <div class="ink_modal_footer" style="justify-content: center !important; border-top: none !important;">
+                    <button class="ink_btn_defeat" onclick="window['${funcName}']()">
+                        <span class="btn_icon">🤕</span><span class="btn_text">黯然离去</span>
+                    </button>
+                </div>`;
+
+            // 3. 强制锁定
+            const strictOptions = { allowOutsideClick: false, allowEsc: false };
+
+            // 【核心修改】这里第6个参数从 null 改为 45，表示宽度设为 45vw (屏幕宽度的45%)
+            // 这样它就是一个横向的矩形了
+            this._showBaseModal('modal_defeat', title, contentHtml, footer, "", 45, null, strictOptions);
+        });
+    },
+
+    _injectDefeatStyles: function() {
+        if (document.getElementById('style-modal-defeat')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-defeat';
+        style.innerHTML = `
+            /* 战败弹窗：灰色调，表现挫败感 */
+            .modal_defeat {
+                border: 2px solid #757575 !important;
+                background-color: #f5f5f5 !important;
+                box-shadow: 0 0 20px rgba(0,0,0,0.6) !important;
+                /* 【核心修改】增加最小宽度，防止内容少时太窄 */
+                min-width: 450px !important; 
+            }
+            .modal_defeat .modal_header {
+                background: #616161 !important;
+                color: #e0e0e0 !important;
+                border-bottom: 2px solid #9e9e9e !important;
+                text-align: center !important;
+                font-family: "KaiTi", serif;
+                font-size: 24px !important; /* 标题字号加大 */
+                letter-spacing: 2px;
+                padding: 12px 0 !important;
+            }
+            .modal_defeat .modal_body {
+                text-align: center;
+                font-family: "KaiTi", serif;
+                font-size: 20px;
+                /* 【核心修改】增加内边距，让布局更宽松 */
+                padding: 40px 30px !important; 
+                color: #555;
+                line-height: 1.6;
+            }
+            /* 按钮样式优化 */
+            .ink_btn_defeat {
+                background: linear-gradient(to bottom, #8d6e63, #5d4037);
+                color: #fff;
+                border: 1px solid #4e342e;
+                padding: 12px 50px; /* 按钮也加宽 */
+                font-size: 20px;
+                font-family: "KaiTi";
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+                border-radius: 4px;
+                transition: all 0.2s;
+                text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+            }
+            .ink_btn_defeat:hover {
+                background: linear-gradient(to bottom, #a1887f, #6d4c41);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+            }
+            .ink_btn_defeat:active {
+                transform: translateY(1px);
+            }
+            .btn_icon { margin-right: 8px; font-size: 22px; vertical-align: middle; }
+            .btn_text { vertical-align: middle; }
+        `;
+        document.head.appendChild(style);
+    },
     // ================= 核心逻辑 =================
 
     _createTempCallback: function(callback, renderFn) {
@@ -444,3 +613,6 @@ window.showConfirmModal = ModalManager.showConfirmModal.bind(ModalManager);
 window.showSelectionModal = ModalManager.showSelectionModal.bind(ModalManager);
 window.closeModal = () => ModalManager.closeTopModal();
 window.showDialogue = ModalManager.showDialogueModal.bind(ModalManager);
+// 新增这一行
+window.showDeathModal = ModalManager.showDeathModal.bind(ModalManager);
+window.showDefeatModal = ModalManager.showDefeatModal.bind(ModalManager);

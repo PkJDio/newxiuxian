@@ -19,7 +19,7 @@ const ENEMY_TEMPLATES = {
     "boss"  : {
         name       : "头目",
         color      : "#56059f",
-        basePen    : 25, // 头目具备穿甲能力
+        basePen    : 35, // 头目具备穿甲能力
         multipliers: {hp: 7.0, atk: 1.5, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0},
         icon: "☠️",
         accuracy: 20
@@ -27,7 +27,7 @@ const ENEMY_TEMPLATES = {
     "lord"  : {
         name       : "领主",
         color      : "#a60518",
-        basePen    : 35, // 领主高穿甲，克制重甲
+        basePen    : 55, // 领主高穿甲，克制重甲
         multipliers: {hp: 14.0, atk: 1.8, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0},
         icon: "👹",
         accuracy: 30
@@ -2540,7 +2540,7 @@ const enemies_r_n = [
             { id: "风暴护盾", rate: 0.2, type: 3, buffValue: 25, buffAttr: "def", buffTimes: 3 },
             { id: "灵魂震慑", rate: 0.2, type: 2, debuffValue: 20, debuffAttr: "atk", debuffTimes: 3 }
         ],
-        desc: "【领主】能召唤雷霆与风暴的萨满教主，法力无边。"
+        desc: "【领主】能召唤雷霆与风暴的萨满教主，灵力无边。"
     },
     {
         id: "rn_lord_03", template: "lord", name: "瀚海沙虫王", region: "r_n", spawnType: "desert", timeStart: 2,
@@ -2904,6 +2904,22 @@ function initEnemyData() {
         finalStats.def = Math.floor(finalStats.def * tmpl.multipliers.def);
         finalStats.speed = Math.floor(finalStats.speed * tmpl.multipliers.speed);
 
+        // 2. 【新增】处理技能伤害倍率
+        let finalSkills = [];
+        if (e.skills && Array.isArray(e.skills)) {
+            finalSkills = e.skills.map(originalSkill => {
+                // 浅拷贝技能对象，以免修改原始配置
+                const skill = { ...originalSkill };
+
+                // 如果是伤害技能 (type: 1)，应用攻击倍率
+                if (skill.type === 1 && skill.damage) {
+                    // damage * atk倍率
+                    skill.damage = Math.floor(skill.damage * tmpl.multipliers.atk);
+                }
+                return skill;
+            });
+        }
+
         // 计算经验值和金钱倍率
         const expBase = Math.floor(finalStats.hp / 2 + finalStats.atk * 2);
         const exp = Math.floor(expBase * tmpl.multipliers.exp);
@@ -2922,7 +2938,8 @@ function initEnemyData() {
             levelType: tmpl.name, // 显示为 [精英] 等
             stats    : finalStats,
             exp      : exp,
-            money    : money
+            money    : money,
+            skills   : finalSkills, // <--- 使用修正后的技能列表
         };
     });
 }
@@ -2930,6 +2947,7 @@ function initEnemyData() {
 // 导出最终数据
 const enemies = initEnemyData();
 window.enemies = enemies; // 挂载到全局
+console.log(enemies)
 
 // 初始化目标数组
 let enemies_all_drops = [];

@@ -62,6 +62,7 @@ const MapEnemyManager = {
 
         for(let i = 0; i < window.GlobalEnemies.length; i++) {
             const enemy = window.GlobalEnemies[i];
+
             // 计算敌人在屏幕上的像素坐标
             const ex = (enemy.x - cameraX) * ts + centerX;
             const ey = (enemy.y - cameraY) * ts + centerY;

@@ -14,6 +14,39 @@ window.performDirectRebirth = function() {
 
     if (!window.player) return;
 
+    // ==========================================
+    // 【新增】兵解前夕：存档数据完整性检查与修补
+    // 目标：防止旧存档熟练度已满但未获得大成标记或轮回属性
+    // ==========================================
+    if (window.player.skills && window.UtilsSkill) {
+        console.log(">>> [State] 开始检查并修补技能数据...");
+        for (let skillId in window.player.skills) {
+            let skillData = window.player.skills[skillId];
+
+            // 1. 获取技能当前状态 (使用旧的 getSkillInfo 逻辑判断是否满级)
+            let info = UtilsSkill.getSkillInfo(skillId);
+
+            if (info) {
+                // 情况A：熟练度已达瓶颈(isCapped)，但存档里没标记 mastered
+                if (info.isCapped && !skillData.mastered) {
+                    console.log(`[Fix] 修复大成标记: ${skillId}`);
+                    skillData.mastered = true;
+                }
+
+                // 情况B：已标记 mastered，但缺少轮回属性 (attr/value)
+                // 这通常发生在旧版本存档更新到新版本时
+                if (skillData.mastered && (!skillData.attr || !skillData.value)) {
+                    console.log(`[Fix] 修复轮回属性: ${skillId}`);
+                    // 调用 UtilsSkill 的内部方法生成属性并写入 skillData
+                    if (typeof UtilsSkill._applyMasteryBonus === 'function') {
+                        UtilsSkill._applyMasteryBonus(skillId);
+                    }
+                }
+            }
+        }
+    }
+    // ==========================================
+
     // 1. 准备新数据
     let template = window.PLAYER_TEMPLATE || {
         name: "新角色", generation: 1, money: 0,
@@ -27,6 +60,17 @@ window.performDirectRebirth = function() {
     // 继承逻辑
     newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
     newPlayer.currentStudyTarget = window.player.currentStudyTarget || null;
+
+    // 【继承技能】将修补好的技能表完整复制给下一世
+    // 注意：这里我们保留了技能的 level 和 exp。
+    // 如果你的设定是“保留功法但重修”，可以在这里遍历 newPlayer.skills 把 exp/level 重置为 0，保留 mastered/attr/value 即可。
+    // 目前按“保留所有”处理。
+    if (window.player.skills) {
+        newPlayer.skills = JSON.parse(JSON.stringify(window.player.skills));
+    } else {
+        newPlayer.skills = {};
+    }
+
 
     newPlayer.danger = 0;
     newPlayer.need_kill = 0;
@@ -61,7 +105,7 @@ window.performDirectRebirth = function() {
     if (typeof backToMenu === 'function') backToMenu();
     if (typeof checkSaveFile === 'function') checkSaveFile();
 
-    if(window.showToast) window.showToast("兵解成功，开启第 " + nextGen + " 世");
+    if(window.showToast) window.showToast("开启第 " + nextGen + " 世");
 };
 /**
  * 自定义为玩家添加初始物品
