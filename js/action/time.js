@@ -1,5 +1,5 @@
 // js/action/time.js
-// 时间系统总控 v10.0
+// 时间系统总控 v10.1 (新增测试用 setTime 方法)
 // 职责：处理物理时间累加、日历进位、状态基础消耗、调用事件调度器
 
 const TIME_CONFIG = {
@@ -26,29 +26,21 @@ const TimeSystem = {
     },
 
     getTimeString: function() {
-        // 1. 基础保底：如果 player 或 player.time 完全不存在
+        // 1. 基础保底
         if (!window.player || !window.player.time) {
-            // 如果存档里没时间，直接给一个初始化的默认值
             window.player = window.player || {};
             window.player.time = { year: 1, month: 1, day: 1, hour: 0, minute: 0 };
-            // console.warn("时间数据丢失，已初始化默认时间");
         }
 
         const t = window.player.time;
 
-        /**
-         * 2. 增强型 pad 函数 (防崩溃)
-         * 逻辑：如果 n 是 undefined 或 null，则返回 "01" 作为占位
-         */
+        // 2. 增强型 pad 函数
         const pad = (n) => {
             const val = (n === undefined || n === null) ? 1 : n;
             return val.toString().padStart(2, '0');
         };
 
-        /**
-         * 3. 属性保底重置
-         * 如果检测到具体的月份、日期等是 undefined，直接将其重置为初始状态
-         */
+        // 3. 属性保底重置
         if (t.month === undefined) t.month = 1;
         if (t.day === undefined) t.day = 1;
         if (t.hour === undefined) t.hour = 0;
@@ -59,6 +51,28 @@ const TimeSystem = {
 
         // 5. 返回格式化字符串
         return `秦始皇${yearChar}年 ${pad(t.month)}月 ${pad(t.day)}日 ${pad(t.hour)}:${pad(t.minute)}`;
+    },
+
+    /**
+     * 【新增】设置游戏时间 (调试/测试专用)
+     * 在控制台调用示例: TimeSystem.setTime(37, 3, 5, 8, 0)  => 设置为 秦始皇37年3月5日 8点0分
+     * 只想改小时: TimeSystem.setTime(undefined, undefined, undefined, 12, 0)
+     */
+    setTime: function(year, month, day, hour, minute) {
+        if (!window.player || !window.player.time) return;
+
+        const t = window.player.time;
+
+        if (year !== undefined) t.year = Number(year);
+        if (month !== undefined) t.month = Number(month);
+        if (day !== undefined) t.day = Number(day);
+        if (hour !== undefined) t.hour = Number(hour);
+        if (minute !== undefined) t.minute = Number(minute);
+
+        console.log(`%c[TimeSystem] 时间已强制调整为: ${this.getTimeString()}`, "color: orange; font-weight: bold;");
+
+        // 强制刷新UI显示
+        if (window.updateUI) window.updateUI();
     },
 
     /**

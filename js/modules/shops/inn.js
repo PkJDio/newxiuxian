@@ -1,8 +1,8 @@
 // js/modules/shops/inn.js
-// 客栈功能模块 v2.8 (适配新版弹窗管理：DOM对象操作 + 局部刷新优化)
+// 客栈功能模块 v2.9 (适配UtilsItem的SID移除逻辑)
 //console.log("加载 客栈模块");
 
-// 注入样式 (保持原样，无需修改)
+// 注入样式 (保持原样)
 const innStyles = `
 <style id="inn-custom-styles">
     /* 悬浮提示触发器 */
@@ -47,7 +47,7 @@ if (!document.getElementById('inn-custom-styles')) {
 const InnShop = {
     currentStock: [],
     currentTown: null,
-    modalBody: null, // 【核心修改】新增：用于存储当前弹窗的DOM引用
+    modalBody: null,
 
     // ================= 入口函数 =================
     enter: function(town) {
@@ -58,12 +58,10 @@ const InnShop = {
     },
 
     // ================= 辅助：更新内容 =================
-    // 【核心修改】不再使用全局查找，而是直接操作保存的 DOM
     _updateContent: function(html) {
         if (this.modalBody) {
             this.modalBody.innerHTML = html;
         } else {
-            // 如果引用丢失，尝试重新渲染主菜单（作为容错）
             console.warn("InnShop: 弹窗引用丢失，重新打开");
             this.renderMainMenu();
         }
@@ -103,7 +101,6 @@ const InnShop = {
             </div>
         `;
 
-        // 【核心修改】获取并保存返回的 body 容器
         this.modalBody = window.showGeneralModal(`${townName} - 客栈`, html);
     },
 
@@ -149,13 +146,11 @@ const InnShop = {
                 </div>
             </div>
         `;
-        // 使用内部更新方法
         this._updateContent(html);
     },
 
     // ================= 确认弹窗逻辑 =================
     confirmStay: function(type) {
-        // 保持原逻辑：使用独立的一层遮罩，不受通用弹窗影响
         const cost = (type === 'premium') ? 300 : 100;
         const roomName = (type === 'premium') ? '上等客房' : '普通客房';
 
@@ -245,7 +240,7 @@ const InnShop = {
             const r = item.rarity || 1;
             return r <= config.maxRarity;
         });
-        //console.log("权重过滤",validItems)
+
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
@@ -267,7 +262,7 @@ const InnShop = {
             const score = Math.pow(rSafe, 1 / w);
             return { item: item, score: score, maxQty: 0 };
         });
-        //console.log("scoredItems",scoredItems);
+
         scoredItems.sort((a, b) => b.score - a.score);
         const selectedItems = scoredItems.slice(0, targetTypeCount);
 
@@ -317,20 +312,16 @@ const InnShop = {
                 const tags = [];
 
                 Object.entries(item.effects).forEach(([key, val]) => {
-                    // 1. 处理嵌套的 buff 对象（支持多属性拆分 + 持续天数显示）
                     if (key === 'buff' && typeof val === 'object') {
                         const buffAttrs = String(val.attr).split('_');
                         const buffVals = String(val.val).split('_');
-                        // 获取天数
                         const days = val.days || 0;
 
                         buffAttrs.forEach((attrKey, index) => {
                             const label = ATTR_MAPPING[attrKey] || attrKey;
-                            // 获取对应数值，若缺失则取第一个
                             const currentVal = buffVals[index] !== undefined ? buffVals[index] : buffVals[0];
                             const valStr = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
 
-                            // 在标签内加上天数显示，例如：攻击+6(14天)
                             tags.push(`
                     <span style="display:inline-block; background:#f3e5f5; color:#7b1fa2; border:1px solid #e1bee7; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">
                         ${label}${valStr}<span style="font-size:15px; opacity:1;">(${days}天)</span>
@@ -338,7 +329,6 @@ const InnShop = {
                 `);
                         });
                     }
-                    // 2. 处理常规数值属性（如饱食、生命等永久回复）
                     else if (typeof val === 'number' && val !== 0) {
                         const label = ATTR_MAPPING[key] || key;
                         const valStr = val > 0 ? `+${val}` : val;
@@ -354,7 +344,6 @@ const InnShop = {
             }
 
             let btnText = "购买";
-            let btnClass = "can-buy";
             let onclick = `InnShop.handleBuy(${index})`;
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
             let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer; text-shadow: 0 1px 1px rgba(0,0,0,0.3);`;
@@ -387,8 +376,6 @@ const InnShop = {
             `;
         }).join('');
 
-        // 【核心修改】使用 this.modalBody.querySelector 来查找元素
-        // 如果 modalBody 为空，说明弹窗没打开，直接返回
         if (!this.modalBody) return;
 
         const container = this.modalBody.querySelector('#inn-buy-container');
@@ -396,13 +383,11 @@ const InnShop = {
         const moneyEl = this.modalBody.querySelector('#inn-buy-money');
 
         if (container && listEl && moneyEl) {
-            // 局部刷新
             const scrollTop = listEl.scrollTop;
             listEl.innerHTML = listHtml;
             moneyEl.innerText = `💰 ${player.money}`;
             requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
         } else {
-            // 全量刷新
             const html = `
                 <div id="inn-buy-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
                     <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
@@ -459,7 +444,7 @@ const InnShop = {
         window.saveGame();
     },
 
-    // ================= 出售界面 =================
+    // ================= 出售界面 (适配 SID) =================
     uiSell: function() {
         const inventory = player.inventory || [];
         const sellableItems = [];
@@ -470,8 +455,9 @@ const InnShop = {
             const count = slot.count || 1;
             let itemData = slot;
 
-            if (itemData && itemData.value) {
-                sellableItems.push({ index: index, id: itemId, data: itemData, count: count });
+            // 【核心修改】确保获取 sid，并放入列表数据中
+            if (itemData && itemData.value && itemData.sid) {
+                sellableItems.push({ sid: itemData.sid, id: itemId, data: itemData, count: count });
             }
         });
 
@@ -511,9 +497,11 @@ const InnShop = {
                 let bulkBtnHtml = '';
                 if (entry.count > 1) {
                     const bulkBtnStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b;`;
-                    bulkBtnHtml = `<button style="${bulkBtnStyle}" onclick="InnShop.handleSellBulk(${entry.index}, ${sellPrice})">全卖</button>`;
+                    // 【核心修改】传入 sid
+                    bulkBtnHtml = `<button style="${bulkBtnStyle}" onclick="InnShop.handleSellBulk('${entry.sid}', ${sellPrice})">全卖</button>`;
                 }
 
+                // 【核心修改】传入 sid
                 return `
                     <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;">
                         <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
@@ -529,14 +517,13 @@ const InnShop = {
                         </div>
                         <div style="width:160px; text-align:right; flex-shrink:0; display:flex; justify-content:flex-end; gap: 10px; align-items: center;">
                             ${bulkBtnHtml}
-                            <button style="${sellBtnStyle}" onclick="InnShop.handleSell(${entry.index}, ${sellPrice})">卖出</button>
+                            <button style="${sellBtnStyle}" onclick="InnShop.handleSell('${entry.sid}', ${sellPrice})">卖出</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // 【核心修改】使用 this.modalBody.querySelector 来查找元素
         if (!this.modalBody) return;
 
         const container = this.modalBody.querySelector('#inn-sell-container');
@@ -544,13 +531,11 @@ const InnShop = {
         const moneyEl = this.modalBody.querySelector('#inn-money-count');
 
         if (container && listEl && moneyEl) {
-            // 局部刷新
             const scrollTop = listEl.scrollTop;
             listEl.innerHTML = listHtml;
             moneyEl.innerText = `💰 ${player.money}`;
             requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
         } else {
-            // 全量刷新
             const html = `
                 <div id="inn-sell-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
                     <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
@@ -572,44 +557,54 @@ const InnShop = {
         }
     },
 
-    handleSell: function(inventoryIndex, price) {
-        if (!player.inventory || !player.inventory[inventoryIndex]) {
+    // 【核心修改】单件出售 (SID)
+    handleSell: function(sid, price) {
+        // 安全检查
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) {
             if(window.showToast) window.showToast("物品不存在或已售出");
             this.uiSell();
             return;
         }
-        const slot = player.inventory[inventoryIndex];
+
         player.money += price;
-        if (slot.count && slot.count > 1) { slot.count--; } else { player.inventory.splice(inventoryIndex, 1); }
+        // 调用 UtilsItem 移除 1 个
+        if (window.UtilsItem) {
+            window.UtilsItem.removeItem(sid, 1);
+        }
+
         if(window.showToast) window.showToast(`出售成功，获得 ${price} 文`);
+
+        // 刷新
         if(window.updateUI) window.updateUI();
         if(window.saveGame) window.saveGame();
         this.uiSell();
-        window.saveGame();
-        window.updateUI();
     },
 
-    handleSellBulk: function(inventoryIndex, unitPrice) {
-        if (!player.inventory || !player.inventory[inventoryIndex]) return;
-        const slot = player.inventory[inventoryIndex];
-        const count = (slot.count && typeof slot.count === 'number') ? slot.count : 1;
+    // 【核心修改】批量出售 (SID)
+    handleSellBulk: function(sid, unitPrice) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) return;
+
+        const count = item.count || 1;
         const totalPrice = unitPrice * count;
         player.money += totalPrice;
-        player.inventory.splice(inventoryIndex, 1);
+
+        // 调用 UtilsItem 移除整个堆叠
+        if (window.UtilsItem) {
+            window.UtilsItem.discardMultipleItems([sid]);
+        }
+
         if(window.showToast) window.showToast(`批量出售 ${count} 个，获得 ${totalPrice} 文`);
+
         if(window.updateUI) window.updateUI();
         if(window.saveGame) window.saveGame();
         this.uiSell();
-        window.saveGame();
-        window.updateUI();
     }
 };
 
 if (window.ShopSystem) {
     ShopSystem.register("客栈", InnShop);
 }
-
-// 注意：原先的 updateModalContent polyfill 已不再需要，且可能有害，已移除。
-// 现在 InnShop 内部使用 _updateContent 并在实例中保存 DOM 引用。
 
 window.InnShop = InnShop;

@@ -1,5 +1,5 @@
 // js/modules/shops/alchemy_shop.js
-// 丹房功能模块 v1.0
+// 丹房功能模块 v1.1 (适配SID出售 + 批量功能)
 //console.log("加载 丹房模块");
 
 const AlchemyShop = {
@@ -12,7 +12,6 @@ const AlchemyShop = {
         this.currentTown = town;
         this._generateStock(town);
         this.renderMainMenu();
-        // 【新增】触发丹房引导
         if (window.UITutorial) UITutorial.checkBuilding('alchemy');
     },
 
@@ -58,7 +57,7 @@ const AlchemyShop = {
         this.modalBody = window.showGeneralModal(`${townName} - 丹房`, html);
     },
 
-    // ================= 库存生成 (丹药 pill + 灵草 material/herbs) =================
+    // ================= 库存生成 =================
     _generateStock: function(town) {
         if (!window.getSeededRandom || !player) return;
 
@@ -71,7 +70,6 @@ const AlchemyShop = {
 
         const allItems = Object.values(pills || {});
         const validItems = allItems.filter(item => {
-            // 【要求】只卖丹药或药材类材料
             const isPill = item.type === 'pill';
             const isHerb = item.type === 'material' && item.subType === 'herbs';
             if (!isPill && !isHerb) return false;
@@ -127,7 +125,6 @@ const AlchemyShop = {
             return;
         }
 
-
         const levelNames = (window.SKILL_CONFIG && SKILL_CONFIG.levelNames) ? SKILL_CONFIG.levelNames : ["未入门", "入门", "进阶", "大成"];
 
         let listHtml = this.currentStock.map((entry, index) => {
@@ -146,7 +143,6 @@ const AlchemyShop = {
                             const cV = bVals[bI] !== undefined ? bVals[bI] : bVals[0];
                             const valStr = parseInt(cV) > 0 ? '+' : '';
 
-                            // 【修改点】将 <small> 替换为 <span style="opacity:0.8;">
                             tags.push(`
         <span style="display:inline-block; background:#f3e5f5; color:#7b1fa2; border:1px solid #e1bee7; padding:2px 6px; border-radius:4px; font-size:14px; margin-right:5px; margin-bottom:2px;">
             ${l}${valStr}${cV}<span style="opacity:0.8;">(${val.days}天)</span>
@@ -154,11 +150,9 @@ const AlchemyShop = {
     `);
                         });
                     }
-                    // 【要求】毒素含量显示
                     else if (key === 'toxicity') {
                         tags.push(`<span style="display:inline-block; background:#fce4ec; color:#c2185b; border:1px solid #f8bbd0; padding:2px 6px; border-radius:4px; font-size:14px; margin-right:5px; margin-bottom:2px;">毒素含量:${val}</span>`);
                     }
-                    // 【要求】境界上限转换显示
                     else if (key === 'max_skill_level') {
                         tags.push(`<span style="display:inline-block; background:#fff3e0; color:#ef6c00; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:14px; margin-right:5px; margin-bottom:2px;">境界上限:${levelNames[val] || "未知"}</span>`);
                     }
@@ -194,31 +188,32 @@ const AlchemyShop = {
             `;
         }).join('');
 
-        const isModalVisible = this.modalBody && document.body.contains(this.modalBody);
-        if (isModalVisible) {
-            const listEl = this.modalBody.querySelector('#pill-buy-list'), moneyEl = this.modalBody.querySelector('#pill-buy-money');
-            if (listEl && moneyEl) {
-                const scrollTop = listEl.scrollTop;
-                listEl.innerHTML = listHtml;
-                moneyEl.innerText = `💰 ${player.money}`;
-                requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
-                return;
-            }
-        }
+        if (!this.modalBody) return;
 
-        const html = `
-            <div id="pill-buy-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
-                <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
-                    <span style="font-size: 24px; font-weight: bold;">💊 丹房内柜</span>
-                    <div style="display:flex; align-items:center; gap: 20px;">
-                        <span id="pill-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
-                        <button class="ink_btn" onclick="AlchemyShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+        const container = this.modalBody.querySelector('#pill-buy-container');
+        const listEl = this.modalBody.querySelector('#pill-buy-list');
+        const moneyEl = this.modalBody.querySelector('#pill-buy-money');
+
+        if (container && listEl && moneyEl) {
+            const scrollTop = listEl.scrollTop;
+            listEl.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+            requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
+        } else {
+            const html = `
+                <div id="pill-buy-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
+                    <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">💊 丹房内柜</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="pill-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="AlchemyShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+                        </div>
                     </div>
+                    <div id="pill-buy-list" style="flex:1; overflow-y:auto; padding:0; background: #fff;">${listHtml}</div>
                 </div>
-                <div id="pill-buy-list" style="flex:1; overflow-y:auto; padding:0; background: #fff;">${listHtml}</div>
-            </div>
-        `;
-        this._updateContent(html);
+            `;
+            this._updateContent(html);
+        }
     },
 
     handleBuy: function(index) {
@@ -235,7 +230,7 @@ const AlchemyShop = {
         this.uiBuy(); if(window.updateUI) window.updateUI(); window.saveGame();
     },
 
-    // ================= 出售界面 (灵草 0.8 / 其他 0.5) =================
+    // ================= 出售界面 (适配 SID + 批量) =================
     uiSell: function() {
         const inventory = player.inventory || [];
         const sellableItems = [];
@@ -245,57 +240,110 @@ const AlchemyShop = {
             const itemId = slot.id || slot;
             let itemData = slot;
 
-            if (itemData && itemData.value) {
+            if (itemData && itemData.value && itemData.sid) {
                 // 【要求】灵草类 0.8，其他 0.5
                 const isHerb = itemData.type === 'material' && itemData.subType === 'herbs';
                 const sellPrice = Math.floor(itemData.value * (isHerb ? 0.8 : 0.5));
-                sellableItems.push({ index: index, id: itemId, data: itemData, count: slot.count || 1, sellPrice: sellPrice });
+                sellableItems.push({ sid: itemData.sid, id: itemId, data: itemData, count: slot.count || 1, sellPrice: sellPrice });
             }
         });
 
         let listHtml = sellableItems.length === 0 ? `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">包袱里暂无丹师看得上的材料。</div>` : sellableItems.map(entry => {
             const item = entry.data, color = (window.RARITY_CONFIG?.[item.rarity]?.color) || '#333';
+
+            const btnBase = "display:inline-block; border-radius: 4px; cursor: pointer; font-size: 16px; padding: 6px 15px; color: #fff; border: 1px solid; white-space: nowrap;";
+            const sellBtnStyle = `${btnBase} background: linear-gradient(to bottom, #ffb74d, #f57c00); border-color: #e65100;`;
+
+            let bulkBtnHtml = '';
+            if (entry.count > 1) {
+                const bulkBtnStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b;`;
+                bulkBtnHtml = `<button style="${bulkBtnStyle}" onclick="AlchemyShop.handleSellBulk('${entry.sid}', ${entry.sellPrice})">全卖</button>`;
+            }
+
             return `
                 <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;">
-                    <div style="flex:1; text-align:left; padding-right: 15px;">
+                    <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <span style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${item.name}</span>
-                        <div style="font-size:14px; color:#999;">${item.desc || ''}</div>
+                        <div style="font-size:14px; color:#999;">
+                            ${entry.count > 1 ? `数量: ${entry.count}` : ''}
+                            <span style="margin-left:5px; color:#ccc;">(原价:${item.value})</span>
+                        </div>
                     </div>
-                    <div style="width:110px; text-align:right; margin-right: 15px;"><div style="color:#388e3c; font-weight:bold; font-size: 20px;">+${entry.sellPrice} 文</div></div>
-                    <div style="width:160px; text-align:right; flex-shrink:0; display:flex; justify-content:flex-end; gap: 10px;">
-                        <button style="border-radius:4px; cursor:pointer; font-size:16px; padding:6px 15px; color:#fff; border:1px solid; background:linear-gradient(to bottom, #ffb74d, #f57c00); border-color:#e65100;" onclick="AlchemyShop.handleSell(${entry.index}, ${entry.sellPrice})">卖出</button>
+                    <div style="width:110px; text-align:right; margin-right: 15px;">
+                        <div style="color:#388e3c; font-weight:bold; font-size: 20px;">+${entry.sellPrice} 文</div>
+                    </div>
+                    <div style="width:160px; text-align:right; flex-shrink:0; display:flex; justify-content:flex-end; gap: 10px; align-items: center;">
+                        ${bulkBtnHtml}
+                        <button style="${sellBtnStyle}" onclick="AlchemyShop.handleSell('${entry.sid}', ${entry.sellPrice})">卖出</button>
                     </div>
                 </div>
             `;
         }).join('');
 
-        const isModalVisible = this.modalBody && document.body.contains(this.modalBody);
-        if (isModalVisible) {
-            const listEl = this.modalBody.querySelector('#pill-sell-list'), moneyEl = this.modalBody.querySelector('#pill-money-count');
-            if (listEl && moneyEl) { listEl.innerHTML = listHtml; moneyEl.innerText = `💰 ${player.money}`; return; }
-        }
+        if (!this.modalBody) return;
 
-        const html = `
-            <div id="pill-sell-container" style="height: 100%; display:flex; flex-direction:column; background:#fff;">
-                <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
-                    <span style="font-size: 24px; font-weight: bold;">💰 回收药材 (特价)</span>
-                    <div style="display:flex; align-items:center; gap: 20px;">
-                        <span id="pill-money-count" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
-                        <button class="ink_btn" onclick="AlchemyShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+        const container = this.modalBody.querySelector('#pill-sell-container');
+        const listEl = this.modalBody.querySelector('#pill-sell-list');
+        const moneyEl = this.modalBody.querySelector('#pill-money-count');
+
+        if (container && listEl && moneyEl) {
+            const scrollTop = listEl.scrollTop;
+            listEl.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+            requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
+        } else {
+            const html = `
+                <div id="pill-sell-container" style="height: 100%; display:flex; flex-direction:column; background:#fff;">
+                    <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">💰 回收药材 (特价)</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="pill-money-count" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="AlchemyShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+                        </div>
                     </div>
+                    <div id="pill-sell-list" style="flex:1; overflow-y:auto; padding:0;">${listHtml}</div>
                 </div>
-                <div id="pill-sell-list" style="flex:1; overflow-y:auto; padding:0;">${listHtml}</div>
-            </div>
-        `;
-        this._updateContent(html);
+            `;
+            this._updateContent(html);
+        }
     },
 
-    handleSell: function(inventoryIndex, price) {
-        if (!player.inventory?.[inventoryIndex]) return;
-        const slot = player.inventory[inventoryIndex]; player.money += price;
-        if (slot.count && slot.count > 1) slot.count--; else player.inventory.splice(inventoryIndex, 1);
+    handleSell: function(sid, price) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) {
+            if(window.showToast) window.showToast("物品不存在或已售出");
+            this.uiSell();
+            return;
+        }
+
+        player.money += price;
+
+        if (window.UtilsItem) {
+            window.UtilsItem.removeItem(sid, 1);
+        }
+
         if(window.showToast) window.showToast(`交易达成，得 ${price} 文`);
-        if(window.updateUI) window.updateUI(); if(window.saveGame) window.saveGame(); this.uiSell();
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
+        this.uiSell();
+    },
+
+    handleSellBulk: function(sid, unitPrice) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) return;
+
+        const count = item.count || 1;
+        const totalPrice = unitPrice * count;
+        player.money += totalPrice;
+
+        if (window.UtilsItem) {
+            window.UtilsItem.discardMultipleItems([sid]);
+        }
+
+        if(window.showToast) window.showToast(`批量出售 ${count} 个，获得 ${totalPrice} 文`);
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
+        this.uiSell();
     }
 };
 

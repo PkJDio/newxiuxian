@@ -3621,7 +3621,7 @@ const booksCultivation_R1 = [
             cd: 1,
             desc: "【效率型】凝气为弹，消耗极低。",
         },
-        desc: "入门练气口诀，能感应天地灵气。",
+        desc: "入门练气口诀，能感应天地灵力。",
     },
     {
         id: "book_cultivation_r1_01_full",
@@ -3663,7 +3663,7 @@ const booksCultivation_R1 = [
             cd: 2,
             desc: "【效率型】以血引气，连绵不断。",
         },
-        desc: "以自身气血引动灵气，偏重炼体。",
+        desc: "以自身气血引动灵力，偏重炼体。",
     },
     {
         id: "book_cultivation_r1_03_full",
@@ -3705,7 +3705,7 @@ const booksCultivation_R1 = [
             cd: 3,
             desc: "【平衡型】庚金之气，无坚不摧。",
         },
-        desc: "汇聚金灵气，化为锋利刃气。",
+        desc: "汇聚金灵力，化为锋利刃气。",
     },
     {
         id: "book_cultivation_r1_05_full",
@@ -3726,7 +3726,7 @@ const booksCultivation_R1 = [
             cd: 4,
             desc: "【平衡型】大地之力，震慑敌人。",
         },
-        desc: "感悟土灵气，掌控地面起伏。",
+        desc: "感悟土灵力，掌控地面起伏。",
     },
     {
         id: "book_cultivation_r1_06_full",
@@ -8569,7 +8569,7 @@ const fullBooks = [
             dmgMult: 5.25,
             mpCost: 200,
             cd: 4,
-            desc: "【平衡型】吞噬灵气，灭绝生机。",
+            desc: "【平衡型】吞噬灵力，灭绝生机。",
         },
         desc: "上古魔神所创。【全篇精义】",
     },

@@ -1,5 +1,5 @@
 // js/action/times/time_history.js
-// 职责：处理大秦历史线与灵气复苏背景
+// 职责：处理大秦历史线与灵力复苏背景
 
 const TimeHistory = {
     /** 检查重大历史转折 (Major) */

@@ -19,7 +19,9 @@ const ITEM_ICONS = {
     tool: "🪓",          // 工具
     mount: "🐎",         // 坐骑
     fishing_rod: "🎣",   // 钓具
+    fish: "🐟",
 
+    herbs:"🌿",
     // 属性图标 (供 UI 使用)
     money: "💰",
     attack: "⚔️",
@@ -180,11 +182,16 @@ function getItemIcon(item) {
             }
         }
     }
-
+// 3. 根据类型返回 (类型映射表)
+    if (item.subType && ITEM_ICONS[item.subType]) {
+        return ITEM_ICONS[item.subType];
+    }
     // 3. 根据类型返回 (类型映射表)
     if (item.type && ITEM_ICONS[item.type]) {
         return ITEM_ICONS[item.type];
     }
+
+
 
     // 4. 绝对保底
     return ITEM_ICONS.default;

@@ -42,9 +42,9 @@ const TimeRaid = {
         const waves = Math.max(1, Math.floor(3 - (player.danger || 0) / 30));
         const waveConfigs = [["boss"], ["elite", "boss"], ["minion", "elite", "boss"]];
 
-        if (window.LogManager) window.LogManager.add(`<span style='color:red; font-weight:bold;'>[警报] 随着灵气倒灌，野外的怪物变得狂暴，它们嗅着人味冲过来了！</span>`);
+        if (window.LogManager) window.LogManager.add(`<span style='color:red; font-weight:bold;'>[警报] 随着灵力倒灌，一切生物变得狂暴，它们嗅着人味冲过来了！</span>`);
+        testRaid("boss", waves);
 
-        this._startRaidChain(waveConfigs[waves - 1] || ["boss"]);
     },
 
     /** 随机来袭 */

@@ -1,5 +1,5 @@
 // js/action/util_fish.js
-// 垂钓核心逻辑 v9.0 (水草封锁机制 + 次数调整)
+// 垂钓核心逻辑 v10.0 (水草封锁机制 + 次数调整)
 
 const UtilFish = {
     // ================= 配置区域 =================
@@ -67,11 +67,12 @@ const UtilFish = {
 
         // 1. 生成基础网格
         for (let i = 0; i < this.totalCells; i++) {
-            const isHit = Math.random() < hitRate;
+            let isHit = Math.random() < hitRate;
             let loot = null;
 
             if (isHit) {
                 loot = this._rollFish(region, season);
+                console.log(`[Fishing] 获取到稀有度 ${loot.rarity} 的鱼: ${loot.name}`)
                 if (!loot) isHit = false;
 
                 // 检查稀有度
@@ -257,6 +258,7 @@ const UtilFish = {
         if (typeof fishes === 'undefined') return null;
 
         let rarity = this._rollRarity();
+        console.log("Rarity: ", rarity)
         const filterPool = (r) => fishes.filter(f => {
             const regionMatch = (f.region === "all" || f.region === region);
             const seasonMatch = (!f.seasons || f.seasons.includes(season));
@@ -265,12 +267,14 @@ const UtilFish = {
         });
 
         let pool = filterPool(rarity);
+        console.log("[Fish]pool1 ", pool)
         if (pool.length === 0 && (rarity === 5 || rarity === 6)) {
             rarity = 4;
             pool = filterPool(rarity);
         }
 
         if (pool.length === 0) return null;
+        console.log("[Fish]pool4 ", pool)
         return pool[Math.floor(Math.random() * pool.length)];
     },
 

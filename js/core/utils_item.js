@@ -137,6 +137,7 @@ const UtilsItem = {
                 switch (itemSlot.type) {
                     case 'food':
                     case 'foodMaterial':
+                    case 'fish': // 【新增】在这里添加 fish 类型
                         verb = "享用了";
                         break;
                     case 'pill':
@@ -278,7 +279,8 @@ const UtilsItem = {
             return true;
         }
 
-        if (item.type === 'food') {
+        // 【修改】允许 food 和 fish 类型即便没有 effects 也能被消耗并提示味道不错
+        if (item.type === 'food' || item.type === 'fish') {
             if (window.showToast) window.showToast("味道不错");
             return true;
         }
@@ -506,6 +508,7 @@ const UtilsItem = {
 
         // console.log("[UtilsItem] 开始校对背包数据...");
         let needFix = false;
+        let needSave=false;
 
         // 检查是否有数据需要修复 (没有 sid 或者 sid 格式不对)
         for (let item of player.inventory) {
@@ -513,6 +516,39 @@ const UtilsItem = {
                 needFix = true;
                 break;
             }
+            //总物品库里根据id获取物品，如果获取不到的话，则移除该物品
+            const itemData = GAME_DB.items.find(i => i.id === item.id);
+            if (!itemData || itemData===undefined || itemData===null) {
+                needSave=true;
+                continue;
+            }else {
+                if (itemData.type === 'fish' && item.type !== 'fish') {
+                    needUpdateFish=true;
+                }
+            }
+
+
+            //检查鱼的问题，把鱼的数据从type=food改成type=fish
+        }
+
+        if (needSave) {
+            // 1. 深拷贝备份旧数据，防止引用问题
+            const oldItems = JSON.parse(JSON.stringify(player.inventory));
+            player.inventory = [];
+            oldItems.forEach(item => {
+                const itemData = GAME_DB.items.find(i => i.id === item.id);
+                if (itemData) {
+                    const count = item.count || 1;
+                    if (item.sid) {
+                        this.addItem(item, count);
+                    }else if (item.id) {
+                        this.addItem(item.id, count);
+                    }
+                }
+
+            });
+            this._refreshAllUI();
+            if (window.saveGame) window.saveGame();
         }
 
         if (needFix) {

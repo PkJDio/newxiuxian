@@ -1,10 +1,9 @@
 /**
  * js/modules/shops/grocery.js
- * 杂货店功能模块 v1.2
- * 1. 仅限城/镇进入
- * 2. 仅售调味料(flavoring)与钓具(fishing_rod)
- * 3. 钓具每期仅限1种，且数量为1
- * 4. 钓具显示钓鱼概率加成
+ * 杂货店功能模块 v1.3
+ * 更新日志：
+ * 1. 适配 UtilsItem 的 SID 移除逻辑
+ * 2. 独立实现出售功能，修复引用客栈逻辑导致的刷新失效问题
  */
 
 let GroceryShop = {
@@ -70,13 +69,11 @@ let GroceryShop = {
 
         const allItems = Object.values(window.GAME_DB.items || {});
 
-        // 分别筛选调味料和钓竿
         const flavorings = allItems.filter(i => i.subType === 'flavoring' && (i.rarity || 1) <= config.maxRarity);
         const rods = allItems.filter(i => i.type === 'fishing_rod' && (i.rarity || 1) <= config.maxRarity);
 
         let selectedItems = [];
 
-        // 1. 处理钓竿：从符合条件的钓竿中随机选1个，数量固定为1
         if (rods.length > 0) {
             const rodIndex = Math.floor(window.getSeededRandom(shopKey, "rodSelect") * rods.length);
             const rod = rods[rodIndex];
@@ -88,7 +85,6 @@ let GroceryShop = {
             });
         }
 
-        // 2. 处理调味料：填充剩余种类
         const targetFlavorCount = config.minType + Math.floor(window.getSeededRandom(shopKey, "typeCount") * (config.maxType - config.minType));
 
         const scoredFlavorings = flavorings.map(item => {
@@ -109,7 +105,6 @@ let GroceryShop = {
 
         selectedItems = [...selectedItems, ...chosenFlavorings];
 
-        // 3. 最终生成库存，处理已购买记录
         this.currentStock = selectedItems.map(entry => {
             const item = entry.item;
             if (!player.shopLogs) player.shopLogs = {};
@@ -139,10 +134,8 @@ let GroceryShop = {
             const canAfford = player.money >= entry.price;
             const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
 
-            // 属性标签处理
             let effectTags = '';
             if (item.type === 'fishing_rod' && item.effects && item.effects.catchRate) {
-                // 如果是钓竿，特别显示钓鱼概率
                 effectTags = `<span style="display:inline-block; background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb; padding:2px 6px; border-radius:4px; font-size:15px;">🎣 钓鱼概率 +${item.effects.catchRate}%</span>`;
             }
 
@@ -178,21 +171,34 @@ let GroceryShop = {
             `;
         }).join('');
 
-        const html = `
-            <div style="height: 100%; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
-                <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
-                    <span style="font-size: 24px; font-weight: bold;">📦 杂货小铺</span>
-                    <div style="display:flex; align-items:center; gap: 20px;">
-                        <span style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
-                        <button class="ink_btn" onclick="GroceryShop.renderMainMenu()" style="font-size: 16px; padding: 5px 15px;">返回</button>
+        // 【修改】使用 this.modalBody 查找容器
+        if (!this.modalBody) return;
+
+        const container = this.modalBody.querySelector('#grocery-buy-list');
+        const moneyEl = this.modalBody.querySelector('#grocery-buy-money');
+
+        if (container && moneyEl) {
+            const scrollTop = container.scrollTop;
+            container.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+            requestAnimationFrame(() => { container.scrollTop = scrollTop; });
+        } else {
+            const html = `
+                <div style="height: 100%; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
+                    <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">📦 杂货小铺</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="grocery-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="GroceryShop.renderMainMenu()" style="font-size: 16px; padding: 5px 15px;">返回</button>
+                        </div>
+                    </div>
+                    <div id="grocery-buy-list" style="flex:1; overflow-y:auto;">
+                        ${listHtml}
                     </div>
                 </div>
-                <div id="grocery-buy-list" style="flex:1; overflow-y:auto;">
-                    ${listHtml}
-                </div>
-            </div>
-        `;
-        this._updateContent(html);
+            `;
+            this._updateContent(html);
+        }
     },
 
     handleBuy: function(index) {
@@ -217,15 +223,139 @@ let GroceryShop = {
         if (window.saveGame) window.saveGame();
     },
 
+    // ================= 出售界面 (独立实现 + SID适配) =================
     uiSell: function() {
-        if (window.InnShop && window.InnShop.uiSell) {
-            window.InnShop.uiSell.call(this);
+        const inventory = player.inventory || [];
+        const sellableItems = [];
+
+        // 筛选可出售物品 (有 value 且有 sid)
+        inventory.forEach((slot) => {
+            if (!slot) return;
+            // 确保有 sid 才能操作
+            if (slot.value && slot.sid) {
+                sellableItems.push(slot);
+            }
+        });
+
+        let listHtml = "";
+        if (sellableItems.length === 0) {
+            listHtml = `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">你的包袱里空空如也，没什么可卖的。</div>`;
+        } else {
+            const btnBase = "display:inline-block; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 2px rgba(0,0,0,0.2); text-shadow: 0 1px 1px rgba(0,0,0,0.3); font-size: 16px; padding: 6px 15px; color: #fff; border: 1px solid; white-space: nowrap;";
+            const sellBtnStyle = `${btnBase} background: linear-gradient(to bottom, #ffb74d, #f57c00); border-color: #e65100;`;
+
+            listHtml = sellableItems.map(item => {
+                const sellPrice = Math.floor(item.value * 0.5);
+                const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
+                const count = item.count || 1;
+
+                let bulkBtnHtml = '';
+                if (count > 1) {
+                    const bulkBtnStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b;`;
+                    // 【关键】传入 SID
+                    bulkBtnHtml = `<button style="${bulkBtnStyle}" onclick="GroceryShop.handleSellBulk('${item.sid}', ${sellPrice})">全卖</button>`;
+                }
+
+                return `
+                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;">
+                        <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
+                            <span style="color:${color}; font-weight:bold; font-size: 21px;">${item.name}</span>
+                            <div style="font-size:17px; color:#666; margin-top:4px;">
+                                ${count > 1 ? `数量: ${count}` : ''} 
+                                <span style="margin-left:5px; color:#999;">(原价:${item.value})</span>
+                            </div>
+                        </div>
+                        <div style="width:110px; text-align:right; margin-right: 15px; flex-shrink:0;">
+                            <div style="color:#388e3c; font-weight:bold; font-size: 20px;">+${sellPrice} 文</div>
+                        </div>
+                        <div style="width:160px; text-align:right; flex-shrink:0; display:flex; justify-content:flex-end; gap: 10px; align-items: center;">
+                            ${bulkBtnHtml}
+                            <button style="${sellBtnStyle}" onclick="GroceryShop.handleSell('${item.sid}', ${sellPrice})">卖出</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
+
+        // 使用 this.modalBody 查找更新
+        if (!this.modalBody) return;
+
+        const container = this.modalBody.querySelector('#grocery-sell-list');
+        const moneyEl = this.modalBody.querySelector('#grocery-sell-money');
+
+        if (container && moneyEl) {
+            const scrollTop = container.scrollTop;
+            container.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+            requestAnimationFrame(() => { container.scrollTop = scrollTop; });
+        } else {
+            const html = `
+                <div style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
+                    <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">💰 典卖物品 (半价)</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="grocery-sell-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="GroceryShop.renderMainMenu()" 
+                                    style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">
+                                返回
+                            </button>
+                        </div>
+                    </div>
+                    <div id="grocery-sell-list" style="flex:1; overflow-y:auto; padding:0; background: #fff;">
+                        ${listHtml}
+                    </div>
+                </div>
+            `;
+            this._updateContent(html);
+        }
+    },
+
+    // 【新增】处理单件出售 (SID)
+    handleSell: function(sid, price) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) {
+            if(window.showToast) window.showToast("物品不存在或已售出");
+            this.uiSell();
+            return;
+        }
+
+        player.money += price;
+
+        // 调用 UtilsItem 移除 1 个
+        if (window.UtilsItem) {
+            window.UtilsItem.removeItem(sid, 1);
+        }
+
+        if(window.showToast) window.showToast(`出售成功，获得 ${price} 文`);
+
+        // 刷新界面
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
+        this.uiSell();
+    },
+
+    // 【新增】处理批量出售 (SID)
+    handleSellBulk: function(sid, unitPrice) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) return;
+
+        const count = item.count || 1;
+        const totalPrice = unitPrice * count;
+        player.money += totalPrice;
+
+        // 调用 UtilsItem 移除整个堆叠
+        if (window.UtilsItem) {
+            window.UtilsItem.discardMultipleItems([sid]);
+        }
+
+        if(window.showToast) window.showToast(`批量出售 ${count} 个，获得 ${totalPrice} 文`);
+
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
+        this.uiSell();
     }
 };
-
 if (window.ShopSystem) {
     ShopSystem.register("杂货店", GroceryShop);
 }
-
 window.GroceryShop = GroceryShop;

@@ -1,7 +1,7 @@
 /**
  * ============================================================
- * [大事件专属] 灵气复苏·沙丘剧变 (第一天) 袭击者数据
- * 背景：始皇驾崩于沙丘行宫，禁制消散，狂暴灵气瞬间撕裂了凡人的理智。
+ * [大事件专属] 灵力复苏·沙丘剧变 (第一天) 袭击者数据
+ * 背景：始皇驾崩于沙丘行宫，禁制消散，狂暴灵力瞬间撕裂了凡人的理智。
  * 强度：高攻击、高速度、低防御（肉体崩溃边缘）。
  * ============================================================
  */
@@ -16,7 +16,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "垂死挣扎", type: 1, damage: 54, rate: 0.15 },
                 { id: "凶光", type: 2, debuffAttr: "atk", debuffValue: 5, debuffTimes: 3, rate: 0.2 }
             ],
-            desc: "守卫在行宫外的士兵，因灵气入体导致血管暴裂，只剩下杀戮本能。"
+            desc: "守卫在行宫外的士兵，因灵力入体导致血管暴裂，只剩下杀戮本能。"
         },
         {
             id: "raid_panicked_attendant", name: "失控的随行杂役", template: "minion", region: "all", timeStart: 1,
@@ -36,7 +36,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "疯狂践踏", type: 1, damage: 44, rate: 0.1 },
                 { id: "暴走", type: 3, buffAttr: "speed", buffValue: 10, buffTimes: 3, rate: 0.2 }
             ],
-            desc: "原本温顺的御马受灵气惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
+            desc: "原本温顺的御马受灵力惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
         },
         {
             id: "raid_exhausted_courier", name: "力竭的传令兵", template: "minion", region: "all", timeStart: 1,
@@ -46,7 +46,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "死战之志", type: 1, damage: 48, rate: 0.15 },
                 { id: "喘息", type: 3, buffAttr: "def", buffValue: 5, buffTimes: 2, rate: 0.2 }
             ],
-            desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴灵气占据了身体。"
+            desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴灵力占据了身体。"
         },
         {
             id: "raid_wild_wolf", name: "嗅血的山林饿狼", template: "minion", region: "all", timeStart: 1,
@@ -84,7 +84,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "服药", type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 3, rate: 0.2 },
                 { id: "腐蚀药雾", type: 2, debuffAttr: "def", debuffValue: 10, debuffTimes: 3, rate: 0.2 }
             ],
-            desc: "【精英】曾为始皇炼丹的方士，在灵气倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
+            desc: "【精英】曾为始皇炼丹的方士，在灵力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
         },
         {
             id: "raid_elite_guard_captain", name: "震颤的行宫禁卫长", template: "elite", region: "all", timeStart: 1,
@@ -120,7 +120,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "暗涌", type: 3, buffAttr: "speed", buffValue: 20, buffTimes: 3, rate: 0.2 },
                 { id: "烟幕", type: 2, debuffAttr: "atk", debuffValue: 15, debuffTimes: 2, rate: 0.2 }
             ],
-            desc: "【精英】潜伏在行宫暗影处的保镖，灵气倒灌让他们与阴影的融合失去了控制。"
+            desc: "【精英】潜伏在行宫暗影处的保镖，灵力倒灌让他们与阴影的融合失去了控制。"
         }
     ],
 
@@ -133,7 +133,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "拂尘乱舞", type: 1, damage: 113, rate: 0.4 },           // 1. 低
                 { id: "内劲掌掴", type: 1, damage: 173, rate: 0.2 },           // 2. 高
                 { id: "行宫绝响", type: 1, damage: 260, rate: 0.1 },          // 3. 很高
-                { id: "灵气坍缩", type: 1, damage: 438, rate: 0.02 },         // 4. 极高
+                { id: "灵力坍缩", type: 1, damage: 438, rate: 0.02 },         // 4. 极高
                 { id: "内侍威仪", type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 4, rate: 0.2 }, // 5. 增益
                 { id: "残命吞噬", type: 3, buffAttr: "hp", buffValue: 170, buffTimes: 1, rate: 0.1 },   // 6. 回复 (1/5)
                 { id: "尖锐嘶叫", type: 2, debuffAttr: "atk", debuffValue: 15, debuffTimes: 5, rate: 0.2 }, // 7. 减益1
@@ -154,7 +154,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "沉重威压", type: 2, debuffAttr: "speed", debuffValue: 10, debuffTimes: 5, rate: 0.2 },
                 { id: "甲片震荡", type: 2, debuffAttr: "def", debuffValue: 20, debuffTimes: 3, rate: 0.2 }
             ],
-            desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的灵气撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
+            desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的灵力撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
         },
         {
             id: "raid_boss_chief_fangshi", name: "神志错乱的随行首席", template: "boss", region: "all", timeStart: 1,

@@ -12,7 +12,7 @@ const RARITY_CONFIG = {
 };
 
 const TYPE_MAPPING = {
-    'material': '材料', 'foodMaterial': '食材', 'food': '料理', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
+    'material': '材料', 'foodMaterial': '食材', 'food': '料理','fish':'鱼', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
 };
 // 【新增】属性名映射表 (用于悬浮窗显示)
 const ATTR_MAPPING = {
@@ -27,7 +27,7 @@ const ATTR_MAPPING = {
     "hunger": "饱食度", //功法上限
     "max_skill_level": "修行上限",
     //研读效率
-    "studyEff": "研读效率",
+    "studyEff": "研读效率","money":"金钱", stabilizer:'稳定', catalyst:'药引',heal:"愈合"
 };
 
 /* ================= 游戏核心常量配置 ================= */
@@ -110,8 +110,11 @@ const PLAYER_TEMPLATE = {
         "cooking": {name: "庖丁", exp: 0, desc: "烹饪美食，去除毒性。"},
         "fishing": {name: "垂钓", exp: 0, desc: "姜太公钓鱼，获取水产。"},
         "medicine": {name: "岐黄", exp: 0, desc: "悬壶济世，提升药效与鉴定。"},
-        "gathering": {name: "采薇", exp: 0, desc: "搜山寻宝，提升采集产量。"}
+        "gathering": {name: "采薇", exp: 0, desc: "搜山寻宝，提升采集产量。"},
+        //炼丹
+        "alchemy": {name: "炼丹", exp: 0, desc: "炼丹术，提升炼丹成功率。"},
     }, learnedRecipes: [], // ["food_01", ...]
+    alchemyHistory:{},
     buffs            : {}, // { "buff_id": { attr, val, days } }
 
     logs: [], time: {         // 新增：时间系统存档数据

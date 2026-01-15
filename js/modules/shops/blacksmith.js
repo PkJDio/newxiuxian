@@ -1,5 +1,5 @@
 // js/modules/shops/blacksmith.js
-// 铁匠铺功能模块 v1.1 (价格调整版)
+// 铁匠铺功能模块 v1.2 (适配SID出售 + 批量功能)
 //console.log("加载 铁匠铺模块");
 
 const BlacksmithShop = {
@@ -12,9 +12,7 @@ const BlacksmithShop = {
         this.currentTown = town;
         this._generateStock(town);
         this.renderMainMenu();
-        // 【新增】触发铁匠铺引导
         if (window.UITutorial) UITutorial.checkBuilding('blacksmith');
-
     },
 
     // ================= 辅助：更新内容 =================
@@ -120,7 +118,6 @@ const BlacksmithShop = {
 
             return {
                 id: item.id, item: item,
-                // 【修改点】买价 * 1.2
                 price: Math.floor((item.price || item.value || 10) * 1.2),
                 qty: Math.max(0, initialQty - boughtQty), maxQty: initialQty, shopKey: shopKey
             };
@@ -136,8 +133,6 @@ const BlacksmithShop = {
             return;
         }
 
-
-
         let listHtml = this.currentStock.map((entry, index) => {
             const item = entry.item;
             const isSoldOut = entry.qty <= 0;
@@ -147,7 +142,7 @@ const BlacksmithShop = {
             const tags = [];
             if (item.effects) {
                 Object.entries(item.effects).forEach(([key, val]) => {
-                    const label = ATTR_MAPPING[key] || key;
+                    const label = ATTR_MAPPING[key] || key; // 假设 ATTR_MAPPING 全局可用，或在此定义
                     const valStr = val > 0 ? `+${val}` : val;
                     tags.push(`<span style="display:inline-block; background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; padding:2px 6px; border-radius:4px; font-size:15px; margin-right:5px; margin-bottom:2px;">${label}${valStr}</span>`);
                 });
@@ -185,34 +180,33 @@ const BlacksmithShop = {
             `;
         }).join('');
 
-        const isModalVisible = this.modalBody && document.body.contains(this.modalBody);
-        if (isModalVisible) {
-            const listEl = this.modalBody.querySelector('#smith-buy-list');
-            const moneyEl = this.modalBody.querySelector('#smith-buy-money');
-            if (listEl && moneyEl) {
-                const scrollTop = listEl.scrollTop;
-                listEl.innerHTML = listHtml;
-                moneyEl.innerText = `💰 ${player.money}`;
-                requestAnimationFrame(() => { listEl.scrollTop = scrollTop; });
-                return;
-            }
-        }
+        if (!this.modalBody) return;
 
-        const html = `
-            <div id="smith-buy-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
-                <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
-                    <span style="font-size: 24px; font-weight: bold;">⚒️ 兵甲铺子</span>
-                    <div style="display:flex; align-items:center; gap: 20px;">
-                        <span id="smith-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
-                        <button class="ink_btn" onclick="BlacksmithShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+        const container = this.modalBody.querySelector('#smith-buy-list');
+        const moneyEl = this.modalBody.querySelector('#smith-buy-money');
+
+        if (container && moneyEl) {
+            const scrollTop = container.scrollTop;
+            container.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+            requestAnimationFrame(() => { container.scrollTop = scrollTop; });
+        } else {
+            const html = `
+                <div id="smith-buy-container" style="height: 100%; box-sizing: border-box; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden;">
+                    <div style="flex: 0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">⚒️ 兵甲铺子</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="smith-buy-money" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="BlacksmithShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+                        </div>
+                    </div>
+                    <div id="smith-buy-list" style="flex:1; overflow-y:auto; padding:0; background: #fff;">
+                        ${listHtml}
                     </div>
                 </div>
-                <div id="smith-buy-list" style="flex:1; overflow-y:auto; padding:0; background: #fff;">
-                    ${listHtml}
-                </div>
-            </div>
-        `;
-        this._updateContent(html);
+            `;
+            this._updateContent(html);
+        }
     },
 
     handleBuy: function(index) {
@@ -237,7 +231,7 @@ const BlacksmithShop = {
         window.saveGame();
     },
 
-    // ================= 出售界面 =================
+    // ================= 出售界面 (SID适配) =================
     uiSell: function() {
         const inventory = player.inventory || [];
         const sellableItems = [];
@@ -248,13 +242,12 @@ const BlacksmithShop = {
             const count = slot.count || 1;
             let itemData = slot;
 
-            if (itemData && itemData.value) {
-                // 【修改点】判断价格倍率
+            if (itemData && itemData.value && itemData.sid) {
+                // 铁匠铺逻辑：装备类0.6，其他0.4
                 const isSpecial = ['weapon', 'head', 'body', 'feet'].includes(itemData.type);
-                // 武器类 0.6，其他 0.4
                 const rate = isSpecial ? 0.6 : 0.4;
                 const sellPrice = Math.floor(itemData.value * rate);
-                sellableItems.push({ index: index, id: itemId, data: itemData, count: count, sellPrice: sellPrice });
+                sellableItems.push({ sid: itemData.sid, id: itemId, data: itemData, count: count, sellPrice: sellPrice });
             }
         });
 
@@ -262,62 +255,104 @@ const BlacksmithShop = {
         if (sellableItems.length === 0) {
             listHtml = `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">包袱里没啥打铁的材料或兵刃。</div>`;
         } else {
+            const btnBase = "display:inline-block; border-radius: 4px; cursor: pointer; font-size: 16px; padding: 6px 15px; color: #fff; border: 1px solid;";
+            const sellBtnStyle = `${btnBase} background: linear-gradient(to bottom, #ffb74d, #f57c00); border-color: #e65100;`;
+
             listHtml = sellableItems.map(entry => {
                 const item = entry.data;
                 const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
-                const btnBase = "display:inline-block; border-radius: 4px; cursor: pointer; font-size: 16px; padding: 6px 15px; color: #fff; border: 1px solid;";
+
+                let bulkBtnHtml = '';
+                if (entry.count > 1) {
+                    const bulkBtnStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b;`;
+                    bulkBtnHtml = `<button style="${bulkBtnStyle}" onclick="BlacksmithShop.handleSellBulk('${entry.sid}', ${entry.sellPrice})">全卖</button>`;
+                }
 
                 return `
                     <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;">
                         <div style="flex:1; text-align:left; padding-right: 15px;">
                             <span style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${item.name}</span>
-                            <div style="font-size:14px; color:#999;">${item.desc || ''}</div>
+                            <div style="font-size:14px; color:#999;">
+                                ${entry.count > 1 ? `数量: ${entry.count}` : ''}
+                                <span style="margin-left:5px; color:#ccc;">(原价:${item.value})</span>
+                            </div>
                         </div>
                         <div style="width:110px; text-align:right; margin-right: 15px;">
                             <div style="color:#388e3c; font-weight:bold; font-size: 20px;">+${entry.sellPrice} 文</div>
                         </div>
                         <div style="width:160px; text-align:right; flex-shrink:0; display:flex; justify-content:flex-end; gap: 10px;">
-                            <button style="${btnBase} background: linear-gradient(to bottom, #ffb74d, #f57c00); border-color: #e65100;" onclick="BlacksmithShop.handleSell(${entry.index}, ${entry.sellPrice})">卖出</button>
+                            ${bulkBtnHtml}
+                            <button style="${sellBtnStyle}" onclick="BlacksmithShop.handleSell('${entry.sid}', ${entry.sellPrice})">卖出</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        const isModalVisible = this.modalBody && document.body.contains(this.modalBody);
-        if (isModalVisible) {
-            const listEl = this.modalBody.querySelector('#smith-sell-list');
-            const moneyEl = this.modalBody.querySelector('#smith-money-count');
-            if (listEl && moneyEl) {
-                listEl.innerHTML = listHtml;
-                moneyEl.innerText = `💰 ${player.money}`;
-                return;
-            }
-        }
+        if (!this.modalBody) return;
 
-        const html = `
-            <div id="smith-sell-container" style="height: 100%; display:flex; flex-direction:column; background:#fff;">
-                <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
-                    <span style="font-size: 24px; font-weight: bold;">💰 回收兵甲 (高价)</span>
-                    <div style="display:flex; align-items:center; gap: 20px;">
-                        <span id="smith-money-count" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
-                        <button class="ink_btn" onclick="BlacksmithShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+        const container = this.modalBody.querySelector('#smith-sell-list');
+        const moneyEl = this.modalBody.querySelector('#smith-money-count');
+
+        if (container && moneyEl) {
+            container.innerHTML = listHtml;
+            moneyEl.innerText = `💰 ${player.money}`;
+        } else {
+            const html = `
+                <div id="smith-sell-container" style="height: 100%; display:flex; flex-direction:column; background:#fff;">
+                    <div style="flex:0 0 auto; padding:18px; border-bottom:1px solid #ccc; display:flex; justify-content:space-between; align-items: center; background: #f5f5f5;">
+                        <span style="font-size: 24px; font-weight: bold;">💰 回收兵甲 (高价)</span>
+                        <div style="display:flex; align-items:center; gap: 20px;">
+                            <span id="smith-money-count" style="color:#d84315; font-weight:bold; font-size: 24px;">💰 ${player.money}</span>
+                            <button class="ink_btn" onclick="BlacksmithShop.renderMainMenu()" style="font-size: 18px; padding: 6px 20px; border:1px solid #8d6e63; background:#fff8e1; color:#5d4037; border-radius:4px; cursor:pointer;">返回</button>
+                        </div>
+                    </div>
+                    <div id="smith-sell-list" style="flex:1; overflow-y:auto; padding:0;">
+                        ${listHtml}
                     </div>
                 </div>
-                <div id="smith-sell-list" style="flex:1; overflow-y:auto; padding:0;">
-                    ${listHtml}
-                </div>
-            </div>
-        `;
-        this._updateContent(html);
+            `;
+            this._updateContent(html);
+        }
     },
 
-    handleSell: function(inventoryIndex, price) {
-        if (!player.inventory || !player.inventory[inventoryIndex]) return;
-        const slot = player.inventory[inventoryIndex];
+    // 【新增】单件出售 (SID)
+    handleSell: function(sid, price) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) {
+            if(window.showToast) window.showToast("物品不存在或已售出");
+            this.uiSell();
+            return;
+        }
+
         player.money += price;
-        if (slot.count && slot.count > 1) slot.count--; else player.inventory.splice(inventoryIndex, 1);
+
+        if (window.UtilsItem) {
+            window.UtilsItem.removeItem(sid, 1);
+        }
+
         if(window.showToast) window.showToast(`铁匠收走了东西，付你 ${price} 文`);
+
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
+        this.uiSell();
+    },
+
+    // 【新增】批量出售 (SID)
+    handleSellBulk: function(sid, unitPrice) {
+        const item = player.inventory.find(i => i.sid === sid);
+        if (!item) return;
+
+        const count = item.count || 1;
+        const totalPrice = unitPrice * count;
+        player.money += totalPrice;
+
+        if (window.UtilsItem) {
+            window.UtilsItem.discardMultipleItems([sid]);
+        }
+
+        if(window.showToast) window.showToast(`批量出售 ${count} 个，获得 ${totalPrice} 文`);
+
         if(window.updateUI) window.updateUI();
         if(window.saveGame) window.saveGame();
         this.uiSell();

@@ -31,7 +31,7 @@ window.UITutorial = {
         {
             target: 'btn_action_train',
             title: '5. 打坐修炼',
-            text: '【修为根本】将天地灵气转化为自身修为。当进度条满时，即可尝试突破境界。'
+            text: '【修为根本】将天地灵力转化为自身修为。当进度条满时，即可尝试突破境界。'
         },
         {
             target: 'btn_action_study',
