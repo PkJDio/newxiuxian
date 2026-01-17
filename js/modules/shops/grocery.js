@@ -75,17 +75,17 @@ let GroceryShop = {
         let selectedItems = [];
 
         if (rods.length > 0) {
-            const rodIndex = Math.floor(window.getSeededRandom(shopKey, "rodSelect") * rods.length);
+            const rodIndex = Math.round(window.getSeededRandom(shopKey, "rodSelect") * rods.length);
             const rod = rods[rodIndex];
             selectedItems.push({
                 item: rod,
-                price: Math.floor((rod.price || rod.value || 100) * 2),
+                price: Math.round((rod.price || rod.value || 100) * 2),
                 qty: 1,
                 isRod: true
             });
         }
 
-        const targetFlavorCount = config.minType + Math.floor(window.getSeededRandom(shopKey, "typeCount") * (config.maxType - config.minType));
+        const targetFlavorCount = config.minType + Math.round(window.getSeededRandom(shopKey, "typeCount") * (config.maxType - config.minType));
 
         const scoredFlavorings = flavorings.map(item => {
             return { item: item, score: window.getSeededRandom(shopKey, item.id, "rank") };
@@ -94,10 +94,10 @@ let GroceryShop = {
 
         const chosenFlavorings = scoredFlavorings.slice(0, targetFlavorCount).map(entry => {
             const item = entry.item;
-            const initialQty = 5 + Math.floor(window.getSeededRandom(shopKey, item.id, "qty") * 10);
+            const initialQty = 5 + Math.round(window.getSeededRandom(shopKey, item.id, "qty") * 10);
             return {
                 item: item,
-                price: Math.floor((item.price || item.value || 10) * 5),
+                price: Math.round((item.price || item.value || 10) * 5),
                 qty: initialQty,
                 isRod: false
             };
@@ -152,7 +152,12 @@ let GroceryShop = {
             }
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index % 2 === 0 ? '#fafafa' : '#fff'};">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index % 2 === 0 ? '#fafafa' : '#fff'};"
+                
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()">
                     <div style="flex:1; text-align:left; padding-right: 15px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px; display:flex; align-items:center; gap:10px;">
                             ${item.name}
@@ -245,7 +250,7 @@ let GroceryShop = {
             const sellBtnStyle = `${btnBase} background: linear-gradient(to bottom, #ffb74d, #f57c00); border-color: #e65100;`;
 
             listHtml = sellableItems.map(item => {
-                const sellPrice = Math.floor(item.value * 0.5);
+                const sellPrice = Math.round(item.value * 0.5);
                 const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
                 const count = item.count || 1;
 
@@ -257,7 +262,11 @@ let GroceryShop = {
                 }
 
                 return `
-                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;">
+                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;"
+                    /* 【新增】出售界面使用的是背包实例，传入 SID */
+         onmouseenter="window.showItemTooltip(event, '${item.sid}')"
+         onmouseleave="window.hideTooltip()"
+                    >
                         <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                             <span style="color:${color}; font-weight:bold; font-size: 21px;">${item.name}</span>
                             <div style="font-size:17px; color:#666; margin-top:4px;">

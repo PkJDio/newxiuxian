@@ -65,7 +65,7 @@ const NAME_KEYWORD_MAP = [
     // { key: "鞋", icon: "👞" },
     // { key: "靴", icon: "👢" },
     // { key: "履", icon: "🥿" },
-    { key: "戒", icon: "💍" },
+    // { key: "戒", icon: "💍" },
     // { key: "镯", icon: "⭕" },
     // { key: "玉佩", icon: "📿" },
     // { key: "护符", icon: "🧿" },
@@ -140,20 +140,20 @@ const NAME_KEYWORD_MAP = [
     // { key: "符", icon: "🟨" },
     //
     // // --- 坐骑/动物 ---
-    { key: "马", icon: "🐎" },
+    // { key: "马", icon: "🐎" },
     // // { key: "驴", icon: "🫏" },
     // { key: "鹿", icon: "🦌" },
     // { key: "鹤", icon: "🦢" },
     // { key: "虎", icon: "🐅" },
     // { key: "狮", icon: "🦁" },
     // { key: "龙", icon: "🐉" },
-    { key: "剑", icon: "🗡️" }, // 飞剑
+    // { key: "剑", icon: "🗡️" }, // 飞剑
     //
     // // --- 工具 ---
-    { key: "镐", icon: "⛏️" },
-    { key: "锄", icon: "⚒️" },
+    // { key: "镐", icon: "⛏️" },
+    // { key: "锄", icon: "⚒️" },
     // { key: "镰", icon: "🌾" },
-    { key: "竿", icon: "🎣" }
+    // { key: "竿", icon: "🎣" }
 ];
 
 /**
@@ -182,10 +182,14 @@ function getItemIcon(item) {
             }
         }
     }
-// 3. 根据类型返回 (类型映射表)
-    if (item.subType && ITEM_ICONS[item.subType]) {
-        return ITEM_ICONS[item.subType];
+    if(item.subType=="fish"){
+        return "🐟️";
     }
+    if(item.type=="weapon"){
+        return "⚔️";
+    }
+
+
     // 3. 根据类型返回 (类型映射表)
     if (item.type && ITEM_ICONS[item.type]) {
         return ITEM_ICONS[item.type];

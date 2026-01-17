@@ -168,9 +168,9 @@ const UISkill = {
     `;
 
         if (window.showGeneralModal) {
-            window.showGeneralModal(title, contentHtml, null, "modal_skill", 90, 85);
+            window.showGeneralModal(title, contentHtml, null, "modal_skill", 68, 80);
         } else if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            window.UtilsModal.showInteractiveModal(title, contentHtml, null, "modal_skill", 90, 85);
+            window.UtilsModal.showInteractiveModal(title, contentHtml, null, "modal_skill", 75, 80);
         }
 
         this.refresh();

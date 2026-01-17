@@ -79,11 +79,11 @@ const BlacksmithShop = {
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
-        let targetTypeCount = Math.floor(randForType * (config.maxType - config.minType + 1)) + config.minType;
+        let targetTypeCount = Math.round(randForType * (config.maxType - config.minType + 1)) + config.minType;
         targetTypeCount = Math.min(targetTypeCount, validItems.length);
 
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
-        let targetTotalQty = Math.floor(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
+        let targetTotalQty = Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
         const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
@@ -105,7 +105,7 @@ const BlacksmithShop = {
 
         for (let i = 0; i < targetTotalQty; i++) {
             const distRand = window.getSeededRandom(shopKey, "dist", i);
-            const index = Math.floor(distRand * selectedItems.length);
+            const index = Math.round(distRand * selectedItems.length);
             selectedItems[Math.min(index, selectedItems.length - 1)].maxQty++;
         }
 
@@ -118,7 +118,7 @@ const BlacksmithShop = {
 
             return {
                 id: item.id, item: item,
-                price: Math.floor((item.price || item.value || 10) * 1.2),
+                price: Math.round((item.price || item.value || 10) * 1.2),
                 qty: Math.max(0, initialQty - boughtQty), maxQty: initialQty, shopKey: shopKey
             };
         });
@@ -161,7 +161,11 @@ const BlacksmithShop = {
             }
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};"
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()">
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">
                             ${item.name}
@@ -246,7 +250,7 @@ const BlacksmithShop = {
                 // 铁匠铺逻辑：装备类0.6，其他0.4
                 const isSpecial = ['weapon', 'head', 'body', 'feet'].includes(itemData.type);
                 const rate = isSpecial ? 0.6 : 0.4;
-                const sellPrice = Math.floor(itemData.value * rate);
+                const sellPrice = Math.round(itemData.value * rate);
                 sellableItems.push({ sid: itemData.sid, id: itemId, data: itemData, count: count, sellPrice: sellPrice });
             }
         });
@@ -269,7 +273,11 @@ const BlacksmithShop = {
                 }
 
                 return `
-                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;">
+                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;"
+                    /* 【新增】出售界面使用的是背包实例，传入 SID */
+         onmouseenter="window.showItemTooltip(event, '${entry.sid}')"
+         onmouseleave="window.hideTooltip()"
+                    >
                         <div style="flex:1; text-align:left; padding-right: 15px;">
                             <span style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${item.name}</span>
                             <div style="font-size:14px; color:#999;">

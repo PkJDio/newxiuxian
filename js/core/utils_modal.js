@@ -399,6 +399,58 @@ const ModalManager = {
         `;
         document.head.appendChild(style);
     },
+
+    // 12. 钓鱼奇遇弹窗 (1/5 长宽比，水墨主题)
+    showFortuneModal: function(eventData) {
+        this._injectFortuneStyles();
+
+        const isGood = eventData.type === 'good';
+        const titlePrefix = isGood ? "✨ 祥瑞降世" : "⚠️ 偶生波折";
+        const themeClass = isGood ? "fortune_good" : "fortune_bad";
+
+        const contentHtml = `
+            <div class="fortune_body">
+                <div class="fortune_event_name">${eventData.name}</div>
+                <div class="fortune_desc">${eventData.desc}</div>
+            </div>
+        `;
+
+        const footerHtml = `<button class="ink_btn_fortune" onclick="window.closeModal()">顺应天命</button>`;
+
+        // 计算 1/5 的尺寸 (约 20vw)
+        this._showBaseModal('modal_fortune', titlePrefix, contentHtml, footerHtml, themeClass, 25, 35, { allowOutsideClick: true });
+    },
+
+    _injectFortuneStyles: function() {
+        if (document.getElementById('style-modal-fortune')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-fortune';
+        style.innerHTML = `
+            /* 基础容器 */
+            .modal_fortune { border: 2px solid #5d4037 !important; border-radius: 8px !important; overflow: visible !important; }
+            
+            /* 祥瑞：喜庆红金 */
+            .fortune_good.modal_fortune { background: #fff9f0 !important; box-shadow: 0 0 20px rgba(216, 67, 21, 0.4) !important; }
+            .fortune_good .modal_header { background: #d84315 !important; color: #fff !important; }
+            .fortune_good .fortune_event_name { color: #b71c1c; }
+
+            /* 波折：压抑灰墨 */
+            .fortune_bad.modal_fortune { background: #f5f5f5 !important; box-shadow: 0 0 15px rgba(0,0,0,0.3) !important; }
+            .fortune_bad .modal_header { background: #424242 !important; color: #eee !important; }
+            .fortune_bad .fortune_event_name { color: #333; }
+
+            /* 内容样式 */
+            .fortune_body { text-align: center; padding: 10px; font-family: "KaiTi", serif; }
+            .fortune_event_name { font-size: 24px; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; }
+            .fortune_desc { font-size: 18px; line-height: 1.6; color: #5d4037; }
+            
+            .ink_btn_fortune { 
+                width: 100%; padding: 10px; background: #5d4037; color: #fff; 
+                border: none; cursor: pointer; font-family: "KaiTi"; font-size: 18px; 
+            }
+        `;
+        document.head.appendChild(style);
+    },
     // ================= 核心逻辑 =================
 
     _createTempCallback: function(callback, renderFn) {
@@ -634,3 +686,4 @@ window.showDialogue = ModalManager.showDialogueModal.bind(ModalManager);
 // 新增这一行
 window.showDeathModal = ModalManager.showDeathModal.bind(ModalManager);
 window.showDefeatModal = ModalManager.showDefeatModal.bind(ModalManager);
+window.showFortuneModal = ModalManager.showFortuneModal.bind(ModalManager);

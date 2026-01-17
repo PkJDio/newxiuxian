@@ -32,11 +32,14 @@ const ArchiveSystem = {
 
             // 【核心修改】直接将版本号写入 player 对象，而不是包一层
             window.player.version = this.CURRENT_VERSION;
+            // 2. 注入/更新时间戳
+            window.player.update_time = Date.now();
 
             const dataStr = JSON.stringify(window.player);
             localStorage.setItem(this.getKey(), dataStr);
             //console.log("[Archive] 游戏已保存 (v" + this.CURRENT_VERSION + ")");
-
+// 4. (可选) 这里可以触发 CloudArchive.executeSave(true) 来实现即时静默云备份
+            if (window.CloudArchive) CloudArchive.executeSave(true);
             // if(window.showToast) window.showToast("游戏已保存");
         } catch (e) {
             console.error("保存失败 (可能是空间不足):", e);
@@ -89,7 +92,10 @@ const ArchiveSystem = {
             if (!window.player.defeatedEnemies) {
                 window.player.defeatedEnemies = {};
             }
-
+// ============================================================
+            // 【核心修改】数据迁移：将旧属性迁移到新属性
+            // ============================================================
+            this._migrateAttributes();
             //console.log("读取存档成功", window.player);
 
             UtilsItem.checkBagData();
@@ -105,6 +111,40 @@ const ArchiveSystem = {
         }
     },
 
+    /**
+     * 【新增】属性迁移逻辑
+     * 规则：旧版 atk -> phy_atk, 旧版 def -> phy_def, 法系归 0
+     */
+    _migrateAttributes: function() {
+        const p = window.player;
+        if (!p || !p.attr) return;
+
+        // 1. 迁移基础属性 (attr) - 针对吃丹药涨的永久属性
+        // 如果 atk 有值，且 phy_atk 为空或0，说明是旧档
+        if (p.attr.atk > 0 && (!p.attr.phy_atk || p.attr.phy_atk === 0)) {
+            console.log("[Archive] 迁移旧版攻击 -> 物理攻击");
+            p.attr.phy_atk = p.attr.atk; // 全部转为物攻
+            p.attr.mag_atk = 0;          // 法攻归零
+        }
+
+        if (p.attr.def > 0 && (!p.attr.phy_def || p.attr.phy_def === 0)) {
+            console.log("[Archive] 迁移旧版防御 -> 物理防御");
+            p.attr.phy_def = p.attr.def; // 全部转为物防
+            p.attr.mag_def = 0;          // 法防归零
+        }
+
+        // 2. 迁移额外属性 (exAttr) - 针对装备/Buff缓存
+        // 虽然 recalcStats 会重算这个，但为了 UI 不闪烁，先迁移一下
+        if (p.exAttr) {
+            if (p.exAttr.atk && !p.exAttr.phy_atk) p.exAttr.phy_atk = p.exAttr.atk;
+            if (p.exAttr.def && !p.exAttr.phy_def) p.exAttr.phy_def = p.exAttr.def;
+            // 法系不继承，保持为 0
+        }
+
+        // 3. 清理旧字段 (可选，如果不清理可以留着做纪念/兼容显示)
+        // p.attr.atk = 0;
+        // p.attr.def = 0;
+    },
     /**
      * 【新增】重置/清空存档
      */

@@ -70,6 +70,11 @@ window.performDirectRebirth = function() {
     } else {
         newPlayer.skills = {};
     }
+    //继承钓鱼图鉴数据fishHistory
+    newPlayer.fishHistory = window.player.fishHistory ? JSON.parse(JSON.stringify(window.player.fishHistory)) : {};
+    //继承生活技能lifeSkills
+    newPlayer.lifeSkills = window.player.lifeSkills ? JSON.parse(JSON.stringify(window.player.lifeSkills)) : {};
+
 
 
     newPlayer.danger = 0;

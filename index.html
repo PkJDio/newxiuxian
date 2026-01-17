@@ -18,6 +18,8 @@
             <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
             <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
             <button id="menu_btn_changelog" class="ink_btn_large">更新日志</button>
+
+
         </div>
 
         <div class="menu_version">当前版本：HTML重构版 v2.0</div>
@@ -32,49 +34,130 @@
     <div id="scene_game" class="scene">
 
         <div id="left_status_panel">
-            <div id="left_profile_box" class="ink_card">
-                <div class="profile_row">
-                    <span id="profile_name">道友未命名</span>
+            <div id="left_profile_box" class="ink_card profile_card">
+                <div class="profile_main">
+                    <span id="profile_name" class="p_name">道友未命名</span>
                     <span id="profile_generation" class="ink_tag">第 1 世</span>
                 </div>
-                <div class="profile_row">
+                <div class="profile_sub">
                     <span id="profile_level">凡人 (0/100)</span>
+                    <span class="p_divider">|</span>
                     <span id="profile_age">16岁</span>
                 </div>
-                <div id="profile_date">秦始皇三十七年 正月 初一</div>
+                <div id="profile_date" class="p_date">秦始皇三十七年 正月 初一</div>
             </div>
 
-            <div id="left_attr_primary" class="ink_card">
-                <div class="attr_row"><span>精 (体质)</span> <span id="val_jing">10</span></div>
-                <div class="attr_row"><span>气 (能量)</span> <span id="val_qi">10</span></div>
-                <div class="attr_row"><span>神 (悟性)</span> <span id="val_shen">10</span></div>
-                <div class="separator_line"></div>
-                <div class="attr_row"><span>💰 钱财</span> <span id="val_money" class="text_gold">100</span></div>
+            <div class="ink_card status_card">
+                <div class="status_row">
+                    <span class="s_label c_hp">❤️ 生命</span>
+                    <span class="s_val" id="val_hp">100/100</span>
+                </div>
+                <div class="status_row">
+                    <span class="s_label c_mp">💧 灵力</span>
+                    <span class="s_val" id="val_mp">50/50</span>
+                </div>
+                <div class="status_row">
+                    <span class="s_label c_hunger">🍖 饱食</span>
+                    <span class="s_val" id="val_hunger">100/100</span>
+                </div>
+                <div class="status_row">
+                    <span class="s_label c_fatigue">😴 疲劳</span>
+                    <span class="s_val" id="val_fatigue">0/100</span>
+                </div>
             </div>
 
-            <div id="left_attr_combat" class="ink_card">
-                <div class="bar_row"><span>❤️ 生命</span> <span id="val_hp">100/100</span></div>
-                <div class="bar_row"><span>💧 灵力</span> <span id="val_mp">50/50</span></div>
-                <div class="bar_row"><span>🍖 饱食</span> <span id="val_hunger">100/100</span></div>
-                <div class="bar_row"><span>😴 疲劳</span> <span id="val_fatigue">0/100</span></div>
+            <div class="ink_card attr_primary_card">
+                <div class="attr_grid">
+                    <div class="attr_item">
+                        <span class="a_label">精</span>
+                        <span class="a_val" id="val_jing">10</span>
+                    </div>
+                    <div class="attr_item">
+                        <span class="a_label">气</span>
+                        <span class="a_val" id="val_qi">10</span>
+                    </div>
+                    <div class="attr_item">
+                        <span class="a_label">神</span>
+                        <span class="a_val" id="val_shen">10</span>
+                    </div>
+                </div>
+                <div class="money_row">
+                    <span>💰 钱财</span>
+                    <span id="val_money" class="text_gold">100</span>
+                </div>
+            </div>
 
-                <div class="attr_row"><span>⚔️ 攻击</span> <span id="val_atk">5</span></div>
-                <div class="attr_row"><span>🛡️ 防御</span> <span id="val_def">1</span></div>
-                <div class="attr_row"><span>🦶 速度</span> <span id="val_speed">10</span></div>
+            <div class="ink_card combat_card">
+                <div class="combat_header" onclick="toggleCombatPanel()">
+                    <div class="combat_title">⚔️ 战力综述</div>
+                    <div class="combat_summary">
+                        <span>攻<b id="val_atk">5</b></span>
+                        <span class="divider">/</span>
+                        <span>防<b id="val_def">1</b></span>
+                        <span class="divider">/</span>
+                        <span>速<b id="val_speed">10</b></span>
+                    </div>
+                    <div id="combat_arrow" class="arrow_icon">▼</div>
+                </div>
+
+                <div id="combat_details" class="combat_details_box collapsed">
+                    <div class="detail_group">
+                        <div class="d_row">
+                            <span class="d_label">⚔️ 物理攻击</span> <span class="d_val" id="val_phy_atk">0</span>
+                        </div>
+                        <div class="d_row">
+                            <span class="d_label">🔮 法术攻击</span> <span class="d_val" id="val_mag_atk">0</span>
+                        </div>
+                        <div class="d_sep"></div>
+                        <div class="d_row">
+                            <span class="d_label">🛡️ 物理防御</span> <span class="d_val" id="val_phy_def">0</span>
+                        </div>
+                        <div class="d_row">
+                            <span class="d_label">✨ 法术防御</span> <span class="d_val" id="val_mag_def">0</span>
+                        </div>
+                        <div class="d_sep"></div>
+                        <div class="d_row">
+                            <span class="d_label">🎯 物暴</span> <span class="d_val" id="val_crit">0%</span>
+                        </div>
+                        <div class="d_row">
+                            <span class="d_label">🔥 法暴</span> <span class="d_val" id="val_mag_crit">0%</span>
+                        </div>
+                        <div class="d_row">
+                            <span class="d_label">🔪 锋利</span> <span class="d_val" id="val_sharpness">0</span>
+                        </div>
+                        <div class="d_row">
+                            <span class="d_label">🔱 灵透</span> <span class="d_val" id="val_penetration">0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="left_buff_container" class="ink_card flex_grow">
-                <div class="panel_header">当前状态</div>
-                <div id="buff_list" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                <div class="panel_header_sm">当前状态</div>
+                <div id="buff_list" class="buff_list_style">
                 </div>
             </div>
 
             <div id="left_system_btns">
-                <button onclick="saveGame()" class="ink_btn_small">💾 保存</button>
+                <button class="ink_btn_small" onclick="CloudArchive.uiSave()">💾 保存</button>
                 <button onclick="attemptDie()" class="ink_btn_small btn_danger">💀 兵解</button>
                 <button onclick="backToMenu()" class="ink_btn_small">🏠 主页</button>
             </div>
         </div>
+
+        <script>
+            function toggleCombatPanel() {
+                const box = document.getElementById('combat_details');
+                const arrow = document.getElementById('combat_arrow');
+                if (box.classList.contains('collapsed')) {
+                    box.classList.remove('collapsed');
+                    arrow.style.transform = 'rotate(180deg)';
+                } else {
+                    box.classList.add('collapsed');
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        </script>
 
         <div id="center_action_panel">
             <div id="center_toolbar">
@@ -247,6 +330,8 @@
     <script src="js/core/utils_buff.js"></script>
     <script src="js/core/utils_log.js"></script>
     <script src="js/core/utils_transmit.js"></script>
+    <script src="js/core/cloud_archive.js"></script>
+
 
     <script src="js/modules/ink_generator.js"></script>
 

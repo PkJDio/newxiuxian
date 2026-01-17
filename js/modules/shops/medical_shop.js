@@ -85,10 +85,10 @@ const MedicalShop = {
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
-        let targetTypeCount = Math.min(Math.floor(randForType * (config.maxType - config.minType + 1)) + config.minType, validItems.length);
+        let targetTypeCount = Math.min(Math.round(randForType * (config.maxType - config.minType + 1)) + config.minType, validItems.length);
 
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
-        let targetTotalQty = Math.max(Math.floor(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
+        let targetTotalQty = Math.max(Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
 
         const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
         const scoredItems = validItems.map(item => {
@@ -105,7 +105,7 @@ const MedicalShop = {
 
         for (let i = 0; i < targetTotalQty; i++) {
             const distRand = window.getSeededRandom(shopKey, "dist", i);
-            selectedItems[Math.floor(distRand * selectedItems.length)].maxQty++;
+            selectedItems[Math.round(distRand * selectedItems.length)].maxQty++;
         }
 
         this.currentStock = selectedItems.map(entry => {
@@ -189,7 +189,12 @@ const MedicalShop = {
             if (isSoldOut || !canAfford) btnStyle = `${btnBase} background: #bdbdbd; border-color: #9e9e9e; color: #616161; cursor: not-allowed;`;
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};"
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()"
+                >
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px;">${item.name}</div>
                         <div>${tags.join('')}</div>

@@ -124,16 +124,17 @@ const InnShop = {
                          style="border:2px solid #8d6e63; padding:26px; border-radius:12px; cursor:pointer; width:260px; background:rgba(255,255,255,0.6); box-shadow: 0 3px 6px rgba(0,0,0,0.15); transition: transform 0.2s;">
                         <div style="font-weight:bold; font-size:26px; margin-bottom:15px;">普通客房</div>
                         <div style="color:#d84315; margin:20px 0; font-size: 24px;">100 文</div>
-                        <div style="font-size:18px; color:#555; line-height: 1.6;">恢复饱食<br>清空疲劳/中毒</div>
+                        <div style="font-size:18px; color:#555; line-height: 1.6;">恢复200饱食<br>清空疲劳/中毒</div>
                     </div>
 
                     <div class="choice-card" onclick="InnShop.confirmStay('premium')" 
                          style="border:2px solid #d84315; padding:26px; border-radius:12px; cursor:pointer; width:260px; background:rgba(255,248,225,0.9); box-shadow: 0 5px 10px rgba(216, 67, 21, 0.25); transition: transform 0.2s;">
                         <div style="font-weight:bold; font-size:26px; color:#d84315; margin-bottom:15px;">🍱 上等客房</div>
-                        <div style="color:#d84315; margin:20px 0; font-size: 24px;">300 文</div>
+                        <div style="color:#d84315; margin:20px 0; font-size: 24px;">500 文</div>
                         <div style="font-size:18px; color:#555; line-height: 1.6;">
                             普通房效果 + <br>
                             <div class="inn-tooltip">
+                                <div style="font-size:18px; color:#555; line-height: 1.6;">恢复全部饱食<br>清空疲劳/中毒</div>
                                 <span style="color:#ff6f00; font-weight:bold;">BUFF:神光焕发(3天)</span>
                                 <span class="inn-tooltip-text">${buffDesc}</span>
                             </div>
@@ -151,7 +152,7 @@ const InnShop = {
 
     // ================= 确认弹窗逻辑 =================
     confirmStay: function(type) {
-        const cost = (type === 'premium') ? 300 : 100;
+        const cost = (type === 'premium') ? 500 : 100;
         const roomName = (type === 'premium') ? '上等客房' : '普通客房';
 
         if (player.money < cost) {
@@ -195,31 +196,80 @@ const InnShop = {
         }
     },
 
+    // ================= 住宿执行逻辑 (最新调整版) =================
     executeStay: function(type) {
         this.closeConfirm();
-        const cost = (type === 'premium') ? 300 : 100;
-        if (player.money < cost) return;
 
+        // 1. 价格判定：上等 500，普通 100
+        const cost = (type === 'premium') ? 500 : 100;
+        if (player.money < cost) {
+            if(window.showToast) window.showToast("囊中羞涩，连个床位都定不起...");
+            return;
+        }
+
+        // 2. 时间计算：睡到清晨 6 点
+        const currentHour = player.time.hour;
+        let hoursToSleep = 0;
+        if (currentHour < 6) {
+            hoursToSleep = 6 - currentHour;
+        } else {
+            hoursToSleep = (24 - currentHour) + 6;
+        }
+
+        // 3. 执行扣费
         player.money -= cost;
-        player.status.hunger = 100;
-        player.status.fatigue = 0;
-        if (player.status.toxicity) player.status.toxicity = 0;
+
+        // 4. 状态恢复核心逻辑
+        player.status.fatigue = 0;  // 无论哪种房间，疲劳都清零
+        if (player.status.toxicity) player.status.toxicity = 0; // 清除丹毒/中毒
 
         if (type === 'premium') {
+            // --- 上等客房待遇 ---
+            player.status.hunger = player.derived.hungerMax; // 饱食度回满
+            player.status.hp = player.derived.hpMax;         // 状态回满
+            player.status.mp = player.derived.mpMax;
+
+            // 添加 3 天的高级 Buff
             const buffData = {
-                name: "神光焕发", attr: "全属性", val: "+20%", days: 3, source: "客栈", isDebuff: false,
-                desc: "在客栈睡了个好觉，精神百倍。攻击、防御、速度提升20%。",
+                name: "神光焕发", attr: "全属性", val: "+20%", days: 3, source: "上等客房",
+                desc: "在天字号房美美睡了一觉，只觉神清气爽，灵力充沛。",
                 effects: { atkPct: 0.20, defPct: 0.20, spdPct: 0.20 }
             };
             if (window.addBuff) window.addBuff('buff_inn_rest', buffData);
-            else {
-                if (!player.buffs) player.buffs = {};
-                player.buffs['buff_inn_rest'] = buffData;
-            }
+        } else {
+            // --- 普通客房待遇 ---
+            player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + 200); // 回复200点，不超过上限
+            // 普通客房仅回复少量生命/灵力（可选，这里设置为回满或按比例，通常普通房间也能睡饱）
+            player.status.hp = player.derived.hpMax;
         }
 
+        // 5. 调用时间系统
+        if (window.TimeSystem && window.TimeSystem.passTime) {
+            window.TimeSystem.passTime(hoursToSleep);
+        }
+
+        // 6. UI 刷新与提示文字修改
         if(window.updateUI) window.updateUI();
-        if(window.showToast) window.showToast(`住宿成功！状态已回满，获得好梦一场。`);
+        if(window.saveGame) window.saveGame();
+
+        const toastMsg = (type === 'premium')
+            ? `支付 ${cost} 文入住天字号房，这一觉神清气爽，已是清晨。`
+            : `支付 ${cost} 文入住普通客房，填了填肚子，睡到清晨起身。`;
+
+        if(window.showToast) window.showToast(toastMsg);
+
+        setTimeout(() => {
+            // 住宿后自动存档
+            if (window.saveGame) window.saveGame();
+
+            // 触发清晨对话
+            showDialogue("店小二", "（咚咚咚——）客官！天色破晓，寅时已过，该起程啦！后厨刚熬好了热腾腾的米粥，您快下楼趁热用点，莫要误了今日的行程！", "left", () => {
+                // 对话结束后的可选操作，例如刷新UI
+                if (window.updateUI) window.updateUI();
+            }, true);
+        }, 600); // 建议延迟时间略长于时间流逝动画
+
+        // 返回主菜单
         this.renderMainMenu();
     },
 
@@ -231,7 +281,7 @@ const InnShop = {
         const shopKey = `shop_${town.id}_inn_${monthIndex}`;
 
         let config = { minType: 5, maxType: 8, minTotal: 10, maxTotal: 16, maxRarity: 3 };
-        if (town.level === 'city') config = { minType: 10, maxType: 15, minTotal: 20, maxTotal: 30, maxRarity: 6 };
+        if (town.level === 'city') config = { minType: 10, maxType: 15, minTotal: 50, maxTotal: 75, maxRarity: 6 };
         else if (town.level === 'town') config = { minType: 8, maxType: 10, minTotal: 10, maxTotal: 20, maxRarity: 5 };
 
         const allItems = Object.values(foods || {});
@@ -244,11 +294,11 @@ const InnShop = {
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
-        let targetTypeCount = Math.floor(randForType * (config.maxType - config.minType + 1)) + config.minType;
+        let targetTypeCount = Math.round(randForType * (config.maxType - config.minType + 1)) + config.minType;
         targetTypeCount = Math.min(targetTypeCount, validItems.length);
 
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
-        let targetTotalQty = Math.floor(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
+        let targetTotalQty = Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
         const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
@@ -270,7 +320,7 @@ const InnShop = {
 
         for (let i = 0; i < targetTotalQty; i++) {
             const distRand = window.getSeededRandom(shopKey, "dist", i);
-            const index = Math.floor(distRand * selectedItems.length);
+            const index = Math.round(distRand * selectedItems.length);
             const safeIndex = Math.min(index, selectedItems.length - 1);
             selectedItems[safeIndex].maxQty++;
         }
@@ -359,7 +409,12 @@ const InnShop = {
             }
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'}; transition: background 0.2s;">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'}; transition: background 0.2s;"
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()"
+                >
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px;">${item.name}</div>
                         <div>${effectTags}</div>
@@ -477,7 +532,7 @@ const InnShop = {
 
             listHtml = sellableItems.map(entry => {
                 const item = entry.data;
-                const sellPrice = Math.floor(item.value * 0.5);
+                const sellPrice = Math.round(item.value * 0.5);
                 const color = (window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity]) ? window.RARITY_CONFIG[item.rarity].color : '#333';
                 let effectTags = '';
                 if (item.effects) {
@@ -503,7 +558,11 @@ const InnShop = {
 
                 // 【核心修改】传入 sid
                 return `
-                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;">
+                    <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff; transition: background 0.2s;"
+                    /* 【新增】出售界面使用的是背包实例，传入 SID */
+         onmouseenter="window.showItemTooltip(event, '${entry.sid}')"
+         onmouseleave="window.hideTooltip()"
+                    >
                         <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                             <span style="color:${color}; font-weight:bold; font-size: 21px;">${item.name}</span>
                             <div>${effectTags}</div>

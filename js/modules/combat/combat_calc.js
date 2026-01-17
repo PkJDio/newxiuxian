@@ -1,154 +1,356 @@
 // js/modules/combat/combat_calc.js
-// 职责：数值逻辑演算
+// 职责：数值逻辑演算、属性动态获取、词条全量支持 (V3.3 修复日志顺序)
 
 const CombatCalc = {
-    /** 执行一次完整的攻击行为计算 */
+
+    /** 获取实时属性 (包含 Buff 和 词条修正) */
+    getDynamicStats: function(ctx, targetKey) {
+        let base = {};
+
+        // 1. 提取基础属性
+        if (targetKey === 'player') {
+            const d = ctx.player.derived || ctx.player.attributes || {};
+            base = {
+                hp: ctx.currentPHp, mp: ctx.currentPMp, hpMax: d.hpMax,
+                speed: d.speed || 10, atk: d.atk || 10, def: d.def || 0,
+                phy_atk: d.phy_atk || d.atk || 10, mag_atk: d.mag_atk || d.atk || 10,
+                phy_def: d.phy_def || d.def || 0, mag_def: d.mag_def || d.def || 0,
+                crit: d.crit || 0, mag_crit: d.mag_crit || 0,
+                sharpness: d.sharpness || 0, penetration: d.penetration || 0,
+                toxicity: ctx.player.toxicity || 0
+            };
+        } else {
+            const e = ctx.enemy;
+            const s = e.stats || {};
+            base = {
+                hp: ctx.currentEHp, hpMax: e.maxHp || e.hp,
+                speed: s.speed!==undefined?s.speed:(e.speed||10),
+                atk: s.atk!==undefined?s.atk:(e.atk||10),
+                def: s.def!==undefined?s.def:(e.def||0),
+                phy_atk: s.phy_atk||s.atk||e.atk||10, mag_atk: s.mag_atk||s.atk||e.atk||10,
+                phy_def: s.phy_def||s.def||e.def||0, mag_def: s.mag_def||s.def||e.def||0,
+                crit: s.crit||e.crit||0, mag_crit: s.mag_crit||e.mag_crit||0,
+                basePen: e.basePen||0, toxAtk: e.toxAtk||0, accuracy: e.accuracy||0,
+                toxicity: e.toxicity||0
+            };
+        }
+
+        // 2. 应用 Buff 修正
+        const myBuffs = ctx.buffs[targetKey];
+        if (myBuffs) {
+            for (let attr in myBuffs) {
+                if (attr === 'hp' || attr === 'mp') continue;
+                if (base[attr] !== undefined) base[attr] += myBuffs[attr].val;
+                // 兼容性联动
+                if (attr === 'atk') { base.phy_atk += myBuffs[attr].val; base.mag_atk += myBuffs[attr].val; }
+                if (attr === 'def') { base.phy_def += myBuffs[attr].val; base.mag_def += myBuffs[attr].val; }
+            }
+        }
+
+        // 3. 应用词条修正 (Stat Mods)
+        this._applyStatMods(ctx, targetKey, base);
+
+        // 4. 保底处理
+        base.speed = Math.max(1, base.speed);
+        base.phy_atk = Math.max(1, base.phy_atk);
+        base.mag_atk = Math.max(1, base.mag_atk);
+
+        return base;
+    },
+
+    /** 执行攻击 (处理连击逻辑) */
     performAttack: function(ctx, attackerName, atkStats, defStats, isPlayerAttacking) {
-        return this.calcDamage(ctx, atkStats, defStats, isPlayerAttacking, "普攻", attackerName);
+        // 1. 基础攻击
+        let totalDamage = this.calcDamage(ctx, atkStats, defStats, isPlayerAttacking, "普攻", attackerName);
+
+        // 2. 检查连击 (Double Strike)
+        // 触发时机: onPhyAttack (仅限物理普攻)
+        if (isPlayerAttacking && ctx.entries && ctx.entries.player) {
+            const entries = ctx.entries.player;
+            const doubleEntry = entries.find(e => e.id === 'double_strike');
+
+            if (doubleEntry) {
+                // 15% 概率
+                if (Math.random() * 100 < doubleEntry.val) {
+                    setTimeout(() => {
+                        CombatUI.log(ctx, `<span style="color:#ff9800; font-weight:bold;">⚡ [连击] 剑光一闪，残影追击！</span>`);
+                        // 连击不触发递归，直接调 calcDamage
+                        const extraDmg = this.calcDamage(ctx, atkStats, defStats, isPlayerAttacking, "连击", attackerName);
+
+                        if (isPlayerAttacking) ctx.currentEHp = Math.max(0, ctx.currentEHp - extraDmg);
+                        else ctx.currentPHp = Math.max(0, ctx.currentPHp - extraDmg);
+
+                        CombatUI.updateStats(ctx);
+                    }, 250);
+                }
+            }
+        }
+
+        return totalDamage;
     },
 
     /** 核心伤害公式 */
     calcDamage: function(ctx, atkStats, defStats, isPlayerAttacking, type="普攻", attackerName=null) {
         const name = attackerName || (isPlayerAttacking ? "你" : ctx.enemy.name);
-        const baseAtk = atkStats.atk || 1;
-        let finalAtkVal = baseAtk;
+        const attackerKey = isPlayerAttacking ? 'player' : 'enemy';
+        const defenderKey = isPlayerAttacking ? 'enemy' : 'player';
 
+        // 1. 确定类型 (物理/法术)
+        let dmgType = 'phy';
+        if (type === "技能") dmgType = atkStats.damageType || 'phy';
+
+        // 2. 提取面板
+        let panelAtk = (dmgType === 'phy') ? atkStats.phy_atk : atkStats.mag_atk;
+        let panelDef = (dmgType === 'phy') ? defStats.phy_def : defStats.mag_def;
+        // 固定穿透值 (玩家锋利/灵透 或 敌人basePen)
+        let penetration = (dmgType === 'phy') ? (atkStats.sharpness || 0) : (atkStats.penetration || 0);
+
+        // 3. 计算面板伤害
+        let finalAtkVal = panelAtk;
         if (atkStats.skillMult) finalAtkVal = Math.floor(finalAtkVal * atkStats.skillMult);
         if (atkStats.skillFlat) finalAtkVal = finalAtkVal + atkStats.skillFlat;
 
-        let defVal = defStats.def || 0;
-        const spdAtk = atkStats.speed || 10;
-        const spdDef = defStats.speed || 10;
+        // 4. 闪避判定
+        const spdAtk = atkStats.speed;
+        const spdDef = defStats.speed;
+        let accMod = (atkStats.accuracy || 0);
 
-        // --- 闪避判定 ---
-        let rawDodgeRate = 0.05 + (spdDef - spdAtk) / 150;
-        rawDodgeRate = Math.max(0, Math.min(0.60, rawDodgeRate));
-        const accModifier = (atkStats.accuracy || 0) / 100;
-        let finalDodgeRate = Math.max(0, rawDodgeRate - accModifier);
+        // 词条: Blind
+        const blindEntry = this._findEntry(ctx, attackerKey, 'blind');
+        if (blindEntry) accMod -= blindEntry.val;
+
+        let rawDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 - (accMod/100));
+        let finalDodgeRate = Math.min(0.5, rawDodgeRate);
 
         if (Math.random() < finalDodgeRate) {
-            const tip = `
-                <div class="combat-tooltip-content">
-                    <div class="tip-row"><span>基础闪避率</span><span>${(rawDodgeRate*100).toFixed(1)}%</span></div>
-                    ${atkStats.accuracy > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>敌方命中率</span><span>-${atkStats.accuracy}%</span></div>` : ''}
-                    <div class="tip-divider"></div>
-                    <div class="tip-row" style="color:#4caf50;"><span>最终闪避率</span><span>${(finalDodgeRate*100).toFixed(1)}%</span></div>
-                </div>`;
-            const span = `<span class="combat-tooltip-trigger" style="color:#aaa; cursor:help; border-bottom:1px dotted #ccc; position:relative;">✨闪避${tip}</span>`;
-            ctx._log(`${name} 的${type}被 ${span} 了！`);
+            this._triggerOnDodge(ctx, defenderKey);
+            const dodgeData = {
+                type: 'evasion',
+                source: isPlayerAttacking ? 'enemy' : 'player',
+                base: (rawDodgeRate * 100).toFixed(1),
+                acc: accMod,
+                final: (finalDodgeRate * 100).toFixed(1)
+            };
+            this._logDodge(ctx, name, type, dodgeData);
             return 0;
         }
 
-        // --- 破甲与锐利度计算 ---
-        const pen = atkStats.basePen || 0;
-        const originDef = defVal;
-        if (pen > 0) defVal = Math.max(0, defVal - pen);
-        const retentionMultiplier = 100 / (100 + (atkStats.sharpness || 0));
-        defVal = defVal * retentionMultiplier;
+        // 5. 防御穿透计算
+        if (atkStats.basePen) penetration += atkStats.basePen;
 
-        // --- 减伤公式 ---
-        const ARMOR_CONST = 100;
-        const reductionMultiplier = ARMOR_CONST / (ARMOR_CONST + defVal);
-        let rawDamage = finalAtkVal * reductionMultiplier;
-
-        // --- 暴击判定 ---
-        let critRate = isPlayerAttacking ? (0 + (atkStats.shen || 0) * 0.005) : 0.05;
-        if (!isPlayerAttacking) {
-            const r = ctx.enemy.template;
-            if (r === "lord") critRate = 0.20; else if (r === "boss") critRate = 0.15; else if (r === "elite") critRate = 0.10;
+        // 词条: Sunder / Penetrate (百分比穿透)
+        let defModPct = 0;
+        if (dmgType === 'phy') {
+            const sunder = this._findEntry(ctx, attackerKey, 'sunder');
+            if (sunder) defModPct += sunder.val;
+        } else {
+            const pen = this._findEntry(ctx, attackerKey, 'penetrate');
+            if (pen) defModPct += pen.val;
         }
-        const isCrit = Math.random() < critRate;
-        if (isCrit) rawDamage *= 1.5;
 
-        // 浮动与最终输出
+        const originDef = panelDef;
+        let effectiveDef = Math.max(0, panelDef - penetration);
+        if (defModPct > 0) effectiveDef = Math.floor(effectiveDef * (1 - defModPct/100));
+
+        // 6. 减伤公式
+        const ARMOR_CONST = 100;
+        const mitigation = ARMOR_CONST / (ARMOR_CONST + effectiveDef);
+        const mitigationPct = ((1 - mitigation) * 100).toFixed(1);
+
+        let rawDamage = finalAtkVal * mitigation;
+
+        // 7. 伤害增幅修正
+        const execute = this._findEntry(ctx, attackerKey, 'execute');
+        if (execute && (defStats.hp / defStats.hpMax) < 0.3) rawDamage *= (1 + execute.val / 100);
+
+        const soft = this._findEntry(ctx, attackerKey, 'soft');
+        if (soft) rawDamage *= (1 - soft.val / 100);
+
+        // 8. 暴击判定
+        let critRate = (dmgType === 'phy') ? atkStats.crit : atkStats.mag_crit;
+        if (isPlayerAttacking) critRate += (atkStats.shen || 0) * 0.05;
+
+        let critDmgMult = 1.5;
+        const critUp = this._findEntry(ctx, attackerKey, 'crit_dmg_up');
+        if (critUp) critDmgMult += (critUp.val / 100);
+
+        const isCrit = Math.random() * 100 < critRate;
+        if (isCrit) rawDamage *= critDmgMult;
+
+        // 9. 最终浮动 & 受击减免
         const variance = 0.95 + Math.random() * 0.1;
-        let finalDamage = Math.floor(rawDamage * variance);
+
+        let dmgTakenMod = 1.0;
+        if (dmgType === 'phy') {
+            const iron = this._findEntry(ctx, defenderKey, 'iron_skin');
+            if (iron) dmgTakenMod -= (iron.val / 100);
+        } else {
+            const shell = this._findEntry(ctx, defenderKey, 'magic_shell');
+            if (shell) dmgTakenMod -= (shell.val / 100);
+        }
+        const frail = this._findEntry(ctx, defenderKey, 'frail');
+        if (frail) dmgTakenMod += (frail.val / 100);
+
+        let finalDamage = Math.floor(rawDamage * variance * Math.max(0.1, dmgTakenMod));
         finalDamage = Math.max(1, finalDamage);
 
-        // 构建 Tooltip 文本 (为了保持原有样式，代码较长)
-        // 【修改点】调用时增加 variance 参数
-        const tooltipHtml = this._buildDamageTooltip(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage, variance);
+        // 10. 构造 Tooltip
+        const tooltipData = {
+            type: 'damage',
+            source: isPlayerAttacking ? 'player' : 'enemy',
+            dmgType: dmgType,
+            originDef: originDef,
+            effectiveDef: effectiveDef,
+            mitigationPct: mitigationPct,
+            penVal: penetration,
+            penPct: defModPct,
+            defReductPct: defModPct,
+            finalAtkVal: finalAtkVal,
+            dmgAfterMitigation: Math.floor(rawDamage / (isCrit ? critDmgMult : 1) / variance),
+            critRate: critRate.toFixed(1),
+            isCrit: isCrit,
+            critDmg: critDmgMult,
+            variance: (variance * 100).toFixed(0) + '%',
+            finalDamage: finalDamage,
+            atkStats: atkStats
+        };
 
-        const color = isPlayerAttacking ? "#d32f2f" : "#1976d2";
-        const dmgSpan = `<span class="combat-tooltip-trigger" style="color:${color}; font-weight:bold; cursor:help; border-bottom:1px dotted ${color}; position:relative;">${finalDamage}${tooltipHtml}</span>`;
+        // 11. 【优先】输出伤害日志
+        this._logDamage(ctx, name, type, isPlayerAttacking, finalDamage, isCrit, tooltipData);
 
-        ctx._log(`${name} ${type}造成 ${dmgSpan} 点伤害${isCrit ? " <b style='color:#ff9800'>[暴击!]</b>" : ""}`);
+        // 12. 【滞后】触发特效 (On Hit / On Damaged) —— 如吸血、反伤
+        // 这样日志里就会先显示“造成伤害”，然后紧接着显示“吸血恢复”
+        this._handlePostAttack(ctx, attackerKey, defenderKey, finalDamage, dmgType, isCrit);
 
-        // 处理敌方普攻带毒
+        // 13. 毒
         if (!isPlayerAttacking && type === "普攻" && atkStats.toxAtk > 0) {
             window.player.toxicity = Math.min(100, (window.player.toxicity || 0) + Number(atkStats.toxAtk));
-            ctx._log(`> ⚠️ ${name} 的攻击附带剧毒！中毒 <span style="color:#9c27b0">+${atkStats.toxAtk}</span>`);
+            CombatUI.updateTox(ctx);
+            CombatUI.log(ctx, `> ⚠️ ${name} 附带剧毒！中毒 +${atkStats.toxAtk}`);
         }
 
         return finalDamage;
     },
 
-    /** 获取包含 Buff 修正后的实时属性 */
-    getDynamicStats: function(ctx, targetKey) {
-        let base = {};
-        if (targetKey === 'player') {
-            const d = ctx.player.derived || ctx.player.attributes;
-            base = { ...d, mp: ctx.currentPMp };
-        } else {
-            const s = ctx.enemy.stats || {};
-            base = {
-                atk: s.atk !== undefined ? s.atk : (ctx.enemy.atk || 0),
-                def: s.def !== undefined ? s.def : (ctx.enemy.def || 0),
-                speed: s.speed !== undefined ? s.speed : (ctx.enemy.speed || 0),
-                accuracy: ctx.enemy.accuracy,
-                basePen: ctx.enemy.basePen,
-                toxAtk: ctx.enemy.toxAtk
-            };
-        }
+    // --- 词条处理核心 ---
 
-        const myBuffs = ctx.buffs[targetKey];
-        for (let attr in myBuffs) {
-            if (base[attr] !== undefined && attr !== 'hp' && attr !== 'mp') base[attr] += myBuffs[attr].val;
-        }
-        base.atk = Math.max(0, base.atk); base.def = Math.max(0, base.def); base.speed = Math.max(0, base.speed);
-        return base;
+    _applyStatMods: function(ctx, targetKey, base) {
+        if (!ctx.entries || !ctx.entries[targetKey]) return;
+
+        const entries = ctx.entries[targetKey];
+        entries.forEach(entry => {
+            if (entry.id === 'sharpness_plus') {
+                base.sharpness = (base.sharpness || 0) + entry.val;
+            }
+            if (entry.id === 'penetration_plus') {
+                base.penetration = (base.penetration || 0) + entry.val;
+            }
+            if (entry.id === 'speed_up') base.speed += entry.val;
+            if (entry.id === 'atk_up_pct') {
+                base.phy_atk = Math.floor(base.phy_atk * (1 + entry.val/100));
+                base.atk = Math.floor(base.atk * (1 + entry.val/100));
+            }
+        });
     },
 
+    _handlePostAttack: function(ctx, attackerKey, defenderKey, damage, dmgType, isCrit) {
+        if (!ctx.entries) return;
+        const attEntries = ctx.entries[attackerKey] || [];
+        const defEntries = ctx.entries[defenderKey] || [];
 
-    /** 构造伤害 Tooltip 的内部辅助 */
-    _buildDamageTooltip: function(atkStats, defStats, finalAtkVal, baseAtk, originDef, defVal, pen, critRate, isCrit, finalDamage, variance) {
-        // --- 1. 预计算 ---
-        const reductionMult = 100 / (100 + defVal);
-        const reductionPct = ((1 - reductionMult) * 100).toFixed(1);
-        const preCritDamage = Math.floor(finalAtkVal * reductionMult);
-        const sharpPct = atkStats.sharpness ? Math.floor((1 - (100 / (100 + atkStats.sharpness))) * 100) : 0;
+        // 1. 吸血 (lifesteal)
+        attEntries.forEach(entry => {
+            if (entry.id === 'lifesteal' && dmgType === 'phy') {
+                this._heal(ctx, attackerKey, Math.floor(damage * entry.val / 100), "吸血", damage, entry.val);
+            }
+            if (entry.id === 'spellvamp' && dmgType === 'mag') {
+                this._heal(ctx, attackerKey, Math.floor(damage * entry.val / 100), "魔饮", damage, entry.val);
+            }
+        });
 
-        // 计算浮动百分比显示
-        const varPct = Math.round(variance * 100);
-        // 设置颜色：大于100%绿色，小于100%灰色/橙色
-        let varColor = "#666";
-        if (varPct > 100) varColor = "#4caf50"; // 运气好
-        else if (varPct < 100) varColor = "#ff9800"; // 运气差
+        // 2. 荆棘 (thorns)
+        defEntries.forEach(entry => {
+            if (entry.id === 'thorns' && dmgType === 'phy') {
+                const reflect = Math.floor(damage * entry.val / 100);
+                if (reflect > 0) this._damage(ctx, attackerKey, reflect, "荆棘", damage, entry.val);
+            }
+        });
+    },
 
-        // --- 2. 构建 HTML ---
-        return `
-            <div class="combat-tooltip-content">
-                <div class="tip-row"><span>🗡️ 本次初始伤害</span> <span>${Math.floor(finalAtkVal)}</span></div>
-                <div class="tip-divider"></div>
-                
-                <div class="tip-row"><span>🛡️ 原始防御</span> <span>${Math.floor(originDef)}</span></div>
-                ${atkStats.sharpness > 0 ? `<div class="tip-row" style="color:#ffb74d;"><span>✨ 武器锐利度</span> <span>${atkStats.sharpness} <span class="tip-dim">(-${sharpPct}%防御)</span></span></div>` : ''}
-                ${pen > 0 ? `<div class="tip-row" style="color:#ff5252;"><span>⚡ 防御穿透</span> <span>-${pen}</span></div>` : ''}
-                <div class="tip-row"><span>🛡️ 实际防御</span> <span>${defVal.toFixed(1)}</span></div>
-                <div class="tip-row"><span>📉 实际防御减伤</span> <span style="color:#ef5350;">-${reductionPct}%</span></div>
-                
-                <div class="tip-divider"></div>
-                
-                <div class="tip-row"><span>💔 暴击前伤害</span> <span>${preCritDamage}</span></div>
-                <div class="tip-row"><span>🎯 暴击率</span> <span>${(critRate*100).toFixed(1)}%</span></div>
-                ${isCrit ? `<div class="tip-row tip-crit"><span>💥 暴击伤害</span> <span>x1.5</span></div>` : ''}
-                
-                <div class="tip-divider"></div>
-                
-                ${/* 【新增】显示伤害浮动 */ ''}
-                <div class="tip-row"><span>🎲 伤害浮动</span> <span style="color:${varColor}">${varPct}%</span></div>
+    _triggerOnDodge: function(ctx, defenderKey) {
+        if (!ctx.entries || !ctx.entries[defenderKey]) return;
+        const entries = ctx.entries[defenderKey];
+        entries.forEach(entry => {
+            if (entry.id === 'dodge_heal') this._heal(ctx, defenderKey, entry.val, "幻身");
+        });
+    },
 
-                <div class="tip-row tip-total"><span>🩸 实际伤害</span> <span>${finalDamage}</span></div>
-            </div>`;
+    _findEntry: function(ctx, targetKey, entryId) {
+        if (!ctx.entries || !ctx.entries[targetKey]) return null;
+        return ctx.entries[targetKey].find(e => e.id === entryId);
+    },
+
+    _heal: function(ctx, targetKey, amount, reason, baseVal, ratio) {
+        if (amount <= 0) return;
+        if (targetKey === 'player') ctx.currentPHp = Math.min(ctx.player.derived.hpMax, ctx.currentPHp + amount);
+        else ctx.currentEHp = Math.min(ctx.enemy.maxHp, ctx.currentEHp + amount);
+
+        let tooltipData = "";
+        if (baseVal !== undefined) {
+            const data = { type: 'entry', name: reason, baseVal: baseVal, ratio: ratio, finalVal: amount };
+            tooltipData = encodeURIComponent(JSON.stringify(data));
+        }
+
+        const span = `<span class="combat-tooltip-trigger" style="color:#4caf50; cursor:help; border-bottom:1px dotted #4caf50;"
+            onmouseenter="window.showCombatTooltip(event, '${tooltipData}')" onmouseleave="window.hideTooltip()" onmousemove="window.moveTooltip(event)">
+            [${reason}]</span>`;
+
+        CombatUI.log(ctx, `> ${span} 恢复 ${amount} 生命`);
+        CombatUI.updateStats(ctx);
+    },
+
+    _damage: function(ctx, targetKey, amount, reason, baseVal, ratio) {
+        if (amount <= 0) return;
+        if (targetKey === 'player') ctx.currentPHp = Math.max(0, ctx.currentPHp - amount);
+        else ctx.currentEHp = Math.max(0, ctx.currentEHp - amount);
+
+        let tooltipData = "";
+        if (baseVal !== undefined) {
+            const data = { type: 'entry', name: reason, baseVal: baseVal, ratio: ratio, finalVal: amount };
+            tooltipData = encodeURIComponent(JSON.stringify(data));
+        }
+
+        const span = `<span class="combat-tooltip-trigger" style="color:#d32f2f; cursor:help; border-bottom:1px dotted #d32f2f;"
+            onmouseenter="window.showCombatTooltip(event, '${tooltipData}')" onmouseleave="window.hideTooltip()" onmousemove="window.moveTooltip(event)">
+            [${reason}]</span>`;
+
+        CombatUI.log(ctx, `> ${span} 受到 ${amount} 伤害`);
+        CombatUI.updateStats(ctx);
+    },
+
+    _logDodge: function(ctx, name, type, data) {
+        const encoded = encodeURIComponent(JSON.stringify(data));
+        const span = `<span class="combat-tooltip-trigger" style="color:#aaa; cursor:help; border-bottom:1px dotted #ccc;"
+            onmouseenter="window.showCombatTooltip(event, '${encoded}')" onmouseleave="window.hideTooltip()" onmousemove="window.moveTooltip(event)">
+            闪避</span>`;
+        CombatUI.log(ctx, `${name} 的${type}被 ${span} 了！`);
+    },
+
+    _logDamage: function(ctx, name, type, isPlayer, dmg, isCrit, data) {
+        const encoded = encodeURIComponent(JSON.stringify(data));
+        const color = isPlayer ? "#d32f2f" : "#1976d2";
+        const critStr = isCrit ? " <b style='color:#ff9800'>[暴击!]</b>" : "";
+
+        const dmgSpan = `<span class="combat-tooltip-trigger" 
+            style="color:${color}; font-weight:bold; cursor:help; border-bottom:1px dotted ${color};"
+            onmouseenter="window.showCombatTooltip(event, '${encoded}')" 
+            onmouseleave="window.hideTooltip()"
+            onmousemove="window.moveTooltip(event)">
+            ${dmg}
+        </span>`;
+
+        CombatUI.log(ctx, `${name} ${type}造成 ${dmgSpan} 点伤害${critStr}`);
     }
 };
+
+window.CombatCalc = CombatCalc;

@@ -16,18 +16,22 @@ const TYPE_MAPPING = {
 };
 // 【新增】属性名映射表 (用于悬浮窗显示)
 const ATTR_MAPPING = {
-    // 基础属性
     "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
-
-    // 战斗属性
-    "hpMax": "生命上限", "hp_max": "生命上限", "mpMax": "灵力上限", "hp": "生命", "mp": "灵力", "atk": "攻击", "def": "防御", "speed": "速度", "critRate": "暴击率", "critDmg": "暴击伤害", "dodge": "闪避", "toxicity": "毒性", "space": "背包空间", "catchRate": "钓鱼成功机率",
-
-    // 生活/特殊
-    "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运", "storage": "背包空间", //饱食度
-    "hunger": "饱食度", //功法上限
-    "max_skill_level": "修行上限",
-    //研读效率
-    "studyEff": "研读效率","money":"金钱", stabilizer:'稳定', catalyst:'药引',heal:"愈合"
+    "hpMax": "生命上限", "hp_max": "生命上限", "max_hp": "生命上限",
+    "mpMax": "灵力上限", "max_mp": "灵力上限",
+    "hp": "生命", "mp": "灵力",
+    "atk": "攻击力", "def": "防御力",
+    "phy_atk": "物理攻击", "mag_atk": "法术攻击",
+    "phy_def": "物理防御", "mag_def": "法术防御",
+    "crit": "物理暴击率", "mag_crit": "法术暴击率",
+    "plate": "板甲", "heavy": "重甲", "light": "轻甲", "leather": "皮甲", "cloth": "布甲",
+    "speed": "速度", "critRate": "暴击率", "critDmg": "暴击伤害", "dodge": "闪避",
+    "toxicity": "毒性", "space": "背包空间", "catchRate": "钓鱼成功机率",
+    "sharpness": "锋利度", "penetration": "法术穿透",
+    "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运",
+    "storage": "背包空间", "hunger": "饱食度",
+    "max_skill_level": "修行上限", "studyEff": "研读效率",
+    "money": "金钱", "stabilizer": '稳定', "catalyst": '药引', "heal": "愈合"
 };
 
 /* ================= 游戏核心常量配置 ================= */
@@ -64,29 +68,47 @@ const SKILL_CONFIG = {
 
 // 4. 玩家初始模板 (新档使用)
 const PLAYER_TEMPLATE = {
-    version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10, //外功槽位
-
+    version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10,
     gongfa_nums: 3,
-    // 【新增】用于记录所有功法的研读进度，key为书籍ID，val为点数
     studyProgress: {},
-
-    // 【新增】当前正在研读的目标书籍ID
     currentStudyTarget: null,
-    age      : 16, dayCount: 0, timeHours: 7, // 辰时
-    worldSeed: 20251227, // 默认种子，开始游戏时会随机覆盖
-    //当前时间阶段
+    age: 16, dayCount: 0, timeHours: 7,
+    worldSeed: 20251227,
     timeStart: 0,
-    startDanger:0,
-    // 位置
-    coord   : {x: 2770, y: 2653}, // 对应新地图关中区域
+    startDanger: 0,
+    coord: {x: 2770, y: 2653},
     location: 'guanzhong', mapUnlocked: false,
-// 【新增】随身消耗品 (3个格子)
     consumables: [null, null, null],
-    //基础
-    attr: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 100, hungerMax: 0,fatigueMax:0}, //额外加成的属性
-    exAttr: {jing: 0, qi: 0, shen: 0, atk: 0, def: 0, speed: 0, space: 0, hpMax: 0, mpMax: 0, hungerMax: 0,fatigueMax:0}, //基础属性+加成之后显示的实际属性，显示在UI上，有计算属性的方法计算
-    derived: {jing: 5, qi: 5, shen: 5, atk: 0, def: 0, speed: 0, space: 25, hpMax: 200, mpMax: 0, hungerMax: 0,fatigueMax:0 },
 
+    // 【修改】基础属性模板 (新增拆分属性)
+    attr: {
+        jing: 5, qi: 5, shen: 5,
+        atk: 0, def: 0, // 保留作为基础值或显示值
+        phy_atk: 0, mag_atk: 0, // 新增
+        phy_def: 0, mag_def: 0, // 新增
+        speed: 0, space: 0,
+        hpMax: 200, mpMax: 100, hungerMax: 0, fatigueMax: 0
+    },
+
+    // 【修改】额外加成
+    exAttr: {
+        jing: 0, qi: 0, shen: 0,
+        atk: 0, def: 0,
+        phy_atk: 0, mag_atk: 0,
+        phy_def: 0, mag_def: 0,
+        speed: 0, space: 0,
+        hpMax: 0, mpMax: 0, hungerMax: 0, fatigueMax: 0
+    },
+
+    // 【修改】最终衍生属性
+    derived: {
+        jing: 5, qi: 5, shen: 5,
+        atk: 0, def: 0,
+        phy_atk: 0, mag_atk: 0,
+        phy_def: 0, mag_def: 0,
+        speed: 0, space: 0,
+        hpMax: 200, mpMax: 0, hungerMax: 0, fatigueMax: 0
+    },
     // 动态状态
     status: {hp: 9999, mp: 9999, hunger: 9999, mood: 100, toxicity: 0, fatigue: 0},
     //寻幽记录

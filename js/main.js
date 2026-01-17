@@ -11,6 +11,11 @@ window.onload = function() {
   loadGame();
   checkSaveFile();
   bindMainMenuEvents();
+
+    setTimeout(() => {
+        CloudArchive.initSync();
+        console.log("[CloudArchive] Cloud Archive Sync Initialized.");
+    }, 500);
 };
 
 /**
@@ -268,4 +273,8 @@ window.addEventListener('load', function() {
         console.error(`>>> [MAIN] ❌ 找不到按钮 ID: ${btnId}！请检查 HTML 中按钮的 id 属性是否写错了`);
     }
     //console.log("========================================");
+
+    setTimeout(() => {
+        CloudArchive.initSync();
+    }, 500);
 });

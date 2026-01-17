@@ -1,62 +1,147 @@
 // js/modules/combat/combat_core.js
-// 职责：战斗流程管控、生命周期管理、胜负判定
+// 职责：时间轴管控、自动攻击逻辑 (Auto-Battler Core)
+// 适配：V3.0 精确跑条 + 自动普攻
 
 const CombatCore = {
-    /** 战斗主心跳循环 */
-    runLoop: function(ctx) {
-        if (ctx.isStopped || ctx.isPaused) return;
+    CONFIG: {
+        MAX_GAUGE: 10000,
+        TICK_RATE: 50, // 50ms 刷新一次 (1秒20帧)
+        BASE_TIME: 3.0, // 0速度时 5秒一动
+        SPD_FACTOR: 0.02 // 速度系数
+    },
 
-        let pStats = CombatCalc.getDynamicStats(ctx, 'player');
-        let eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
+    /** 初始化战斗数据 */
+    init: function(ctx) {
+        ctx.gauges = { player: 0, enemy: 0 };
+        ctx.state = 'running';
+        ctx.globalTimer = 0;
+        ctx.turnCount = 1; // 内部轮次计数
+    },
 
-        if (ctx.currentTurn === 1) ctx._log(`<br>遭遇了 ${ctx.enemy.name} (HP: ${ctx.currentEHp})！<br>`);
-        if (ctx.currentTurn > ctx.maxTurns) { ctx._log("双方罢兵..."); this.handleEnd(ctx, "平局"); return; }
+    /** 启动时间循环 */
+    startLoop: function(ctx) {
+        if (ctx.isEnded) return;
+        ctx.state = 'running';
+        this._tick(ctx);
+    },
 
-        ctx._log(`<div class="turn-divider">--- 第 ${ctx.currentTurn} 回合 ---</div>`);
+    /** 单帧心跳逻辑 */
+    _tick: function(ctx) {
+        // 1. 状态检查：暂停或结束后停止心跳
+        if (ctx.isStopped || ctx.isEnded || ctx.isPaused) return;
 
-        // 回合起始处理
-        for(let i=0; i<3; i++) if (ctx.itemCDs[i] > 0) ctx.itemCDs[i]--;
-        for(let k in ctx.skillCDs) if (ctx.skillCDs[k] > 0) ctx.skillCDs[k]--;
-        ctx._refreshItemCDUI(); ctx._refreshSkillCDUI();
+        // 2. 获取动态属性 (实时速度)
+        const pStats = CombatCalc.getDynamicStats(ctx, 'player');
+        const eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
 
-        // 行动顺序判定
-        const playerFirst = pStats.speed >= eStats.speed;
-        let isWin = false; let isDead = false;
+        // 3. 精确计算增量 (修复速度感觉一样的问题)
+        // 逻辑：计算跑满所需的总时间(秒) -> 换算成帧数 -> 算出每帧加多少
+        // 帧率 = 1000 / TICK_RATE (默认20)
+        const fps = 1000 / this.CONFIG.TICK_RATE;
 
-        if (playerFirst) {
+        // 玩家目标时间 (秒) = 基准 / (1 + 速度加成)
+        const pTargetTime = this.CONFIG.BASE_TIME / (1 + pStats.speed * this.CONFIG.SPD_FACTOR);
+        // 玩家每帧增量
+        const pInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, pTargetTime) * fps);
+        // 敌人目标时间 (秒)
+        const eTargetTime = this.CONFIG.BASE_TIME / (1 + eStats.speed * this.CONFIG.SPD_FACTOR);
+        const eInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, eTargetTime) * fps);
 
+        // 应用增量
+        ctx.gauges.player += pInc;
+        ctx.gauges.enemy += eInc;
+        ctx.globalTimer += this.CONFIG.TICK_RATE;
+
+        // 4. 更新 UI 进度条
+        const pPct = Math.min(100, (ctx.gauges.player / this.CONFIG.MAX_GAUGE) * 100);
+        const ePct = Math.min(100, (ctx.gauges.enemy / this.CONFIG.MAX_GAUGE) * 100);
+
+        if (window.CombatUI && CombatUI.updateGauges) {
+            CombatUI.updateGauges(ctx, pPct, ePct);
+        }
+
+        // 5. 检查满条 (自动攻击逻辑)
+        let actionHappened = false;
+
+        // --- 玩家满条 ---
+        if (ctx.gauges.player >= this.CONFIG.MAX_GAUGE) {
+            // 保留溢出值 (模拟 CTB 机制，速度极快时不会亏损进度)
+            ctx.gauges.player -= this.CONFIG.MAX_GAUGE;
+
+            // 执行自动普攻
+            // 注意：这里不再暂停等待 UI 输入，而是直接打出去
             const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
-            ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg); // <--- 防止负数
+            ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg);
 
-            if (ctx.currentEHp <= 0) isWin = true;
-            else { CombatAction.enemyAction(ctx, eStats, pStats); if (ctx.currentPHp <= 0) isDead = true; }
-        } else {
+            // 触发行动后结算 (Buff/毒) - 谁动谁结算
+            this._onTurnEnd(ctx, 'player');
+            actionHappened = true;
+        }
+
+        // --- 敌人满条 ---
+        if (ctx.gauges.enemy >= this.CONFIG.MAX_GAUGE) {
+            ctx.gauges.enemy -= this.CONFIG.MAX_GAUGE;
+
+            // 执行敌人 AI
             CombatAction.enemyAction(ctx, eStats, pStats);
-            if (ctx.currentPHp <= 0) isDead = true;
-            else {
 
-                const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
-                ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg); // <--- 防止负数
+            this._onTurnEnd(ctx, 'enemy');
+            actionHappened = true;
+        }
 
-                if (ctx.currentEHp <= 0) isWin = true;
+        // 6. 状态同步与胜负判定
+        if (actionHappened) {
+            ctx._syncPlayerStatus();
+            ctx._updateUIStats();
+
+            // 每次有人行动，检查一次死活
+            if (ctx.currentEHp <= 0) {
+                this.handleVictory(ctx);
+                return; // 结束循环
+            }
+            if (ctx.currentPHp <= 0) {
+                this.handleDefeat(ctx);
+                return; // 结束循环
             }
         }
 
-        // 后置结算
-        if (!isWin && !isDead) { isWin = CombatAction.processPoisonOnEnemy(ctx); isDead = CombatAction.processPoisonOnPlayer(ctx); }
-        if (!isWin && !isDead) { CombatAction.processBuffs(ctx); if (ctx.currentPHp <= 0) isDead = true; if (ctx.currentEHp <= 0) isWin = true; }
-
-        ctx.enemy.hp = ctx.currentEHp;
-        ctx._syncPlayerStatus(); ctx._updateUIStats(); ctx._updateToxUI();
-
-        if (isWin) { this.handleVictory(ctx); return; }
-        if (isDead) { this.handleDefeat(ctx); return; }
-
-        ctx.currentTurn++;
-        ctx.timer = setTimeout(() => this.runLoop(ctx), ctx.turnSpeed);
+        // 7. 继续下一帧
+        ctx.timer = setTimeout(() => this._tick(ctx), this.CONFIG.TICK_RATE);
     },
 
-    /** 停止战斗逻辑 */
+    /** 单个实体行动后的结算 (原回合结束逻辑) */
+    _onTurnEnd: function(ctx, targetKey) {
+        // 结算 Buff 持续时间 (回合数 -1)
+        CombatAction.processBuffs(ctx, targetKey);
+
+        // 结算毒伤
+        if (targetKey === 'player') CombatAction.processPoisonOnPlayer(ctx);
+        else CombatAction.processPoisonOnEnemy(ctx);
+
+        // 刷新技能/物品 CD (按行动次数减少)
+        // 只有玩家行动时才刷新玩家 CD，或者你可以设定为全场时间刷新，这里按行动次数更符合回合制直觉
+        if (targetKey === 'player') {
+            for(let i=0; i<3; i++) if (ctx.itemCDs[i] > 0) ctx.itemCDs[i]--;
+            for(let k in ctx.skillCDs) if (ctx.skillCDs[k] > 0) ctx.skillCDs[k]--;
+            ctx._refreshItemCDUI();
+            ctx._refreshSkillCDUI();
+        }
+    },
+
+    // ================== 结算相关 (保持原有逻辑框架) ==================
+
+    syncStatus: function(ctx) {
+        if(ctx.player.status) {
+            ctx.player.status.hp = ctx.currentPHp;
+            ctx.player.status.mp = ctx.currentPMp;
+        }
+    },
+
+    canAct: function(ctx) {
+        return !(ctx.isStopped || ctx.isEnded || ctx.isPaused);
+    },
+
+    /** 逃跑 */
     stop: function(ctx) {
         if (ctx.options && ctx.options.canEscape === false) {
             if(window.showToast) window.showToast("强敌环伺，无路可退！");
@@ -65,7 +150,7 @@ const CombatCore = {
         ctx.isStopped = true; ctx.isEnded = true;
         if (ctx.timer) clearTimeout(ctx.timer);
         ctx._log(`<div style="color:#d32f2f; font-weight:bold; margin-top:10px;">🏃 你看准时机，脚底抹油溜之大吉！</div>`);
-        ctx._syncPlayerStatus();
+        this.syncStatus(ctx);
         if (window.saveGame) window.saveGame();
         CombatUI.renderEnd(ctx, "逃跑");
         const footer = document.getElementById('map_combat_footer');
@@ -73,34 +158,28 @@ const CombatCore = {
         ctx.clearCache();
     },
 
-    /** 胜利结算 */
+    /** 胜利 */
     handleVictory: function(ctx) {
         ctx.isEnded = true;
-        // 1. 危险度逻辑
         if (window.player) {
             const rank = ctx.enemy.template || "minion";
             const gain = { "minion": 5, "elite": 10, "boss": 50, "lord": 100 }[rank] || 0;
             window.player.danger = Math.min(100, (window.player.danger || 0) + gain);
-            window.player.need_kill = 0;
-            // if (window.LogManager) window.LogManager.add(`[系统] 击杀${rank}级目标，当前危险度: ${window.player.danger}`);
         }
 
         ctx._log(`<div style="color:green; font-weight:bold; margin-top:10px; font-size:16px;">🏆 战斗胜利！</div>`);
 
-        // 2. 奖励逻辑
-        const money = ctx._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
+        const money = this._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
         if (money > 0) { if (window.UtilsAdd) UtilsAdd.addMoney(money); else ctx.player.money += money; }
 
         const drops = this._calculateFinalDrops(ctx);
         let rewardHtml = this._buildRewardHtml(ctx, money, drops);
 
         if (window.UtilsEnemy) UtilsEnemy.markDefeated(ctx.enemy.x, ctx.enemy.y);
-        ctx._syncPlayerStatus();
+        this.syncStatus(ctx);
 
-        // 3. 连续战斗判断
         if (ctx.onWinCallback) {
             ctx.onWinCallback();
-            // 如果是连续战斗且 options.isMultiWave 开启，则不渲染结算 UI
             if (ctx.options && ctx.options.isMultiWave) return;
         }
 
@@ -108,78 +187,77 @@ const CombatCore = {
         CombatUI.renderEnd(ctx, "胜利", rewardHtml);
     },
 
-    /** 失败结算 */
+    /** 失败 */
     handleDefeat: function(ctx) {
         ctx.isEnded = true;
         ctx._log(`<div style="color:red; font-weight:bold; margin-top:10px;">💀 战斗失败...</div>`);
-
-        // 1. 渲染失败界面（界面变灰、停止动画，但不关闭）
         CombatUI.renderEnd(ctx, "失败");
 
-        // 2. 生成底部按钮，但不要直接调用 closeModal
         const footer = document.getElementById('map_combat_footer');
         if (footer) {
-            // 生成唯一ID，确保事件绑定正确
             const btnId = 'btn_defeat_confirm_' + Date.now();
-
             footer.innerHTML = `<button id="${btnId}" class="ink_btn_normal" style="width:100%; height:40px;">黯然离去</button>`;
-
-            // 3. 绑定点击事件：点击后才真正执行结算
-            const btn = document.getElementById(btnId);
-            if (btn) {
-                btn.onclick = () => {
-                    this._finalizeDefeat(ctx);
-                };
-            }
+            setTimeout(() => {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.onclick = () => this._finalizeDefeat(ctx);
+            }, 0);
         }
     },
 
-    /** * 【新增】内部方法：执行失败惩罚并关闭
-     * (只有用户点击了“黯然离去”才会执行这里)
-     */
     _finalizeDefeat: function(ctx) {
-        // 1. 执行数值惩罚 (HP变为1, MP清空)
         if (window.player.status) {
             window.player.status.hp = 1;
             window.player.status.mp = 0;
         }
-
-        // 2. 执行外部失败逻辑 (如掉落物品、传送到重生点等)
         if (window.UtilsFail && window.UtilsFail.onCombatDefeat) {
             window.UtilsFail.onCombatDefeat(ctx.enemy);
         }
-
-        // 3. 关闭弹窗
         if (window.closeModal) window.closeModal();
-
-        // 4. 清理战斗缓存
         ctx.clearCache();
     },
 
+    /** 暂停控制 */
     togglePause: function(ctx) {
         if (ctx.isStopped || ctx.isEnded) return;
         ctx.isPaused = !ctx.isPaused;
+
         const btn = document.getElementById('combat_btn_pause');
-        if (btn) btn.innerHTML = ctx.isPaused ? "▶ 继续战斗" : "⏸ 暂停";
-        if (!ctx.isPaused) ctx._runCombatLoopAsync(); else if (ctx.timer) clearTimeout(ctx.timer);
+        if (btn) btn.innerHTML = ctx.isPaused ? "▶ 继续" : "⏸ 暂停";
+
+        if (!ctx.isPaused && ctx.state === 'running') {
+            this._tick(ctx);
+        } else if (ctx.timer) {
+            clearTimeout(ctx.timer);
+        }
     },
 
+    /** 变速 */
     changeSpeed: function(ctx, delta) {
-        ctx.turnSpeed = Math.max(500, Math.min(3000, ctx.turnSpeed + delta));
+        // 通过调整 TICK_RATE 来改变速度
+        let newRate = this.CONFIG.TICK_RATE;
+        if (delta < 0) newRate = Math.max(10, newRate - 10); // 加速 (间隔变小)
+        else newRate = Math.min(100, newRate + 10); // 减速 (间隔变大)
+
+        this.CONFIG.TICK_RATE = newRate;
+
         const spdEl = document.getElementById('combat_speed_display');
-        if(spdEl) spdEl.innerText = (1000 / ctx.turnSpeed).toFixed(1) + "x";
+        const baseFps = 1000 / 50; // 基准 20fps
+        const currentFps = 1000 / newRate;
+        const displaySpd = (currentFps / baseFps).toFixed(1);
+
+        if(spdEl) spdEl.innerText = displaySpd + "x";
     },
 
-    syncStatus: function(ctx) { if(ctx.player.status) { ctx.player.status.hp = ctx.currentPHp; ctx.player.status.mp = ctx.currentPMp; } },
-    canAct: function(ctx) { return !(ctx.isStopped || ctx.isEnded || ctx.isPaused); },
-    handleEnd: function(ctx, type) { ctx.isEnded = true; ctx._syncPlayerStatus(); if (window.saveGame) window.saveGame(); CombatUI.renderEnd(ctx, type); },
+    // --- 内部辅助 (保持不变) ---
+    _randomInt: function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
 
     _calculateFinalDrops: function(ctx) {
         const drops = [];
         if (ctx.enemy.drops) ctx.enemy.drops.forEach(e => { if (Math.random() <= e.rate) drops.push({ id: e.id }); });
-        // 悬赏掉落
-        const bounty = this._checkBountyDrops(ctx);
-        bounty.forEach(b => drops.push({ id: b.id, isBounty: true }));
+        if (this._checkBountyDrops) {
+            const bounty = this._checkBountyDrops(ctx);
+            bounty.forEach(b => drops.push({ id: b.id, isBounty: true }));
+        }
         return drops;
     },
 
@@ -199,7 +277,6 @@ const CombatCore = {
     },
 
     _rollBountyEquip: function(rank) {
-        // ... (保持原有复杂掉落池筛选逻辑)
         let rw = rank === 'lord' ? {3:40,4:20,5:5,6:1} : (rank === 'boss' ? {1:80,2:40,3:20,4:5,5:1} : {1:100});
         let tw = 0; for (let r in rw) tw += rw[r];
         let rv = Math.random() * tw; let sr = 1;
@@ -216,14 +293,15 @@ const CombatCore = {
         if (drops.length > 0) {
             h += `<div style="font-weight:bold; margin-top:5px;">战利品:</div><div style="display:flex; flex-wrap:wrap; gap:5px;">`;
             drops.forEach(d => {
-                let info = window.UtilsAdd ? UtilsAdd.addItem(d.id, 1, false) : {sid: d.id};
                 let itemData = (Array.isArray(window.GAME_DB.items) ? window.GAME_DB.items.find(i=>i.id===d.id) : window.GAME_DB.items[d.id]);
                 let name = itemData ? itemData.name : d.id;
                 let extra = d.isBounty ? "border-color:#ff9800; background:#fff3e0; color:#e65100;" : "";
-                h += `<span onmouseenter="TooltipManager.showItem(event, '${info.sid}')" onmouseleave="TooltipManager.hide()" onmousemove="TooltipManager._move(event)" style="cursor:help; background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${extra}">${d.isBounty?'✨ ':''}${name}</span>`;
+                h += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${extra}">${d.isBounty?'✨ ':''}${name}</span>`;
             });
             h += `</div>`;
         }
         return h + `</div>`;
     }
 };
+
+window.CombatCore = CombatCore;

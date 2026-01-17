@@ -29,8 +29,13 @@ const BlackMarket = {
         const validItems = allItems.filter(item => {
             const r = item.rarity || 1;
             //如果type是book的话，name里不能包含_full
-            if (item.type === 'book' && item.name.includes('_full')) return false;
+            if (item.type === 'book' && item.id.includes('_full')) return false;
+
+            //type不可以是material,foodMaterial,food,fish,herb,tool,mount
+            if (item.type === 'material' || item.type === 'foodMaterial' || item.type === 'food' || item.type === 'fish' || item.type === 'herb' || item.type === 'tool' || item.type === 'mount') return false;
+
             return r <= config.maxRarity;
+
         });
 
         if (validItems.length === 0) { this.currentStock = []; return; }
@@ -137,12 +142,8 @@ const BlackMarket = {
             }
 
             // 获取物品类型中文名称
-            const typeMap = (window.TYPE_MAPPING) ? window.TYPE_MAPPING : {
-                "weapon": "兵器", "head": "头部", "body": "身体", "feet": "足部",
-                "mount": "坐骑", "pill": "丹药", "book": "秘籍", "food": "食物",
-                "material": "材料", "tool": "工具", "fishing_rod": "钓具"
-            };
-            const typeName = typeMap[item.type] || "物品";
+
+            const typeName = TYPE_MAPPING[item.type] || "物品";
 
             let btnText = "购买";
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
@@ -158,7 +159,12 @@ const BlackMarket = {
 
             // 【风格修改】使用亮色背景 (斑马纹 #fafafa / #fff)
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index % 2 === 0 ? '#fafafa' : '#fff'}; transition: background 0.2s;">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index % 2 === 0 ? '#fafafa' : '#fff'}; transition: background 0.2s;" 
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()"
+                >
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px;">
                             <span style="font-size:18px; color:#555; font-weight:normal; margin-right:2px;">【${typeName}】</span>${item.name}

@@ -24,18 +24,42 @@ const UtilFish = {
             "万鱼朝宗<br>满塘皆活"
         ],
 
-        // 【修改】熟练度配置：次数调整为 25/20/16/12
+        // 【修改】熟练度配置：次数调整为 18/16/14/12
         MASTERY_TIERS: [
-            { exp: 999, rate: 0.3, attempts: 25, hintProb: 1.0, name: "大成" },
-            { exp: 400, rate: 0.2, attempts: 20, hintProb: 0.7, name: "进阶" },
-            { exp: 100, rate: 0.1, attempts: 16, hintProb: 0.6, name: "入门" },
+            { exp: 999, rate: 0.3, attempts: 18, hintProb: 1.0, name: "大成" },
+            { exp: 400, rate: 0.2, attempts: 16, hintProb: 0.7, name: "进阶" },
+            { exp: 100, rate: 0.1, attempts: 14, hintProb: 0.6, name: "入门" },
             { exp: 0,   rate: 0.0, attempts: 12, hintProb: 0.5, name: "初学" }
         ],
 
         GRID_COLS: 12,
         GRID_ROWS: 8,
+        // 【新增】随机事件配置
+        RANDOM_EVENTS: {
+            // 祥瑞类 (Good)
+            blessing: [
+                { id: 'fish_god', name: '水神庇护', prob: 0.001, type: 'good', desc: '金鳞岂是池中物，本池接下来的下三次起竿必定中鱼！', effect: { buffCount: 3, forceFish: true } },
+                { id: 'old_man',  name: '仙人指路', prob: 0.01,  type: 'good', desc: '偶遇神秘老者传授秘诀，本池的钓鱼次数恢复了3次。', effect: { addAttempts: 3 } },
+                { id: 'tide',     name: '灵气潮汐', prob: 0.002, type: 'good', desc: '池中灵气暴涨，尚未翻开的鱼儿似乎发生了蜕变...未翻开的格子稀有度群体+1', effect: { upgradeRarity: true } },
+                { id: 'net',      name: '一网打尽', prob: 0.002, type: 'good', desc: '灵力激荡，瞬间震落了周围的水纹，随机翻开4格。', effect: { revealArea: true, revealCount: 4 } },
+                { id: 'koi',      name: '锦鲤附体', prob: 0.008, type: 'good', desc: '鸿运当头，本池接下来的接下来五次探查将看破迷雾，必定得到信息。', effect: { buffCount: 5, forceHint: true } },
+                { id: 'time',     name: '时光溯游', prob: 0.004, type: 'good', desc: '神思游历太虚，疲惫与饥饿感竟消散了大半。', effect: { refundStats: 0.5 } }
+            ],
+            // 波折类 (Bad)
+            calamity: [
+                { id: 'thunder',  name: '惊鱼之灾', prob: 0.01,  type: 'bad',  desc: '旱天惊雷，胆小的鱼儿都被吓跑了，接下来两次怕是难有收获。', effect: { debuffCount: 2, forceEmpty: true } },
+                { id: 'tangle',   name: '鱼线缠绕', prob: 0.015, type: 'bad',  desc: '哎呀，鱼线拧成了麻花，维修花费了不少时间，剩余次数-2。', effect: { addAttempts: -2 } },
+                { id: 'muddy',    name: '浑水摸鱼', prob: 0.01,  type: 'bad',  desc: '泥沙翻涌，什么都看不清了，直觉彻底失效，接下来3次未中的话无法得知信息。', effect: { debuffCount: 3, hideHint: true } }
+            ]
+        }
     },
-
+// 【新增】运行时状态
+    eventStatus: {
+        buffCount: 0,    // 正面状态剩余次数
+        debuffCount: 0,  // 负面状态剩余次数
+        activeBuffId: null,
+        activeDebuffId: null
+    },
     flippedCount: 0,
     totalCells: 96,
     gridState: [],
@@ -51,6 +75,14 @@ const UtilFish = {
     },
 
     refreshPond: function() {
+        // 【核心修改】：刷新鱼池时，重置所有临时 Buff/Debuff
+        console.log("鱼池已重构，临时奇遇状态已清空");
+        this.eventStatus = {
+            buffCount: 0,
+            debuffCount: 0,
+            activeBuffId: null,
+            activeDebuffId: null
+        };
         this.flippedCount = 0;
         this.gridState = [];
 
@@ -162,73 +194,191 @@ const UtilFish = {
             }
         }
     },
+    /**
+     * 【新增】获取当前鱼池中存在的所有鱼种列表
+     * 用于 UI 图鉴展示
+     */
+    getPondLootPool: function() {
+        if (typeof fishes === 'undefined') return [];
 
+        const p = window.player;
+        const region = (p.coord ? p.coord.region : "all"); // 获取当前地区
+        const season = this.getCurrentSeason(); // 获取当前季节
+
+        // 从全局库 fishes 中筛选符合当前地区和季节的所有鱼
+        const pool = fishes.filter(f => {
+            const regionMatch = (f.region === "all" || f.region === region);
+            const seasonMatch = (!f.seasons || f.seasons.includes(season));
+            return regionMatch && seasonMatch;
+        });
+
+        // 稀有度从高到低排序 (6 -> 1)
+        return pool.sort((a, b) => (b.rarity || 1) - (a.rarity || 1));
+    },
+    /**
+     * 【核心修改】尝试翻牌逻辑，加入事件影响判定
+     */
     tryFlip: function(index) {
         if (!this.gridState[index]) return { error: true, msg: "数据异常" };
         const cell = this.gridState[index];
 
         if (cell.isFlipped) return { error: true, msg: "已翻开" };
-        // 【新增】封锁检查
         if (cell.isBlocked) return { error: true, msg: "此处水草丛生，无法下竿" };
+        if (this.currentAttempts <= 0) return { error: true, msg: "次数已尽" };
 
-        if (this.currentAttempts <= 0) {
-            return { error: true, msg: "本次尝试次数已用尽" };
-        }
-
+        // 消耗逻辑 (保持不变)
         const p = window.player;
         const curSat = (p.status && p.status.hunger) || 0;
         const curFat = (p.status && p.status.fatigue) || 0;
         const maxFat = (p.derived && p.derived.fatigueMax) ? p.derived.fatigueMax : 100;
-
         if (curSat < this.CONFIG.COST_SATIETY) return { error: true, msg: "饱食度不足" };
         if (curFat + this.CONFIG.COST_FATIGUE > maxFat) return { error: true, msg: "精神困顿" };
+        p.status.hunger = Math.max(0, curSat - this.CONFIG.COST_SATIETY);
+        p.status.fatigue = Math.min(maxFat, curFat + this.CONFIG.COST_FATIGUE);
+        if (window.TimeSystem) window.TimeSystem.passTime(this.CONFIG.COST_TIME);
 
-        if (p.status) {
-            p.status.hunger = Math.max(0, curSat - this.CONFIG.COST_SATIETY);
-            p.status.fatigue = Math.min(maxFat, curFat + this.CONFIG.COST_FATIGUE);
+        // --- 判定状态影响 ---
+        let forceFish = false;
+        let forceEmpty = false;
+
+        // 如果有水神庇护 Buff
+        if (this.eventStatus.buffCount > 0 && this.eventStatus.activeBuffId === 'fish_god') {
+            forceFish = true;
+            this.eventStatus.buffCount--;
+            // 如果 Buff 耗尽，清除标记
+            if (this.eventStatus.buffCount <= 0) this.eventStatus.activeBuffId = null;
         }
-        if (window.TimeSystem && window.TimeSystem.passTime) window.TimeSystem.passTime(this.CONFIG.COST_TIME);
 
-        // --- 执行翻牌 ---
+        // 如果有惊鱼之灾 Debuff
+        if (this.eventStatus.debuffCount > 0 && this.eventStatus.activeDebuffId === 'thunder') {
+            forceEmpty = true;
+            this.eventStatus.debuffCount--;
+            if (this.eventStatus.debuffCount <= 0) this.eventStatus.activeDebuffId = null;
+        }
+
+        // 执行翻牌
         cell.isFlipped = true;
         this.flippedCount++;
         this.currentAttempts--;
 
-        let result = {
-            success: false,
-            loot: null,
-            nearCount: 0,
-            showHint: false,
-            attemptsLeft: this.currentAttempts,
-            isPondEmpty: false
-        };
+        let result = { success: false, loot: null, nearCount: 0, showHint: false, triggeredEvent: null };
 
-        if (cell.hasFish && cell.loot) {
+        // 【核心修改】：判定最终是否有鱼
+        // 规则：Buff 强制有鱼 > Debuff 强制没鱼 > 原始状态
+        const finalHasFish = forceFish ? true : (forceEmpty ? false : cell.hasFish);
+
+        if (finalHasFish) {
+            // 如果是 Buff 强制生成的鱼，或者是原始有鱼但 loot 丢失的，立即生成鱼数据并写入格子
+            if (!cell.hasFish || !cell.loot) {
+                cell.hasFish = true; // 关键：修改格子原始状态，确保 UI 渲染正确
+                cell.loot = this._rollFish(p.coord?.region || "all", this.getCurrentSeason());
+                console.log(`[Buff生效] 强制生成鱼: ${cell.loot.name}`);
+            }
+
             result.success = true;
             result.loot = cell.loot;
+
             if (window.UtilsAdd) window.UtilsAdd.addItem(cell.loot.id, 1);
             this._addFishingExp(1);
-            this._updateAllHints(); // 钓走鱼后更新全场提示
-        } else {
-            result.success = false;
-            cell.nearCount = this._countSurroundingFish(index); // 即使没鱼也要更新一下当前格子的计数
-            result.nearCount = cell.nearCount;
+            this._updateFishHistory(cell.loot);
 
+            // 鱼被钓走了，更新周围的数字提示
+            this._updateAllHints();
+        } else {
+            // 【核心修改】：如果是因为 Debuff 导致的“本来有鱼变没鱼”，也需要修改格子状态
+            if (cell.hasFish && forceEmpty) {
+                cell.hasFish = false;
+                cell.loot = null;
+                console.log("[Debuff生效] 鱼儿遁走了");
+                this._updateAllHints(); // 鱼跑了，提示也要变
+            }
+
+            result.nearCount = this._countSurroundingFish(index);
             const tier = this._getMasteryTier();
-            if (Math.random() < tier.hintProb) {
-                cell.hintRevealed = true;
-                result.showHint = true;
-            } else {
-                cell.hintRevealed = false;
-                result.showHint = false;
+
+            // 锦鲤/浑水摸鱼的提示逻辑
+            let showHint = Math.random() < tier.hintProb;
+            if (this.eventStatus.activeBuffId === 'koi' && this.eventStatus.buffCount > 0) showHint = true;
+            if (this.eventStatus.activeDebuffId === 'muddy' && this.eventStatus.debuffCount > 0) showHint = false;
+
+            cell.hintRevealed = showHint;
+            result.showHint = showHint;
+        }
+
+        // --- 随机事件滚动 ---
+        // 只有在没有活跃 Buff/Debuff 时才滚动新事件，防止无限套娃
+        if (this.eventStatus.buffCount <= 0 && this.eventStatus.debuffCount <= 0) {
+            result.triggeredEvent = this._rollRandomEvent();
+        }
+
+        if (this.currentAttempts <= 0) result.isPondEmpty = true;
+        return result;
+    },
+
+    _rollRandomEvent: function() {
+        const events = this.CONFIG.RANDOM_EVENTS;
+        const allEvents = [...events.blessing, ...events.calamity];
+        const r = Math.random();
+        let cumulative = 0;
+
+        for (let event of allEvents) {
+            cumulative += event.prob;
+            if (r < cumulative) {
+                this._applyEventEffect(event);
+                return event;
             }
         }
+        return null;
+    },
 
-        if (this.currentAttempts <= 0) {
-            result.isPondEmpty = true;
+    _applyEventEffect: function(event) {
+        const eff = event.effect;
+        const p = window.player;
+
+        if (eff.addAttempts) this.currentAttempts = Math.max(0, this.currentAttempts + eff.addAttempts);
+        if (eff.buffCount) {
+            this.eventStatus.buffCount = eff.buffCount;
+            this.eventStatus.activeBuffId = event.id;
         }
+        if (eff.debuffCount) {
+            this.eventStatus.debuffCount = eff.debuffCount;
+            this.eventStatus.activeDebuffId = event.id;
+        }
+        if (eff.refundStats) {
+            p.status.hunger = Math.min(p.derived.hungerMax, p.status.hunger + (p.derived.hungerMax * eff.refundStats));
+            p.status.fatigue = Math.max(0, p.status.fatigue - (p.derived.fatigueMax * eff.refundStats));
+        }
+        if (eff.upgradeRarity) {
+            this.gridState.forEach(c => {
+                if (c.hasFish && c.loot && c.loot.rarity < 6 && !c.isFlipped) {
+                    c.loot.rarity++; // 简单提升，实际可查库换 ID
+                }
+            });
+        }
+        if (eff.revealArea) {
+            // 一网打尽：随机翻开 revealCount 个
+            let availableIndices = [];
+            this.gridState.forEach((c, i) => { if(!c.isFlipped && !c.isBlocked) availableIndices.push(i); });
+            this._shuffleArray(availableIndices);
+            const targets = availableIndices.slice(0, eff.revealCount);
+            // 注意：这里由于直接修改状态，UI 需要 syncGrid
+            targets.forEach(idx => {
+                const c = this.gridState[idx];
+                c.isFlipped = true;
+                if(c.hasFish) {
+                    if (window.UtilsAdd) window.UtilsAdd.addItem(c.loot.id, 1);
+                    this._updateFishHistory(c.loot);
+                }
+            });
+            this._updateAllHints();
+        }
+    },
 
-        return result;
+    _updateFishHistory: function(loot) {
+        if (!player.fishHistory) player.fishHistory = {};
+        if (!player.fishHistory[loot.id]) player.fishHistory[loot.id] = { nums: 0 };
+        player.fishHistory[loot.id].nums++;
+        if(window.saveGame) window.saveGame();
     },
 
     calculateHitRate: function() {
@@ -325,11 +475,15 @@ const UtilFish = {
 
     getInfo: function() {
         const tier = this._getMasteryTier();
+        // 获取当前钓具数据
+        const rodData = this._getEquippedRodData();
         return {
             levelName: tier.name,
             remainingFish: this.getRemainingFishCount(),
             attempts: this.currentAttempts,
-            maxAttempts: this.maxAttempts
+            maxAttempts: this.maxAttempts,
+            // 【新增】返回当前钓具的百分比加成
+            rodBonus: rodData ? rodData.catchRate : 0
         };
     },
 

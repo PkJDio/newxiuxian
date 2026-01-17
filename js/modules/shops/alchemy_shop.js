@@ -81,10 +81,10 @@ const AlchemyShop = {
         if (validItems.length === 0) { this.currentStock = []; return; }
 
         const randForType = window.getSeededRandom(shopKey, "typeCount");
-        let targetTypeCount = Math.min(Math.floor(randForType * (config.maxType - config.minType + 1)) + config.minType, validItems.length);
+        let targetTypeCount = Math.min(Math.round(randForType * (config.maxType - config.minType + 1)) + config.minType, validItems.length);
 
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
-        let targetTotalQty = Math.max(Math.floor(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
+        let targetTotalQty = Math.max(Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
 
         const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
 
@@ -102,7 +102,7 @@ const AlchemyShop = {
 
         for (let i = 0; i < targetTotalQty; i++) {
             const distRand = window.getSeededRandom(shopKey, "dist", i);
-            selectedItems[Math.floor(distRand * selectedItems.length)].maxQty++;
+            selectedItems[Math.round(distRand * selectedItems.length)].maxQty++;
         }
 
         this.currentStock = selectedItems.map(entry => {
@@ -169,7 +169,12 @@ const AlchemyShop = {
             else if (!canAfford) btnStyle = `${btnBase} background: #e0e0e0; border-color: #bdbdbd; color: #9e9e9e; cursor: not-allowed;`;
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:${index%2===0?'#fafafa':'#fff'};"
+                /* 【新增】鼠标移入显示详情 */
+         onmouseenter="window.showShopItemTooltip(event, '${item.id}')"
+         /* 【新增】鼠标移出隐藏 */
+         onmouseleave="window.hideTooltip()"
+                >
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <div style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">
                             ${item.name}
@@ -243,7 +248,7 @@ const AlchemyShop = {
             if (itemData && itemData.value && itemData.sid) {
                 // 【要求】灵草类 0.8，其他 0.5
                 const isHerb = itemData.type === 'material' && itemData.subType === 'herbs';
-                const sellPrice = Math.floor(itemData.value * (isHerb ? 0.8 : 0.5));
+                const sellPrice = Math.round(itemData.value * (isHerb ? 0.8 : 0.5));
                 sellableItems.push({ sid: itemData.sid, id: itemId, data: itemData, count: slot.count || 1, sellPrice: sellPrice });
             }
         });
@@ -261,7 +266,10 @@ const AlchemyShop = {
             }
 
             return `
-                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;">
+                <div class="shop-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee; background:#fff;"
+                /* 【新增】出售界面使用的是背包实例，传入 SID */
+         onmouseenter="window.showItemTooltip(event, '${entry.sid}')"
+         onmouseleave="window.hideTooltip()">
                     <div style="flex:1; text-align:left; padding-right: 15px; display:flex; flex-direction:column; gap:6px;">
                         <span style="color:${color}; font-weight:bold; font-size: 21px; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${item.name}</span>
                         <div style="font-size:14px; color:#999;">

@@ -98,20 +98,7 @@
     background-color: #e6e6e6;
 }
 
-/* 1. 左侧状态栏 */
-#left_status_panel {
-    width: 260px;
-    height: 100%;
-    background: #f2f2f2;
-    border-right: 3px double #999;
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    gap: 8px;
-    flex-shrink: 0;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.05);
-    z-index: 10;
-}
+
 
 
 /* --- 1. 角色名片区域 --- */
@@ -414,4 +401,291 @@
     overflow-y: auto;
     /* 平滑滚动体验 */
     scroll-behavior: smooth;
+}
+
+
+
+
+
+/* 水墨风通用按钮 - 宣纸白版 */
+.ink_btn_small {
+    position: relative;
+    padding: 5px 15px;
+    margin: 2px 4px;
+
+    /* 宣纸底色：带一点点暖灰的白 */
+    background: #fdfaf5;
+    /* 墨色文字 */
+    color: #2c2c2c;
+
+    /* 模拟水墨晕染的不规则边框 */
+    border: 1px solid #333;
+    border-radius: 4px 10px 5px 12px / 12px 5px 10px 4px;
+
+    font-family: "Kaiti", "STKaiti", "楷体", serif;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+
+    /* 纸张阴影 */
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+/* 按钮内部的纹理装饰（模拟宣纸纤维） */
+.ink_btn_small::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* 悬浮效果：浓墨入纸，边框加粗 */
+.ink_btn_small:hover {
+    background: #fff;
+    color: #000;
+    border-width: 2px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+    transform: translate(-1px, -1px);
+}
+
+/* 点击效果：纸张按压感 */
+.ink_btn_small:active {
+    background: #e8e3d9;
+    transform: translate(1px, 1px);
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+    border-style: solid;
+}
+
+/* 针对“灵石/金钱”按钮的特殊样式（红色印章感） */
+.ink_btn_small[onclick*="addMoney"] {
+    /* 模拟朱砂印章的红色边缘 */
+    border-color: #8e2323;
+    color: #8e2323;
+}
+
+.ink_btn_small[onclick*="addMoney"]:hover {
+    background: #8e2323;
+    color: #fff;
+    border-color: #8e2323;
+}
+
+/* 禁用状态：枯笔淡墨 */
+.ink_btn_small:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #eee;
+    border-style: dashed;
+    color: #999;
+}
+
+/* === 左侧面板整体容器 === */
+#left_status_panel {
+    width: 320px; /* 稍微加宽一点以容纳大字体 */
+    height: 100%;
+    background: #e6e6e6; /* 浅灰底色 */
+    border-right: 1px solid #bbb;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 8px; /* 卡片间距 */
+    box-sizing: border-box;
+    font-family: "Kaiti", "STKaiti", serif; /* 强制楷体 */
+    color: #2c2c2c;
+}
+
+/* === 通用卡片样式 === */
+.ink_card {
+    background: #fdfaf5; /* 宣纸白 */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 10px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+}
+
+/* 1. 角色名片 */
+.profile_card {
+    border-left: 4px solid #444; /* 左侧重墨装饰 */
+}
+.profile_main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.p_name {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+}
+.profile_sub {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 6px;
+}
+.p_divider { margin: 0 5px; color: #ccc; }
+.p_date {
+    font-size: 15px;
+    color: #666;
+    border-top: 1px dashed #ddd;
+    padding-top: 4px;
+    text-align: center;
+}
+
+/* 2. 生存状态 */
+.status_card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.status_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px; /* 重点数据加大 */
+    font-weight: bold;
+    padding: 2px 0;
+    border-bottom: 1px dotted #eee;
+}
+.status_row:last-child { border-bottom: none; }
+.s_label { font-weight: bold;font-size: 18px; }
+.c_hp { color: #d32f2f; }
+.c_mp { color: #1976d2; }
+.c_hunger { color: #f57c00; }
+.c_fatigue { color: #616161; }
+
+/* 3. 基础属性 (精气神) */
+.attr_primary_card {
+    background: #fff;
+}
+.attr_grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.attr_item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 33%;
+}
+.a_label {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 2px;
+}
+.a_val {
+    font-size: 20px; /* 数字加大 */
+    font-weight: bold;
+    color: #333;
+}
+.money_row {
+    border-top: 1px solid #eee;
+    padding-top: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+}
+.text_gold { color: #d4af37; }
+
+/* 4. 战斗属性 (折叠设计) */
+.combat_card {
+    padding: 0; /* 内部无padding，由子元素控制 */
+    overflow: hidden; /* 动画需要 */
+}
+.combat_header {
+    padding: 10px;
+    background: #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+.combat_header:hover {
+    background: #e8e8e8;
+}
+.combat_title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #444;
+}
+.combat_summary {
+    font-size: 14px;
+    color: #666;
+}
+.combat_summary b { color: #333; }
+.combat_summary .divider { margin: 0 2px; color:#ccc; }
+.arrow_icon {
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.3s ease;
+}
+
+/* 折叠区域 */
+.combat_details_box {
+    background: #fdfaf5;
+    transition: max-height 0.3s ease-out, padding 0.3s ease;
+    max-height: 500px; /* 足够大即可 */
+    padding: 8px 10px;
+}
+/* 折叠状态 */
+.combat_details_box.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: none;
+    overflow: hidden;
+}
+
+.detail_group {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 双列 */
+    gap: 4px 10px; /* 行间距4，列间距10 */
+}
+.d_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+}
+.d_label { color: #666; }
+.d_val { font-weight: bold; color: #333; }
+.d_sep {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: #eee;
+    margin: 2px 0;
+}
+
+/* 5. Buff 列表 */
+.panel_header_sm {
+    font-size: 14px;
+    color: #999;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
+    padding-bottom: 2px;
+}
+.buff_list_style {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.flex_grow {
+    flex-grow: 1; /* 占据剩余空间 */
+    min-height: 100px; /* 防止太小 */
+}
+
+/* 6. 底部按钮 */
+#left_system_btns {
+    display: flex;
+    gap: 5px;
+}
+#left_system_btns button {
+    flex: 1; /* 平均分布 */
+    font-size: 15px;
 }

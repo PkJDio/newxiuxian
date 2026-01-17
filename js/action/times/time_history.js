@@ -71,8 +71,9 @@ const TimeHistory = {
             const typeMap = { 'court': '【朝廷】', 'nature': '【天象】', 'world': '【天下】', 'rumor': '【传闻】' };
             const prefix = typeMap[event.type] || "【传闻】";
 
-            if (window.showToast) window.showToast(`${prefix} ${event.text}`);
+            // if (window.showToast) window.showToast(`${prefix} ${event.text}`);
             if (window.LogManager) window.LogManager.add(`${prefix} ${event.text}`, "normal");
+            ModalManager.showEventModal('民间传闻', event.text);
         });
     }
 };

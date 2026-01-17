@@ -1,0 +1,24 @@
+/* 【新增】进食背包样式 */
+.fish_food_inv {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+.food_inv_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #d7ccc8;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+.food_inv_row:hover {
+    background: #fdf5e6;
+}
+.food_inv_info {
+    display: flex;
+    flex-direction: column;
+}

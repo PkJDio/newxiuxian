@@ -1,5 +1,6 @@
 // js/modules/combat/combat_init.js
-// 职责：战斗准备、数据补丁、样式注入
+// 职责：战斗准备、数据补丁、样式注入、词条收集
+// 修复：初始化 Core 数据 (Gauges) 和 词条数据 (Entries)
 
 const CombatInit = {
     start: function(ctx, enemyObj, onWin, logId) {
@@ -8,45 +9,97 @@ const CombatInit = {
         this._injectStyles();
         this._initUICache(ctx, logId);
 
-        // 克隆敌人数据并打补丁
+        // 1. 克隆敌人数据并打补丁
         ctx.enemy = JSON.parse(JSON.stringify(enemyObj));
         this._patchEnemyData(ctx.enemy);
 
         ctx.player = window.player;
         if (ctx.player.toxicity === undefined) ctx.player.toxicity = 0;
 
-        // 初始化状态
+        // 2. 初始化基础状态
         ctx.logs = [];
         ctx.onWinCallback = onWin;
         ctx.logContainerId = logId;
         ctx.isStopped = false;
         ctx.isPaused = false;
         ctx.isEnded = false;
+
+        // 冷却与Buff
         ctx.itemCDs = [0, 0, 0];
         ctx.skillCDs = {};
         ctx.buffs = { player: {}, enemy: {} };
-        ctx.turnSpeed = 1000;
 
-        // 同步实时数值
+        // 3. 【核心修复】初始化词条系统 (直接读取装备对象上的 entries)
+        ctx.entries = {
+            player: this._collectPlayerEntries(),
+            enemy: ctx.enemy.entries || []
+        };
+
+        // 同步数值
         const p = ctx.player.derived || ctx.player.attributes;
         ctx.currentPHp = p.hp !== undefined ? p.hp : (p.maxHp || 100);
         ctx.currentPMp = p.mp !== undefined ? p.mp : (p.maxMp || 100);
-        ctx.currentEHp = (ctx.enemy.stats && ctx.enemy.stats.hp !== undefined) ? ctx.enemy.stats.hp : (ctx.enemy.hp || 100);
+
+        const eStats = ctx.enemy.stats || {};
+        ctx.currentEHp = eStats.hp !== undefined ? eStats.hp : (ctx.enemy.hp || 100);
         ctx.enemy.maxHp = ctx.currentEHp;
 
         ctx.currentTurn = 1;
 
-        // 初始 UI 渲染
-        ctx._refreshItemCDUI();
-        ctx._refreshSkillCDUI();
-        ctx._updateToxUI();
-        ctx._updateUIStats();
+        // 4. UI 初始渲染
+        if (ctx._refreshItemCDUI) ctx._refreshItemCDUI();
+        if (ctx._refreshSkillCDUI) ctx._refreshSkillCDUI();
+        if (ctx._updateToxUI) ctx._updateToxUI();
+        if (ctx._updateUIStats) ctx._updateUIStats();
 
-        // 500ms 后进入战斗循环
-        ctx.timer = setTimeout(() => ctx._runCombatLoopAsync(), 500);
+        // 5. 初始化战斗核心数据
+        if (window.CombatCore && CombatCore.init) {
+            CombatCore.init(ctx);
+        }
+
+        // 6. 启动循环
+        ctx.timer = setTimeout(() => {
+            if (window.CombatCore && CombatCore.startLoop) {
+                CombatCore.startLoop(ctx);
+            }
+        }, 500);
     },
 
-    /** 敌人属性补丁：兼容旧数据模版 */
+    /** 【新增】收集玩家所有装备的词条 */
+    /** * 【修改】收集玩家所有装备的词条
+     * 逻辑：直接读取 equipment 中对象的 entries 字段
+     */
+    _collectPlayerEntries: function() {
+        const p = window.player;
+        if (!p || !p.equipment) return [];
+
+        let allEntries = [];
+
+        // 遍历所有装备槽 (weapon: Object, gongfa: Array, etc.)
+        Object.values(p.equipment).forEach(item => {
+            if (!item) return;
+
+            // 情况1: item 是直接的物品对象 (如 weapon: { id:..., entries:[...] })
+            // 必须排除数组，因为 Array 也有 entries 方法(迭代器)，但不是我们要的属性
+            if (!Array.isArray(item) && item.entries && Array.isArray(item.entries)) {
+                allEntries = allEntries.concat(item.entries);
+            }
+
+            // 情况2: item 是数组 (如 gongfa: [obj1, obj2])
+            // 如果未来功法也实例化为对象存在数组里，这里可以支持
+            if (Array.isArray(item)) {
+                item.forEach(subItem => {
+                    if (subItem && typeof subItem === 'object' && subItem.entries && Array.isArray(subItem.entries)) {
+                        allEntries = allEntries.concat(subItem.entries);
+                    }
+                });
+            }
+        });
+
+        return allEntries;
+    },
+
+    /** 敌人数据补丁 */
     _patchEnemyData: function(enemy) {
         const tmplKey = enemy.template || "minion";
         const templateData = (typeof ENEMY_TEMPLATES !== 'undefined') ? ENEMY_TEMPLATES[tmplKey] : null;
@@ -54,24 +107,20 @@ const CombatInit = {
         if (enemy.basePen === undefined && templateData) enemy.basePen = templateData.basePen;
         if (enemy.accuracy === undefined) enemy.accuracy = templateData ? (templateData.accuracy || 0) : 0;
 
-        if (enemy.toxAtk === undefined) {
-            const db = window.enemies || (window.GAME_DB ? window.GAME_DB.enemies : []);
-            const template = db.find(e => e.id === enemy.id);
-            if (template) {
-                if (template.stats && template.stats.toxicity) enemy.toxAtk = template.stats.toxicity;
-                if (template.basePen !== undefined) enemy.basePen = template.basePen;
-                if (template.accuracy !== undefined) enemy.accuracy = template.accuracy;
-            }
-        }
-        enemy.basePen = enemy.basePen || 0;
-        enemy.toxAtk = enemy.toxAtk || 0;
+        // 确保 stats 对象存在
         if (!enemy.stats) enemy.stats = {};
+
+        // 补全基础属性到 stats
         if (enemy.atk !== undefined && enemy.stats.atk === undefined) enemy.stats.atk = enemy.atk;
         if (enemy.def !== undefined && enemy.stats.def === undefined) enemy.stats.def = enemy.def;
         if (enemy.speed !== undefined && enemy.stats.speed === undefined) enemy.stats.speed = enemy.speed;
+
+        // 补全特殊属性
+        enemy.basePen = enemy.basePen || 0;
+        enemy.toxAtk = enemy.toxAtk || 0;
     },
 
-    /** 缓存 DOM 引用，避免战斗中重复获取 */
+    /** 缓存 UI */
     _initUICache: function(ctx, logId) {
         ctx.uiRefs = {
             logContainer: document.getElementById(logId),
@@ -81,10 +130,14 @@ const CombatInit = {
             pMpBar: document.getElementById('combat_p_mp_bar'),
             pToxBar: document.getElementById('combat_p_tox_bar'),
             pToxVal: document.getElementById('combat_p_tox_val'),
+            pApBar: document.getElementById('combat_p_ap_bar'), // 行动条
+
             eHp: document.getElementById('combat_e_hp'),
             eHpBar: document.getElementById('combat_e_hp_bar'),
             eToxBar: document.getElementById('combat_e_tox_bar'),
             eToxVal: document.getElementById('combat_e_tox_val'),
+            eApBar: document.getElementById('combat_e_ap_bar'), // 行动条
+
             pAttr: {
                 atk: document.getElementById('p_attr_atk'),
                 def: document.getElementById('p_attr_def'),
@@ -98,20 +151,13 @@ const CombatInit = {
         };
     },
 
-    /** 注入战斗专用的 Tooltip 样式 */
+    /** 注入样式 (Tooltips等) */
     _injectStyles: function() {
         if (document.getElementById('combat-styles-v7-7')) return;
         const css = `
             .turn-divider { margin:8px 0; border-top:1px dashed #ccc; color:#888; font-size:12px; text-align:center; } 
             .combat-tooltip-trigger { display: inline-block; position: relative; cursor: help; } 
-            .combat-tooltip-content { visibility: hidden; opacity: 0; position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 10px; width: 220px; background: rgba(0, 0, 0, 0.9); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-family: monospace; font-weight: normal; z-index: 99999; box-shadow: 2px 2px 10px rgba(0,0,0,0.4); transition: opacity 0.2s; pointer-events: none; text-align: left; line-height: 1.5; white-space: normal; } 
-            .combat-tooltip-content::after { content: ""; position: absolute; top: 50%; right: 100%; margin-top: -6px; border-width: 6px; border-style: solid; border-color: transparent rgba(0, 0, 0, 0.9) transparent transparent; } 
-            .combat-tooltip-trigger:hover .combat-tooltip-content { visibility: visible; opacity: 1; } 
-            .tip-row { display: flex; justify-content: space-between; margin-bottom: 2px; } 
-            .tip-dim { color: #aaa; font-size: 12px; } 
-            .tip-crit { color: #ffeb3b; font-weight: bold; } 
-            .tip-divider { border-top: 1px solid #555; margin: 5px 0; } 
-            .tip-total { font-size: 15px; color: #4caf50; font-weight: bold; margin-top: 2px; }
+            /* 注意：现在主要使用全局 TooltipManager，这里的 CSS 仅作备用或用于简单的内部提示 */
         `;
         const style = document.createElement('style');
         style.id = 'combat-styles-v7-7';

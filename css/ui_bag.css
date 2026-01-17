@@ -370,3 +370,12 @@
     /* 如果 grayscale 对 Emoji 无效，可以尝试降低亮度或使用特定的蒙版 */
     filter: grayscale(100%) brightness(0.7);
 }
+
+
+/* 被选中的物品高亮样式 */
+.bag_grid_item.active_item {
+    background-color: rgba(255, 255, 255, 0.15); /* 稍微亮一点的背景 */
+    box-shadow: 0 0 10px rgba(136, 36, 60, 0.5); /* 金色发光边框 */
+    border-color: #5d540e !important; /* 强制边框变金 */
+    transform: translateY(-1px); /* 微微上浮 */
+}

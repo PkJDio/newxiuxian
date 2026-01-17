@@ -63,7 +63,7 @@ let UICook = {
         `;
 
         if (window.UtilsModal) {
-            UtilsModal.showInteractiveModal("灶前参悟", contentHtml, null, "modal_cook", 800, 850);
+            UtilsModal.showInteractiveModal("灶前参悟", contentHtml, null, "modal_cook", 75, 80);
         }
         this._applyInkStyles();
         this.fullRefresh();

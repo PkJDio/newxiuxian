@@ -7,12 +7,17 @@ const UIFish = {
 
     open: function() {
         this._injectStyles();
-        if (window.UtilFish) window.UtilFish.init();
+        // 【核心修改】：每次打开 UI 时，强制重新初始化鱼池数据
+        // 这样可以确保玩家“关闭再打开”后，看到的是一个全新的池子
+        if (window.UtilFish) {
+            window.UtilFish.init();      // 确保基础状态正确
+            window.UtilFish.refreshPond(); // 强制刷新格子、次数和清除 Buff
+        }
 
         this._renderContent();
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            this.modalBody = window.UtilsModal.showInteractiveModal("寒江独钓", this.lastContentHtml, null, "modal_fishing_grid", 90, 95);
+            this.modalBody = window.UtilsModal.showInteractiveModal("寒江独钓", this.lastContentHtml, null, "modal_fishing_grid", 68, 80);
         }
 
         this._syncGridWithState();
@@ -20,54 +25,165 @@ const UIFish = {
     },
 
     _renderContent: function() {
-        const info = window.UtilFish ? window.UtilFish.getInfo() : { levelName:"?", remainingFish:0, attempts:0, maxAttempts:0 };
+        const info = window.UtilFish ? window.UtilFish.getInfo() : { levelName:"?", remainingFish:0, attempts:0, maxAttempts:0, rodBonus:0 };
 
         this.lastContentHtml = `
-            <div class="fish_layout">
-                <div class="fish_grid_board" id="fish_grid_board">
-                    ${this._generateGridHtml()}
+    <div class="fish_layout">
+        <div class="fish_grid_board" id="fish_grid_board">
+            ${this._generateGridHtml()}
+        </div>
+
+        <div class="fish_info_panel">
+            <div class="fish_stats_row">
+                <div class="fish_stat_item">
+                    <span class="stat_label">垂钓境界</span>
+                    <span class="stat_val">${info.levelName}</span>
                 </div>
-
-                <div class="fish_info_panel">
-                    <div class="fish_stats_row">
-                        <div class="fish_stat_item">
-                            <span class="stat_label">垂钓境界</span>
-                            <span class="stat_val">${info.levelName}</span>
-                        </div>
-                        
-                        <div class="fish_stat_item">
-                            <span class="stat_label">
-                                消耗 
-                                <span id="ui_fish_cur_stats" style="color:#e65100; font-weight:normal; font-size:12px; display:block;">(加载中...)</span>
-                            </span>
-                            <span class="stat_val">10饱食 / 5疲劳</span>
-                        </div>
-
-                        
-
-                        <div class="fish_stat_item" id="ui_fish_attempts">
-                            <span class="stat_label">剩余次数</span>
-                            <span class="stat_val" style="color:#e65100;">${info.attempts} / ${info.maxAttempts}</span>
-                        </div>
+                <div class="fish_stat_item">
+                    <span class="stat_label">钓具加成</span>
+                    <span class="stat_val" style="color:#2b58a6;">+${info.rodBonus || 0}%</span>
+                </div>
+                <div class="fish_stat_item" style="flex:1.5;">
+                    <span class="stat_label">消耗 <span id="ui_fish_cur_stats">...</span></span>
+                    <span class="stat_val">10饱食 / 5疲劳</span>
+                </div>
+                <div class="fish_stat_item" id="ui_fish_attempts">
+                    <span class="stat_label">剩余次数</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="stat_val" style="color:#e65100;">${info.attempts} / ${info.maxAttempts}</span>
                     </div>
-
-                    <div class="fish_action_row">
-                        <div class="fish_rules" style="flex:1; text-align:left;">
-                            <p>※ 点击水面下竿，数字代表周围鱼数。</p>
-                            <p>※ 每次点击消耗 <b>1小时</b>。</p>
-                            <p>※ <b>${info.maxAttempts}次</b>机会耗尽后，池塘将自动刷新。</p>
-                        </div>
-                        <div class="fish_btns">
-                            <button class="ink_btn_small" onclick="UIFish.onClickFeed()">🍱 进食</button>
-                            <button class="ink_btn_small" onclick="UIFish.onClickRest()">🍵 休憩</button>
-                            <button class="ink_btn_small btn_refresh" onclick="UIFish.onClickRefresh()">🔄 手动刷新</button>
-                        </div>
-                    </div>
+                </div>
+                <div class="fish_stat_item">
+                    <span class="stat_label">查看鱼池图鉴</span>
+                    <button class="ink_btn_mini" onclick="UIFish.showPondGallery()">🐟</button>
                 </div>
             </div>
-        `;
+
+            <div class="fish_action_row">
+                <div class="fish_rules" style="flex:1; text-align:left;">
+                    <p>※ 点击水面下竿，数字代表周围鱼数。</p>
+                    <p>※ 消耗尽后池塘自动刷新，刷新后奇遇消失。</p>
+                </div>
+                <div class="fish_btns">
+                    <button class="ink_btn_small" style="background:#5d4037;" onclick="UIFish.showFoodInventory()">🎒 背包</button>
+                    <button class="ink_btn_small" onclick="UIFish.onClickRest()">🍵 休憩</button>
+                    <button class="ink_btn_small btn_refresh" onclick="UIFish.onClickRefresh()">🔄 刷新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    },
+    /**
+     * 【新增】显示专门用于垂钓进食的背包窗口
+     */
+    showFoodInventory: function() {
+        const p = window.player;
+        if (!p || !p.inventory) return;
+
+        // 1. 筛选 food 和 fish
+        let foodList = p.inventory.filter(slot => {
+            if (!slot) return false;
+            return slot.type === 'food' || slot.type === 'fish';
+        });
+
+        // 2. 排序逻辑：类型(food优先) -> 稀有度(高优先) -> 饱食度(大优先)
+        foodList.sort((a, b) => {
+            if (a.type !== b.type) return a.type === 'food' ? -1 : 1;
+            if (a.rarity !== b.rarity) return b.rarity - a.rarity;
+            const hungerA = (a.effects && a.effects.hunger) || 0;
+            const hungerB = (b.effects && b.effects.hunger) || 0;
+            return hungerB - hungerA;
+        });
+
+        // 3. 构建 HTML
+        let listHtml = `<div class="fish_food_inv">`;
+        if (foodList.length === 0) {
+            listHtml += `<div style="text-align:center; padding:20px; color:#888;">包里没吃的了...</div>`;
+        } else {
+            foodList.forEach(item => {
+                const hunger = (item.effects && item.effects.hunger) || 0;
+                const rarityColor = window.RARITY_CONFIG[item.rarity]?.color || "#333";
+                listHtml += `
+                <div class="food_inv_row" onmouseenter="window.showItemTooltip(event, '${item.sid}')" onmouseleave="window.hideTooltip()">
+                    <div class="food_inv_info">
+                        <span style="color:${rarityColor}; font-weight:bold;">${item.name}</span>
+                        <span style="font-size:16px; color:#666; margin-left:8px;">饱食 + ${hunger}   剩余数量： ${item.count}</span>
+                    </div>
+                    <button class="ink_btn_mini" style="background:#4caf50; color:#fff; border:none;" onclick="UIFish.handleEatFood('${item.sid}')">食用</button>
+                </div>
+            `;
+            });
+        }
+        listHtml += `</div>`;
+
+        // 4. 弹出竖长窗口 (25vw x 60vh)
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            window.UtilsModal.showInteractiveModal("随身干粮", listHtml, null, "modal_fish_food", 25, 60);
+        }
     },
 
+    /**
+     * 【新增】处理进食
+     */
+    handleEatFood: function(sid) {
+        if (window.UtilsItem && window.UtilsItem.useItem) {
+            window.UtilsItem.useItem(sid, 1);
+            // 刷新显示和属性
+            this._updateStatsUI();
+            this.showFoodInventory(); // 刷新当前列表
+        }
+    },
+    /**
+     * 【新增】显示当前鱼池图鉴弹窗
+     */
+    showPondGallery: function() {
+        const lootPool = window.UtilFish.getPondLootPool();
+        const history = (window.player && player.fishHistory) ? player.fishHistory : {};
+
+        const p = window.player;
+
+        let region=REGION_LAYOUT.find(r => r.id == p.coord.region);
+        const seasonNames = ["春", "夏", "秋", "冬"];
+        const curSeason = seasonNames[window.UtilFish.getCurrentSeason()];
+
+        let listHtml = `
+            <div style="padding:10px; color:#5d4037; font-family:'KaiTi'; border-bottom:1px dashed #d7ccc8; margin-bottom:10px;">
+                📍 当前水域：${region.name} | 🗓️ 当前时节：${curSeason}季
+            </div>
+            <div class="fish_gallery_grid">
+        `;
+
+        lootPool.forEach(fish => {
+            const record = history[fish.id];
+            const hasCaught = record && record.nums > 0;
+            const rarityClass = `gallery_rarity_${fish.rarity}`;
+
+            listHtml += `
+                <div class="fish_gallery_item ${hasCaught ? rarityClass : 'gallery_unknown'}" 
+                     /* 即使没钓到，也可以鼠标悬浮看一眼大概描述(可选)，或者保持神秘 */
+                     onmouseenter="${hasCaught ? `window.showShopItemTooltip(event, '${fish.id}')` : ''}"
+                     onmouseleave="window.hideTooltip()">
+                    <div class="fish_name">${hasCaught ? fish.name : '？？？'}</div>
+                    <div class="fish_count">${hasCaught ? `累计钓获: ${record.nums} 次` : '<span style="color:#999">尚未捕获</span>'}</div>
+                    <div class="fish_rarity_tag">${window.RARITY_CONFIG[fish.rarity].name}</div>
+                </div>
+            `;
+        });
+
+        listHtml += `</div>`;
+
+        if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
+            window.UtilsModal.showInteractiveModal(
+                "本域鱼典",
+                listHtml,
+                null,
+                "modal_fish_gallery",
+                60, // 稍微加宽一点以适应更多条目
+                70
+            );
+        }
+    },
     _updateStatsUI: function() {
         const p = window.player;
         if (!p) return;
@@ -121,6 +237,9 @@ const UIFish = {
 
         cells.forEach((el, idx) => {
             const cellData = state[idx];
+            // 【关键修改】重置所有鼠标事件，防止旧数据残留
+            el.onmouseenter = null;
+            el.onmouseleave = null;
 
             // 重置状态
             el.classList.remove('flipped', 'blocked');
@@ -149,6 +268,11 @@ const UIFish = {
                     backEl.className = `fish_cell_back bg_rarity_${rarity}`;
                     nameEl.innerHTML = cellData.loot.name;
                     nameEl.className = `loot_name val_rarity_${rarity}`;
+
+                    // 【关键修改】：如果已经翻开且有鱼，绑定 Tip 悬浮窗
+                    // 查库模式：使用 loot.id 查原始数据显示
+                    el.onmouseenter = (e) => window.showShopItemTooltip(e, cellData.loot.id);
+                    el.onmouseleave = () => window.hideTooltip();
                 } else {
                     backEl.className = "fish_cell_back bg_empty";
                     this._renderHint(nameEl, cellData.nearCount, cellData.hintRevealed);
@@ -167,6 +291,7 @@ const UIFish = {
             return;
         }
 
+        // 1. 调用逻辑层翻牌
         const result = window.UtilFish.tryFlip(index);
 
         if (result.error) {
@@ -174,30 +299,28 @@ const UIFish = {
             return;
         }
 
-        el.classList.add('flipped');
-
-        const backEl = el.querySelector('.fish_cell_back');
-        const nameEl = el.querySelector('.loot_name');
-
-        if (result.success && result.loot) {
-            const rarity = result.loot.rarity || 1;
-            backEl.className = `fish_cell_back bg_rarity_${rarity}`;
-            nameEl.innerHTML = result.loot.name;
-            nameEl.className = `loot_name val_rarity_${rarity}`;
-        } else {
-            backEl.className = "fish_cell_back bg_empty";
-            this._renderHint(nameEl, result.nearCount, result.showHint);
-        }
-
-        // 同步全场状态（主要是为了更新周围格子的提示）
+        // 2. 立即同步全场状态
+        // 【重要】：UtilFish.tryFlip 内部如果触发了“水神庇护”，已经把该格子的 hasFish 改为 true 并补全了 loot 数据。
+        // 这里直接调用同步方法，UI 会自动根据更新后的 cellData 渲染出鱼的名字和稀有度颜色，不再显示“未中鱼”。
         this._syncGridWithState();
 
+        // 3. 此时格子已经被 _syncGridWithState 翻转并渲染完毕，我们只需处理反馈和后续事件
+
+        // 如果中了鱼（无论是天然的还是 Buff 强制生成的），给出提示
         if (result.success && result.loot) {
             if(window.showToast) window.showToast(`🎣 钓到了 [${result.loot.name}]！`);
         }
 
+        // 4. 处理随机事件弹窗 (放在最后，延迟显示，避免遮挡刚钓到的鱼)
+        if (result.triggeredEvent && window.showFortuneModal) {
+            setTimeout(() => {
+                window.showFortuneModal(result.triggeredEvent);
+            }, 500);
+        }
+
         if(window.updateUI) window.updateUI();
 
+        // 5. 次数耗尽的刷新逻辑
         if (result.isPondEmpty) {
             this.isAnimating = true;
             if(window.showToast) window.showToast("🎣 次数已尽，鱼群即将散去...");
@@ -208,6 +331,7 @@ const UIFish = {
 
                 setTimeout(() => {
                     this._syncGridWithState();
+                    this._updateStatsUI(); // 记得更新下方的次数 UI
                     this.isAnimating = false;
                     if(window.showToast) window.showToast("池塘已自动刷新！");
                 }, 1000);
@@ -268,8 +392,17 @@ const UIFish = {
 
     resetGridAnimation: function(silent = false) {
         const cells = document.querySelectorAll('.fish_cell_wrapper');
+
+        // 【新增】动画开始即隐藏 Tip
+        if (window.hideTooltip) window.hideTooltip();
+
         cells.forEach((cell, idx) => {
             setTimeout(() => {
+
+                // 【新增】动画过程中移除监听，防止鼠标划过正在翻转的格子弹出错误 Tip
+                cell.onmouseenter = null;
+                cell.onmouseleave = null;
+
                 cell.classList.remove('flipped');
             }, idx * 5);
         });
@@ -285,6 +418,38 @@ const UIFish = {
         if (document.getElementById('style-ui-fish-grid')) return;
 
         const css = `
+        /* 【新增】图鉴相关样式 */
+            .ink_btn_mini { 
+                background: #fdfbf7; border: 1px solid #8d6e63; border-radius: 4px; 
+                cursor: pointer; padding: 2px 6px; font-size: 14px; transition: 0.2s;
+            }
+            .ink_btn_mini:hover { background: #efebe9; transform: scale(1.1); }
+
+            .fish_gallery_grid { 
+                display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; 
+            }
+            .fish_gallery_item {
+                border: 2px solid #ddd; border-radius: 6px; padding: 10px; position: relative;
+                background: #fff; display: flex; flex-direction: column; gap: 4px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .fish_gallery_item.gallery_unknown { background: #f5f5f5; border-color: #eee; border-style: dashed; }
+            .fish_gallery_item .fish_name { font-weight: bold; font-size: 18px; font-family: "KaiTi"; }
+            .fish_gallery_item .fish_count { font-size: 14px; color: #666; }
+            .fish_gallery_item .fish_rarity_tag { 
+                position: absolute; right: 5px; top: 5px; font-size: 12px; 
+                opacity: 0.7; padding: 2px 4px; border-radius: 3px; background: rgba(0,0,0,0.05);
+            }
+
+            /* 不同稀有度的边框颜色 */
+            .gallery_rarity_1 { border-color: #818181; }
+            .gallery_rarity_2 { border-color: #258625; }
+            .gallery_rarity_3 { border-color: #2b58a6; }
+            .gallery_rarity_4 { border-color: #a61a73; }
+            .gallery_rarity_5 { border-color: #ceae04; }
+            .gallery_rarity_6 { border-color: #c23601; }
+            
+        
             .modal_fishing_grid .modal_body { padding: 0 !important; background: #fdfbf7; overflow: hidden; display: flex; flex-direction: column; }
             .fish_layout { display: flex; flex-direction: column; height: 100%; width: 100%; }
             
@@ -343,7 +508,9 @@ const UIFish = {
             .btn_refresh { background: #34495e; } .btn_refresh:hover { background: #2c3e50; }
             .fish_rules { font-size: 16px; color: #666; line-height: 1.5; font-family: "KaiTi"; }
             .fish_rules p { margin: 2px 0; }
-            
+                
+                
+                
             @keyframes floatWater { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
         `;
         const style = document.createElement('style');

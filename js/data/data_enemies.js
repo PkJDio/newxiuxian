@@ -6,6 +6,7 @@ const ENEMY_TEMPLATES = {
         basePen    : 0,
         multipliers: {hp: 1.0, atk: 1.0, def: 1.0, speed: 1.0, exp: 1.0, money: 1.0},
         icon: "💀",
+        crit: 0.05,
         accuracy: 0
     },
     "elite" : {
@@ -14,6 +15,7 @@ const ENEMY_TEMPLATES = {
         basePen    : 15, // 精英微量穿甲
         multipliers: {hp: 3.5, atk: 1.3, def: 1.2, speed: 1.1, exp: 3.0, money: 2.5},
         icon: "💀",
+        crit: 0.07,
         accuracy: 10
     },
     "boss"  : {
@@ -22,6 +24,7 @@ const ENEMY_TEMPLATES = {
         basePen    : 35, // 头目具备穿甲能力
         multipliers: {hp: 7.0, atk: 1.5, def: 1.4, speed: 1.15, exp: 10.0, money: 10.0},
         icon: "☠️",
+        crit: 0.1,
         accuracy: 20
     },
     "lord"  : {
@@ -30,6 +33,7 @@ const ENEMY_TEMPLATES = {
         basePen    : 55, // 领主高穿甲，克制重甲
         multipliers: {hp: 14.0, atk: 1.8, def: 1.8, speed: 1.25, exp: 50.0, money: 50.0},
         icon: "👹",
+        crit: 0.15,
         accuracy: 30
     }
 };

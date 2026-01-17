@@ -39,8 +39,8 @@ const UtilsItem = {
     },
 
     // ============================================================
-    // 1. 添加物品 (核心逻辑：自动计算 SID 实现智能堆叠)
-    // ============================================================
+// 1. 添加物品 (核心逻辑：增加背包上限 space 检查)
+// ============================================================
     addItem: function(itemInput, amount = 1) {
         if (!window.player) return;
         if (!player.inventory) player.inventory = [];
@@ -64,23 +64,48 @@ const UtilsItem = {
 
         if (!newItemData) return;
 
-        // 【核心修改】根据物品当前的属性内容，计算确定性 SID
+        // 计算确定性 SID
         const sid = this._generateDeterministicSid(newItemData);
         newItemData.sid = sid;
 
-        // 检查背包中是否已有该 SID
+        // 检查背包中是否已有该 SID (用于判定是否需要新格子)
         const existingSlot = player.inventory.find(slot => slot.sid === sid);
 
+        // 【新增核心：背包空间检查】
+        // 只有在“需要开新格子”且“当前格子数 >= 上限”时，判定为满
+        const currentSpace = player.derived && player.derived.space ? player.derived.space : 50; // 默认50
+        if (!existingSlot && player.inventory.length >= currentSpace) {
+            if (window.showToast) {
+                window.showToast(`背包已满！${newItemData.name} x${amount} 已遗失。`, 3000);
+            }
+            if (window.LogManager && window.LogManager.add) {
+                window.LogManager.add(`<span style="color:#e74c3c">由于背包空间不足，${newItemData.name} x${amount} 已遗失！</span>`);
+            }
+            return null;
+        }
+
+        // 执行添加逻辑
         if (existingSlot) {
-            // SID 相同，说明属性完全一致，直接堆叠
             existingSlot.count = (existingSlot.count || 0) + amount;
         } else {
-            // SID 不同，说明是新物品或属性有差异（如强化等级不同），新开格子
             newItemData.count = amount;
             player.inventory.push(newItemData);
         }
 
         if (window.showToast) window.showToast(`获得了 ${newItemData.name} x${amount}`);
+
+        // 【新增：不足5格空间提醒】
+        const remainingSpace = currentSpace - player.inventory.length;
+
+        if (remainingSpace <= 3 && remainingSpace > 0) {
+            if (window.showWarningModal) {
+
+                    window.showWarningModal("警告",`背包空间仅剩 ${remainingSpace} 格！背包格子满了之后，多余物品将直接无法获得`);
+
+
+            }
+        }
+
         this._refreshAllUI();
         if (window.saveGame) window.saveGame();
 

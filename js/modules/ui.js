@@ -29,7 +29,7 @@ function enterGameScene() {
 function updateUI() {
     if (!player) return;
 
-    // 【修复1】数据源清洗：强制将 Buff 的剩余天数保留1位小数
+    // 1. 数据源清洗
     if (player.buffs) {
         for (let id in player.buffs) {
             let b = player.buffs[id];
@@ -39,31 +39,72 @@ function updateUI() {
         }
     }
 
+    // 2. 重新计算属性
     if (typeof recalcStats === 'function') {
         recalcStats();
     }
 
+    // --- 内部更新工具 ---
     const updateVal = (id, key, label) => {
         const el = document.getElementById(id);
         if (!el) return;
         const val = player.derived[key] || 0;
         el.innerText = Math.floor(val);
-        // 这里事件绑定频率较低，暂时保持原样，或后续也可改为委托
         el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, key, label); };
         el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
     };
 
+    const updatePct = (id, key, label) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = player.derived[key] || 0;
+        el.innerText = Math.floor(val) + '%';
+    };
+
+    // --- 3. 更新 角色名片 ---
     if(document.getElementById('profile_name')) document.getElementById('profile_name').innerText = player.name;
     if(document.getElementById('profile_age')) document.getElementById('profile_age').innerText = player.age + "岁";
     if(document.getElementById('profile_generation')) document.getElementById('profile_generation').innerText = `第 ${player.generation || 1} 世`;
+    const elDate = document.getElementById('profile_date');
+    if (elDate && window.TimeSystem) {
+        elDate.innerText = TimeSystem.getTimeString();
+    }
 
+    // --- 4. 更新 基础属性 (精气神 & 钱) ---
     updateVal('val_jing', 'jing', '精(体质)');
     updateVal('val_qi',   'qi',   '气(能量)');
     updateVal('val_shen', 'shen', '神(悟性)');
-    updateVal('val_atk',   'atk',   '攻击力');
-    updateVal('val_def',   'def',   '防御力');
-    updateVal('val_speed', 'speed', '速度');
+    if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
 
+    // --- 5. 【核心修改】更新 战斗综述 (折叠栏头部 - 显示总和) ---
+    // 计算总攻击 (物理 + 法术)
+    const totalAtk = (player.derived.phy_atk || 0) + (player.derived.mag_atk || 0);
+    // 计算总防御 (物理 + 法术)
+    const totalDef = (player.derived.phy_def || 0) + (player.derived.mag_def || 0);
+
+    // 手动更新 DOM，而不是用 updateVal
+    const elSumAtk = document.getElementById('val_atk');
+    if (elSumAtk) elSumAtk.innerText = Math.floor(totalAtk);
+
+    const elSumDef = document.getElementById('val_def');
+    if (elSumDef) elSumDef.innerText = Math.floor(totalDef);
+
+    // 速度保持原样 (recalcStats 会保证它不为负)
+    updateVal('val_speed', 'speed',   '速度');
+
+    // --- 6. 更新 战斗详情 (折叠栏内部 - 详细拆分) ---
+    updateVal('val_phy_atk', 'phy_atk', '物理攻击');
+    updateVal('val_mag_atk', 'mag_atk', '法术攻击');
+    updateVal('val_phy_def', 'phy_def', '物理防御');
+    updateVal('val_mag_def', 'mag_def', '法术防御');
+
+    updatePct('val_crit',     'crit',     '物理暴击率');
+    updatePct('val_mag_crit', 'mag_crit', '法术暴击率');
+
+    updateVal('val_sharpness',   'sharpness',   '锋利度');
+    updateVal('val_penetration', 'penetration', '灵透度');
+
+    // --- 7. 更新 生存状态条 ---
     const setBar = (idVal, current, max, label) => {
         const el = document.getElementById(idVal);
         if(el) {
@@ -80,15 +121,8 @@ function updateUI() {
     const maxFatigue = player.derived.fatigueMax || 100;
     setBar('val_fatigue', fatigue, maxFatigue, 'fatigueMax');
 
-    const elDate = document.getElementById('profile_date');
-    if (elDate && window.TimeSystem) {
-        elDate.innerText = TimeSystem.getTimeString();
-    }
-
-    if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
-
+    // --- 8. 其他组件渲染 ---
     renderBuffs();
-    // 【新增】更新集市按钮状态
     updateMarketButtonState();
 }
 
