@@ -1,5 +1,5 @@
 // js/modules/ui_combat_modal.js
-// 战斗弹窗UI管理器 v4.5 (修复NextWave连战逻辑 + 适配新属性面板)
+// 战斗弹窗UI管理器 v4.6 (丹药/功法 样式完全物理隔离)
 
 const UICombatModal = {
     _isStyleInjected: false,
@@ -95,33 +95,22 @@ const UICombatModal = {
             .sidebar-title { font-size: 16px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; margin-bottom: 5px; padding-bottom: 2px; }
             .sidebar-items-container { display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; overflow-y: auto; }
             
-            .c-slot-wrapper { width: 70px; height: 80px; background: #fff; border: 1px solid #d7ccc8; border-radius: 4px; padding: 2px; display: flex; flex-direction: column; position: relative; cursor: help; }
+            /* 【核心修改】通用盒子样式 (c-slot-box保持不变，用于内部布局) */
             .c-slot-box { flex: 1; background: #fafafa; border: 1px dashed #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
             .c-icon { font-size: 24px; }
             .c-name { font-size: 10px; white-space: nowrap; overflow: hidden; width: 100%; text-align: center; margin-top: 2px; }
-            .c-btn { width: 100%; font-size: 12px; padding: 1px 0; margin-top: 2px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
-            .c-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-            
-            /* CD 遮罩分离 */
-            /* ====== 【新增】彻底分离的样式 ====== */
-            
-            /* 1. 丹药样式 (Danyao) */
+
+            /* 【核心修改】丹药专用样式 (Danyao) */
             .danyao_slot_wrapper { width: 70px; height: 80px; background: #fff; border: 1px solid #d7ccc8; border-radius: 4px; padding: 2px; display: flex; flex-direction: column; position: relative; cursor: help; }
             .danyao_btn { width: 100%; font-size: 12px; padding: 1px 0; margin-top: 2px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
             .danyao_btn:disabled { opacity: 0.6; cursor: not-allowed; }
             .danyao_cd_overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; color:#333; z-index:5; }
 
-            /* 2. 功法样式 (Gongfa) */
+            /* 【核心修改】功法专用样式 (Gongfa) */
             .gongfa_slot_wrapper { width: 70px; height: 80px; background: #fff; border: 1px solid #a1887f; border-radius: 4px; padding: 2px; display: flex; flex-direction: column; position: relative; cursor: help; }
             .gongfa_btn { width: 100%; font-size: 12px; padding: 1px 0; margin-top: 2px; border: 1px solid #a1887f; background: #efebe9; color:#5d4037; cursor: pointer; }
             .gongfa_btn:disabled { opacity: 0.6; cursor: not-allowed; }
             .gongfa_cd_overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; color:#333; z-index:5; }
-
-            /* 通用内部盒子 */
-            .c-slot-box { flex: 1; background: #fafafa; border: 1px dashed #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-            .c-icon { font-size: 24px; }
-            .c-name { font-size: 10px; white-space: nowrap; overflow: hidden; width: 100%; text-align: center; margin-top: 2px; }
-            
         `;
 
         const styleEl = document.createElement('style');
@@ -141,21 +130,10 @@ const UICombatModal = {
         if (enemy.mag_def === undefined) enemy.mag_def = enemy.def;
     },
 
-    /**
-     * 计算实际行动时间 (秒)
-     * 公式: 5秒 / (1 + 速度 * 0.006)
-     */
-    /**
-     * 【修复】计算实际行动时间 (秒)
-     * 现在直接从 CombatCore 读取配置，保证数值同步
-     */
     _calcActionTime: function(speed) {
-        // 读取配置，如果读取不到则使用默认保底值 (应对未加载的情况)
         const config = (window.CombatCore && window.CombatCore.CONFIG) ? window.CombatCore.CONFIG : { BASE_TIME: 3.0, SPD_FACTOR: 0.01 };
-
         const baseTime = config.BASE_TIME;
         const factor = config.SPD_FACTOR;
-
         const multiplier = 1 + (speed * factor);
         const safeMult = Math.max(0.1, multiplier);
         const time = baseTime / safeMult;
@@ -371,10 +349,8 @@ const UICombatModal = {
                 <button class="ink_btn_danger" style="flex:1; font-weight:bold;" onclick="window['${startCB}']()">⚔️ 拔剑迎敌</button>
             </div>`;
 
-        const modalTitle = options.canEscape ? "遭遇强敌" : `🛑 殊死一搏 - ${enemy.name}`;
-
         UtilsModal.showInteractiveModal(
-            modalTitle,
+            options.canEscape ? "遭遇强敌" : `🛑 殊死一搏 - ${enemy.name}`,
             contentHtml,
             footerHtml,
             "combat_modal",
@@ -410,7 +386,7 @@ const UICombatModal = {
                 const onclick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useConsumable('${idx}')`;
                 const disabled = !item ? 'disabled' : '';
 
-                // 【核心】使用 danyao_... 类名
+                // 【核心修改】Wrapper使用 danyao_slot_wrapper
                 html += `
                 <div class="danyao_slot_wrapper" ${tooltipAttr}>
                     <div class="c-slot-box">${inner}</div>
@@ -440,7 +416,7 @@ const UICombatModal = {
                     const tooltipAttr = `onmouseenter="if(window.TooltipManager)TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="if(window.TooltipManager)TooltipManager.hide()" onmousemove="if(window.TooltipManager)TooltipManager._move(event)"`;
                     const onclick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useSkill('${entry.id}', '${idx}')`;
 
-                    // 【核心】使用 gongfa_... 类名
+                    // 【核心修改】Wrapper使用 gongfa_slot_wrapper
                     html += `
                     <div class="gongfa_slot_wrapper" ${tooltipAttr}>
                         <div class="c-slot-box" style="border-color:#a1887f;">
@@ -456,10 +432,7 @@ const UICombatModal = {
         }
     },
 
-    /**
-     * 【修复】连战逻辑
-     * 适配新的UI结构 (phy_atk, mag_atk 等)
-     */
+    // ... (nextWave 逻辑保持与之前一致，仅需确保 updateSidebar 被调用) ...
     nextWave: function(enemy, nextOnWin = null, options = { canEscape: false, isMultiWave: false }) {
         let modalEl = document.getElementById('combat_modal');
         if (!modalEl) {
@@ -517,7 +490,6 @@ const UICombatModal = {
         if (eToxBar) eToxBar.style.width = '0%';
         if (eToxVal) eToxVal.innerText = '0';
 
-        // 【核心修复】更新拆分后的属性面板
         const eStats = enemy.stats || {};
         const updateAttr = (id, val) => {
             const el = document.getElementById(id);
@@ -534,10 +506,8 @@ const UICombatModal = {
         updateAttr('e_attr_phy_def', eStats.phy_def || enemy.def);
         updateAttr('e_attr_mag_def', eStats.mag_def || enemy.def);
 
-        // 更新速度和时间
         const spd = eStats.speed || enemy.speed;
         updateAttr('e_attr_spd', spd);
-        // 重新计算并更新时间
         const timeEl = document.getElementById('e_attr_spd').querySelector('.attr-extra');
         if (timeEl) {
             const actTime = this._calcActionTime(spd);

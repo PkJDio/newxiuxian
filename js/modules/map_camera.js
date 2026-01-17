@@ -1,34 +1,42 @@
 // js/modules/map_camera.js
-// 主界面地图交互模块 v34.2 (性能优化：按需渲染)
-//console.log("加载 主界面地图控制 (Performance Optimized)");
+// 主界面地图交互模块 v34.4 (修复慢速无法显示的问题)
 
 const MapCamera = {
     canvas: null,
     ctx: null,
 
     // MapCamera 对象的属性
-    x: 2550, // 原 1330 -> 5100/2
-    y: 2550, // 原 1350 -> 5100/2
+    x: 2550,
+    y: 2550,
     scale: 1.5,
     width: 0,
     height: 0,
 
     // 动画控制
     animationId: null,
-    isDirty: true, // 标记是否需要重绘 (初始化为 true)
+    isDirty: true,
     lastRenderTime: 0,
+
+    // 【新增】移动模式配置 (0:慢速, 1:中速, 2:快速)
+    moveModes: {
+        0: { name: "🚶 慢速移动", speed: 5,  hunger: 1, fatigue: 0.5, color: "#8bc34a" },  // 慢速: 消耗减半
+        1: { name: "🏃 中速移动", speed: 10, hunger: 2, fatigue: 1.0, color: "#2196f3" },  // 中速: 标准
+        2: { name: "🐎 快速移动", speed: 20, hunger: 4, fatigue: 2.0, color: "#ff9800" }   // 快速: 消耗加倍
+    },
 
     init: function() {
         this.canvas = document.getElementById('big_map_canvas');
         if (!this.canvas) return;
 
-        // 优化：关闭 alpha 通道以提升 Canvas 性能（如果不需要透明背景）
-        // 你的 MapAtlas 会绘制全屏背景色，所以这里可以关闭 alpha
+        // 优化：关闭 alpha 通道以提升 Canvas 性能
         this.ctx = this.canvas.getContext('2d', { alpha: false });
 
         if (window.MapAtlas && window.MapAtlas.init) window.MapAtlas.init();
 
         this._initPlayerPos();
+
+        // 【核心】初始化左下角移动控制按钮
+        this._initMoveControl();
 
         if (window.player && !window.player.defeatedEnemies) {
             window.player.defeatedEnemies = {};
@@ -45,19 +53,97 @@ const MapCamera = {
 
         window.addEventListener('resize', () => {
             this._resize();
-            this.requestRender(); // 窗口变化时请求重绘
+            this.requestRender();
         });
 
         // 启动渲染循环
         this._loop();
     },
 
-    /**
-     * 请求执行一次渲染
-     * 在移动、战斗结束、打开界面关闭后调用
-     */
     requestRender: function() {
         this.isDirty = true;
+    },
+
+    // 【新增】初始化移动速度控制按钮
+    _initMoveControl: function() {
+        if (!window.player) return;
+
+        // 1. 读取存档或初始化默认值 (1: 中速)
+        // 注意：这里必须用 undefined 判断，否则 0 会被误判
+        if (player.moveSpeedMode === undefined) player.moveSpeedMode = 1;
+
+        // 2. 创建或获取按钮容器
+        let btn = document.getElementById('btn_move_speed');
+        if (!btn) {
+            btn = document.createElement('div');
+            btn.id = 'btn_move_speed';
+
+            // 设置样式：悬浮在左下角 (红色框位置)
+            btn.style.cssText = `
+                position: absolute;
+                bottom: 15px;
+                left: 15px;
+                z-index: 100;
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 8px 12px;
+                cursor: pointer;
+                font-family: "Kaiti", "KaiTi", serif;
+                font-weight: bold;
+                font-size: 18px;
+                box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+                user-select: none;
+                transition: all 0.1s;
+                text-align: center;
+                min-width: 90px;
+            `;
+
+            btn.onmousedown = () => { btn.style.transform = 'scale(0.95)'; };
+            btn.onmouseup = () => { btn.style.transform = 'scale(1)'; };
+            btn.onclick = () => { this._toggleSpeedMode(); };
+
+            // 插入到 canvas 的父容器中
+            if (this.canvas.parentElement) {
+                // 确保父容器是定位基准，否则 bottom:15px 会跑到页面最底部
+                const computedStyle = window.getComputedStyle(this.canvas.parentElement);
+                if (computedStyle.position === 'static') {
+                    this.canvas.parentElement.style.position = 'relative';
+                }
+                this.canvas.parentElement.appendChild(btn);
+            }
+        }
+
+        this._updateSpeedBtnUI();
+    },
+
+    // 【新增】切换速度模式 (0->1->2->0)
+    _toggleSpeedMode: function() {
+        if (!window.player) return;
+
+        // 循环切换
+        const current = (player.moveSpeedMode !== undefined) ? player.moveSpeedMode : 1;
+        player.moveSpeedMode = (current + 1) % 3;
+
+        this._updateSpeedBtnUI();
+        if (window.saveGame) window.saveGame();
+    },
+
+    // 【核心修复】更新按钮显示 (修复了 0 被判定为 false 导致跳回中速的 Bug)
+    _updateSpeedBtnUI: function() {
+        const btn = document.getElementById('btn_move_speed');
+        if (!btn || !window.player) return;
+
+        // 使用 !== undefined 严格判断，确保 0 (慢速) 能被正确读取
+        const modeIdx = (player.moveSpeedMode !== undefined) ? player.moveSpeedMode : 1;
+        const config = this.moveModes[modeIdx] || this.moveModes[1];
+
+        btn.innerHTML = config.name;
+        btn.style.color = config.color;
+        btn.style.borderColor = config.color;
+
+        // 动态提示
+        btn.title = `移动消耗：饱食度 ${config.hunger}/时，疲劳 ${config.fatigue}/时`;
     },
 
     _initPlayerPos: function() {
@@ -85,7 +171,6 @@ const MapCamera = {
         if (container) {
             const w = container.clientWidth;
             const h = container.clientHeight;
-            // 只有尺寸改变才重置 canvas 尺寸，避免清空画布
             if (this.canvas.width !== w || this.canvas.height !== h) {
                 this.canvas.width = w;
                 this.canvas.height = h;
@@ -99,13 +184,9 @@ const MapCamera = {
     _loop: function(timestamp) {
         this.animationId = requestAnimationFrame((t) => this._loop(t));
 
-        // 只有当标记为 dirty 时才执行繁重的绘制
-        // 或者每隔一定时间强制刷新一次（比如 1秒）以更新时间/光照变化
-        // 这里添加一个简单的节流，防止某些情况下的高频刷新
         if (this.isDirty || (timestamp - this.lastRenderTime > 1000)) {
 
             if (window.player) {
-                // 只有坐标变了才算真的变了，虽然 moveTo 已经设了 dirty，这里双重保险
                 if (this.x !== player.coord.x || this.y !== player.coord.y) {
                     this.x = player.coord.x;
                     this.y = player.coord.y;
@@ -122,7 +203,6 @@ const MapCamera = {
             this.isDirty = false;
             this.lastRenderTime = timestamp;
 
-            // 【确保这里有调用】
             this._checkMonsterTutorial();
         }
     },
@@ -186,6 +266,7 @@ const MapCamera = {
         this.moveTo(Math.floor(worldX), Math.floor(worldY));
     },
 
+    // 【核心修改】移动逻辑：根据当前模式计算时间与消耗
     moveTo: function(tx, ty) {
         const MAX = 5100;
         tx = Math.max(0, Math.min(MAX, tx));
@@ -196,19 +277,27 @@ const MapCamera = {
         const dist = Math.abs(player.coord.x - tx) + Math.abs(player.coord.y - ty);
         if (player.buffs && player.buffs['t_water']) this._addSwimmingExp(dist);
 
-        let currentSpeed = player.derived.speed || 10;
-        if (currentSpeed < 1) currentSpeed = 1;
+        // 1. 获取当前移动模式 (严格判断)
+        const modeIdx = (player.moveSpeedMode !== undefined) ? player.moveSpeedMode : 1;
+        const modeConfig = this.moveModes[modeIdx] || this.moveModes[1];
+
+        // 2. 计算消耗时间 (距离 / 模式速度)
+        const currentSpeed = modeConfig.speed;
         const costHours = dist / currentSpeed;
 
-        if (window.TimeSystem) TimeSystem.passTime(costHours);
+        // 3. 调用 TimeSystem，传入自定义消耗速率
+        if (window.TimeSystem) {
+            TimeSystem.passTime(costHours, 0, 0, {
+                hunger: modeConfig.hunger,
+                fatigue: modeConfig.fatigue
+            });
+        }
 
         // 更新坐标
         player.coord.x = tx;
         player.coord.y = ty;
 
-        // --- 新增：根据坐标检测并保存区域信息 ---
         this._updateRegionInfo(tx, ty);
-        // --- 【核心修改】检测是否在城镇中，并更新 player.location ---
         this._updatePlayerLocation(tx, ty);
         this._checkRegion(tx, ty);
         this._updateTerrainBuffs(tx, ty);
@@ -216,21 +305,17 @@ const MapCamera = {
         if (window.MapEnemyManager) MapEnemyManager.update(this.x, this.y);
 
         if (window.GatherSystem) GatherSystem.updateButtonState();
-        if(window.saveGame) window.saveGame(); // 保存存档
+        if(window.saveGame) window.saveGame();
 
         this.requestRender();
     },
 
-    // --- 新增辅助方法：更新区域 region (如: r_c_1_1) ---
     _updateRegionInfo: function(x, y) {
         if (typeof REGION_LAYOUT === 'undefined') return;
-
-        // 遍历区域布局寻找匹配项
         const region = REGION_LAYOUT.find(r =>
             x >= r.x[0] && x < r.x[1] &&
             y >= r.y[0] && y < r.y[1]
         );
-
         if (region) {
             player.coord.region = region.id;
         } else {
@@ -238,32 +323,19 @@ const MapCamera = {
         }
     },
 
-    // --- 【核心修改】新增辅助方法：更新具体位置 location (如: t_xianyang) ---
     _updatePlayerLocation: function(x, y) {
         if (!window.player) return;
-
-        let locId = ""; // 默认不在任何城镇
-
+        let locId = "";
         if (typeof WORLD_TOWNS !== 'undefined') {
-            // 查找当前坐标是否在某个城镇的矩形范围内
             const town = WORLD_TOWNS.find(t =>
                 x >= t.x && x < t.x + t.w &&
                 y >= t.y && y < t.y + t.h
             );
-
-            if (town) {
-                locId = town.id;
-            }
+            if (town) locId = town.id;
         }
-
-        // 只有位置发生变化时才更新（可选优化）
         if (player.location !== locId) {
             player.location = locId;
-
-            // 如果有“集市”按钮的状态更新函数，可以在这里触发
-            if (window.updateMarketButtonState) {
-                window.updateMarketButtonState();
-            }
+            if (window.updateMarketButtonState) window.updateMarketButtonState();
         }
     },
 
@@ -271,51 +343,38 @@ const MapCamera = {
         if (window.UICombatModal) UICombatModal.updateSidebar();
     },
 
-    // 供外部调用刷新地图渲染 (强制刷新)
     renderMap: function() {
         this._checkMonsterTutorial();
         this.requestRender();
     },
-    // 【新增】检测屏幕内是否有怪物并触发教程
-    // 【修正版】检测屏幕内是否有怪物并触发教程
-    _checkMonsterTutorial: function() {
-        // 1. 检查是否已经教过了
-        if (localStorage.getItem('xiuxian_tut_monster_ignore') === 'true') return;
 
-        // 2. 限制检测频率 (每秒检测一次即可)
+    _checkMonsterTutorial: function() {
+        if (localStorage.getItem('xiuxian_tut_monster_ignore') === 'true') return;
         const now = Date.now();
-        if (now - this._lastTutorialCheck < 1000) return; // 这里的变量名要和 init 里定义的一致
+        if (now - (this._lastTutorialCheck || 0) < 1000) return;
         this._lastTutorialCheck = now;
 
-        // 3. 获取当前屏幕内的所有怪物
         if (!window.MapEnemyManager || !MapEnemyManager.enemies) return;
 
-        // 4. 准备参数
-        const ts = (window.MapAtlas ? MapAtlas.tileSize : 32); // 关键修正：获取格子大小
+        const ts = (window.MapAtlas ? MapAtlas.tileSize : 32);
         const centerX = this.width / 2;
         const centerY = this.height / 2;
-        const margin = 60; // 边缘边距
+        const margin = 60;
 
-        // 遍历所有活着的敌人
         for (let key in MapEnemyManager.enemies) {
             const enemy = MapEnemyManager.enemies[key];
             if (enemy.isDead) continue;
 
-            // 关键修正：加入 ts (tileSize) 进行计算
             const screenX = (enemy.x - this.x) * ts * this.scale + centerX;
             const screenY = (enemy.y - this.y) * ts * this.scale + centerY;
 
-            // 5. 判断是否在屏幕可视范围内
             if (screenX > margin && screenX < this.width - margin &&
                 screenY > margin && screenY < this.height - margin) {
 
                 console.log(">>> [MapCamera] 发现怪物，触发新手引导！");
-
-                // 构造虚拟坐标矩形 (图标大小也受缩放影响)
                 const iconSize = ts * this.scale;
                 const canvasRect = this.canvas.getBoundingClientRect();
 
-                // 绝对坐标 = Canvas在网页的坐标 + 怪物在Canvas的坐标
                 const virtualRect = {
                     left: canvasRect.left + screenX - iconSize/2,
                     top: canvasRect.top + screenY - iconSize/2,
@@ -323,12 +382,10 @@ const MapCamera = {
                     height: iconSize
                 };
 
-                // 调用 UI 教程模块
                 if (window.UITutorial) {
                     UITutorial.start(false, 'monster', virtualRect);
                 }
-
-                return; // 触发一次就够了
+                return;
             }
         }
     },

@@ -1,7 +1,7 @@
 // js/core/utils_tip.js
 // 悬浮窗管理器 (最终完整版)
-// 特性：GPU加速渲染 + 坐标自动修正 + 完整的功法/物品样式
-// console.log("加载 悬浮窗系统 (Final)");
+// 特性：GPU加速渲染 + 坐标自动修正 + 完整的功法/物品样式 + 装备词条显示
+// console.log("加载 悬浮窗系统 (Final + Entries)");
 
 const TooltipManager = {
     el: null,
@@ -154,30 +154,21 @@ const TooltipManager = {
         this.el.innerHTML = html;
         this._show();
     },
+
     /* ================= 2.1 商店/图鉴物品详情 (查库版) ================= */
-    /**
-     * 显示商店物品详情 (无SID，直接查库)
-     * @param {Event} e 鼠标事件
-     * @param {String} itemId 物品模板ID
-     */
     showShopItem: function(e, itemId) {
-        // 1. 数据获取
         let item = null;
         if (window.GAME_DB && window.GAME_DB.items) {
             item = window.GAME_DB.items.find(i => i.id === itemId);
         }
-
         if (!item) {
             console.warn(`[Tooltip] 无法找到物品数据: ${itemId}`);
             return;
         }
-
-        // 2. 复用 showItem 逻辑
-        // 传入 null 作为 sid，传入 item 对象作为 instance
         this.showItem(e, null, item, 'normal');
     },
-    /* ================= 2. 普通物品详情 (恢复完整版) ================= */
-    /* ================= 2. 普通物品详情 (支持拆分属性与装备需求) ================= */
+
+    /* ================= 2. 普通物品详情 (支持拆分属性与装备需求 + 词条显示) ================= */
     showItem: function(e, sid, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, sid); return; }
         this._init();
@@ -203,11 +194,9 @@ const TooltipManager = {
                 if (typeof val === 'number' && val !== 0) {
                     if (k === 'max_skill_level') continue;
 
-                    // 直接使用全局定义的 ATTR_MAPPING
                     let label = ATTR_MAPPING[k] || k;
                     let c = '#fff';
 
-                    // 根据 key 设置特定图标与颜色
                     if (k === 'phy_atk') { label = '⚔️ 物理攻击'; c = '#ffa726'; }
                     else if (k === 'mag_atk') { label = '🔮 法术攻击'; c = '#42a5f5'; }
                     else if (k === 'phy_def') { label = '🛡️ 物理防御'; c = '#66bb6a'; }
@@ -224,14 +213,12 @@ const TooltipManager = {
                     else if (k === 'toxicity') { label = '☠️ 丹毒'; c = '#9c27b0'; }
                     else if (k === 'luck') { label = '🍀 气运'; c = '#ffee58'; }
 
-                    // 通用处理：正数加+号且变绿(除非已有特定c值)，负数标红
                     let finalColor = val < 0 ? '#f44336' : c;
                     statsHtml += `<div class="tt_row">
                     <span style="color:#ccc;">${label}</span>
                     <span style="color:${finalColor}; font-weight:bold;">${val > 0 ? '+' : ''}${val}</span>
                 </div>`;
                 }
-                // 处理 Buff (保持原逻辑)
                 else if (k === 'buff' && typeof val === 'object') {
                     const bAttrs = String(val.attr).split('_');
                     const bVals = String(val.val).split('_');
@@ -246,8 +233,37 @@ const TooltipManager = {
         }
         if (statsHtml) html += `<div style="margin:8px 0; padding-bottom:8px; border-bottom:1px dashed #444;">${statsHtml}</div>`;
 
-        // --- 2. 装备需求显示 ---
+        // --- 1.5. 【新增】装备词条显示 (仅对装备有效) ---
+        // 确保 ENTRY_DB 已加载
         const equipTypes = ['weapon', 'head', 'body', 'feet', 'fishing_rod'];
+        if (equipTypes.includes(item.type) && item.entries && item.entries.length > 0 && window.ENTRY_DB) {
+            let entriesHtml = '';
+            item.entries.forEach(entry => {
+                const def = window.ENTRY_DB[entry.id];
+                if (!def) return; // 数据库中找不到则跳过
+
+                let valStr = "";
+                // 如果词条有数值（如吸血15%），且描述里有 {0} 占位符，可以替换
+                // 这里简单处理：如果有 val，就显示在名字后面
+                if (entry.val !== undefined) {
+                    valStr = `<span style="color:#ffeb3b; font-weight:bold; margin-left:4px;">${entry.val > 0 ? '+' : ''}${entry.val}${def.unit || ''}</span>`;
+                }
+
+                entriesHtml += `
+                <div style="margin-bottom:4px;">
+                    <div style="color:#b39ddb; font-weight:bold;">◆ ${def.name}${valStr}</div>
+                    <div style="color:#9e9e9e; font-size:12px; margin-left:14px;">${def.desc || "暂无描述"}</div>
+                </div>`;
+            });
+
+            if (entriesHtml) {
+                html += `<div style="margin:8px 0; padding:6px; background:rgba(103, 58, 183, 0.15); border:1px solid rgba(103, 58, 183, 0.3); border-radius:4px;">
+                    ${entriesHtml}
+                </div>`;
+            }
+        }
+
+        // --- 2. 装备需求显示 ---
         if (equipTypes.includes(item.type) && item.req) {
             let reqHtml = '<div style="margin:8px 0; font-size:14px; color:#aaa;">使用要求：</div>';
             const curStats = window.player.derived || window.player.attr || {};
@@ -274,7 +290,6 @@ const TooltipManager = {
             html += `<div class="tt_sep"></div><div class="tt_row"><span>修习状态</span><span class="${isLearned ? 'tt_pos' : 'tt_neu'}">${isLearned ? '已学会' : '未领悟'}</span></div>`;
         }
 
-        // 支持你新增的 value 字段价格显示
         if (item.price || item.value) {
             let val = item.value || item.price;
             html += `<div class="tt_row" style="margin-top:5px; border-top:1px solid #333; padding-top:5px;">
@@ -289,7 +304,7 @@ const TooltipManager = {
         this._show();
     },
 
-    /* ================= 3. 技能详情 (恢复完整版+主动技能) ================= */
+    /* ================= 3. 技能详情 (保持不变) ================= */
     showSkill: function(e, skillId) {
         this._init();
         this._mouseX = e.clientX;
@@ -305,7 +320,6 @@ const TooltipManager = {
         const attrMap = (typeof ATTR_MAPPING !== 'undefined') ? ATTR_MAPPING : {};
         const isMastered = player.skills && player.skills[skillId] && player.skills[skillId].mastered;
 
-        // --- 样式定义 ---
         const styleHeader = `font-size:22px; font-weight:bold; color:${rarityConf.color}; word-break: break-all;`;
         const styleSub = `font-size:15px; color:#aaa; margin-top:4px;`;
         const styleBarLabel = `font-size:14px; color:#ccc;`;
@@ -316,7 +330,6 @@ const TooltipManager = {
         const levelTag = `<span style="${tagStyle} background:#d4af37; color:#000;">${info.levelName}</span>`;
         const limitTag = `<span style="${tagStyle} background:#444; color:#ccc;">上限: ${info.limitLevelName}</span>`;
 
-        // 1. 标题头
         let html = `
         <div style="border-bottom:1px solid #555; padding-bottom:8px; margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
@@ -329,7 +342,6 @@ const TooltipManager = {
             </div>
         </div>`;
 
-        // 2. 进度条
         let expText = "已满级";
         let progressPct = 100;
         if (info.nextExp !== -1) {
@@ -350,7 +362,6 @@ const TooltipManager = {
             </div>
         </div>`;
 
-        // 3. 基础属性加成
         if (info.baseEffects) {
             let statsHtml = "";
             for (let key in info.baseEffects) {
@@ -369,7 +380,6 @@ const TooltipManager = {
             }
         }
 
-        // 4. 主动招式展示
         if (item.action) {
             const act = item.action;
             let dmgStr = "";
@@ -394,7 +404,6 @@ const TooltipManager = {
             </div>`;
         }
 
-        // 5. 参悟加成
         if (isMastered && info.masteryBonus) {
             const mAttr = attrMap[info.masteryBonus.attr] || info.masteryBonus.attr;
             const mVal = info.masteryBonus.val;
@@ -410,43 +419,32 @@ const TooltipManager = {
         html += `<div style="${styleDesc}">${item.desc || "暂无描述"}</div>`;
 
         this.el.className = 'ink_tooltip';
-        this.el.style.width = '320px'; // 稍微加宽一点适应内容
+        this.el.style.width = '320px';
         this.el.innerHTML = html;
         this._show();
     },
 
     /* ================= 4. 图鉴详情 (保持通用逻辑) ================= */
     showGalleryItem: function(e, sid) {
-        // 由于图鉴逻辑较长且与普通物品类似，直接复用 showItem 逻辑或保留你原有的复杂逻辑
-        // 这里为了确保你的图鉴样式也恢复，我复用 showItem 的核心，但在顶部加个区分
         this.showItem(e, sid, null, 'normal');
     },
-    /* ================= 5. 战斗详细悬浮窗 (新增) ================= */
-    /**
-     * 显示战斗数值的详细计算过程
-     * @param {Event} e 鼠标事件
-     * @param {String} encodedData 经过 encodeURIComponent(JSON.stringify(data)) 处理的数据
-     */
+
+    /* ================= 5. 战斗详细悬浮窗 (保持不变) ================= */
     showCombatDetail: function(e, encodedData) {
         this._init();
         this._mouseX = e.clientX;
         this._mouseY = e.clientY;
 
         let data = {};
-        try {
-            data = JSON.parse(decodeURIComponent(encodedData));
-        } catch (err) {
-            console.error("Tooltip parse error", err);
-            return;
-        }
+        try { data = JSON.parse(decodeURIComponent(encodedData)); } catch (err) { return; }
 
         let html = '';
+        const sep = '<div style="border-top:1px dashed #555; margin:4px 0;"></div>';
 
-        // --- 1.1 & 1.2 伤害计算 (玩家/敌人) ---
+        // --- 1.1 & 1.2 伤害计算 ---
         if (data.type === 'damage') {
             const isPlayer = data.source === 'player';
             const isPhy = data.dmgType === 'phy';
-            // 标题颜色：玩家攻击用红色，敌人攻击用橙色
             const color = isPlayer ? '#d32f2f' : '#f57f17';
 
             const title = isPlayer
@@ -454,118 +452,97 @@ const TooltipManager = {
                 : (isPhy ? "敌人造成物理伤害" : "敌人造成法术伤害");
 
             html += `<div class="tt_header" style="color:${color}; border-bottom:1px solid #555; padding-bottom:4px; margin-bottom:4px;">${title}</div>`;
-
-            // 1. 伤害类型
             html += `<div class="tt_row"><span>伤害类型</span> <span style="color:#fff">${isPhy ? '物理' : '法术'}</span></div>`;
-// 【修正】2. 造成的初始伤害 (新增)
             html += `<div class="tt_row"><span>造成的初始伤害</span> <span>${Math.floor(data.finalAtkVal)}</span></div>`;
-            // 2. 防御力 (目标)
+
             const defLabel = isPlayer ? (isPhy ? "敌人物理防御力" : "敌人法术防御力") : (isPhy ? "玩家物理防御力" : "玩家法术防御力");
             html += `<div class="tt_row"><span>${defLabel}</span> <span>${Math.floor(data.originDef)}</span></div>`;
 
-            // 3. 穿透/锋利度 (攻击者)
-            if (data.penVal > 0) {
-                let penLabel = "";
-                if (isPlayer) penLabel = isPhy ? "玩家武器锋利度" : "玩家武器灵透度";
-                else penLabel = isPhy ? "敌人护甲穿透" : "敌人法术穿透"; // 对应 basePen
-
-                // 玩家百分比穿透 或 敌人basePen百分比
-                const penText = (data.penPct > 0) ? `${data.penVal} (+${data.penPct}%)` : `${data.penVal}`;
-
-                html += `<div class="tt_row" style="color:#ffb74d;"><span>${penLabel}</span> <span>${penText}</span></div>`;
-            } else if (data.penPct > 0) {
-                // 纯百分比穿透情况
-                html += `<div class="tt_row" style="color:#ffb74d;"><span>穿透比例</span> <span>${data.penPct}%</span></div>`;
+            if (isPlayer) {
+                if (isPhy && data.atkStats.sharpness > 0) html += `<div class="tt_row" style="color:#ffb74d;"><span>玩家武器锋利度</span> <span>${data.atkStats.sharpness}</span></div>`;
+                if (!isPhy && data.atkStats.penetration > 0) html += `<div class="tt_row" style="color:#ffb74d;"><span>玩家武器灵透度</span> <span>${data.atkStats.penetration}</span></div>`;
+                if (data.penPct > 0) html += `<div class="tt_row" style="color:#ffb74d;"><span>${isPhy?'物理':'法术'}穿透%</span> <span>${data.penPct}%</span></div>`;
+            } else {
+                if (data.atkStats.basePen > 0) {
+                    let penLabel = isPhy ? "敌人护甲穿透basePen" : "敌人法术穿透basePen";
+                    html += `<div class="tt_row" style="color:#ffb74d;"><span>${penLabel}</span> <span>${data.atkStats.basePen}</span></div>`;
+                }
             }
 
-            // 4. 防御衰减 (计算结果)
             if (data.defReductPct > 0) {
-                const label = isPlayer ? (isPhy ? "敌人物防衰减" : "敌人法防衰减") : (isPhy ? "玩家物防衰减" : "玩家法防衰减");
-                html += `<div class="tt_row" style="color:#ffb74d;"><span>${label}</span> <span>${data.defReductPct}%</span></div>`;
+                const targetStr = isPlayer ? "敌人" : "玩家";
+                const typeStr = isPhy ? "物理" : "法术";
+                html += `<div class="tt_row" style="color:#ffb74d;"><span>${targetStr}${typeStr}防御衰减度%</span> <span>${data.defReductPct}%</span></div>`;
             }
 
-            // 5. 实际防御 & 减伤
             const targetName = isPlayer ? "敌人" : "玩家";
-            const defType = isPhy ? "物理" : "法术";
-            html += `<div class="tt_row"><span>${targetName}实际${defType}防御</span> <span>${data.effectiveDef}</span></div>`;
-            html += `<div class="tt_row"><span>${targetName}实际${defType}减伤</span> <span style="color:#ef5350;">${data.mitigationPct}%</span></div>`;
+            const defTypeStr = isPhy ? "物理" : "法术";
+            html += `<div class="tt_row"><span>${targetName}实际${defTypeStr}防御力</span> <span>${Math.floor(data.effectiveDef)}</span></div>`;
+            html += `<div class="tt_row"><span>${targetName}实际${defTypeStr}防御减伤%</span> <span style="color:#ef5350;">${data.mitigationPct}%</span></div>`;
 
-            html += `<div class="tt_sep"></div>`;
+            html += sep;
 
-            // 6. 减伤后伤害
             const attackerName = isPlayer ? "玩家" : "敌人";
-            html += `<div class="tt_row"><span>${attackerName}减伤后伤害</span> <span>${data.dmgAfterMitigation}</span></div>`;
+            html += `<div class="tt_row"><span>${attackerName}减伤后造成${defTypeStr}伤害</span> <span>${data.dmgAfterMitigation}</span></div>`;
 
-            // 7. 暴击
-            const critLabel = isPhy ? "物理暴击率" : "法术暴击率"; // 敌人统称暴击率crit
-            html += `<div class="tt_row"><span>${data.source === 'enemy' ? '敌人暴击率' : critLabel}</span> <span>${data.critRate}%</span></div>`;
+            const critLabel = isPlayer ? (isPhy ? "物理暴击率" : "法术暴击率") : "敌人暴击率crit";
+            html += `<div class="tt_row"><span>${critLabel}</span> <span>${(data.finalCritRate * 100).toFixed(1)}%</span></div>`;
 
-            if (data.isCrit) {
-                html += `<div class="tt_row" style="color:#ffeb3b; font-weight:bold;"><span>暴击增加伤害</span> <span>x${data.critDmg || 1.5}</span></div>`;
-            }
+            if (data.isCrit) html += `<div class="tt_row" style="color:#ffeb3b; font-weight:bold;"><span>暴击增加伤害</span> <span>x${data.critDmg || 1.5}</span></div>`;
 
-            // 8. 浮动
-            html += `<div class="tt_row"><span>伤害浮动</span> <span style="color:#aaa;">${data.variance}</span></div>`;
+            const varPct = Math.round(data.variance * 100);
+            html += `<div class="tt_row"><span>伤害浮动</span> <span style="color:#aaa;">${varPct}%</span></div>`;
 
-            // 9. 最终
-            html += `<div class="tt_row" style="margin-top:4px; font-size:15px; color:${color}; font-weight:bold; border-top:1px solid #444; padding-top:2px;">
-                <span>${attackerName}实际造成${defType}伤害</span> <span>${data.finalDamage}</span>
-            </div>`;
+            html += sep;
+            html += `<div class="tt_row" style="font-size:16px; font-weight:bold; color:${color};"><span>${attackerName}实际造成${defTypeStr}伤害</span> <span>${data.finalDamage}</span></div>`;
         }
 
         // --- 1.3 & 1.4 闪避判定 ---
         else if (data.type === 'evasion') {
-            const isPlayer = data.source === 'player'; // 这里的 source 指谁在尝试闪避
-            const title = isPlayer ? "玩家闪避判定" : "敌人闪避判定";
-
+            const isPlayer = data.source === 'player';
+            const title = isPlayer ? "玩家的闪避" : "敌人的闪避";
             html += `<div class="tt_header">${title}</div>`;
-            html += `<div class="tt_row"><span>${isPlayer?'玩家':'敌人'}基础闪避率</span> <span>${data.base}%</span></div>`;
-
-            if (data.acc > 0) {
-                html += `<div class="tt_row" style="color:#ff5252;"><span>${isPlayer?'敌人':'玩家'}命中度</span> <span>-${data.acc}%</span></div>`;
-            }
-
-            html += `<div class="tt_sep"></div>`;
-            html += `<div class="tt_row" style="color:#4caf50; font-weight:bold;"><span>${isPlayer?'玩家':'敌人'}最终闪避率</span> <span>${data.final}%</span></div>`;
+            html += `<div class="tt_row"><span>${isPlayer?'玩家':'敌人'}的基础闪避率</span> <span>${data.base}%</span></div>`;
+            if (data.acc > 0) html += `<div class="tt_row" style="color:#ff5252;"><span>${isPlayer?'敌人':'玩家'}命中度%</span> <span>-${data.acc}%</span></div>`;
+            html += sep;
+            html += `<div class="tt_row" style="color:#4caf50; font-weight:bold;"><span>${isPlayer?'玩家':'敌人'}的最终闪避率</span> <span>${data.final}%</span></div>`;
         }
 
         // --- 1.5 玩家技能 ---
         else if (data.type === 'player_skill') {
             html += `<div class="tt_header" style="color:#2196f3;">${data.name}</div>`;
-            html += `<div class="tt_row"><span>伤害类型</span> <span>${data.dmgType === 'phy' ? '物理' : '法术'}</span></div>`;
+            const typeStr = data.dmgType === 'phy' ? '物理' : '法术';
+            html += `<div class="tt_row"><span>伤害类型</span> <span>${typeStr}</span></div>`;
+            html += `<div class="tt_row"><span>${typeStr}攻击面板</span> <span>${data.panelVal}</span></div>`;
 
-            const panelName = data.dmgType === 'phy' ? '物理攻击' : '法术攻击';
-            html += `<div class="tt_row"><span>${panelName}面板</span> <span>${data.panelVal}</span></div>`;
-
-            // 功法伤害数值 (固定/百分比)
-            let dmgStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}% × ${panelName}`;
+            let dmgStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}% × ${typeStr}攻击`;
             html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${dmgStr}</span></div>`;
-
             html += `<div class="tt_row"><span>消耗灵力</span> <span style="color:#42a5f5;">${data.cost}</span></div>`;
             html += `<div class="tt_row"><span>冷却时间</span> <span>${data.cd} 回合</span></div>`;
         }
 
-        // --- 1.6 敌人技能 (Type 1, 2, 3) ---
+        // --- 1.6 敌人技能 ---
         else if (data.type === 'enemy_skill') {
-            // 1:伤害(红), 2:Debuff(橙), 3:Buff(绿)
             const color = data.subType === 1 ? '#d32f2f' : (data.subType === 2 ? '#f57f17' : '#388e3c');
             html += `<div class="tt_header" style="color:${color};">${data.name}</div>`;
 
-            if (data.subType === 1) { // 伤害技能
-                const panelName = data.dmgType === 'phy' ? '物理攻击' : '法术攻击';
-                html += `<div class="tt_row"><span>伤害类型</span> <span>${data.dmgType==='phy'?'物理':'法术'}</span></div>`;
-                html += `<div class="tt_row"><span>${panelName}面板</span> <span>${data.panelVal}</span></div>`;
-                let dmgStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}% × ${panelName}`;
-                html += `<div class="tt_row"><span>功法伤害数值</span> <span>${dmgStr}</span></div>`;
-            }
-            else if (data.subType === 2) { // Debuff
+            if (data.subType === 1) {
+                const typeStr = data.dmgType === 'phy' ? '物理' : '法术';
+                html += `<div class="tt_row"><span>伤害类型</span> <span>${typeStr}</span></div>`;
+                if (data.valType === 1) {
+                    html += `<div class="tt_row"><span>${typeStr}攻击面板</span> <span>${data.panelVal}</span></div>`;
+                    let dmgStr = `${data.ratio}% × ${typeStr}攻击`;
+                    html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${dmgStr}</span></div>`;
+                } else {
+                    html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${data.fixedDmg}</span></div>`;
+                }
+            } else if (data.subType === 2) {
                 html += `<div class="tt_row"><span>类型</span> <span>减益(Debuff)</span></div>`;
                 html += `<div class="tt_row"><span>减益字段</span> <span>${data.effect}</span></div>`;
                 let valStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}%`;
                 html += `<div class="tt_row"><span>数值</span> <span>${valStr}</span></div>`;
                 html += `<div class="tt_row"><span>持续时间</span> <span>${data.duration} 回合</span></div>`;
-            }
-            else { // Buff
+            } else {
                 html += `<div class="tt_row"><span>类型</span> <span>增益(Buff)</span></div>`;
                 html += `<div class="tt_row"><span>增益字段</span> <span>${data.effect}</span></div>`;
                 let valStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}%`;
@@ -575,25 +552,58 @@ const TooltipManager = {
             html += `<div class="tt_row" style="color:#aaa; font-size:12px;"><span>触发概率</span> <span>${data.prob}%</span></div>`;
         }
 
-        // --- 1.7 词条效果 (吸血/荆棘) ---
+        // --- 1.7 词条效果 ---
         else if (data.type === 'entry') {
             html += `<div class="tt_header" style="color:#ab47bc;">${data.name}</div>`;
             if (data.name === '吸血' || data.name === '魔饮') {
                 html += `<div class="tt_row"><span>造成的实际物理伤害</span> <span>${data.baseVal}</span></div>`;
                 html += `<div class="tt_row"><span>吸血百分比</span> <span>${data.ratio}%</span></div>`;
-                html += `<div class="tt_sep"></div>`;
+                html += sep;
                 html += `<div class="tt_row" style="color:#4caf50; font-weight:bold;"><span>回复数值</span> <span>+${data.finalVal}</span></div>`;
             } else if (data.name === '荆棘') {
                 html += `<div class="tt_row"><span>受到的实际物理伤害</span> <span>${data.baseVal}</span></div>`;
                 html += `<div class="tt_row"><span>反伤百分比</span> <span>${data.ratio}%</span></div>`;
-                html += `<div class="tt_sep"></div>`;
+                html += sep;
                 html += `<div class="tt_row" style="color:#d32f2f; font-weight:bold;"><span>反伤数值</span> <span>${data.finalVal}</span></div>`;
             }
         }
 
         this.el.className = 'ink_tooltip';
-        // 宽度稍微加宽以容纳详细信息
         this.el.style.width = '280px';
+        this.el.innerHTML = html;
+        this._show();
+    },
+    /* ================= 6. 单一词条详情 (新增) ================= */
+    /**
+     * 显示单个词条的详细解释
+     * @param {Event} e 鼠标事件
+     * @param {String} entryId 词条ID (如 'lifesteal')
+     * @param {Number} val 词条数值 (如 15)
+     */
+    showEntry: function(e, entryId, val) {
+        this._init();
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        const def = window.ENTRY_DB ? window.ENTRY_DB[entryId] : null;
+        if (!def) return;
+
+        // 自动替换描述中的 {val} 占位符
+        let desc = def.desc || "暂无描述";
+        if (val !== undefined && val !== null) {
+            // 支持 {val}% 和 {val} 两种情况的替换，这里简单全局替换
+            desc = desc.replace(/\{val\}/g, `<span style="color:#fff; font-weight:bold;">${val}</span>`);
+        }
+
+        const html = `
+            <div class="tt_header" style="color:#b39ddb; border-bottom:1px solid #555; padding-bottom:4px; margin-bottom:4px;">
+                ${def.name} <span style="color:#ffeb3b; margin-left:5px;">${val > 0 ? '+' : ''}${val}${def.unit || ''}</span>
+            </div>
+            <div class="tt_desc" style="font-size:14px; color:#ccc; line-height:1.5;">${desc}</div>
+        `;
+
+        this.el.className = 'ink_tooltip';
+        this.el.style.width = '260px';
         this.el.innerHTML = html;
         this._show();
     }
@@ -607,9 +617,9 @@ window.showSkillTooltip = TooltipManager.showSkill.bind(TooltipManager);
 window.hideTooltip = TooltipManager.hide.bind(TooltipManager);
 window.moveTooltip = TooltipManager._move.bind(TooltipManager);
 window.showCombatTooltip = TooltipManager.showCombatDetail.bind(TooltipManager);
-// 【新增】暴露商店物品悬浮窗接口
 window.showShopItemTooltip = TooltipManager.showShopItem.bind(TooltipManager);
-// 全局监听
+// 【新增】暴露词条悬浮窗接口
+window.showEntryTooltip = TooltipManager.showEntry.bind(TooltipManager);
 document.addEventListener('mousemove', (e) => {
     TooltipManager._move(e);
 }, { passive: true });

@@ -29,10 +29,13 @@ const CombatCalc = {
                 def: s.def!==undefined?s.def:(e.def||0),
                 phy_atk: s.phy_atk||s.atk||e.atk||10, mag_atk: s.mag_atk||s.atk||e.atk||10,
                 phy_def: s.phy_def||s.def||e.def||0, mag_def: s.mag_def||s.def||e.def||0,
-                crit: s.crit||e.crit||0, mag_crit: s.mag_crit||e.mag_crit||0,
+                crit: s.crit !== undefined ? s.crit : (e.crit || 0), // 优先读取 stats.crit，其次 enemy.crit
+                mag_crit: s.mag_crit !== undefined ? s.mag_crit : (e.crit || 0), // 如果没有特指法术暴击，通常默认用 crit
+
                 basePen: e.basePen||0, toxAtk: e.toxAtk||0, accuracy: e.accuracy||0,
                 toxicity: e.toxicity||0
             };
+            console.log('怪物base', base);
         }
 
         // 2. 应用 Buff 修正
@@ -51,7 +54,7 @@ const CombatCalc = {
         this._applyStatMods(ctx, targetKey, base);
 
         // 4. 保底处理
-        base.speed = Math.max(1, base.speed);
+        // base.speed = Math.max(1, base.speed);
         base.phy_atk = Math.max(1, base.phy_atk);
         base.mag_atk = Math.max(1, base.mag_atk);
 

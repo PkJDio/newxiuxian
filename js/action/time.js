@@ -1,5 +1,5 @@
 // js/action/time.js
-// 时间系统总控 v10.3 (Debug版)
+// 时间系统总控 v10.4 (适配多级移动消耗)
 
 const TIME_CONFIG = {
     HUNGER_PER_HOUR: 2,
@@ -55,17 +55,29 @@ const TimeSystem = {
         if (window.updateUI) window.updateUI();
     },
 
-    passTime: function(hours, extraHungerCost = 0, extraFatigueCost = 0) {
+    // 【核心修改】支持自定义消耗倍率
+    // customRates: { hunger: 1, fatigue: 0.5 }
+    passTime: function(hours, extraHungerCost = 0, extraFatigueCost = 0, customRates = null) {
         if (!player) return;
         if (!player.time) player.time = { year: 37, month: 1, day: 1, hour: 0, minute: 0, useHour: 0 };
 
         let t = player.time;
         const hoursToAdd = Number(hours) || 0;
 
-        // 状态消耗
-        player.status.hunger = Math.max(0, (player.status.hunger || 0) - (hoursToAdd * TIME_CONFIG.HUNGER_PER_HOUR + extraHungerCost));
-        player.status.fatigue = Math.min(200, (player.status.fatigue || 0) + (hoursToAdd * TIME_CONFIG.FATIGUE_PER_HOUR + extraFatigueCost));
-        TimeEvents.checkStatusDebuffs();
+        // 确定消耗速率 (优先使用自定义，否则使用默认配置)
+        const hungerRate = (customRates && customRates.hunger !== undefined) ? customRates.hunger : TIME_CONFIG.HUNGER_PER_HOUR;
+        const fatigueRate = (customRates && customRates.fatigue !== undefined) ? customRates.fatigue : TIME_CONFIG.FATIGUE_PER_HOUR;
+
+        // 计算消耗
+        const hungerLoss = hoursToAdd * hungerRate + extraHungerCost;
+        const fatigueGain = hoursToAdd * fatigueRate + extraFatigueCost;
+
+        player.status.hunger = Math.max(0, (player.status.hunger || 0) - hungerLoss);
+        player.status.fatigue = Math.min(200, (player.status.fatigue || 0) + fatigueGain);
+
+        if (window.TimeEvents && TimeEvents.checkStatusDebuffs) {
+            TimeEvents.checkStatusDebuffs();
+        }
 
         // 物理时间进位
         t.accMins = (t.accMins || 0) + hoursToAdd * 60;
@@ -84,7 +96,6 @@ const TimeSystem = {
                 t.hour -= 24;
                 t.day += 1;
 
-                // 核心修复逻辑：先处理跨月/跨年，再触发新的一天
                 if (t.day > 30) {
                     console.log(`%c[TimeSystem] 📅 月份进位触发: 从 ${t.month}月${t.day}日 -> ${t.month+1}月1日`, "color: #9c27b0");
                     t.day = 1;
@@ -95,14 +106,13 @@ const TimeSystem = {
                         t.month = 1;
                         t.year += 1;
                         player.age = (player.age || 16) + 1;
-                        TimeEvents.onNewYear();
+                        if(TimeEvents.onNewYear) TimeEvents.onNewYear();
                     }
-                    TimeEvents.onNewMonth();
+                    if(TimeEvents.onNewMonth) TimeEvents.onNewMonth();
                 }
 
-                // 打印当前确切日期，用于调试
                 console.log(`%c[TimeSystem] 🌞 新的一天开始: ${t.year}年${t.month}月${t.day}日`, "color: #2196f3");
-                TimeEvents.onNewDay();
+                if(TimeEvents.onNewDay) TimeEvents.onNewDay();
             }
         }
 
@@ -110,8 +120,8 @@ const TimeSystem = {
         if (t.useHour >= 2.4) {
             const count = Math.floor(t.useHour / 2.4);
             t.useHour -= count * 2.4;
-            TimeEvents.applyNaturalRecovery();
-            TimeEvents.applyBuffReduction(count * 0.1);
+            if(TimeEvents.applyNaturalRecovery) TimeEvents.applyNaturalRecovery();
+            if(TimeEvents.applyBuffReduction) TimeEvents.applyBuffReduction(count * 0.1);
         }
 
         if (window.updateUI) window.updateUI();

@@ -14955,9 +14955,9 @@ const weapons = [
         sharpness: 10,
         effects: { phy_atk: 10, mag_atk: 10 },
         entries: [
-            { id: "lifesteal", val: 15 }, // 吸血 15%
-            { id: "sharpness_plus", val: 10 }, // 锐利 +10
-            {id: "double_strike", val: 15} // 连击 15%
+            { id: "lifesteal", val: 5 }, // 吸血 15%
+            { id: "sharpness_plus", val: 5 }, // 锐利 +10
+            {id: "double_strike", val: 5} // 连击 15%
         ],
         desc: "剑就是剑，哪有什么名字",
     },

@@ -1,66 +1,43 @@
 // js/modules/combat/combat_action.js
 // 职责：执行具体的战斗行为与状态结算
+// 适配：V3.4 怪物技能数值类型区分 (固定/百分比)
 
 const CombatAction = {
     /** 玩家施放技能 */
-    useSkill: function(ctx, bookId, skillIdx) {
+    useSkill: function(ctx, bookId, skillIdx) { /* 保持原代码 */
         if (!ctx._canAct()) return;
         if (ctx.skillCDs[bookId] > 0) {
             if(window.showToast) window.showToast(`技能冷却中 (${ctx.skillCDs[bookId]})`);
             return;
         }
-
         const book = window.GAME_DB.items.find(i => i.id === bookId);
         if (!book || !book.action) return;
-
         const action = book.action;
         if (ctx.currentPMp < action.mpCost) {
             if(window.showToast) window.showToast("灵力不足！");
             return;
         }
-
         ctx.currentPMp -= action.mpCost;
         ctx.skillCDs[bookId] = (action.cd || 0) + 1;
         ctx._refreshSkillCDUI();
-
         const pStats = CombatCalc.getDynamicStats(ctx, 'player');
         const eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
         const attacker = { ...pStats, skillMult: action.dmgMult || 1.0, skillName: action.name };
 
-        // 构造玩家技能悬浮窗数据
         const dmgType = action.damageType || 'phy';
         const panelVal = dmgType === 'phy' ? pStats.phy_atk : pStats.mag_atk;
-
         const tooltipData = {
-            type: 'player_skill',
-            name: action.name,
-            dmgType: dmgType,
-            panelVal: panelVal,
-            fixedDmg: action.flatDmg || 0,
-            ratio: ((action.dmgMult || 1) * 100).toFixed(0),
-            cost: action.mpCost,
-            cd: action.cd || 0
+            type: 'player_skill', name: action.name, dmgType: dmgType, panelVal: panelVal,
+            fixedDmg: action.flatDmg || 0, ratio: ((action.dmgMult || 1) * 100).toFixed(0),
+            cost: action.mpCost, cd: action.cd || 0
         };
         const encoded = encodeURIComponent(JSON.stringify(tooltipData));
-
-        const skillSpan = `<span class="combat-tooltip-trigger" 
-            style="color:#ffb74d; font-weight:bold; cursor:help; border-bottom:1px dotted #ffb74d;"
-            onmouseenter="window.showCombatTooltip(event, '${encoded}')"
-            onmouseleave="window.hideTooltip()"
-            onmousemove="window.moveTooltip(event)">
-            ${action.name}
-        </span>`;
-
+        const skillSpan = `<span class="combat-tooltip-trigger" style="color:#ffb74d; font-weight:bold; cursor:help; border-bottom:1px dotted #ffb74d;" onmouseenter="window.showCombatTooltip(event, '${encoded}')" onmouseleave="window.hideTooltip()" onmousemove="window.moveTooltip(event)">${action.name}</span>`;
         ctx._log(`> 你施展了 ${skillSpan}！`);
-
         const dmg = CombatCalc.calcDamage(ctx, attacker, eStats, true, "技能");
         ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg);
-
         ctx._updateUIStats();
-
-        if (ctx.currentEHp <= 0) {
-            CombatCore.handleVictory(ctx);
-        }
+        if (ctx.currentEHp <= 0) CombatCore.handleVictory(ctx);
     },
 
     /** 玩家使用消耗品 */
@@ -118,19 +95,43 @@ const CombatAction = {
                     // --- 伤害技能 (Type 1) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
 
-                    // 【修正】伤害类型判定：有字段取字段，无字段默认为 'mag' (法术)
-                    const dmgType = skill.damageType || 'mag';
+                    const dmgType = skill.damageType || 'mag'; // 默认法术
+                    const valType = skill.dmgValType !== undefined ? skill.dmgValType : 0; // 默认固定(0)
 
-                    // 构造技能攻击面板
-                    let atk = {
+                    // 构造攻击属性对象
+                    let atkStats = {
                         ...eStats,
-                        atk: (skill.damage || 0),
-                        skillFlat: 0,
                         skillName: skill.id,
-                        damageType: dmgType // 传入计算模块
+                        damageType: dmgType
                     };
 
-                    const dmg = CombatCalc.calcDamage(ctx, atk, pStats, false, "技能");
+                    // 【核心修改】伤害计算逻辑区分
+                    if (valType === 1) {
+                        // === 百分比模式 (1) ===
+                        // 逻辑：面板 * 系数
+                        // 确保面板数据存在 (回退逻辑)
+                        if (dmgType === 'phy') {
+                            atkStats.phy_atk = eStats.phy_atk !== undefined ? eStats.phy_atk : (eStats.atk || 0);
+                        } else {
+                            atkStats.mag_atk = eStats.mag_atk !== undefined ? eStats.mag_atk : (eStats.atk || 0);
+                        }
+
+                        atkStats.skillMult = skill.damage || 0; // 系数
+                        atkStats.skillFlat = 0;
+                    } else {
+                        // === 固定数值模式 (0) ===
+                        // 逻辑：直接造成 skill.damage 点伤害 (忽略面板)
+                        // 我们通过直接覆写 phy_atk/mag_atk 来实现固定值效果
+                        if (dmgType === 'phy') {
+                            atkStats.phy_atk = skill.damage || 0;
+                        } else {
+                            atkStats.mag_atk = skill.damage || 0;
+                        }
+                        atkStats.skillMult = 1.0;
+                        atkStats.skillFlat = 0;
+                    }
+
+                    const dmg = CombatCalc.calcDamage(ctx, atkStats, pStats, false, "技能");
                     ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
 
                 } else if (skill.type === 2) {
@@ -156,12 +157,12 @@ const CombatAction = {
         }
     },
 
-    /** 构造敌人技能日志 HTML */
+    /** 构造敌人技能日志 HTML (含悬浮窗数据) */
     _buildSkillLogHtml: function(skill, eStats) {
         let color = "#333";
-        if (skill.type === 1) color = "#d32f2f"; // 红
-        else if (skill.type === 2) color = "#f57f17"; // 橙
-        else if (skill.type === 3) color = "#388e3c"; // 绿
+        if (skill.type === 1) color = "#d32f2f";
+        else if (skill.type === 2) color = "#f57f17";
+        else if (skill.type === 3) color = "#388e3c";
 
         // 构造 Tooltip 数据
         let tooltipData = {
@@ -173,14 +174,31 @@ const CombatAction = {
 
         if (skill.type === 1) {
             // --- 伤害型 (Type 1) ---
-            // 【修正】悬浮窗显示逻辑：优先读取 damageType，不存在则默认为 'mag'
             const dmgType = skill.damageType || 'mag';
-            const panelVal = dmgType === 'phy' ? (eStats.phy_atk || eStats.atk) : (eStats.mag_atk || eStats.atk);
+            const valType = skill.dmgValType !== undefined ? skill.dmgValType : 0;
 
             tooltipData.dmgType = dmgType;
-            tooltipData.panelVal = panelVal;
-            tooltipData.fixedDmg = skill.damage || 0;
-            tooltipData.ratio = 0;
+            tooltipData.valType = valType;
+
+            if (valType === 1) {
+                // === 百分比模式 ===
+                // 需要显示面板数值，应用回退逻辑
+                let panelVal = 0;
+                if (dmgType === 'phy') {
+                    panelVal = eStats.phy_atk !== undefined ? eStats.phy_atk : (eStats.atk || 0);
+                } else {
+                    panelVal = eStats.mag_atk !== undefined ? eStats.mag_atk : (eStats.atk || 0);
+                }
+
+                tooltipData.panelVal = panelVal;
+                // skill.damage 是系数 (如 1.5)
+                tooltipData.ratio = (skill.damage * 100).toFixed(0);
+            } else {
+                // === 固定数值模式 ===
+                // 不需要面板数值，直接显示固定伤害
+                tooltipData.fixedDmg = skill.damage || 0;
+            }
+
         } else if (skill.type === 2) {
             // Debuff
             tooltipData.effect = skill.debuffAttr;
@@ -203,6 +221,7 @@ const CombatAction = {
             ${skill.id}
         </span>`;
     },
+
 
     /** 应用 Buff/Debuff */
     applyBuff: function(ctx, targetKey, attr, val, turns, type, name) {

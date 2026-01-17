@@ -101,22 +101,41 @@ const CombatInit = {
 
     /** 敌人数据补丁 */
     _patchEnemyData: function(enemy) {
+        // 1. 获取模板数据
         const tmplKey = enemy.template || "minion";
         const templateData = (typeof ENEMY_TEMPLATES !== 'undefined') ? ENEMY_TEMPLATES[tmplKey] : null;
 
-        if (enemy.basePen === undefined && templateData) enemy.basePen = templateData.basePen;
-        if (enemy.accuracy === undefined) enemy.accuracy = templateData ? (templateData.accuracy || 0) : 0;
+        // 2. 准备自身数值 (优先取外层，没有则取stats层，防止undefined)
+        // 注意：这里我们假设传入的 enemy 是原始数据的拷贝，尚未被修改过
+        const selfBasePen = (enemy.basePen !== undefined) ? enemy.basePen : (enemy.stats && enemy.stats.basePen !== undefined ? enemy.stats.basePen : 0);
+        const selfAcc = (enemy.accuracy !== undefined) ? enemy.accuracy : (enemy.stats && enemy.stats.accuracy !== undefined ? enemy.stats.accuracy : 0);
+        const selfCrit = (enemy.crit !== undefined) ? enemy.crit : (enemy.stats && enemy.stats.crit !== undefined ? enemy.stats.crit : 0);
 
-        // 确保 stats 对象存在
+        // 3. 准备模板数值
+        const tmplBasePen = templateData ? (templateData.basePen || 0) : 0;
+        const tmplAcc = templateData ? (templateData.accuracy || 0) : 0;
+        const tmplCrit = templateData ? (templateData.crit || 0) : 0;
+
+        // 4. 执行叠加 (自身 + 模板)
+        enemy.basePen = selfBasePen + tmplBasePen;
+        enemy.accuracy = selfAcc + tmplAcc;
+        // 暴击率防止浮点数精度问题，保留4位小数
+        enemy.crit = parseFloat((selfCrit + tmplCrit).toFixed(4));
+
+        // 5. 确保 stats 对象存在并同步基础属性
         if (!enemy.stats) enemy.stats = {};
 
-        // 补全基础属性到 stats
         if (enemy.atk !== undefined && enemy.stats.atk === undefined) enemy.stats.atk = enemy.atk;
         if (enemy.def !== undefined && enemy.stats.def === undefined) enemy.stats.def = enemy.def;
         if (enemy.speed !== undefined && enemy.stats.speed === undefined) enemy.stats.speed = enemy.speed;
 
-        // 补全特殊属性
-        enemy.basePen = enemy.basePen || 0;
+        // 6. 将计算后的最终属性同步到 stats (覆盖)
+        // 这样 CombatCalc 无论读 enemy.basePen 还是 enemy.stats.basePen 都是对的
+        enemy.stats.basePen = enemy.basePen;
+        enemy.stats.accuracy = enemy.accuracy;
+        enemy.stats.crit = enemy.crit;
+
+        // 7. 毒性攻击初始化
         enemy.toxAtk = enemy.toxAtk || 0;
     },
 
