@@ -313,7 +313,7 @@ const materials = [
         grade: 0,
         rarity: 2,
         value: 85,
-        desc: "【精良】一枚折断的剑尖，尽管锈迹斑斑，但断面处仍透出丝丝寒气，似乎在诉说着它曾经的锋芒与落败。"
+        desc: "一枚折断的剑尖，尽管锈迹斑斑，但断面处仍透出丝丝寒气，似乎在诉说着它曾经的锋芒与落败。"
     },
     {
         id: "materials_082",
@@ -350,5 +350,374 @@ const materials = [
         rarity: 1,
         value: 15,
         desc: "一张字迹模糊的当票，上面盖着‘落归当铺’的红印。虽然票面价值不高，但似乎关联着某件被寄存的旧物，或许能找当铺老板换回点什么。"
-    }
+    },
+    {
+        id: "materials_086",
+        name: "破碎的兽皮",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 12, // 接近下限，因为是“破碎的”
+        desc: "被暴力撕碎的野兽皮毛，由于破损严重，几乎没有什么利用价值，或许只能用来擦鞋。"
+    },
+    {
+        id: "materials_087",
+        name: "变异鼠牙",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 18, // 略高于基础皮毛
+        desc: "比普通老鼠牙齿略大一圈，呈令人不适的枯黄色，虽然带着病菌，但质地尚算坚硬。"
+    },
+    {
+        id: "materials_088",
+        name: "锈蚀铁片",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 15,
+        desc: "一片布满暗红色铁锈的金属残片，边缘虽然已经钝化，但在某些场合或许能充当临时刮刀。"
+    },
+    {
+        id: "materials_089",
+        name: "污秽的布条",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 11,
+        desc: "散发着难闻气味的碎布，上面沾满了不明粘液与尘土，恐怕只有最落魄的乞丐才会多看它一眼。"
+    },
+    {
+        id: "materials_090",
+        name: "坚硬的木刺",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 22,
+        desc: "从某种坚韧植物或破碎木兵器上掉落的尖刺，虽然粗糙，但足够扎手，常被用来制作简易的陷阱。"
+    },
+    {
+        id: "materials_091",
+        name: "无名草药",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 28,
+        desc: "路边随处可见的青绿色小草，虽然叫不出名字，但揉碎后敷在伤口上似乎有一点止血的效果。"
+    },
+    {
+        id: "materials_092",
+        name: "锋利的犬齿",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 32,
+        desc: "从野兽口中脱落的犬齿，尖端尚未经过太多磨损，依然保持着一定的穿透力，是制作简易箭头的素材。"
+    },
+    {
+        id: "materials_093",
+        name: "兽骨",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 20,
+        desc: "最常见的野兽骨骼，质地坚硬且沉重，虽然没有什么灵性，但却是打磨粗糙骨器的基础材料。"
+    },
+    {
+        id: "materials_094",
+        name: "破碎的符纸",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 13,
+        desc: "撕裂且受潮的黄纸，上面的咒文已经模糊不清，几乎丧失了引动灵气的作用。"
+    },
+    {
+        id: "materials_095",
+        name: "劣质朱砂",
+        type: "material",
+        grade: 0,
+        rarity: 1,
+        value: 18,
+        desc: "掺杂了大量红土的朱砂粉末，色泽暗淡，虽然还能勉强用于画符，但极易导致失败。"
+    },
+    {
+        id: "materials_096",
+        name: "军功爵牌",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 125,
+        desc: "大秦军中精锐佩戴的铜制爵牌，正面刻有持有者的军衔，是战功的象征。即便持有者已逝，其上凝聚的铁血之气依然若隐若现。"
+    },
+    {
+        id: "materials_097",
+        name: "完整的狼皮",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 145,
+        desc: "剥取手法极其老道，整张皮毛完整无缺，毛色油光发亮且厚实，是制作高级防寒皮甲的上等主料。"
+    },
+    {
+        id: "materials_098",
+        name: "变异狼牙",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 90,
+        desc: "由于变异而生长得异常粗壮的犬牙，根部还带着一丝干涸的血迹，质地坚硬如石，是强化兵器锋利度的好材料。"
+    },
+    {
+        id: "materials_099",
+        name: "灵石碎片",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 65,
+        desc: "蕴含微弱灵气的矿石碎片，是修仙界最基础的能源，常用于驱动低级法阵或作为简易机关的动力源。"
+    },
+    {
+        id: "materials_100",
+        name: "浑浊的灵气结晶",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 135,
+        desc: "自然界中灵气凝结的产物，因含有较多杂质而显得灰暗，虽不如纯净灵石珍贵，但也是炼器时极佳的辅助材料。"
+    },
+    {
+        id: "materials_101",
+        name: "精铁齿轮",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 95,
+        desc: "经过百般锤炼的精铁打磨而成的齿轮，咬合极其精准，能够承受高强度的机械运转而不易磨损。"
+    },
+    {
+        id: "materials_102",
+        name: "机关木料",
+        type: "material",
+        grade: 0,
+        rarity: 2,
+        value: 82,
+        desc: "选取生长百年的铁杉木，经特制桐油长期浸泡而成，既保留了木材的韧性，又拥有了接近金属的硬度。"
+    },
+    {
+        id: "materials_103",
+        name: "古旧的将军印",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 310,
+        desc: "一枚在古战场深处出土的青铜印章，尽管已被岁月侵蚀得斑驳不堪，但其内部依然凝聚着一股令人胆寒的统帅威压，非寻常士卒所能直视。"
+    },
+    {
+        id: "materials_104",
+        name: "青铜甲片",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 185,
+        desc: "从强大机关兽或古代将领铠甲上剥离的护甲残片，由于曾受灵力滋养，其质地远非凡铁可比，即便是利刃也难在上面留下划痕。"
+    },
+    {
+        id: "materials_105",
+        name: "尸毒样本",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 245,
+        desc: "从千年僵尸体内提取的浓缩毒素，呈现出诡异的暗紫色并带有粘稠感。极具腐蚀性，仅需一滴便能让周围的草木瞬间枯萎。"
+    },
+    {
+        id: "materials_106",
+        name: "巨大的食人花蕊",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 345,
+        desc: "从巨型食人花母体中心采出的花蕊，依然在微微蠕动并散发出诱人的异香，这种香气能麻痹猎物的神经，是制作顶级迷药的核心材料。"
+    },
+    {
+        id: "materials_107",
+        name: "酸性毒囊",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 180,
+        desc: "食人花体内储存强酸的器官，外皮极具弹性且耐腐蚀。内部液体可以瞬间溶解生铁，在炼金术中常被用于萃取稀有金属。"
+    },
+    {
+        id: "materials_108",
+        name: "变异藤蔓",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 155,
+        desc: "受妖气侵蚀而产生变异的粗壮藤蔓，其纤维交织如钢缆般坚韧，即便被斩断也会在短时间内保持活性，是制作束缚类法具的最佳选择。"
+    },
+    {
+        id: "materials_109",
+        name: "狼王内丹",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 352,
+        desc: "啸月狼王毕生修为所化的结晶，通体浑圆并散发出淡淡的血色月光，蕴含着狂暴的妖力，是炼制增进修为丹药的极品主料。"
+    },
+    {
+        id: "materials_110",
+        name: "血煞狼皮",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 165,
+        desc: "浸染了无数生灵鲜血的狼王皮毛，质地比玄铁还要坚韧，表面隐约流转着一层血色煞气，寻常野兽见之便会瑟瑟发抖。"
+    },
+    {
+        id: "materials_111",
+        name: "锋利狼爪",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 128,
+        desc: "狼王最为致命的武器，指爪如钢钩般锋利，且附带着撕裂伤口的特殊性质，是打造刺杀类兵器的绝佳素材。"
+    },
+    {
+        id: "materials_112",
+        name: "未知的丹方",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 340,
+        desc: "一张泛黄且边缘碳化的古老纸页，上面记载着某种失传丹药的炼制心得。虽然由于岁月侵蚀使得部分字迹模糊，但其核心的药理逻辑依然极具研究价值。"
+    },
+    {
+        id: "materials_113",
+        name: "爆裂丹",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 155,
+        desc: "炼制过程中因火候失控意外产生的变异丹药，内部蕴含着极其不稳定的狂暴火元素。虽然无法服用，但若作为投掷物引爆，其破坏力足以令精英级对手胆寒。"
+    },
+    {
+        id: "materials_114",
+        name: "朱砂笔",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 225,
+        desc: "笔杆由灵木削制，笔尖则采用了某种高阶妖兽的颈部鬃毛。笔尖隐约透着暗红色光芒，能极大地增强使用者与天地灵气间的感应，是绘制高阶符咒的必备之物。"
+    },
+    {
+        id: "materials_115",
+        name: "墨家机关核心",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 355,
+        desc: "墨家机关术的极致结晶，核心内部结构精密到了令人发指的程度，即便本体已经损毁，其内部的动力源依然在平稳地输出能量，是制作高阶机关造物的绝对核心。"
+    },
+    {
+        id: "materials_116",
+        name: "精炼玄铁",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 120,
+        desc: "经过千锤百炼剔除杂质后的玄铁，密度极高且具有出色的灵力传导性，是打造重型兵器或强化防具结构的首选素材。"
+    },
+    {
+        id: "materials_117",
+        name: "重型装甲片",
+        type: "material",
+        grade: 0,
+        rarity: 3,
+        value: 210,
+        desc: "剥离自巨型机关兽表层的厚重防护片，表面布满了吸收冲击的特殊纹路，寻常刀剑砍在其上只能留下浅浅的白痕，极大地提升了防具的抗击打能力。"
+    },
+    {
+        id: "materials_118",
+        name: "始皇佩剑碎片",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 580,
+        desc: "传说中千古一帝佩剑的残片，剑身虽断，但其上附着的皇者霸气历经千年未散。哪怕只是握在手中，也能感受到一股令万物臣服的肃杀之感，是重铸神兵的绝世材料。"
+    },
+    {
+        id: "materials_119",
+        name: "定魂珠",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 460,
+        desc: "通体晶莹剔透，内部有烟云流转的异宝。据说此珠能镇压生魂、平复心魔，在突破境界或遭遇阴毒咒术时，能护住识海一点清明不灭，极其罕见。"
+    },
+    {
+        id: "materials_120",
+        name: "巨灵神动力核心",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 620,
+        desc: "巨灵神机关造物的力量源泉，其内部的灵力压缩到了极其恐怖的程度。即便是在离线状态下，核心散发的高温也足以让周围的空气扭曲，是制造跨时代战争兵器的终极能源。"
+    },
+    {
+        id: "materials_121",
+        name: "墨家机关臂",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 495,
+        desc: "由数百个精密零件嵌套而成的机械手臂，完美模拟了人类手臂的灵活性。内部刻满了复杂的灵力循环阵法，不仅力大无穷，还能精准地执行极其细微的指令。"
+    },
+    {
+        id: "materials_122",
+        name: "精炼玄铁锭",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 285,
+        desc: "在天外玄铁的基础上，运用墨家秘传的熔炼法反复精炼而成的锭块。其硬度与灵力传导性达到了完美的平衡，是打造领主级武器装备的通用高阶基材。"
+    },
+    {
+        id: "materials_123",
+        name: "宗师级丹炉",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 610,
+        desc: "由深海寒铁与地脉火铜合铸而成的炼丹重器，炉身刻有聚灵阵法，能极大程度地稳定火候并剔除药渣。即便是普通的草药，在其中炼制也能发挥出远超常态的药性。"
+    },
+    {
+        id: "materials_124",
+        name: "极品朱砂",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 240,
+        desc: "产自极阳之地的极品矿石精粹，色泽鲜红如血且带有微微的温热感。其蕴含的阳气极为纯净，是绘制镇魂、辟邪类高阶符咒的绝佳媒介。"
+    },
+    {
+        id: "materials_125",
+        name: "巴蛇之胆",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 625,
+        desc: "传说中能吞食大象的巨蛇留下的苦胆，蕴含着极其浓缩的生机与剧烈毒性。它是炼制顶级解毒圣药或见血封喉奇毒的稀世主材，处理时需极其谨慎。"
+    },
+    {
+        id: "materials_126",
+        name: "坚韧的蛇皮",
+        type: "material",
+        grade: 0,
+        rarity: 4,
+        value: 320,
+        desc: "剥自成年巴蛇的巨型皮壳，质地坚韧且极具弹性，表面覆盖着一层细密如钢的鳞片。这种材料对锐器的切割有极强的防护效果，是制作高阶软甲或软鞭的绝佳选择。"
+    },
 ];

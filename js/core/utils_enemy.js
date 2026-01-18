@@ -32,6 +32,7 @@ const UtilsEnemy = {
 
         // 获取配置中的基础颜色
         let displayColor = "#333";
+
         if (window.ENEMY_TEMPLATES && ENEMY_TEMPLATES[type]) {
             displayColor = ENEMY_TEMPLATES[type].color;
         }
@@ -55,6 +56,10 @@ const UtilsEnemy = {
             maxHp: template.stats.hp,
             atk: template.stats.atk,
             def: template.stats.def,
+            phy_atk: template.stats.phy_atk,
+            mag_atk: template.stats.mag_atk,
+            phy_def: template.stats.phy_def,
+            mag_def: template.stats.mag_def,
             speed: template.stats.speed,
 
             // 毒性处理

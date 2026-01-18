@@ -14,7 +14,7 @@ const CombatInit = {
         this._patchEnemyData(ctx.enemy);
 
         ctx.player = window.player;
-        if (ctx.player.toxicity === undefined) ctx.player.toxicity = 0;
+        if (ctx.player.status.toxicity === undefined) ctx.player.status.toxicity = 0;
 
         // 2. 初始化基础状态
         ctx.logs = [];
@@ -128,6 +128,10 @@ const CombatInit = {
         if (enemy.atk !== undefined && enemy.stats.atk === undefined) enemy.stats.atk = enemy.atk;
         if (enemy.def !== undefined && enemy.stats.def === undefined) enemy.stats.def = enemy.def;
         if (enemy.speed !== undefined && enemy.stats.speed === undefined) enemy.stats.speed = enemy.speed;
+        if (enemy.phy_atk !== undefined && enemy.stats.phy_atk === undefined) enemy.stats.phy_atk = enemy.phy_atk;
+        if (enemy.mag_atk !== undefined && enemy.stats.mag_atk === undefined) enemy.stats.mag_atk = enemy.mag_atk;
+        if (enemy.phy_def !== undefined && enemy.stats.phy_def === undefined) enemy.stats.phy_def = enemy.phy_def;
+        if (enemy.mag_def !== undefined && enemy.stats.mag_def === undefined) enemy.stats.mag_def = enemy.mag_def;
 
         // 6. 将计算后的最终属性同步到 stats (覆盖)
         // 这样 CombatCalc 无论读 enemy.basePen 还是 enemy.stats.basePen 都是对的

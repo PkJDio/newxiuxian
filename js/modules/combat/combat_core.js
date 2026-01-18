@@ -7,7 +7,7 @@ const CombatCore = {
         MAX_GAUGE: 10000,
         TICK_RATE: 50, // 50ms 刷新一次 (1秒20帧)
         BASE_TIME: 3.0, // 0速度时 5秒一动
-        SPD_FACTOR: 0.02 // 速度系数
+        SPD_FACTOR: 0.01 // 速度系数
     },
 
     /** 初始化战斗数据 */
@@ -117,7 +117,10 @@ const CombatCore = {
         // 结算毒伤
         if (targetKey === 'player') CombatAction.processPoisonOnPlayer(ctx);
         else CombatAction.processPoisonOnEnemy(ctx);
-
+// --- 核心修复：添加以下代码 ---
+        if (ctx._updateToxUI) {
+            ctx._updateToxUI();
+        }
         // 刷新技能/物品 CD (按行动次数减少)
         // 只有玩家行动时才刷新玩家 CD，或者你可以设定为全场时间刷新，这里按行动次数更符合回合制直觉
         if (targetKey === 'player') {

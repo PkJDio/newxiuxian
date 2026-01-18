@@ -63,8 +63,8 @@ const CombatUI = {
     refreshItemCD: function(ctx) {
         for(let i=0; i<3; i++) {
             // 查找按钮和遮罩 (适配 danyao_cd_overlay)
-            const btn = document.getElementById(`combat_btn_use_${i}`);
-            const overlay = document.getElementById(`combat_cd_overlay_${i}`);
+            const btn = document.getElementById(`danyao_combat_btn_use_${i}`);
+            const overlay = document.getElementById(`danyao_combat_cd_overlay_${i}`);
 
             if (!overlay || !btn) continue;
 
@@ -86,26 +86,22 @@ const CombatUI = {
 
     /** 刷新功法技能 CD */
     refreshSkillCD: function(ctx) {
-        // 查找所有功法槽 (适配 gongfa_slot_wrapper)
         const containers = document.querySelectorAll('#sidebar_skills .gongfa_slot_wrapper');
 
         containers.forEach((wrapper) => {
             const btn = wrapper.querySelector('button[id^="combat_btn_skill_"]');
             if (!btn) return;
 
-            // 从 onclick 属性解析 skillId
             const match = btn.getAttribute('onclick').match(/'([^']+)'/);
             if (!match) return;
             const skillId = match[1];
             const cd = ctx.skillCDs[skillId] || 0;
 
-            // 查找新的类名 .gongfa_cd_overlay
             const overlay = wrapper.querySelector('.gongfa_cd_overlay');
-
             if (overlay) {
                 if (cd > 0) {
-                    // 强制覆盖样式以显示
-                    overlay.style.cssText = "display: flex !important; align-items: center; justify-content: center; background: rgba(255,255,255,0.75); color: #333; font-weight: bold; font-size: 20px; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10;";
+                    // 确保样式应用
+                    overlay.style.display = "flex"; // 这里的样式已经在 CSS 类名中定义了
                     overlay.innerText = cd;
                     btn.disabled = true;
                 } else {
@@ -122,8 +118,8 @@ const CombatUI = {
             ctx.uiRefs.eToxVal.innerText = `${ctx.enemy.toxicity}`;
         }
         if (ctx.uiRefs.pToxBar) {
-            ctx.uiRefs.pToxBar.style.width = `${window.player.toxicity}%`;
-            ctx.uiRefs.pToxVal.innerText = `${window.player.toxicity}`;
+            ctx.uiRefs.pToxBar.style.width = `${window.player.status.toxicity}%`;
+            ctx.uiRefs.pToxVal.innerText = `${window.player.status.toxicity}`;
         }
     },
 
@@ -143,7 +139,6 @@ const CombatUI = {
      * 将 atk/def 等通用属性映射到 phy_atk/mag_atk 等具体格子上
      */
     _updateAttrStyle: function(ctx, target, buffs) {
-        // ID 前缀: 玩家 p_attr_, 敌人 e_attr_
         const prefix = target === 'player' ? 'p_attr_' : 'e_attr_';
 
         // 1. 清理旧的 buff 显示
@@ -155,22 +150,22 @@ const CombatUI = {
 
         if (!buffs) return;
 
-        // 2. 定义映射关系: Buff属性名 -> UI后缀列表
+        // 2. 定义映射关系
         const map = {
-            'atk': ['phy_atk', 'mag_atk'],      // 攻击 -> 物攻 + 法攻
-            'def': ['phy_def', 'mag_def'],      // 防御 -> 物防 + 法防
+            'atk': ['phy_atk', 'mag_atk'],
+            'def': ['phy_def', 'mag_def'],
             'phy_atk': ['phy_atk'],
             'mag_atk': ['mag_atk'],
             'phy_def': ['phy_def'],
             'mag_def': ['mag_def'],
-            'speed': ['spd'],                   // 速度 -> 速
-            'spd': ['spd']                      // 兼容写法
+            'speed': ['spd'],
+            'spd': ['spd']
         };
 
         // 3. 遍历生效的 Buff
         for (let attr in buffs) {
             const buff = buffs[attr];
-            const targetSuffixes = map[attr]; // 找到对应的 UI 盒子后缀
+            const targetSuffixes = map[attr];
 
             if (targetSuffixes) {
                 targetSuffixes.forEach(suffix => {
@@ -178,11 +173,22 @@ const CombatUI = {
                     const el = document.getElementById(elId);
                     if (el) {
                         const isDebuff = (buff.val < 0);
-                        const color = isDebuff ? '#d32f2f' : '#388e3c'; // 红/绿
-                        const sign = buff.val > 0 ? "+" : ""; // 负数自带符号
+                        const color = isDebuff ? '#d32f2f' : '#388e3c';
+                        const sign = buff.val > 0 ? "+" : "";
 
-                        // 插入 span
-                        const html = `<span class="attr-buff-val" style="color:${color}; margin-left:4px; font-size:12px; font-weight:bold;">${sign}${buff.val}</span>`;
+                        // --- 【核心修复逻辑】 ---
+                        let displayVal = "";
+                        if (buff.valType === 1) {
+                            // 如果是百分比类型 (如 0.4)，显示为 +40%
+                            displayVal = `${sign}${(buff.val * 100).toFixed(0)}%`;
+                        } else {
+                            // 如果是固定数值 (如 20)，显示为 +20
+                            displayVal = `${sign}${buff.val}`;
+                        }
+                        // -----------------------
+
+                        // 插入新的 span
+                        const html = `<span class="attr-buff-val" style="color:${color}; margin-left:4px; font-size:12px; font-weight:bold;">${displayVal}</span>`;
                         el.insertAdjacentHTML('beforeend', html);
                     }
                 });

@@ -55,6 +55,7 @@ const CombatAction = {
 
         UtilsItem.useItem(sid, 1);
         if (window.MapCamera && MapCamera.updateSidebar) MapCamera.updateSidebar();
+        ctx._refreshSkillCDUI(); // 重新把刚被 innerHTML 刷掉的遮罩画回来
 
         if ((itemData.subType || itemData.subtype || "").toLowerCase() === 'poison') {
             this._applyPoisonToEnemy(ctx, itemData);
@@ -137,12 +138,12 @@ const CombatAction = {
                 } else if (skill.type === 2) {
                     // --- Debuff (Type 2) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
-                    this.applyBuff(ctx, 'player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id);
+                    this.applyBuff(ctx, 'player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id,skill.debuffValType);
 
                 } else if (skill.type === 3) {
                     // --- Buff (Type 3) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
-                    this.applyBuff(ctx, 'enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id);
+                    this.applyBuff(ctx, 'enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id,skill.buffValType);
                 }
 
                 actionDone = true;
@@ -159,6 +160,7 @@ const CombatAction = {
 
     /** 构造敌人技能日志 HTML (含悬浮窗数据) */
     _buildSkillLogHtml: function(skill, eStats) {
+        console.log(`skill`, skill)
         let color = "#333";
         if (skill.type === 1) color = "#d32f2f";
         else if (skill.type === 2) color = "#f57f17";
@@ -193,6 +195,7 @@ const CombatAction = {
                 tooltipData.panelVal = panelVal;
                 // skill.damage 是系数 (如 1.5)
                 tooltipData.ratio = (skill.damage * 100).toFixed(0);
+                console.log(`tooltipData`, tooltipData)
             } else {
                 // === 固定数值模式 ===
                 // 不需要面板数值，直接显示固定伤害
@@ -223,20 +226,34 @@ const CombatAction = {
     },
 
 
-    /** 应用 Buff/Debuff */
-    applyBuff: function(ctx, targetKey, attr, val, turns, type, name) {
+    /** 应用 Buff/Debuff
+     * @param {number} valType - 0: 固定值, 1: 百分比 (例如 0.2 表示 20%)
+     */
+    applyBuff: function(ctx, targetKey, attr, val, turns, type, name, valType = 0) {
         if (!ctx.buffs[targetKey]) ctx.buffs[targetKey] = {};
 
-        ctx.buffs[targetKey][attr] = { val, turns, type, name, isNew: true };
+        // 存储时记录 valType，以便后续 UI 渲染或逻辑计算使用
+        ctx.buffs[targetKey][attr] = { val, turns, type, name, valType, isNew: true };
 
-        const attrMap = { 'atk': '攻击', 'def': '防御', 'speed': '速度', 'hp': '生命', 'mp': '灵力' };
         const targetName = targetKey === 'player' ? '你' : ctx.enemy.name;
+
+        // 格式化数值显示
+        let valStr = "";
+        if (valType === 1) {
+            // 百分比显示：0.2 -> 20%
+            valStr = (val > 0 ? "+" : "") + (val * 100).toFixed(0) + "%";
+        } else {
+            // 固定值显示：20 -> +20
+            valStr = (val > 0 ? "+" : "") + val;
+        }
 
         let desc = "";
         if (attr === 'hp' || attr === 'mp') {
-            desc = (val < 0) ? `每回合损失 ${Math.abs(val)} ${attrMap[attr]}` : `每回合恢复 ${val} ${attrMap[attr]}`;
+            // 针对持续恢复/扣除的特殊描述
+            const displayVal = valType === 1 ? (Math.abs(val) * 100).toFixed(0) + "%" : Math.abs(val);
+            desc = (val < 0) ? `每回合损失 ${displayVal} ${ATTR_MAPPING[attr]}` : `每回合恢复 ${displayVal} ${ATTR_MAPPING[attr]}`;
         } else {
-            desc = `${attrMap[attr]} ${val>0?'+':''}${val}`;
+            desc = `${ATTR_MAPPING[attr]} ${valStr}`;
         }
 
         ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b> 影响: ${desc} (${turns}次)`);
@@ -254,11 +271,21 @@ const CombatAction = {
             if (attr === 'hp') {
                 const max = target === 'player' ? ctx.player.derived.hpMax : ctx.enemy.maxHp;
                 const curr = target === 'player' ? ctx.currentPHp : ctx.currentEHp;
-                const newHp = Math.max(0, Math.min(max, curr + b.val));
+
+                // 【修复】计算变动值 (如果是百分比，则基于最大生命计算)
+                const change = b.valType === 1 ? Math.floor(max * b.val) : b.val;
+
+                const newHp = Math.max(0, Math.min(max, curr + change));
                 if (target === 'player') ctx.currentPHp = newHp; else ctx.currentEHp = newHp;
-                ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${Math.abs(b.val)} 生命`);
-            } else if (attr === 'mp' && target === 'player') {
-                ctx.currentPMp = Math.max(0, Math.min(ctx.player.derived.mpMax, ctx.currentPMp + b.val));
+
+                const logVal = b.valType === 1 ? `${(Math.abs(b.val)*100).toFixed(0)}% (${Math.abs(change)})` : Math.abs(change);
+                ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${logVal} 生命`);
+            }else if (attr === 'mp' && target === 'player') {
+                const max =  ctx.player.derived.mpMax ;
+                const curr = ctx.currentPMp ;
+                const change= b.valType === 1 ? Math.floor(max * b.val) : b.val;
+
+                ctx.currentPMp = Math.max(0, Math.min(max, curr + change));
                 ctx._log(`> ${targetName} 因 [${b.name}] ${b.val>0?'恢复':'流失'} ${Math.abs(b.val)} 灵力`);
             }
 
@@ -287,13 +314,13 @@ const CombatAction = {
     },
 
     processPoisonOnPlayer: function(ctx) {
-        if (ctx.player.toxicity > 0 && (ctx.player.toxicity >= 100 || ctx.player.hasDeepPoison)) {
+        if (ctx.player.status.toxicity > 0 && (ctx.player.status.toxicity >= 100 || ctx.player.hasDeepPoison)) {
             ctx.player.hasDeepPoison = true;
             const dmg = Math.floor(ctx.player.derived.hpMax * 0.05);
             ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
             ctx._log(`> [你] 毒发攻心，受 <span style="color:#9c27b0;">${dmg}</span> 伤害`);
-            ctx.player.toxicity = Math.max(0, ctx.player.toxicity - 20);
-            if (ctx.player.toxicity <= 0) ctx.player.hasDeepPoison = false;
+            ctx.player.status.toxicity = Math.max(0, ctx.player.status.toxicity - 20);
+            if (ctx.player.status.toxicity <= 0) ctx.player.hasDeepPoison = false;
             return ctx.currentPHp <= 0;
         }
         return false;
@@ -312,7 +339,7 @@ const CombatAction = {
             ctx._log(`> 使用 [${item.name}]: 恢复 <span style="color:#2196f3;">${heal}</span> MP`);
         }
         if (eff.toxicity < 0) {
-            ctx.player.toxicity = Math.max(0, ctx.player.toxicity + Number(eff.toxicity));
+            ctx.player.status.toxicity = Math.max(0, ctx.player.status.toxicity + Number(eff.toxicity));
             ctx._log(`> 使用 [${item.name}]: 解毒 <span style="color:green;">${Math.abs(eff.toxicity)}</span>`);
         }
     },

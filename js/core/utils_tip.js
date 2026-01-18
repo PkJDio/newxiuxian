@@ -464,7 +464,7 @@ const TooltipManager = {
                 if (data.penPct > 0) html += `<div class="tt_row" style="color:#ffb74d;"><span>${isPhy?'物理':'法术'}穿透%</span> <span>${data.penPct}%</span></div>`;
             } else {
                 if (data.atkStats.basePen > 0) {
-                    let penLabel = isPhy ? "敌人护甲穿透basePen" : "敌人法术穿透basePen";
+                    let penLabel = isPhy ? "敌人护甲穿透" : "敌人法术穿透";
                     html += `<div class="tt_row" style="color:#ffb74d;"><span>${penLabel}</span> <span>${data.atkStats.basePen}</span></div>`;
                 }
             }
@@ -485,13 +485,13 @@ const TooltipManager = {
             const attackerName = isPlayer ? "玩家" : "敌人";
             html += `<div class="tt_row"><span>${attackerName}减伤后造成${defTypeStr}伤害</span> <span>${data.dmgAfterMitigation}</span></div>`;
 
-            const critLabel = isPlayer ? (isPhy ? "物理暴击率" : "法术暴击率") : "敌人暴击率crit";
-            html += `<div class="tt_row"><span>${critLabel}</span> <span>${(data.finalCritRate * 100).toFixed(1)}%</span></div>`;
+            const critLabel = isPlayer ? (isPhy ? "物理暴击率" : "法术暴击率") : "敌人暴击率";
+            html += `<div class="tt_row"><span>${critLabel}</span> <span>${(data.critRate * 100).toFixed(1)}%</span></div>`;
 
             if (data.isCrit) html += `<div class="tt_row" style="color:#ffeb3b; font-weight:bold;"><span>暴击增加伤害</span> <span>x${data.critDmg || 1.5}</span></div>`;
 
-            const varPct = Math.round(data.variance * 100);
-            html += `<div class="tt_row"><span>伤害浮动</span> <span style="color:#aaa;">${varPct}%</span></div>`;
+
+            html += `<div class="tt_row"><span>伤害浮动</span> <span style="color:#aaa;">${data.variance}</span></div>`;
 
             html += sep;
             html += `<div class="tt_row" style="font-size:16px; font-weight:bold; color:${color};"><span>${attackerName}实际造成${defTypeStr}伤害</span> <span>${data.finalDamage}</span></div>`;
@@ -502,7 +502,7 @@ const TooltipManager = {
             const isPlayer = data.source === 'player';
             const title = isPlayer ? "玩家的闪避" : "敌人的闪避";
             html += `<div class="tt_header">${title}</div>`;
-            html += `<div class="tt_row"><span>${isPlayer?'玩家':'敌人'}的基础闪避率</span> <span>${data.base}%</span></div>`;
+            html += `<div class="tt_row"><span>${isPlayer?'玩家':'敌人'}的基础闪避率</span> <span>${data.firstDR}%</span></div>`;
             if (data.acc > 0) html += `<div class="tt_row" style="color:#ff5252;"><span>${isPlayer?'敌人':'玩家'}命中度%</span> <span>-${data.acc}%</span></div>`;
             html += sep;
             html += `<div class="tt_row" style="color:#4caf50; font-weight:bold;"><span>${isPlayer?'玩家':'敌人'}的最终闪避率</span> <span>${data.final}%</span></div>`;
@@ -516,6 +516,7 @@ const TooltipManager = {
             html += `<div class="tt_row"><span>${typeStr}攻击面板</span> <span>${data.panelVal}</span></div>`;
 
             let dmgStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}% × ${typeStr}攻击`;
+
             html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${dmgStr}</span></div>`;
             html += `<div class="tt_row"><span>消耗灵力</span> <span style="color:#42a5f5;">${data.cost}</span></div>`;
             html += `<div class="tt_row"><span>冷却时间</span> <span>${data.cd} 回合</span></div>`;
@@ -532,19 +533,23 @@ const TooltipManager = {
                 if (data.valType === 1) {
                     html += `<div class="tt_row"><span>${typeStr}攻击面板</span> <span>${data.panelVal}</span></div>`;
                     let dmgStr = `${data.ratio}% × ${typeStr}攻击`;
+                  
                     html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${dmgStr}</span></div>`;
                 } else {
                     html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${data.fixedDmg}</span></div>`;
                 }
+                //计算实际伤害数值
+                const realVal=Math.floor(data.panelVal*data.ratio*0.01);
+                html += `<div class="tt_row"><span>功法伤害输出数值</span> <span style="color:#ffb74d;">${realVal}</span></div>`;
             } else if (data.subType === 2) {
                 html += `<div class="tt_row"><span>类型</span> <span>减益(Debuff)</span></div>`;
-                html += `<div class="tt_row"><span>减益字段</span> <span>${data.effect}</span></div>`;
+                html += `<div class="tt_row"><span>减益字段</span> <span>${ATTR_MAPPING[data.effect]}</span></div>`;
                 let valStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}%`;
                 html += `<div class="tt_row"><span>数值</span> <span>${valStr}</span></div>`;
                 html += `<div class="tt_row"><span>持续时间</span> <span>${data.duration} 回合</span></div>`;
             } else {
                 html += `<div class="tt_row"><span>类型</span> <span>增益(Buff)</span></div>`;
-                html += `<div class="tt_row"><span>增益字段</span> <span>${data.effect}</span></div>`;
+                html += `<div class="tt_row"><span>增益字段</span> <span>${ATTR_MAPPING[data.effect]}</span></div>`;
                 let valStr = data.fixedDmg > 0 ? `${data.fixedDmg}` : `${data.ratio}%`;
                 html += `<div class="tt_row"><span>数值</span> <span>${valStr}</span></div>`;
                 html += `<div class="tt_row"><span>持续时间</span> <span>${data.duration} 回合</span></div>`;

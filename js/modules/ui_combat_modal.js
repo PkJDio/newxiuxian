@@ -152,13 +152,14 @@ const UICombatModal = {
         const eMaxHp = (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 100);
         const eHpPct = Math.max(0, Math.min(100, (enemy.hp / eMaxHp) * 100));
         const eToxPct = Math.min(100, enemy.toxicity || 0);
-        const eStats = enemy.stats || {};
-        const eSpd = eStats.speed || enemy.speed || 0;
+
+
+        const eSpd =  enemy.speed || 0;
         const eActTime = this._calcActionTime(eSpd);
 
         const pHpPct = Math.max(0, Math.min(100, (pDerived.hp / pDerived.hpMax) * 100));
         const pMpPct = Math.max(0, Math.min(100, ((pDerived.mp || 0) / (pDerived.mpMax || 100)) * 100));
-        const pToxPct = Math.min(100, p.toxicity || 0);
+        const pToxPct = Math.min(100, p.status.toxicity || 0);
         const pSpd = pDerived.speed || 0;
         const pActTime = this._calcActionTime(pSpd);
 
@@ -184,7 +185,7 @@ const UICombatModal = {
                                 <div class="bar-bg" style="background:#f3e5f5; border:none;">
                                     <div id="combat_e_tox_bar" class="tox-fill" style="width:${eToxPct}%"></div>
                                     <div class="bar-text" style="justify-content:flex-end; padding-right:2px; color:#ab47bc;">
-                                        <span id="combat_e_tox_val">${Math.floor(enemy.toxicity||0)}</span>
+                                        <span id="combat_e_tox_val">${Math.floor(enemy.toxicity || 0)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -195,10 +196,10 @@ const UICombatModal = {
                                 </div>
                             </div>
                             <div class="attr-grid">
-                                <div class="attr-box" id="e_attr_phy_atk"><span class="attr-label">物攻</span><span class="attr-val">${eStats.phy_atk||enemy.atk}</span></div>
-                                <div class="attr-box" id="e_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${eStats.mag_atk||enemy.atk}</span></div>
-                                <div class="attr-box" id="e_attr_phy_def"><span class="attr-label">物防</span><span class="attr-val">${eStats.phy_def||enemy.def}</span></div>
-                                <div class="attr-box" id="e_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${eStats.mag_def||enemy.def}</span></div>
+                                <div class="attr-box" id="e_attr_phy_atk"><span class="attr-label">物攻</span><span class="attr-val">${enemy.phy_atk || enemy.atk}</span></div>
+                                <div class="attr-box" id="e_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${enemy.mag_atk || enemy.atk}</span></div>
+                                <div class="attr-box" id="e_attr_phy_def"><span class="attr-label">物防</span><span class="attr-val">${enemy.phy_def || enemy.def}</span></div>
+                                <div class="attr-box" id="e_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${enemy.mag_def || enemy.def}</span></div>
                                 <div class="attr-box" id="e_attr_spd" style="grid-column: span 2;">
                                     <span class="attr-label">速度</span>
                                     <span class="attr-val">${eSpd}</span>
@@ -219,8 +220,8 @@ const UICombatModal = {
                 <div class="fighter-card player">
                     <div class="fighter-identity">
                         <div class="fighter-icon">🧘</div>
-                        <div class="fighter-name" style="color:#1976d2">${p.name || '少侠'}</div>
-                        <span class="fighter-rank" style="border:1px solid #1976d2; color:#1976d2">修仙者</span>
+                        <div class="fighter-name" style="color:#051c33">${p.name || '少侠'}</div>
+                        <span class="fighter-rank" style="border:1px solid #072542; color:#0c1d2d">修仙者</span>
                     </div>
 
                     <div class="fighter-main">
@@ -244,7 +245,7 @@ const UICombatModal = {
                                 <div class="bar-bg" style="background:#f3e5f5; border:none;">
                                     <div id="combat_p_tox_bar" class="tox-fill" style="width:${pToxPct}%"></div>
                                     <div class="bar-text" style="justify-content:flex-end; padding-right:2px; color:#ab47bc;">
-                                        <span id="combat_p_tox_val">${Math.floor(p.toxicity||0)}</span>
+                                        <span id="combat_p_tox_val">${Math.floor(p.status.toxicity || 0)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -256,14 +257,14 @@ const UICombatModal = {
                             </div>
                             
                             <div class="attr-grid">
-                                <div class="attr-box" id="p_attr_atk"><span class="attr-label">物攻</span><span class="attr-val">${pDerived.phy_atk||pDerived.atk}</span></div>
-                                <div class="attr-box" id="p_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${pDerived.mag_atk||pDerived.atk}</span></div>
-                                <div class="attr-box" id="p_attr_def"><span class="attr-label">物防</span><span class="attr-val">${pDerived.phy_def||pDerived.def}</span></div>
-                                <div class="attr-box" id="p_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${pDerived.mag_def||pDerived.def}</span></div>
-                                <div class="attr-box" id="p_attr_crit"><span class="attr-label">物暴</span><span class="attr-val">${pDerived.crit||0}%</span></div>
-                                <div class="attr-box" id="p_attr_mag_crit"><span class="attr-label">法暴</span><span class="attr-val">${pDerived.mag_crit||0}%</span></div>
-                                <div class="attr-box" id="p_attr_sharp"><span class="attr-label">锋利</span><span class="attr-val">${pDerived.sharpness||0}</span></div>
-                                <div class="attr-box" id="p_attr_pen"><span class="attr-label">灵透</span><span class="attr-val">${pDerived.penetration||0}</span></div>
+                                <div class="attr-box" id="p_attr_atk"><span class="attr-label">物攻</span><span class="attr-val">${pDerived.phy_atk || pDerived.atk}</span></div>
+                                <div class="attr-box" id="p_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${pDerived.mag_atk || pDerived.atk}</span></div>
+                                <div class="attr-box" id="p_attr_def"><span class="attr-label">物防</span><span class="attr-val">${pDerived.phy_def || pDerived.def}</span></div>
+                                <div class="attr-box" id="p_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${pDerived.mag_def || pDerived.def}</span></div>
+                                <div class="attr-box" id="p_attr_crit"><span class="attr-label">物暴</span><span class="attr-val">${pDerived.crit || 0}%</span></div>
+                                <div class="attr-box" id="p_attr_mag_crit"><span class="attr-label">法暴</span><span class="attr-val">${pDerived.mag_crit || 0}%</span></div>
+                                <div class="attr-box" id="p_attr_sharp"><span class="attr-label">锋利</span><span class="attr-val">${pDerived.sharpness || 0}</span></div>
+                                <div class="attr-box" id="p_attr_pen"><span class="attr-label">灵透</span><span class="attr-val">${pDerived.penetration || 0}</span></div>
                                 <div class="attr-box" id="p_attr_spd" style="grid-column: span 2;">
                                     <span class="attr-label">速度</span>
                                     <span class="attr-val">${pSpd}</span>
@@ -354,7 +355,7 @@ const UICombatModal = {
             contentHtml,
             footerHtml,
             "combat_modal",
-            90,
+            69,
             null,
             {
                 allowOutsideClick: false,
@@ -390,8 +391,8 @@ const UICombatModal = {
                 html += `
                 <div class="danyao_slot_wrapper" ${tooltipAttr}>
                     <div class="c-slot-box">${inner}</div>
-                    <button id="combat_btn_use_${idx}" class="danyao_btn" ${disabled} onclick="${onclick}">使用</button>
-                    <div id="combat_cd_overlay_${idx}" class="danyao_cd_overlay" style="display:none;"></div>
+                    <button id="danyao_combat_btn_use_${idx}" class="danyao_btn" ${disabled} onclick="${onclick}">使用</button>
+                    <div id="danyao_combat_cd_overlay_${idx}" class="danyao_cd_overlay" style="display:none;"></div>
                 </div>`;
             });
             consContainer.innerHTML = html;
@@ -490,7 +491,7 @@ const UICombatModal = {
         if (eToxBar) eToxBar.style.width = '0%';
         if (eToxVal) eToxVal.innerText = '0';
 
-        const eStats = enemy.stats || {};
+
         const updateAttr = (id, val) => {
             const el = document.getElementById(id);
             if(el) {
@@ -501,12 +502,12 @@ const UICombatModal = {
             }
         };
 
-        updateAttr('e_attr_phy_atk', eStats.phy_atk || enemy.atk);
-        updateAttr('e_attr_mag_atk', eStats.mag_atk || enemy.atk);
-        updateAttr('e_attr_phy_def', eStats.phy_def || enemy.def);
-        updateAttr('e_attr_mag_def', eStats.mag_def || enemy.def);
+        updateAttr('e_attr_phy_atk', enemy.phy_atk || enemy.atk);
+        updateAttr('e_attr_mag_atk', enemy.mag_atk || enemy.atk);
+        updateAttr('e_attr_phy_def', enemy.phy_def || enemy.def);
+        updateAttr('e_attr_mag_def', enemy.mag_def || enemy.def);
 
-        const spd = eStats.speed || enemy.speed;
+        const spd =  enemy.speed || 0;
         updateAttr('e_attr_spd', spd);
         const timeEl = document.getElementById('e_attr_spd').querySelector('.attr-extra');
         if (timeEl) {

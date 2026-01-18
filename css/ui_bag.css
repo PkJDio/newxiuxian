@@ -176,7 +176,7 @@
 }
 
 .bag_grid_name {
-    font-size: 18px; /* 【修改重点】 原13px -> 18px */
+    font-size: 14px; /* 【修改重点】 原13px -> 18px */
     font-weight: bold; /* 加粗让字体更清晰 */
     width: 95%;
     text-align: center;

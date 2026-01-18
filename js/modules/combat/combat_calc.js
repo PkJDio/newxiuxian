@@ -17,11 +17,13 @@ const CombatCalc = {
                 phy_def: d.phy_def || d.def || 0, mag_def: d.mag_def || d.def || 0,
                 crit: d.crit || 0, mag_crit: d.mag_crit || 0,
                 sharpness: d.sharpness || 0, penetration: d.penetration || 0,
-                toxicity: ctx.player.toxicity || 0
+                toxicity: ctx.player.status.toxicity || 0
             };
         } else {
             const e = ctx.enemy;
+            // console.log('怪物', e);
             const s = e.stats || {};
+            // console.log('怪物stats', s);
             base = {
                 hp: ctx.currentEHp, hpMax: e.maxHp || e.hp,
                 speed: s.speed!==undefined?s.speed:(e.speed||10),
@@ -35,18 +37,33 @@ const CombatCalc = {
                 basePen: e.basePen||0, toxAtk: e.toxAtk||0, accuracy: e.accuracy||0,
                 toxicity: e.toxicity||0
             };
-            console.log('怪物base', base);
+            // console.log('怪物base', base);
         }
 
         // 2. 应用 Buff 修正
+        // 2. 【核心修复】区分固定值与百分比 Buff
         const myBuffs = ctx.buffs[targetKey];
         if (myBuffs) {
             for (let attr in myBuffs) {
                 if (attr === 'hp' || attr === 'mp') continue;
-                if (base[attr] !== undefined) base[attr] += myBuffs[attr].val;
-                // 兼容性联动
-                if (attr === 'atk') { base.phy_atk += myBuffs[attr].val; base.mag_atk += myBuffs[attr].val; }
-                if (attr === 'def') { base.phy_def += myBuffs[attr].val; base.mag_def += myBuffs[attr].val; }
+                const b = myBuffs[attr];
+
+                // 计算具体增量
+                const calcBonus = (originVal) => {
+                    return b.valType === 1 ? (originVal * b.val) : b.val;
+                };
+
+                if (base[attr] !== undefined) base[attr] += calcBonus(base[attr]);
+
+                // 联动处理 (如果加的是总攻击 'atk'，则物攻法攻同步加成)
+                if (attr === 'atk') {
+                    base.phy_atk += calcBonus(base.phy_atk);
+                    base.mag_atk += calcBonus(base.mag_atk);
+                }
+                if (attr === 'def') {
+                    base.phy_def += calcBonus(base.phy_def);
+                    base.mag_def += calcBonus(base.mag_def);
+                }
             }
         }
 
@@ -121,8 +138,9 @@ const CombatCalc = {
         // 词条: Blind
         const blindEntry = this._findEntry(ctx, attackerKey, 'blind');
         if (blindEntry) accMod -= blindEntry.val;
-
+        let firstDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 );
         let rawDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 - (accMod/100));
+
         let finalDodgeRate = Math.min(0.5, rawDodgeRate);
 
         if (Math.random() < finalDodgeRate) {
@@ -130,6 +148,7 @@ const CombatCalc = {
             const dodgeData = {
                 type: 'evasion',
                 source: isPlayerAttacking ? 'enemy' : 'player',
+                firstDR: (firstDodgeRate * 100).toFixed(1),
                 base: (rawDodgeRate * 100).toFixed(1),
                 acc: accMod,
                 final: (finalDodgeRate * 100).toFixed(1)
@@ -171,14 +190,22 @@ const CombatCalc = {
 
         // 8. 暴击判定
         let critRate = (dmgType === 'phy') ? atkStats.crit : atkStats.mag_crit;
+        critRate=critRate * 0.01;
         if (isPlayerAttacking) critRate += (atkStats.shen || 0) * 0.05;
+        //限制暴击率最高为100%
+        critRate = Math.min(100, critRate);
+
+
+
 
         let critDmgMult = 1.5;
         const critUp = this._findEntry(ctx, attackerKey, 'crit_dmg_up');
         if (critUp) critDmgMult += (critUp.val / 100);
 
         const isCrit = Math.random() * 100 < critRate;
+
         if (isCrit) rawDamage *= critDmgMult;
+
 
         // 9. 最终浮动 & 受击减免
         const variance = 0.95 + Math.random() * 0.1;
@@ -227,7 +254,7 @@ const CombatCalc = {
 
         // 13. 毒
         if (!isPlayerAttacking && type === "普攻" && atkStats.toxAtk > 0) {
-            window.player.toxicity = Math.min(100, (window.player.toxicity || 0) + Number(atkStats.toxAtk));
+            window.player.status.toxicity = Math.min(100, (window.player.status.toxicity || 0) + Number(atkStats.toxAtk));
             CombatUI.updateTox(ctx);
             CombatUI.log(ctx, `> ⚠️ ${name} 附带剧毒！中毒 +${atkStats.toxAtk}`);
         }
