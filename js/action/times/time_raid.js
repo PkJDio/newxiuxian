@@ -46,27 +46,39 @@ const TimeRaid = {
             }
         }
     },
+    /** * 【新增】强制检测重连
+     * 用于 window.onload 或 TimeSystem 启动时调用
+     */
+    /** 强制检测重连 */
+    forceReconnectRaid: function() {
+        console.log("player.startDanger=", player.startDanger);
+        if (!player || player.startDanger !== 1) return;
 
-    /** 剧情来袭 (计算波数 -> 调用 testRaid) */
+        // 【修正点】通过检查 DOM 元素的 display 属性来判断战斗窗口是否已打开
+        const modal = document.getElementById('map_combat_modal');
+        if (modal && modal.style.display === 'flex') {
+            console.log("[TimeRaid] 战斗窗口已在运行中，跳过重连触发");
+            return;
+        }
+
+        console.warn("[TimeRaid] 检测到挂起的剧情袭击，强行重回战斗...");
+        this._triggerScriptedRaid();
+    },
+
+    /** 剧情来袭 */
     _triggerScriptedRaid: function() {
-        // 根据危险度计算波数: 危险度 0 -> 3波; 30 -> 2波; 60 -> 1波
+        // 计算波数
         const waves = Math.max(1, Math.floor(3 - (player.danger || 0) / 30));
 
-        if (window.LogManager) window.LogManager.add(`<span style='color:red; font-weight:bold;'>[警报] 随着灵力倒灌，野兽变得狂暴，第一波冲击到来了！(共 ${waves} 波)</span>`);
+        // 触发前存档，确保刷新后 startDanger 依然是 1
+        if (window.saveGame) window.saveGame();
 
-        // 调用全局 Raid 函数
-        // 参数: 级别='boss', 波数=waves, 死斗=true, 胜利回调=Function
         if (window.testRaid) {
             window.testRaid("boss", waves, true, () => {
-                // 这个回调只有在“最终胜利”时才会被执行
-                console.log("[TimeRaid] 剧情袭击防守成功！状态推进 startDanger -> 2");
-                player.startDanger = 2;
-
-                if (window.showToast) window.showToast("🎉 你成功抵御了第一波兽潮，乱世生存正式开始！");
+                console.log("[TimeRaid] 剧情袭击成功，状态推进");
+                player.startDanger = 2; // 战斗彻底胜利后才推进到随机袭击阶段
                 if (window.saveGame) window.saveGame();
             });
-        } else {
-            console.error("window.testRaid 未定义");
         }
     },
 

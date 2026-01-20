@@ -33,7 +33,7 @@ const UtilsEnemy = {
         // 获取配置中的基础颜色
         let displayColor = "#333";
 
-        if (window.ENEMY_TEMPLATES && ENEMY_TEMPLATES[type]) {
+        if (ENEMY_TEMPLATES && ENEMY_TEMPLATES[type]) {
             displayColor = ENEMY_TEMPLATES[type].color;
         }
 
@@ -75,7 +75,7 @@ const UtilsEnemy = {
             skills: template.skills ? JSON.parse(JSON.stringify(template.skills)) : [],
 
             visual: {
-                icon: (window.ENEMY_TEMPLATES && ENEMY_TEMPLATES[type]) ? ENEMY_TEMPLATES[type].icon : "💀",
+                icon: (ENEMY_TEMPLATES && ENEMY_TEMPLATES[type]) ? ENEMY_TEMPLATES[type].icon : "💀",
                 color: displayColor,
                 scale: style.scale,
                 shadowBlur: style.shadowBlur,

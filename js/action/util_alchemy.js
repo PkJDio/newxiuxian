@@ -1,6 +1,7 @@
 // js/utils/util_alchemy.js
+// 炼丹逻辑核心 v2.0 - 适配新版技艺等级系统
 
-console.log("【AlchemyUtil】逻辑核心加载 (稳定剂共鸣修复版)");
+console.log("【AlchemyUtil】逻辑核心加载 (新版技艺适配)");
 
 const UtilAlchemy = {
     grid: new Array(9).fill(null),
@@ -21,10 +22,12 @@ const UtilAlchemy = {
         6: [3, 7], 7: [4, 6, 8], 8: [5, 7]
     },
 
+    // 【修改点 1】统一获取等级接口 (0-10)
     getSkillLevel: function() {
-        if (!window.player || !window.player.lifeSkills) return 0;
-        let val = window.player.lifeSkills.alchemy;
-        return (typeof val === 'object' && val !== null) ? (val.level || 0) : (Number(val) || 0);
+        if (window.UtilsLifeSkills) {
+            return UtilsLifeSkills.getLevel('alchemy');
+        }
+        return 0; // 默认值
     },
 
     initSession: function(pill) {
@@ -59,7 +62,9 @@ const UtilAlchemy = {
         let totalCatalyst = 0;
         let resonanceLinks = [];
 
-        const skill = this.getSkillLevel();
+        // 获取当前等级 (0-10)
+        const skillLevel = this.getSkillLevel();
+
         const targetReq = this.session.pill.formula.requirements;
         const mainKey = Object.keys(targetReq)[0];
         const targetVal = targetReq[mainKey];
@@ -72,7 +77,7 @@ const UtilAlchemy = {
             for (let k in item.properties) {
                 let v = item.properties[k];
                 if (k === 'stabilizer') {
-                    stabilityAdd += v; // 只要放入，基础稳定性就生效
+                    stabilityAdd += v;
                 } else if (k === 'catalyst') {
                     totalCatalyst += v;
                 } else if (k === mainKey) {
@@ -87,7 +92,7 @@ const UtilAlchemy = {
         let catalystBonusVal = Math.floor(totalPotency * catalystBonusRate);
         totalPotency += catalystBonusVal;
 
-        // 2. 阵法连携 (计算相邻关系)
+        // 2. 阵法连携
         let processed = new Set();
         for (let i = 0; i < 9; i++) {
             if (!this.grid[i]) continue;
@@ -101,34 +106,33 @@ const UtilAlchemy = {
 
                 let itemB = this.grid[nIdx];
 
-                // === A. 主属性共鸣 (同属性相邻 +20%) ===
+                // A. 主属性共鸣
                 if (itemA.properties[mainKey] && itemB.properties[mainKey]) {
                     let bonus = Math.floor((itemA.properties[mainKey] + itemB.properties[mainKey]) * 0.2);
                     totalPotency += bonus;
                     resonanceLinks.push({ from: i, to: nIdx, type: 'resonance' });
                 }
 
-                // === B. 稳定剂-烈性药 镇压 (减少损耗) ===
-                if (itemA.properties.stabilizer && !itemB.properties.stabilizer) {
-                    stabilityCost -= 5;
-                    resonanceLinks.push({ from: i, to: nIdx, type: 'stabilize' });
-                }
-                if (itemB.properties.stabilizer && !itemA.properties.stabilizer) {
+                // B. 稳定剂-烈性药 镇压
+                if ((itemA.properties.stabilizer && !itemB.properties.stabilizer) ||
+                    (itemB.properties.stabilizer && !itemA.properties.stabilizer)) {
                     stabilityCost -= 5;
                     resonanceLinks.push({ from: i, to: nIdx, type: 'stabilize' });
                 }
 
-                // === C. 稳定剂-稳定剂 强固 (【新增逻辑】) ===
-                // 如果两个稳定剂相邻，它们会连接，并额外提供少量稳定性 (比如两者之和的10%)
+                // C. 稳定剂-稳定剂 强固
                 if (itemA.properties.stabilizer && itemB.properties.stabilizer) {
                     let stabBonus = Math.floor((itemA.properties.stabilizer + itemB.properties.stabilizer) * 0.1);
                     stabilityAdd += stabBonus;
-                    resonanceLinks.push({ from: i, to: nIdx, type: 'stabilize' }); // 同样画绿色线
+                    resonanceLinks.push({ from: i, to: nIdx, type: 'stabilize' });
                 }
             }
         }
 
-        if (skill >= 400) stabilityCost = Math.floor(stabilityCost * 0.8);
+        // 【修改点 2】技能减免公式化：每级减少 2% 损耗 (Lv10 = 20%)
+        // 旧逻辑：if (skill >= 400) stabilityCost *= 0.8
+        const costReduction = skillLevel * 0.02; // 0.0 ~ 0.2
+        stabilityCost = Math.floor(stabilityCost * (1 - costReduction));
 
         this.session.currentPotency = totalPotency;
         this.session.currentStability = Math.max(0, 100 + stabilityAdd - stabilityCost);
@@ -172,9 +176,7 @@ const UtilAlchemy = {
             if (multiplier < 1) multiplier = 1;
         }
 
-        // 暂存成功率
         const currentSuccessRate = s.successRate;
-
         const roll = Math.random() * 100;
 
         if (roll < currentSuccessRate) {
@@ -185,7 +187,10 @@ const UtilAlchemy = {
             if(!window.player.alchemyHistory) window.player.alchemyHistory = {};
             window.player.alchemyHistory[s.pill.id] = (window.player.alchemyHistory[s.pill.id] || 0) + multiplier;
 
-            window.player.lifeSkills.alchemy = (Number(window.player.lifeSkills.alchemy)||0) + multiplier;
+            // 【修改点 3】调用新版接口增加经验 (产出几颗加几点)
+            if (window.UtilsLifeSkills) {
+                UtilsLifeSkills.addExp('alchemy', multiplier);
+            }
 
             return {
                 success: true,
@@ -195,6 +200,9 @@ const UtilAlchemy = {
             };
         } else {
             this.consumeMaterials();
+            // 失败也可以加一点安慰经验
+            if (window.UtilsLifeSkills) UtilsLifeSkills.addExp('alchemy', 1);
+
             return { success: false, msg: `凝丹失败 (成功率 ${Math.floor(currentSuccessRate)}%)，火候未到...` };
         }
     },
@@ -208,7 +216,7 @@ const UtilAlchemy = {
                     window.player.inventory[idx].count--;
                     if (window.player.inventory[idx].count <= 0) {
                         window.player.inventory.splice(idx, 1);
-                        this.grid[i] = null; // 用完才清空
+                        this.grid[i] = null;
                     }
                 } else {
                     this.grid[i] = null;

@@ -158,7 +158,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 60, def: 2},
+        effects: {hunger: 60},
         desc: "头方嘴阔，常吸附于岩石上刮食苔藓。",
         value: 22
     },
@@ -218,7 +218,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 45, def: 3},
+        effects: {hunger: 45},
         desc: "体色如铜，鳞片紧密，力大无穷。",
         value: 18
     },
@@ -242,7 +242,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 42, speed: 2},
+        effects: {hunger: 42},
         desc: "鳞片洁白如甲，游动如飞。",
         value: 16
     },
@@ -278,7 +278,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 75, def: 2},
+        effects: {hunger: 75, },
         desc: "鳞片金黄，尾鳍鲜红，是富贵的象征。",
         value: 45
     },
@@ -314,7 +314,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 54, speed: 3},
+        effects: {hunger: 54, speed: 1},
         desc: "身形飘逸，游动时如仙子凌波微步。",
         value: 48
     },
@@ -338,7 +338,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 90, atk: 2},
+        effects: {hunger: 90, atk: 1},
         desc: "色红如火，性情刚烈，肉质极鲜。",
         value: 55
     },
@@ -362,7 +362,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 60, speed: 5},
+        effects: {hunger: 60, speed: 1},
         desc: "形如织布银梭，快如闪电。",
         value: 50
     },
@@ -434,7 +434,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 90, speed: 5},
+        effects: {hunger: 90, speed: 2},
         desc: "喜好逆流而上，体型细长，味道鲜美。",
         value: 105 // (30+5)*3 = 105
     },
@@ -458,7 +458,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 120, def: 5},
+        effects: {hunger: 120, def: 1},
         desc: "色彩斑斓，身披重甲，虾中之王。",
         value: 135 // (40+5)*3 = 135
     },
@@ -506,7 +506,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 240, hp: 150, atk: 10}, // 无 Buff
+        effects: {hunger: 240, hp: 150, atk: 2}, // 无 Buff
         desc: "深海中的活化石，体型庞大如苍龙，力量无穷。",
         value: 920 // (80+150)*4 = 920
     },
@@ -530,7 +530,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 150, hp: 80, speed: 15}, // 无 Buff
+        effects: {hunger: 150, hp: 80, speed: 2}, // 无 Buff
         desc: "生于极阴之地，游动无声无息，如幽灵般诡异。",
         value: 520 // (50+80)*4 = 520 (注：speed未计入基础公式，仅作参考或单独计算) -> 修正为 HP+Hunger 基础
     },
@@ -554,7 +554,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 210, hp: 120, def: 20}, // 无 Buff
+        effects: {hunger: 210, hp: 120, def: 2}, // 无 Buff
         desc: "背甲坚硬如玄铁，散发寒气，是炼体的大补之物。",
         value: 760 // (70+120)*4 = 760
     },
@@ -578,7 +578,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 90, speed: 30}, // 无 Buff
+        effects: {hunger: 90, speed: 2}, // 无 Buff
         desc: "身上斑点如星河灿烂，速度快到肉眼难以捕捉。",
         value: 120 // (30)*4 = 120 (特殊类，主要价值在稀有度和特殊效果)
     },
@@ -602,7 +602,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 270, mp: 90, atk: 15}, // 无 Buff
+        effects: {hunger: 270, mp: 90, atk: 2}, // 无 Buff
         desc: "来自深渊的恐怖生物，触手带有魔性，味道却极其鲜美。",
         value: 720 // (90+90)*4 = 720
     },
@@ -626,7 +626,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 300, hp: 500, mp: 500, speed: 100}, // 无 Buff
+        effects: {hunger: 300, hp: 500, mp: 500, speed: 4}, // 无 Buff
         desc: "游弋于时间长河中的生灵，甚至能让人产生时光倒流的错觉。",
         value: 5500 // (100+500+500)*5 = 5500
     },
@@ -662,7 +662,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 1500, hp: 500, atk: 200}, // 无 Buff
+        effects: {hunger: 1500, hp: 500, atk: 4}, // 无 Buff
         desc: "生于归墟深渊，以毁灭为食，肉质中充满了暴虐的力量。",
         value: 5000 // (500+500)*5 = 5000
     },
@@ -686,7 +686,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
         obtain: "fish",
         seasons: [0, 1, 2, 3],
         region: "all",
-        effects: {hunger: 3000, def: 100}, // 无 Buff
+        effects: {hunger: 3000, def: 4}, // 无 Buff
         desc: "吞噬星辰核心而生，小小一条重达万钧，口感如同嚼铁。",
         value: 5000 // (1000)*5 = 5000
     },

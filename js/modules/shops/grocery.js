@@ -55,7 +55,7 @@ let GroceryShop = {
                 </div>
             </div>
         `;
-        this.modalBody = window.showGeneralModal(`${townName} - 杂货店`, html);
+        this.modalBody = window.showGeneralModal(`${townName} - 杂货店`, html, null, "grocery_modal", 68, 85);
     },
 
     _generateStock: function(town) {
@@ -94,7 +94,7 @@ let GroceryShop = {
 
         const chosenFlavorings = scoredFlavorings.slice(0, targetFlavorCount).map(entry => {
             const item = entry.item;
-            const initialQty = 5 + Math.round(window.getSeededRandom(shopKey, item.id, "qty") * 10);
+            const initialQty = 35 + Math.round(window.getSeededRandom(shopKey, item.id, "qty") * 10);
             return {
                 item: item,
                 price: Math.round((item.price || item.value || 10) * 5),

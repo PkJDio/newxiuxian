@@ -1,168 +1,188 @@
 // js/core/state.js
-// 核心状态管理：定义玩家模板、兵解逻辑 v2.0 (修复注释BUG，重命名接口)
+// 核心状态管理 v3.2 (修复弹窗冲突与轮回逻辑)
 
 var player = null;
 
-// ==========================================
-// 2. 核心逻辑：直接执行兵解 (无弹窗，纯逻辑)
-// ==========================================
-
-
-// 供战斗系统直接调用，或由确认弹窗回调调用
 window.performDirectRebirth = function() {
-    console.log(">>> [State] 执行 performDirectRebirth (纯逻辑，无弹窗)");
+    console.log(">>> [State] performDirectRebirth 被调用");
 
-    if (!window.player) return;
+    // 【关键修复】立即关闭当前的确认/死亡弹窗
+    // 这能防止旧弹窗遮挡新弹窗，也能避免ID冲突
+    if (window.closeModal) window.closeModal();
 
-    // ==========================================
-    // 【新增】兵解前夕：存档数据完整性检查与修补
-    // 目标：防止旧存档熟练度已满但未获得大成标记或轮回属性
-    // ==========================================
-    if (window.player.skills && window.UtilsSkill) {
-        console.log(">>> [State] 开始检查并修补技能数据...");
-        for (let skillId in window.player.skills) {
-            let skillData = window.player.skills[skillId];
+    if (!window.player) {
+        console.error(">>> [State] Error: window.player 不存在!");
+        return;
+    }
 
-            // 1. 获取技能当前状态 (使用旧的 getSkillInfo 逻辑判断是否满级)
-            let info = UtilsSkill.getSkillInfo(skillId);
+    // --- 核心重置逻辑 (闭包) ---
+    // --- 核心重置逻辑 (闭包) ---
+    const proceedWithRebirth = () => {
+        console.log(">>> [State] 开始执行 proceedWithRebirth (重塑真身)...");
 
-            if (info) {
-                // 情况A：熟练度已达瓶颈(isCapped)，但存档里没标记 mastered
-                if (info.isCapped && !skillData.mastered) {
-                    console.log(`[Fix] 修复大成标记: ${skillId}`);
+        // 1. 技能修补
+        if (window.player.skills && window.UtilsSkill) {
+            for (let skillId in window.player.skills) {
+                let skillData = window.player.skills[skillId];
+                let info = UtilsSkill.getSkillInfo(skillId);
+                if (info && info.isCapped && !skillData.mastered) {
                     skillData.mastered = true;
-                }
-
-                // 情况B：已标记 mastered，但缺少轮回属性 (attr/value)
-                // 这通常发生在旧版本存档更新到新版本时
-                if (skillData.mastered && (!skillData.attr || !skillData.value)) {
-                    console.log(`[Fix] 修复轮回属性: ${skillId}`);
-                    // 调用 UtilsSkill 的内部方法生成属性并写入 skillData
-                    if (typeof UtilsSkill._applyMasteryBonus === 'function') {
-                        UtilsSkill._applyMasteryBonus(skillId);
-                    }
                 }
             }
         }
-    }
-    // ==========================================
 
-    // 1. 准备新数据
-    let template = window.PLAYER_TEMPLATE || {
-        name: "新角色", generation: 1, money: 0,
-        attributes: { hp: 100, mp: 0, atk: 10, def: 0, speed: 10 },
-        inventory: []
+        // 2. 提取保留物品 (此时 window.player 还是旧角色)
+        console.log(">>> [State] 正在提取 samsaraItem=1 的物品...");
+        // 深拷贝一份出来，防止后面引用断裂
+        const legacyItems = JSON.parse(JSON.stringify(
+            (window.player.inventory || []).filter(item => item.samsaraItem === 1)
+        ));
+        console.log(`>>> [State] 提取到 ${legacyItems.length} 件轮回物品`);
+
+        // 3. 准备新数据
+        let template = window.PLAYER_TEMPLATE || {
+            name: "新角色", generation: 1, money: 0,
+            attributes: { hp: 100, mp: 0, atk: 10, def: 0, speed: 10 },
+            inventory: []
+        };
+        let newPlayer = JSON.parse(JSON.stringify(template));
+        const nextGen = (window.player.generation || 1) + 1;
+
+        // 继承属性
+        newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
+        newPlayer.skills = window.player.skills ? JSON.parse(JSON.stringify(window.player.skills)) : {};
+        newPlayer.fishHistory = window.player.fishHistory ? JSON.parse(JSON.stringify(window.player.fishHistory)) : {};
+        newPlayer.lifeSkills = window.player.lifeSkills ? JSON.parse(JSON.stringify(window.player.lifeSkills)) : {};
+
+        newPlayer.danger = 0;
+        newPlayer.need_kill = 0;
+        newPlayer.timeStart = 0;
+        newPlayer.generation = nextGen;
+        newPlayer.name = "道友" + nextGen + "世";
+        newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
+        newPlayer.isNewLife = true;
+
+        // ============================================================
+        // 4. 覆盖全局数据 (关键！)
+        // ============================================================
+        // 先把 player 换成新的，这样 UtilsAdd.addItem 才会加到新背包里
+        window.player = newPlayer;
+        console.log(">>> [State] 玩家数据已重置:", window.player.name);
+
+        // ============================================================
+        // 5. 放入保留物品 (使用 UtilsItem.addItem)
+        // ============================================================
+        if (window.UtilsItem && legacyItems.length > 0) {
+            legacyItems.forEach(item => {
+
+                // 直接调用 addItem
+                // 因为 item 里面有了 isSamsara:true，_generateDeterministicSid 会生成完全不同的 SID
+                // 这样就自动和普通物品分开了
+                // 传入 item 对象，addItem 会处理深拷贝
+                window.UtilsItem.addItem(item, item.count || 1);
+            });
+        }
+
+        // 发放初始物品
+        setStartItem();
+
+        if(window.saveGame) window.saveGame();
+        if (window.LogManager) window.LogManager.clear();
+
+        // 6. UI 刷新
+        if(window.recalcStats) window.recalcStats();
+        if(window.updateUI) window.updateUI();
+
+        // 再次确保关闭所有弹窗
+        if (window.closeModal) window.closeModal();
+
+        if (typeof backToMenu === 'function') backToMenu();
+        if(window.showToast) window.showToast("开启第 " + nextGen + " 世");
+
+        console.log(">>> [State] 准备刷新页面...");
+        setTimeout(() => location.reload(), 500);
     };
+    setTimeout(() => {
+        // 7. 触发事件
+        // --- 逻辑分支 ---
 
-    let newPlayer = JSON.parse(JSON.stringify(template));
-    const nextGen = (window.player.generation || 1) + 1;
+        // 1. 检查条件
+        const timeStart = window.player.timeStart || 0;
+        const canCarryItem = timeStart > 0;
+        console.log(`>>> [State] 检查轮回条件: timeStart=${timeStart}, canCarry=${canCarryItem}`);
 
-    // 继承逻辑
-    newPlayer.studyProgress = window.player.studyProgress ? JSON.parse(JSON.stringify(window.player.studyProgress)) : {};
-    newPlayer.currentStudyTarget = window.player.currentStudyTarget || null;
+        // 2. 强制卸下装备
+        if (canCarryItem && window.UtilsItem && window.player.equipment) {
+            console.log(">>> [State] 正在强制卸下装备...");
+            const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'accessory', 'fishing_rod'];
+            slots.forEach(slot => {
+                if (window.player.equipment[slot]) {
+                    window.UtilsItem.unequipItem(slot);
+                }
+            });
+        }
 
-    // 【继承技能】将修补好的技能表完整复制给下一世
-    // 注意：这里我们保留了技能的 level 和 exp。
-    // 如果你的设定是“保留功法但重修”，可以在这里遍历 newPlayer.skills 把 exp/level 重置为 0，保留 mastered/attr/value 即可。
-    // 目前按“保留所有”处理。
-    if (window.player.skills) {
-        newPlayer.skills = JSON.parse(JSON.stringify(window.player.skills));
-    } else {
-        newPlayer.skills = {};
-    }
-    //继承钓鱼图鉴数据fishHistory
-    newPlayer.fishHistory = window.player.fishHistory ? JSON.parse(JSON.stringify(window.player.fishHistory)) : {};
-    //继承生活技能lifeSkills
-    newPlayer.lifeSkills = window.player.lifeSkills ? JSON.parse(JSON.stringify(window.player.lifeSkills)) : {};
+        // 3. 筛选可选物品
+        let equipableItems = [];
+        if (canCarryItem && window.player.inventory) {
+            equipableItems = window.player.inventory.filter(i => {
+                return ['weapon', 'head', 'body', 'feet', 'mount', 'accessory', 'fishing_rod'].includes(i.type);
+            });
+            console.log(`>>> [State] 背包中筛选出 ${equipableItems.length} 件可选装备`);
+        }
 
+        // 4. 弹出选择 (前提：UtilsModal存在且有物品)
+        if (equipableItems.length > 0) {
+            if (window.UtilsModal && window.UtilsModal.showSamsaraSelectionModal) {
+                console.log(">>> [State] 呼叫 showSamsaraSelectionModal");
 
+                // 这里不需要 return，因为 showSamsaraSelectionModal 会打开新弹窗
+                // 而 proceedWithRebirth 是在回调里执行的
+                window.UtilsModal.showSamsaraSelectionModal(equipableItems, (selectedItem) => {
+                    console.log(">>> [State] 玩家选择了物品回调:", selectedItem);
+                    if (selectedItem) {
+                        selectedItem.samsaraItem = 1;
+                    }
+                    proceedWithRebirth();
+                });
+                return; // 暂停后续逻辑，等待用户交互
+            }
+        }
 
-    newPlayer.danger = 0;
-    newPlayer.need_kill = 0;
-    newPlayer.timeStart = 0; // 兵解后重置世界阶段
+        // 5. 直接执行 (无装备或不满足条件)
+        console.log(">>> [State] 无可选装备或不满足条件，直接轮回");
+        proceedWithRebirth();
+    }, 500);
 
-    newPlayer.generation = nextGen;
-    newPlayer.name = "道友" + nextGen + "世";
-    newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
-
-
-
-    // ==========================================
-    // 【核心修改】增加一个标记，表明这是新的一世
-    // ==========================================
-    newPlayer.isNewLife = true;
-
-    // 2. 覆盖全局数据
-    window.player = newPlayer;
-    setStartItem();
-    // 3. 保存与清理
-    if(window.saveGame) window.saveGame();
-    if (window.LogManager) window.LogManager.clear();
-
-    // 4. 刷新界面
-    if(window.recalcStats) window.recalcStats();
-    if(window.updateUI) window.updateUI();
-
-    // 5. 【关键修复】这里强制关闭所有弹窗，换行写，避免被注释掉
-    if (window.closeModal) window.closeModal();
-
-    // 6. 回主页
-    if (typeof backToMenu === 'function') backToMenu();
-    if (typeof checkSaveFile === 'function') checkSaveFile();
-
-    if(window.showToast) window.showToast("开启第 " + nextGen + " 世");
 };
-/**
- * 自定义为玩家添加初始物品
- * @param newPlayer
- * @returns {undefined}
- */
+
 function setStartItem() {
-    //初始添加装备
+    if (!window.UtilsAdd) return;
     UtilsAdd.addItem("weapons_000", 1);
     UtilsAdd.addItem("body_001", 1);
     UtilsAdd.addItem("head_001", 1);
     UtilsAdd.addItem("feet_002", 1);
-
-    //添加初始金钱
     UtilsAdd.addMoney(100);
-    //添加初始食物
     UtilsAdd.addItem("foods_005", 2);
     UtilsAdd.addItem("foods_053", 1);
-    //添加初始功法
     UtilsAdd.addItem("book_cultivation_r1_00_full", 1);
-
-
-    //添加初始功法
     UtilsAdd.addSkill("book_body_r1_00_full");
-
-
-
 };
 
-
-
-// 为了兼容旧存档或习惯，保留 executeDie 别名，但指向新函数
 window.executeDie = window.performDirectRebirth;
 
-// ==========================================
-// 3. 交互逻辑：用户手动点击兵解 (带确认弹窗)
-// ==========================================
 function attemptDie() {
-    console.log(">>> [State] 用户点击兵解，弹出确认框");
     if (window.showConfirmModal) {
         window.showConfirmModal(
             "兵解轮回",
             `
             <div style="text-align:center; padding:10px;">
                 <p class="text_red" style="font-weight:bold; font-size:18px; margin-bottom:15px;">警告：肉身将毁，修为尽失！</p>
-                <p style="color:#444; margin-bottom:5px;">你将保留所有<b style="color:#2b58a6">已学会的功法</b>（需重新修炼）。</p>
-                <p style="color:#444; margin-bottom:5px;">已<b style="color:#ceae04">大成</b>的功法将化为永久属性加成。</p>
+                <p style="color:#444; margin-bottom:5px;">你将保留所有<b style=\"color:#2b58a6\">已学会的功法</b>（需重新修炼）。</p>
                 <br>
                 <p style="font-weight:bold;">道友道心已决，确定要开启来世吗？</p>
             </div>
             `,
-            // 确认后，调用上面的纯逻辑函数
             window.performDirectRebirth
         );
     } else {

@@ -202,24 +202,42 @@ const UISkill = {
         if (!container) return;
 
         // 1. 处理生活技艺
+        // 1. 处理生活技艺
         if (this.currentTab === 'life') {
-            if (!player.lifeSkills || Object.keys(player.lifeSkills).length === 0) {
+            // 使用工具类获取标准化数据
+            const skillList = window.UtilsLifeSkills ? UtilsLifeSkills.getSkillListForUI() : [];
+
+            if (skillList.length === 0) {
                 container.innerHTML = `<div class="text-empty">暂未领悟任何生活技艺</div>`;
                 return;
             }
+
             let html = '';
-            for (let key in player.lifeSkills) {
-                const skill = player.lifeSkills[key];
+            skillList.forEach(item => {
+                const expText = item.isMax ? "已臻化境" : `${item.exp} / ${item.maxExp}`;
+
+                // 构建带进度条的卡片 HTML
                 html += `
-                    <div class="skill_card" style="cursor:default">
-                        <div class="skill_icon">🎨</div>
-                        <div class="skill_info">
-                            <div class="skill_name" style="color:#2e7d32;">${skill.name}</div>
-                            <div style="font-size:14px; color:#666;">熟练度: <span style="color:#d4af37; font-weight:bold;">${skill.exp}</span></div>
-                            <div style="font-size:12px; color:#999; margin-top:2px;">${skill.desc || '暂无描述'}</div>
+                <div class="skill_card" style="cursor:default; display:flex; flex-direction:column; align-items:stretch; padding:12px; height:auto; min-height:90px;">
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div class="skill_icon" style="font-size:24px;">🎨</div>
+                            <div>
+                                <div class="skill_name" style="color:#2e7d32; font-size:18px;">${item.name}</div>
+                                <div style="font-size:12px; color:#888;">Lv.${item.level} <span style="color:#aaa;">(${item.realm})</span></div>
+                            </div>
                         </div>
-                    </div>`;
-            }
+                        <div style="font-size:14px; font-weight:bold; color:#d4af37;">${expText}</div>
+                    </div>
+
+                    <div style="font-size:13px; color:#666; margin-bottom:8px; line-height:1.4;">${item.desc}</div>
+
+                    <div style="background:#e0e0e0; height:8px; border-radius:4px; overflow:hidden; width:100%;">
+                        <div style="background:linear-gradient(90deg, #4caf50, #8bc34a); width:${item.percent}%; height:100%; transition:width 0.3s;"></div>
+                    </div>
+                </div>`;
+            });
             container.innerHTML = html;
             return;
         }

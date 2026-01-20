@@ -201,21 +201,36 @@ const UtilsItem = {
 
             // A. 基础恢复
             if (eff.hp) {
-                player.derived.hp = Math.min(player.derived.hpMax, player.derived.hp + eff.hp);
-                if( eff.hp>0){
+                // 【修复】确保操作的是 player.status.hp 而不是 derived
+                if (!player.status) player.status = {};
+
+                // 获取最大生命值 (从 derived 读取上限)
+                const maxHp = (player.derived && player.derived.hpMax) ? player.derived.hpMax : 100;
+
+                // 修改当前生命值
+                player.status.hp = Math.min(maxHp, (player.status.hp || 0) + eff.hp);
+
+                if( eff.hp > 0){
                     msg += `生命回复${eff.hp} `;
-                }else if( eff.hp<0){
+                } else if( eff.hp < 0){
                     msg += `生命减少${Math.abs(eff.hp)} `;
                 }
 
                 applied = true;
             }
+
             if (eff.mp) {
-                player.derived.mp = Math.min(player.derived.mpMax, (player.derived.mp||0) + eff.mp);
-                if(eff.mp>0){
+                // 【修复】同理修复 MP，操作 player.status.mp
+                if (!player.status) player.status = {};
+
+                const maxMp = (player.derived && player.derived.mpMax) ? player.derived.mpMax : 100;
+
+                player.status.mp = Math.min(maxMp, (player.status.mp || 0) + eff.mp);
+
+                if(eff.mp > 0){
                     msg += `灵力回复${eff.mp} `;
-                }else{
-                    msg += `灵力减少-${Math.abs(eff.mp)} `;
+                } else {
+                    msg += `灵力减少${Math.abs(eff.mp)} `;
                 }
                 applied = true;
             }
@@ -247,8 +262,30 @@ const UtilsItem = {
             // C. 永久属性
             const permAttrs = ['jing', 'qi', 'shen', 'atk', 'def', 'speed', 'hpMax', 'mpMax'];
             let attrChanged = false;
+
+            // ---【修改开始】---
+            // 处理 atk -> phy_atk + mag_atk
+            if (eff.atk) {
+                if (!player.exAttr) player.exAttr = {};
+                // 分别加到物攻和法攻
+                player.exAttr.phy_atk = (player.exAttr.phy_atk || 0) + eff.atk;
+                player.exAttr.mag_atk = (player.exAttr.mag_atk || 0) + eff.atk;
+                // 原 atk 字段不再累加，或仅作为兼容保留（建议直接拆分）
+                // player.exAttr.atk = (player.exAttr.atk || 0) + eff.atk;
+                attrChanged = true;
+            }
+            // 处理 def -> phy_def + mag_def
+            if (eff.def) {
+                if (!player.exAttr) player.exAttr = {};
+                // 分别加到物防和法防
+                player.exAttr.phy_def = (player.exAttr.phy_def || 0) + eff.def;
+                player.exAttr.mag_def = (player.exAttr.mag_def || 0) + eff.def;
+                attrChanged = true;
+            }
+
+            // 处理其余常规属性 (过滤掉 atk 和 def，因为上面已经处理了)
             permAttrs.forEach(key => {
-                if (eff[key]) {
+                if (key !== 'atk' && key !== 'def' && eff[key]) {
                     if (!player.exAttr) player.exAttr = {};
                     if (!player.exAttr[key]) player.exAttr[key] = 0;
                     player.exAttr[key] += eff[key];
@@ -256,12 +293,11 @@ const UtilsItem = {
                     applied = true;
                 }
             });
+            // ---【修改结束】---
             if (attrChanged) msg += "属性提升 ";
 
-            // D. Buff
             // D. 临时 Buff (buff)
-            // D. 临时 Buff (buff)
-            // 【核心修改】支持复合属性分割与分别添加
+            // 【核心修改】支持复合属性分割，并针对 atk/def 进行物法拆分
             if (eff.buff) {
                 const b = eff.buff;
                 if (b.attr && b.val && b.days) {
@@ -270,28 +306,46 @@ const UtilsItem = {
                     // 1. 将 attr 和 val 转为字符串并用 '_' 分割
                     const attrs = String(b.attr).split('_');
                     const vals = String(b.val).split('_');
-                    const days = b.days; // 天数共享
+                    const days = b.days;
 
-                    // 2. 遍历所有属性并添加
+                    // 2. 遍历所有配置的属性
                     attrs.forEach((subAttr, index) => {
-                        // 防止 val 数量少于 attr 数量，缺省取第一个
                         const subVal = vals[index] !== undefined ? vals[index] : vals[0];
 
-                        // 3. 生成唯一 Key
-                        // 如果是单属性，使用 item.id (兼容旧逻辑)
-                        // 如果是多属性，使用 item.id + "_" + subAttr (防止Key冲突)
-                        const buffKey = attrs.length > 1 ? `${item.id}_${subAttr}` : item.id;
+                        // --- 【核心修改开始】判断是否需要拆分属性 ---
+                        let realTargets = [];
+                        if (subAttr === 'atk') {
+                            realTargets = ['phy_atk', 'mag_atk'];
+                        } else if (subAttr === 'def') {
+                            realTargets = ['phy_def', 'mag_def'];
+                        } else {
+                            realTargets = [subAttr]; // 其他属性保持原样
+                        }
 
-                        const newBuff = {
-                            name: item.name,
-                            days: days,
-                            attr: subAttr,
-                            val: Number(subVal), // 确保转为数字
-                            isDebuff: false,
-                            desc: item.desc || ""
-                        };
+                        // 3. 为每个实际生效的属性创建 Buff
+                        realTargets.forEach(realAttr => {
+                            // 生成唯一 Key：
+                            // 如果属性发生了拆分 (如 atk -> phy_atk)，或者原本就是多属性配置，必须加后缀以防覆盖
+                            // 只有当 原本是单属性 且 不需要拆分 时，才保留 item.id 以兼容旧存档
+                            let buffKey;
+                            if (attrs.length === 1 && realTargets.length === 1) {
+                                buffKey = item.id;
+                            } else {
+                                buffKey = `${item.id}_${realAttr}`;
+                            }
 
-                        player.buffs[buffKey] = newBuff;
+                            const newBuff = {
+                                name: item.name,
+                                days: days,
+                                attr: realAttr, // 使用拆分后的真实属性
+                                val: Number(subVal),
+                                isDebuff: false,
+                                desc: item.desc || ""
+                            };
+
+                            player.buffs[buffKey] = newBuff;
+                        });
+                        // --- 【核心修改结束】 ---
                     });
 
                     applied = true;

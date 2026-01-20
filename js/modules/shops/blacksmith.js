@@ -54,7 +54,7 @@ const BlacksmithShop = {
             </div>
         `;
 
-        this.modalBody = window.showGeneralModal(`${townName} - 铁匠铺`, html);
+        this.modalBody = window.showGeneralModal(`${townName} - 铁匠铺`, html,null,"blacksmith_modal",68,85);
     },
 
     // ================= 库存生成 =================

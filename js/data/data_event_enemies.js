@@ -8,53 +8,156 @@
 let EVENT_RAID_ENEMIES = {
     // --- 5个 Minion (普通级)：3个技能 ---
     minion: [
+        // ==========================================
+// 杂鱼级怪物 (Minion) 标准化技能格式重构
+// ==========================================
         {
-            id: "raid_frenzied_sentry", name: "狂躁的行宫岗哨", template: "minion", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 55, atk: 18, def: 2, speed: 15 }, money: [5, 10],
+            id: "raid_frenzied_sentry",
+            name: "狂躁的行宫岗哨",
+            template: "minion",
+            rank: "minion",
+            subType: "human",
+            defType: "light",
+            stats: {
+                hp: 90,
+                phy_atk: 18, mag_atk: 2,
+                phy_def: 4, mag_def: 2,
+                speed: 11
+            },
+            money: [5, 10],
+            drops: [
+                { id: "materials_088", rate: 0.4 }, // 锈蚀铁片
+                { id: "materials_089", rate: 0.5 }  // 污秽的布条
+            ],
             skills: [
-                { id: "乱剑挥砍", type: 1, damage: 28, rate: 0.5 },
-                { id: "垂死挣扎", type: 1, damage: 54, rate: 0.15 },
-                { id: "凶光", type: 2, debuffAttr: "atk", debuffValue: 5, debuffTimes: 3, rate: 0.2 }
+                // 高伤害 (10%)
+                { id: "舍命一击", rate: 0.1, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%)
+                { id: "快速抽打", rate: 0.2, type: 1, damage: 0.8, damageType: "phy", dmgValType: 1 },
+                // 常规 (50%)
+                { id: "乱剑挥砍", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
+                // 功能 (20%)
+                { id: "凶光", rate: 0.2, type: 2, debuffAttr: "phy_atk", debuffValue: 0.1, debuffValType: 1, debuffTimes: 3 }
             ],
             desc: "守卫在行宫外的士兵，因灵力入体导致血管暴裂，只剩下杀戮本能。"
         },
         {
-            id: "raid_panicked_attendant", name: "失控的随行杂役", template: "minion", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 50, atk: 16, def: 1, speed: 12 }, money: [2, 8],
+            id: "raid_panicked_attendant",
+            name: "失控的随行杂役",
+            template: "minion",
+            rank: "minion",
+            subType: "human",
+            defType: "cloth",
+            stats: {
+                hp: 80,
+                phy_atk: 12, mag_atk: 6,
+                phy_def: 2, mag_def: 5,
+                speed: 12
+            },
+            money: [2, 8],
+            drops: [
+                { id: "materials_089", rate: 0.6 },
+                { id: "materials_094", rate: 0.2 }
+            ],
             skills: [
-                { id: "胡乱投掷", type: 1, damage: 24, rate: 0.5 },
-                { id: "拼命冲撞", type: 1, damage: 38, rate: 0.15 },
-                { id: "哀嚎", type: 2, debuffAttr: "speed", debuffValue: 3, debuffTimes: 2, rate: 0.2 }
+                // 高伤害 (10%)
+                { id: "器皿重砸", rate: 0.1, type: 1, damage: 2.0, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%)
+                { id: "拍打", rate: 0.2, type: 1, damage: 0.7, damageType: "phy", dmgValType: 1 },
+                // 常规 (50%)
+                { id: "胡乱投掷", rate: 0.5, type: 1, damage: 1.1, damageType: "phy", dmgValType: 1 },
+                // 功能 (20%)
+                { id: "哀嚎", rate: 0.2, type: 2, debuffAttr: "speed", debuffValue: 3, debuffTimes: 2 }
             ],
             desc: "行宫内的侍从，被突如其来的剧变吓疯了，手中抓着沉重的青铜器皿疯狂乱砸。"
         },
         {
-            id: "raid_bolting_steed", name: "惊厥的御用战马", template: "minion", region: "all", timeStart: 1,
-            subType: "beast", stats: { hp: 70, atk: 14, def: 5, speed: 20 }, money: [0, 0],
+            id: "raid_bolting_steed",
+            name: "惊厥的御用战马",
+            template: "minion",
+            rank: "minion",
+            subType: "beast",
+            defType: "leather",
+            stats: {
+                hp: 108,
+                phy_atk: 20, mag_atk: 0,
+                phy_def: 6, mag_def: 3,
+                speed: 20
+            },
+            money: [0, 0],
+            drops: [
+                { id: "materials_086", rate: 0.4 },
+                { id: "materials_093", rate: 0.4 }
+            ],
             skills: [
-                { id: "后蹄重踢", type: 1, damage: 26, rate: 0.4 },
-                { id: "疯狂践踏", type: 1, damage: 44, rate: 0.1 },
-                { id: "暴走", type: 3, buffAttr: "speed", buffValue: 10, buffTimes: 3, rate: 0.2 }
+                // 高伤害 (10%)
+                { id: "绝命践踏", rate: 0.1, type: 1, damage: 2.5, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%)
+                { id: "轻踢", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
+                // 常规 (50%)
+                { id: "后蹄重踢", rate: 0.5, type: 1, damage: 1.3, damageType: "phy", dmgValType: 1 },
+                // 功能 (20%)
+                { id: "暴走", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 10, buffTimes: 3 }
             ],
             desc: "原本温顺的御马受灵力惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
         },
         {
-            id: "raid_exhausted_courier", name: "力竭的传令兵", template: "minion", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 60, atk: 20, def: 2, speed: 18 }, money: [10, 20],
+            id: "raid_exhausted_courier",
+            name: "力竭的传令兵",
+            template: "minion",
+            rank: "minion",
+            subType: "human",
+            defType: "light",
+            stats: {
+                hp: 90,
+                phy_atk: 20, mag_atk: 0,
+                phy_def: 8, mag_def: 5,
+                speed: 18
+            },
+            money: [10, 20],
+            drops: [
+                { id: "materials_089", rate: 0.4 },
+                { id: "materials_092", rate: 0.3 }
+            ],
             skills: [
-                { id: "短剑突刺", type: 1, damage: 30, rate: 0.5 },
-                { id: "死战之志", type: 1, damage: 48, rate: 0.15 },
-                { id: "喘息", type: 3, buffAttr: "def", buffValue: 5, buffTimes: 2, rate: 0.2 }
+                // 高伤害 (10%)
+                { id: "绝命透甲", rate: 0.1, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%)
+                { id: "挥砍", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
+                // 常规 (50%)
+                { id: "短剑突刺", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
+                // 功能 (20%)
+                { id: "喘息", rate: 0.2, type: 3, buffAttr: "phy_def", buffValue: 5, buffTimes: 2 }
             ],
             desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴灵力占据了身体。"
         },
         {
-            id: "raid_wild_wolf", name: "嗅血的山林饿狼", template: "minion", region: "all", timeStart: 1,
-            subType: "beast", stats: { hp: 45, atk: 22, def: 1, speed: 22 }, money: [0, 0],
+            id: "raid_wild_wolf",
+            name: "嗅血的山林饿狼",
+            template: "minion",
+            rank: "minion",
+            subType: "beast",
+            defType: "leather",
+            stats: {
+                hp: 100,
+                phy_atk: 22, mag_atk: 0,
+                phy_def: 4, mag_def: 2,
+                speed: 22
+            },
+            money: [0, 0],
+            drops: [
+                { id: "materials_086", rate: 0.5 },
+                { id: "materials_092", rate: 0.4 }
+            ],
             skills: [
-                { id: "撕咬", type: 1, damage: 33, rate: 0.5 },
-                { id: "锁喉", type: 1, damage: 54, rate: 0.1 },
-                { id: "嗜血", type: 3, buffAttr: "atk", buffValue: 8, buffTimes: 3, rate: 0.2 }
+                // 高伤害 (10%)
+                { id: "疯狂撕碎", rate: 0.1, type: 1, damage: 2.3, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%)
+                { id: "扑击", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
+                // 常规 (50%)
+                { id: "撕咬", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
+                // 功能 (20%)
+                { id: "嗜血", rate: 0.2, type: 3, buffAttr: "phy_atk", buffValue: 8, buffTimes: 3 }
             ],
             desc: "沙丘行宫附近的野狼，嗅到了宫殿内浓郁的生机与死亡交织的气息，变得异常亢奋。"
         }
@@ -62,112 +165,263 @@ let EVENT_RAID_ENEMIES = {
 
     // --- 5个 Elite (精英级)：5个技能 ---
     elite: [
+        // ==========================================
+// 精英级怪物 (Elite) 标准化技能格式重构
+// ==========================================
         {
-            id: "raid_elite_lieutenant", name: "暴走的行宫校尉", template: "elite", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 180, atk: 45, def: 12, speed: 25 }, money: [50, 100],
-            skills: [
-                { id: "破空斩", type: 1, damage: 65, rate: 0.5 },
-                { id: "旋风重劈", type: 1, damage: 100, rate: 0.2 },
-                { id: "真气暴血", type: 1, damage: 155, rate: 0.05 },
-                { id: "校尉威压", type: 3, buffAttr: "atk", buffValue: 12, buffTimes: 3, rate: 0.2 },
-                { id: "缴械", type: 2, debuffAttr: "atk", debuffValue: 10, debuffTimes: 2, rate: 0.2 }
+            id: "raid_elite_lieutenant",
+            name: "暴走的行宫校尉",
+            template: "elite",
+            rank: "elite",
+            subType: "human",
+            defType: "heavy",
+            stats: {
+                hp: 315,
+                phy_atk: 38, mag_atk: 4,
+                phy_def: 18, mag_def: 10,
+                speed: 15
+            },
+            money: [50, 100],
+            drops: [
+                { id: "materials_096", rate: 0.3 },
+                { id: "materials_117", rate: 0.2 }
             ],
-            desc: "【精英】原本负责寝殿安保的将领，此刻浑身肌肉扭曲，皮肤呈现出金属般的乌青。"
+            skills: [
+                // 很高伤害 (10%) - 真气暴血 (物理百分比)
+                { id: "真气暴血", rate: 0.1, type: 1, damage: 3.2, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%) - 旋风重劈
+                { id: "旋风重劈", rate: 0.2, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 },
+                // 常规技能 (40%)
+                { id: "破空斩", rate: 0.4, type: 1, damage: 1.3, damageType: "phy", dmgValType: 1 },
+                // Debuff (10%) - 缴械
+                { id: "缴械", rate: 0.1, type: 2, debuffAttr: "phy_atk", debuffValue: 0.15, debuffValType: 1, debuffTimes: 2 },
+                // Buff (20%)
+                { id: "校尉威压", rate: 0.2, type: 3, buffAttr: "phy_atk", buffValue: 12, buffTimes: 3 }
+            ],
+            desc: "原本负责寝殿安保的将领，此刻浑身肌肉扭曲，皮肤呈现出金属般的乌青。"
         },
         {
-            id: "raid_elite_alchemist", name: "脱力的御前医方", template: "elite", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 140, atk: 52, def: 6, speed: 30 }, money: [80, 150],
-            skills: [
-                { id: "汞毒粉末", type: 1, damage: 67, rate: 0.5 },
-                { id: "废丹引爆", type: 1, damage: 112, rate: 0.2 },
-                { id: "天地炉火", type: 1, damage: 172, rate: 0.05 },
-                { id: "服药", type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 3, rate: 0.2 },
-                { id: "腐蚀药雾", type: 2, debuffAttr: "def", debuffValue: 10, debuffTimes: 3, rate: 0.2 }
+            id: "raid_elite_alchemist",
+            name: "脱力的御前医方",
+            template: "elite",
+            rank: "elite",
+            subType: "human",
+            defType: "cloth",
+            stats: {
+                hp: 250,
+                phy_atk: 5, mag_atk: 42,
+                phy_def: 8, mag_def: 18,
+                speed: 18
+            },
+            money: [80, 150],
+            drops: [
+                { id: "materials_113", rate: 0.4 },
+                { id: "materials_114", rate: 0.2 }
             ],
-            desc: "【精英】曾为始皇炼丹的方士，在灵力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
+            skills: [
+                // 很高伤害 (10%) - 天地炉火 (法术百分比)
+                { id: "天地炉火", rate: 0.1, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
+                // 低伤害 (20%) - 废丹引爆
+                { id: "废丹引爆", rate: 0.2, type: 1, damage: 1.6, damageType: "mag", dmgValType: 1 },
+                // 常规技能 (40%)
+                { id: "汞毒粉末", rate: 0.4, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
+                // Debuff (10%) - 腐蚀药雾
+                { id: "腐蚀药雾", rate: 0.1, type: 2, debuffAttr: "phy_def", debuffValue: 0.2, debuffValType: 1, debuffTimes: 3 },
+                // Buff (20%)
+                { id: "服药", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 3 }
+            ],
+            desc: "曾为始皇炼丹的方士，在灵力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
         },
         {
-            id: "raid_elite_guard_captain", name: "震颤的行宫禁卫长", template: "elite", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 220, atk: 42, def: 20, speed: 18 }, money: [60, 120],
-            skills: [
-                { id: "突刺", type: 1, damage: 60, rate: 0.5 },
-                { id: "盾击", type: 1, damage: 87, rate: 0.2 },
-                { id: "禁卫绝杀", type: 1, damage: 147, rate: 0.05 },
-                { id: "铁壁之志", type: 3, buffAttr: "def", buffValue: 15, buffTimes: 4, rate: 0.2 },
-                { id: "锁足", type: 2, debuffAttr: "speed", debuffValue: 8, debuffTimes: 3, rate: 0.2 }
+            id: "raid_elite_guard_captain",
+            name: "震颤的行宫禁卫长",
+            template: "elite",
+            rank: "elite",
+            subType: "human",
+            defType: "plate",
+            stats: {
+                hp: 380,
+                phy_atk: 25, mag_atk: 15,
+                phy_def: 25, mag_def: 15,
+                speed: 12
+            },
+            money: [60, 120],
+            drops: [
+                { id: "materials_096", rate: 0.4 },
+                { id: "materials_117", rate: 0.3 }
             ],
-            desc: "【精英】大秦最精锐的卫兵，即便在癫狂中依然保持着死守行宫的战斗姿势。"
+            skills: [
+                // 很高伤害 (10%) - 禁卫绝杀
+                { id: "禁卫绝杀", rate: 0.1, type: 1, damage: 2.8, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%) - 盾击
+                { id: "盾击", rate: 0.2, type: 1, damage: 1.5, damageType: "phy", dmgValType: 1 },
+                // 常规技能 (40%)
+                { id: "突刺", rate: 0.4, type: 1, damage: 1.1, damageType: "phy", dmgValType: 1 },
+                // Debuff (10%) - 锁足
+                { id: "锁足", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 8, debuffTimes: 3 },
+                // Buff (20%)
+                { id: "铁壁之志", rate: 0.2, type: 3, buffAttr: "phy_def", buffValue: 15, buffTimes: 4 }
+            ],
+            desc: "大秦最精锐的卫兵，即便在癫狂中依然保持着死守行宫的战斗姿势。"
         },
         {
-            id: "raid_elite_court_official", name: "癫狂的执笔史官", template: "elite", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 150, atk: 48, def: 8, speed: 22 }, money: [100, 200],
-            skills: [
-                { id: "飞毫如箭", type: 1, damage: 64, rate: 0.5 },
-                { id: "简牍重击", type: 1, damage: 98, rate: 0.2 },
-                { id: "笔墨诛心", type: 1, damage: 163, rate: 0.05 },
-                { id: "文气护体", type: 3, buffAttr: "def", buffValue: 10, buffTimes: 5, rate: 0.2 },
-                { id: "律令·禁", type: 2, debuffAttr: "speed", debuffValue: 12, debuffTimes: 4, rate: 0.2 }
+            id: "raid_elite_official",
+            name: "癫狂的执笔史官",
+            template: "elite",
+            rank: "elite",
+            subType: "human",
+            defType: "cloth",
+            stats: {
+                hp: 260,
+                phy_atk: 10, mag_atk: 38,
+                phy_def: 10, mag_def: 20,
+                speed: 14
+            },
+            money: [100, 200],
+            drops: [
+                { id: "materials_112", rate: 0.2 },
+                { id: "materials_099", rate: 0.4 }
             ],
-            desc: "【精英】正在记录陛下遗诏的史官，受惊后将手中的青铜笔当成了致命的杀器。"
+            skills: [
+                // 很高伤害 (10%) - 笔墨诛心
+                { id: "笔墨诛心", rate: 0.1, type: 1, damage: 3.3, damageType: "mag", dmgValType: 1 },
+                // 低伤害 (20%) - 简牍重击
+                { id: "简牍重击", rate: 0.2, type: 1, damage: 1.7, damageType: "mag", dmgValType: 1 },
+                // 常规技能 (40%)
+                { id: "飞毫如箭", rate: 0.4, type: 1, damage: 1.3, damageType: "mag", dmgValType: 1 },
+                // Debuff (10%) - 律令·禁
+                { id: "律令·禁", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 12, debuffTimes: 3 },
+                // Buff (20%)
+                { id: "文气护体", rate: 0.2, type: 3, buffAttr: "mag_def", buffValue: 10, buffTimes: 5 }
+            ],
+            desc: "正在记录陛下遗诏的史官，受惊后将手中的青铜笔当成了致命的杀器。"
         },
         {
-            id: "raid_elite_shadow_guard", name: "错乱的影中死士", template: "elite", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 130, atk: 60, def: 4, speed: 45 }, money: [40, 90],
-            skills: [
-                { id: "影袭", type: 1, damage: 82, rate: 0.5 },
-                { id: "背刺", type: 1, damage: 125, rate: 0.2 },
-                { id: "瞬狱杀", type: 1, damage: 190, rate: 0.05 },
-                { id: "暗涌", type: 3, buffAttr: "speed", buffValue: 20, buffTimes: 3, rate: 0.2 },
-                { id: "烟幕", type: 2, debuffAttr: "atk", debuffValue: 15, debuffTimes: 2, rate: 0.2 }
+            id: "raid_elite_shadow_guard",
+            name: "错乱的影中死士",
+            template: "elite",
+            rank: "elite",
+            subType: "human",
+            defType: "light",
+            stats: {
+                hp: 240,
+                phy_atk: 48, mag_atk: 12,
+                phy_def: 8, mag_def: 8,
+                speed: 25
+            },
+            money: [40, 90],
+            drops: [
+                { id: "materials_059", rate: 0.2 },
+                { id: "materials_082", rate: 0.1 }
             ],
-            desc: "【精英】潜伏在行宫暗影处的保镖，灵力倒灌让他们与阴影的融合失去了控制。"
+            skills: [
+                // 很高伤害 (10%) - 瞬狱杀
+                { id: "瞬狱杀", rate: 0.1, type: 1, damage: 3.8, damageType: "phy", dmgValType: 1 },
+                // 低伤害 (20%) - 背刺
+                { id: "背刺", rate: 0.2, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
+                // 常规技能 (40%)
+                { id: "影袭", rate: 0.4, type: 1, damage: 1.5, damageType: "phy", dmgValType: 1 },
+                // Debuff (10%) - 烟幕
+                { id: "烟幕", rate: 0.1, type: 2, debuffAttr: "phy_atk", debuffValue: 0.2, debuffValType: 1, debuffTimes: 2 },
+                // Buff (20%)
+                { id: "暗涌", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 20, buffTimes: 3 }
+            ],
+            desc: "潜伏在行宫暗影处的保镖，灵力倒灌让他们与阴影的融合失去了控制。"
         }
     ],
 
     // --- 3个 Boss (首领级)：8个技能 ---
     boss: [
+        // ==========================================
+// 头目级怪物 (Boss) 标准技能格式重构
+// ==========================================
         {
-            id: "raid_boss_chamberlain", name: "癫狂的沙丘内侍长", template: "boss", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 850, atk: 88, def: 20, speed: 38 }, money: [500, 1000],
+            id: "raid_boss_chamberlain",
+            name: "癫狂的沙丘内侍长",
+            template: "boss",
+            rank: "boss",
+            subType: "human",
+            defType: "cloth",
+            // 倾向性: mag (纯法术)
+            stats: {
+                hp: 756,
+                phy_atk: 6, mag_atk: 63,
+                phy_def: 13, mag_def: 22,
+                speed: 15,
+                atk: 63, def: 22
+            },
+            money: [300, 400],
+            drops: [
+                { id: "materials_127", rate: 0.05 },
+                { id: "materials_129", rate: 0.5 }
+            ],
             skills: [
-                { id: "拂尘乱舞", type: 1, damage: 113, rate: 0.4 },           // 1. 低
-                { id: "内劲掌掴", type: 1, damage: 173, rate: 0.2 },           // 2. 高
-                { id: "行宫绝响", type: 1, damage: 260, rate: 0.1 },          // 3. 很高
-                { id: "灵力坍缩", type: 1, damage: 438, rate: 0.02 },         // 4. 极高
-                { id: "内侍威仪", type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 4, rate: 0.2 }, // 5. 增益
-                { id: "残命吞噬", type: 3, buffAttr: "hp", buffValue: 170, buffTimes: 1, rate: 0.1 },   // 6. 回复 (1/5)
-                { id: "尖锐嘶叫", type: 2, debuffAttr: "atk", debuffValue: 15, debuffTimes: 5, rate: 0.2 }, // 7. 减益1
-                { id: "绝望目光", type: 2, debuffAttr: "def", debuffValue: 12, debuffTimes: 4, rate: 0.2 }  // 8. 减益2
+                { id: "灵力坍缩", rate: 0.05, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
+                { id: "行宫绝响", rate: 0.1, type: 1, damage: 2.5, damageType: "mag", dmgValType: 1 },
+                { id: "内劲掌掴", rate: 0.2, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 },
+                { id: "拂尘乱舞", rate: 0.45, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
+                { id: "内侍威仪", rate: 0.1, type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 4 },
+                { id: "绝望目光", rate: 0.1, type: 2, debuffAttr: "mag_def", debuffValue: 0.2, debuffValType: 1, debuffTimes: 4 }
             ],
             desc: "【头目】沙丘行宫的总管，最先目睹陛下驾崩的人。他在极度的恐惧中吞噬了陛下逸散的第一缕龙气。"
         },
         {
-            id: "raid_boss_general", name: "脱控的行宫镇守将", template: "boss", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 1200, atk: 75, def: 45, speed: 22 }, money: [600, 1200],
+            id: "raid_boss_general",
+            name: "脱控的行宫镇守将",
+            template: "boss",
+            rank: "boss",
+            subType: "human",
+            defType: "plate",
+            // 倾向性: tank (肉盾)
+            stats: {
+                hp: 756,
+                phy_atk: 37, mag_atk: 37,
+                phy_def: 30, mag_def: 26,
+                speed: 15,
+                atk: 37, def: 30
+            },
+            money: [300, 400],
+            drops: [
+                { id: "materials_118", rate: 0.1 },
+                { id: "materials_103", rate: 0.3 }
+            ],
             skills: [
-                { id: "破阵一枪", type: 1, damage: 105, rate: 0.4 },
-                { id: "横扫千军", type: 1, damage: 170, rate: 0.2 },
-                { id: "山崩地裂", type: 1, damage: 285, rate: 0.1 },
-                { id: "定秦绝剑", type: 1, damage: 495, rate: 0.02 },
-                { id: "战阵杀气", type: 3, buffAttr: "atk", buffValue: 20, buffTimes: 5, rate: 0.2 },
-                { id: "老兵不屈", type: 3, buffAttr: "hp", buffValue: 240, buffTimes: 1, rate: 0.1 },
-                { id: "沉重威压", type: 2, debuffAttr: "speed", debuffValue: 10, debuffTimes: 5, rate: 0.2 },
-                { id: "甲片震荡", type: 2, debuffAttr: "def", debuffValue: 20, debuffTimes: 3, rate: 0.2 }
+                { id: "定秦绝剑", rate: 0.05, type: 1, damage: 4.0, damageType: "phy", dmgValType: 1 },
+                { id: "山崩地裂", rate: 0.1, type: 1, damage: 3.0, damageType: "phy", dmgValType: 1 },
+                { id: "横扫千军", rate: 0.2, type: 1, damage: 2.0, damageType: "phy", dmgValType: 1 },
+                { id: "破阵一枪", rate: 0.45, type: 1, damage: 1.4, damageType: "phy", dmgValType: 1 },
+                { id: "战阵杀气", rate: 0.1, type: 3, buffAttr: "phy_atk", buffValue: 0.25, buffValType: 1, buffTimes: 5 },
+                { id: "沉重威压", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 10, debuffTimes: 5 }
             ],
             desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的灵力撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
         },
         {
-            id: "raid_boss_chief_fangshi", name: "神志错乱的随行首席", template: "boss", region: "all", timeStart: 1,
-            subType: "human", stats: { hp: 750, atk: 105, def: 10, speed: 55 }, money: [800, 1500],
+            id: "raid_boss_chief_fangshi",
+            name: "神志错乱的随行首席",
+            template: "boss",
+            rank: "boss",
+            subType: "human",
+            defType: "cloth",
+            // 倾向性: mag (纯法术)
+            stats: {
+                hp: 756,
+                phy_atk: 6, mag_atk: 63,
+                phy_def: 13, mag_def: 22,
+                speed: 15,
+                atk: 63, def: 22
+            },
+            money: [300, 400],
+            drops: [
+                { id: "materials_123", rate: 0.1 },
+                { id: "materials_124", rate: 0.5 }
+            ],
             skills: [
-                { id: "乱灵符", type: 1, damage: 140, rate: 0.4 },
-                { id: "五雷错位", type: 1, damage: 205, rate: 0.2 },
-                { id: "阴阳逆转", type: 1, damage: 345, rate: 0.1 },
-                { id: "长生幻灭", type: 1, damage: 585, rate: 0.02 },
-                { id: "入道疯魔", type: 3, buffAttr: "atk", buffValue: 30, buffTimes: 3, rate: 0.2 },
-                { id: "丹髓共鸣", type: 3, buffAttr: "hp", buffValue: 150, buffTimes: 1, rate: 0.1 },
-                { id: "感官剥夺", type: 2, debuffAttr: "speed", debuffValue: 20, debuffTimes: 4, rate: 0.2 },
-                { id: "神识压制", type: 2, debuffAttr: "atk", debuffValue: 20, debuffTimes: 5, rate: 0.2 }
+                { id: "长生幻灭", rate: 0.05, type: 1, damage: 5.0, damageType: "mag", dmgValType: 1 },
+                { id: "阴阳逆转", rate: 0.1, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
+                { id: "五雷错位", rate: 0.2, type: 1, damage: 2.2, damageType: "mag", dmgValType: 1 },
+                { id: "乱灵符", rate: 0.45, type: 1, damage: 1.5, damageType: "mag", dmgValType: 1 },
+                { id: "入道疯魔", rate: 0.1, type: 3, buffAttr: "mag_atk", buffValue: 0.3, buffValType: 1, buffTimes: 3 },
+                { id: "感官剥夺", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 20, debuffTimes: 4 }
             ],
             desc: "【头目】始皇最信赖的首席方士，因在驾崩现场试图通过禁术挽回圣命，导致灵魂被天地之威瞬间冲垮。"
         }
@@ -187,8 +441,12 @@ function initRaidEnemyData() {
 
         // 应用模板倍率
         finalStats.hp = Math.floor(finalStats.hp * tmpl.multipliers.hp);
-        finalStats.atk = Math.floor(finalStats.atk * tmpl.multipliers.atk);
-        finalStats.def = Math.floor(finalStats.def * tmpl.multipliers.def);
+        finalStats.atk = finalStats.atk?Math.floor(finalStats.atk * tmpl.multipliers.atk):0;
+        finalStats.phy_atk =  Math.floor(finalStats.phy_atk * tmpl.multipliers.atk);
+        finalStats.mag_atk =  Math.floor(finalStats.mag_atk * tmpl.multipliers.atk);
+        finalStats.phy_def = Math.floor(finalStats.phy_def * tmpl.multipliers.def);
+        finalStats.mag_def = Math.floor(finalStats.mag_def * tmpl.multipliers.def);
+        finalStats.def = finalStats.def?Math.floor(finalStats.def * tmpl.multipliers.def):0;
         finalStats.speed = Math.floor(finalStats.speed * tmpl.multipliers.speed);
 
         // 2. 【新增】处理技能伤害倍率
@@ -199,7 +457,7 @@ function initRaidEnemyData() {
                 const skill = { ...originalSkill };
 
                 // 如果是伤害技能 (type: 1)，应用攻击倍率
-                if (skill.type === 1 && skill.damage) {
+                if (skill.type === 1 && skill.damage && skill.dmgValType === 0) {
                     // damage * atk倍率
                     skill.damage = Math.floor(skill.damage * tmpl.multipliers.atk);
                 }

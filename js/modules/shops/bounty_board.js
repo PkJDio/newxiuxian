@@ -199,7 +199,7 @@ const BountyBoard = {
                     </div>
                 </div>
             </div>`;
-        this.modalBody = window.showGeneralModal(`悬赏榜`, html, null, "modal_bounty", 85, 80);
+        this.modalBody = window.showGeneralModal(`悬赏榜`, html, null, "modal_bounty", 68, 85);
     },
 
     _renderTaskList: function() {

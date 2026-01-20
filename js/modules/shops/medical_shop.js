@@ -57,7 +57,7 @@ const MedicalShop = {
             </div>
         `;
 
-        this.modalBody = window.showGeneralModal(`${townName} - 医馆`, html);
+        this.modalBody = window.showGeneralModal(`${townName} - 医馆`, html,null,"medical_shop_modal",68,85);
     },
 
     // ================= 库存生成 =================
@@ -101,11 +101,21 @@ const MedicalShop = {
 
         scoredItems.sort((a, b) => b.score - a.score);
         const selectedItems = scoredItems.slice(0, targetTypeCount);
-        selectedItems.forEach(entry => { entry.maxQty = 1; targetTotalQty--; });
-
+        // 随机分配剩余数量
         for (let i = 0; i < targetTotalQty; i++) {
             const distRand = window.getSeededRandom(shopKey, "dist", i);
-            selectedItems[Math.round(distRand * selectedItems.length)].maxQty++;
+
+            // 【修复】使用 Math.floor 并防止越界
+            // 原代码: selectedItems[Math.round(distRand * selectedItems.length)].maxQty++;
+
+            // 新代码:
+            let idx = Math.floor(distRand * selectedItems.length);
+            // 双重保险：确保索引在 0 到 length-1 之间
+            if (idx >= selectedItems.length) idx = selectedItems.length - 1;
+
+            if (selectedItems[idx]) {
+                selectedItems[idx].maxQty++;
+            }
         }
 
         this.currentStock = selectedItems.map(entry => {

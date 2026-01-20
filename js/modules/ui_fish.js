@@ -25,6 +25,7 @@ const UIFish = {
     },
 
     _renderContent: function() {
+        // info.levelName 已经在 util_fish.js 里格式化好了 (例如 Lv.3 略有小成)
         const info = window.UtilFish ? window.UtilFish.getInfo() : { levelName:"?", remainingFish:0, attempts:0, maxAttempts:0, rodBonus:0 };
 
         this.lastContentHtml = `
@@ -37,7 +38,7 @@ const UIFish = {
             <div class="fish_stats_row">
                 <div class="fish_stat_item">
                     <span class="stat_label">垂钓境界</span>
-                    <span class="stat_val">${info.levelName}</span>
+                    <span class="stat_val" style="color:#d84315;">${info.levelName}</span>
                 </div>
                 <div class="fish_stat_item">
                     <span class="stat_label">钓具加成</span>

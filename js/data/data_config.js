@@ -129,11 +129,11 @@ const PLAYER_TEMPLATE = {
     // 技能与Buff
     skills           : {}, // { "skill_id": { level:0, exp:0, mastered:false } }
     lifeSkills       : {
-        "swimming": {name: "泅水", exp: 0, desc: "浪里白条，影响水域移动速度。"},
+
         "cooking": {name: "庖丁", exp: 0, desc: "烹饪美食，去除毒性。"},
         "fishing": {name: "垂钓", exp: 0, desc: "姜太公钓鱼，获取水产。"},
-        "medicine": {name: "岐黄", exp: 0, desc: "悬壶济世，提升药效与鉴定。"},
-        "gathering": {name: "采薇", exp: 0, desc: "搜山寻宝，提升采集产量。"},
+
+        "gathering": {name: "寻幽", exp: 0, desc: "搜山寻宝，提升采集产量。"},
         //炼丹
         "alchemy": {name: "炼丹", exp: 0, desc: "炼丹术，提升炼丹成功率。"},
     }, learnedRecipes: [], // ["food_01", ...]

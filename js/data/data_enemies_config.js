@@ -140,7 +140,7 @@ const ENEMY_TEMPLATES = {
         accuracy: 30
     }
 };
-window.ENEMY_TEMPLATES = ENEMY_TEMPLATES;
+
 // 定义怪物的具体生态类型
 const MONSTER_SUBTYPES = {
     HUMAN: 'human',     // 人型 (强盗、叛军)

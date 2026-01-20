@@ -216,7 +216,7 @@ const BlackMarket = {
         `;
 
         // 调用全局弹窗并记录新的引用
-        this.modalBody = window.showGeneralModal(`黑市 - ${this.currentTown.name}`, html);
+        this.modalBody = window.showGeneralModal(`黑市 - ${this.currentTown.name}`, html,null,"black_market_modal",68,85);
     },
 
     handleBuy: function(index) {

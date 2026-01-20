@@ -211,93 +211,6 @@ const ModalManager = {
 
         return body;
     },
-// 10. 死亡通知弹窗 (水墨武侠风，强制单按钮)
-    // 10. 死亡通知弹窗 (修复版：宽屏布局)
-    showDeathModal: function(title, contentHtml, onConfirm) {
-        // 1. 注入死亡弹窗专属样式
-        this._injectDeathStyles();
-
-        // 2. 创建回调
-        this._createTempCallback(onConfirm, (funcName) => {
-            const footer = `
-                <div class="ink_modal_footer" style="justify-content: center !important; border-top: none !important;">
-                    <button class="ink_btn_death" onclick="window['${funcName}']()">
-                        <span class="btn_icon">🕯️</span><span class="btn_text">重新来过</span>
-                    </button>
-                </div>`;
-
-            const strictOptions = { allowOutsideClick: false, allowEsc: false };
-
-            // 【核心修改】这里第6个参数改为 45，确保它是横向宽弹窗
-            this._showBaseModal('modal_death', title, contentHtml, footer, "", 45, null, strictOptions);
-        });
-    },
-
-    _injectDeathStyles: function() {
-        if (document.getElementById('style-modal-death')) return;
-        const style = document.createElement('style');
-        style.id = 'style-modal-death';
-        style.innerHTML = `
-            /* 整体容器：水墨纸张质感，加宽 */
-            .modal_death {
-                border: 2px solid #5d4037 !important;
-                background-color: #fdfbf7 !important;
-                box-shadow: 0 0 25px rgba(0,0,0,0.85) !important;
-                min-width: 450px !important; /* 增加最小宽度 */
-            }
-            /* 标题栏：黑底红字，压抑感 */
-            .modal_death .modal_header {
-                background: #1a1a1a !important;
-                color: #d32f2f !important;
-                border-bottom: 2px solid #5d4037 !important;
-                text-align: center !important;
-                font-family: "KaiTi", serif;
-                font-size: 26px !important; /* 加大字号 */
-                letter-spacing: 4px;
-                padding: 15px 0 !important;
-            }
-            /* 内容区：居中，大字体，增加留白 */
-            .modal_death .modal_body {
-                text-align: center;
-                font-family: "KaiTi", serif;
-                font-size: 22px;
-                padding: 40px 30px !important; /* 增加内边距 */
-                color: #333;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                line-height: 1.6;
-            }
-            /* 按钮：深红主题 */
-            .ink_btn_death {
-                background: linear-gradient(to bottom, #b71c1c, #800000);
-                color: #fce4ec;
-                border: 1px solid #500;
-                padding: 12px 60px; /* 加宽按钮 */
-                font-size: 22px;
-                font-family: "KaiTi";
-                font-weight: bold;
-                cursor: pointer;
-                box-shadow: 0 4px 5px rgba(0,0,0,0.3);
-                border-radius: 4px;
-                transition: transform 0.1s;
-                text-shadow: 1px 1px 0 #000;
-                margin-bottom: 10px;
-            }
-            .ink_btn_death:hover {
-                background: linear-gradient(to bottom, #c62828, #b71c1c);
-                color: #fff;
-            }
-            .ink_btn_death:active {
-                transform: translateY(2px);
-                box-shadow: 0 2px 3px rgba(0,0,0,0.3);
-            }
-            .btn_icon { margin-right: 10px; font-size: 24px; vertical-align: middle; }
-            .btn_text { vertical-align: middle; }
-        `;
-        document.head.appendChild(style);
-    },
     _injectDialogueStyles: function() {
         if (document.getElementById('ink_dialogue_style')) return;
         const style = document.createElement('style');
@@ -312,6 +225,128 @@ const ModalManager = {
             .modal_dialogue .modal_body { position: relative; z-index: 1; font-size: 20px; line-height: 1.8; padding: 15px 25px; font-family: "KaiTi", serif; min-height: 100px; }
             .ink_btn_next { padding: 8px 25px; background: #222; color: #fff; border: 1px solid #000; cursor: pointer; font-family: "KaiTi"; font-size: 18px; transition: all 0.2s; }
             .ink_btn_next:hover { background: #a94442; box-shadow: 2px 2px 0 #333; }
+        `;
+        document.head.appendChild(style);
+    },
+// ===============================================
+    // 10. 死亡通知弹窗 (带防双击)
+    // ===============================================
+    showDeathModal: function(title, contentHtml, onConfirm) {
+        this._injectDeathStyles();
+
+        // 【检查轮回条件】
+        const canCarry = window.player && (window.player.timeStart || 0) > 0;
+        const btnText = canCarry ? "选择物品开始下一次轮回" : "重新来过";
+        const btnStyle = canCarry ? 'background: linear-gradient(to bottom, #d84315, #bf360c);' : '';
+
+        this._createTempCallback(onConfirm, (funcName) => {
+            const footer = `
+                <div class="ink_modal_footer" style="justify-content: center !important; border-top: none !important;">
+                    <button class="ink_btn_death" style="${btnStyle}" onclick="this.disabled=true; window['${funcName}']()">
+                        <span class="btn_icon">🕯️</span><span class="btn_text">${btnText}</span>
+                    </button>
+                </div>`;
+
+            this._showBaseModal('modal_death', title, contentHtml, footer, "", 45, null, { allowOutsideClick: false, allowEsc: false });
+        });
+    },
+
+    // ===============================================
+    // 11. 轮回装备选择弹窗 (完整版)
+    // ===============================================
+    showSamsaraSelectionModal: function(items, onSelect) {
+        console.log(">>> [Modal] 打开轮回装备选择界面, 物品数:", items.length);
+
+        // 生成网格 HTML
+        let gridHtml = `
+            <div style="padding:10px; text-align:center; font-family:'KaiTi';">
+                <p style="font-size:18px; color:#d32f2f; margin-bottom:15px; font-weight:bold;">魂牵梦萦：请选择一件装备随你入轮回</p>
+                <div class="samsara_grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; max-height:300px; overflow-y:auto; padding:5px; background:#f0f0f0; border-radius:4px;">
+        `;
+
+        items.forEach((item, index) => {
+            const rarityColor = window.RARITY_CONFIG && window.RARITY_CONFIG[item.rarity] ? window.RARITY_CONFIG[item.rarity].color : "#333";
+
+            // 【核心修改】检查是否为轮回遗物，生成左上角标记
+            const samsaraMark = item.samsaraItem ?
+                `<div style="position:absolute; top:2px; left:2px; font-size:14px; color:#9c27b0; z-index:5; line-height:1; text-shadow: 1px 1px 0 #fff;">☯️</div>`
+                : '';
+
+            gridHtml += `
+                <div class="samsara_item_slot" 
+                     onclick="window.selectSamsaraItem(${index})"
+                     id="samsara_slot_${index}"
+                     style="border:2px solid #ccc; background:#fff; padding:5px; cursor:pointer; position:relative; min-height:80px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:4px; transition:all 0.2s;"
+                     onmouseenter="window.showItemTooltip && window.showItemTooltip(event, '${item.sid}')"
+                     onmouseleave="window.hideTooltip && window.hideTooltip()">
+                    
+                    ${samsaraMark} <div style="font-size:24px; margin-bottom:4px;">${getItemIcon(item)}</div>
+                    <div style="color:${rarityColor}; font-weight:bold; font-size:13px; line-height:1.2; word-break:break-all;">${item.name}</div>
+                </div>
+            `;
+        });
+
+        gridHtml += `</div></div>`;
+
+        // 绑定选择逻辑
+        window.selectSamsaraItem = (idx) => {
+            // 重置所有边框
+            document.querySelectorAll('.samsara_item_slot').forEach(el => {
+                el.style.borderColor = '#ccc';
+                el.style.backgroundColor = '#fff';
+                el.style.boxShadow = 'none';
+            });
+            // 高亮选中
+            const el = document.getElementById(`samsara_slot_${idx}`);
+            if (el) {
+                el.style.borderColor = '#d32f2f';
+                el.style.backgroundColor = '#ffebee';
+                el.style.boxShadow = '0 0 8px rgba(211, 47, 47, 0.5)';
+            }
+            window._tempSamsaraIdx = idx;
+        };
+
+        // 绑定确认逻辑
+        window.confirmSamsaraSelection = () => {
+            if (window._tempSamsaraIdx === undefined) {
+                if(window.showToast) window.showToast("请先点击选择一件遗物");
+                return;
+            }
+            const selected = items[window._tempSamsaraIdx];
+            console.log(">>> [Modal] 确认选择:", selected.name);
+
+            // 清理
+            delete window._tempSamsaraIdx;
+            delete window.selectSamsaraItem;
+            delete window.confirmSamsaraSelection;
+
+            // 关闭当前弹窗
+            window.closeModal();
+
+            // 执行回调
+            if(onSelect) onSelect(selected);
+        };
+
+        const footer = `
+            <button class="ink_btn" style="width:100%; background:#5d4037; color:#fff; padding:12px; font-size:18px;" onclick="this.disabled=true; window.confirmSamsaraSelection()">确认带走</button>
+        `;
+
+        this._showBaseModal('modal_samsara', "轮回契约", gridHtml, footer, "", 50, null, { allowOutsideClick: false, allowEsc: false });
+    },
+
+    _injectDeathStyles: function() {
+        if (document.getElementById('style-modal-death')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-death';
+        style.innerHTML = `
+            .modal_death { border: 2px solid #5d4037 !important; background-color: #fdfbf7 !important; box-shadow: 0 0 25px rgba(0,0,0,0.85) !important; min-width: 450px !important; }
+            .modal_death .modal_header { background: #1a1a1a !important; color: #d32f2f !important; border-bottom: 2px solid #5d4037 !important; text-align: center !important; font-family: "KaiTi", serif; font-size: 26px !important; letter-spacing: 4px; padding: 15px 0 !important; }
+            .modal_death .modal_body { text-align: center; font-family: "KaiTi", serif; font-size: 22px; padding: 40px 30px !important; color: #333; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.6; }
+            .ink_btn_death { background: linear-gradient(to bottom, #b71c1c, #800000); color: #fce4ec; border: 1px solid #500; padding: 12px 60px; font-size: 22px; font-family: "KaiTi"; font-weight: bold; cursor: pointer; box-shadow: 0 4px 5px rgba(0,0,0,0.3); border-radius: 4px; transition: transform 0.1s; text-shadow: 1px 1px 0 #000; margin-bottom: 10px; }
+            .ink_btn_death:hover { background: linear-gradient(to bottom, #c62828, #b71c1c); color: #fff; }
+            .ink_btn_death:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
+            .btn_icon { margin-right: 10px; font-size: 24px; vertical-align: middle; }
+            .btn_text { vertical-align: middle; }
         `;
         document.head.appendChild(style);
     },
@@ -448,6 +483,107 @@ const ModalManager = {
                 width: 100%; padding: 10px; background: #5d4037; color: #fff; 
                 border: none; cursor: pointer; font-family: "KaiTi"; font-size: 18px; 
             }
+        `;
+        document.head.appendChild(style);
+    },
+    // 13. 赌坊结算弹窗 (新增)
+    // 13. 赌坊结算弹窗 (增强版：支持自定义文本)
+    showGambleResultModal: function(isWin, amount, onConfirm, customMsg = null, customTitle = null) {
+        this._injectGambleResultStyles();
+
+        // 支持自定义标题和内容
+        const title = customTitle || (isWin ? "✨ 大 获 全 胜 ✨" : "💀 棋 差 一 着 💀");
+        const themeClass = isWin ? "gamble_win" : "gamble_loss";
+        const icon = isWin ? "🀄" : "💸";
+
+        // 默认文本 vs 自定义文本
+        let msg = isWin ? `技高一筹，赢取筹码` : `技不如人，损失筹码`;
+        if (customMsg) msg = customMsg;
+
+        const amountClass = isWin ? "win_amount" : "loss_amount";
+        const amountPrefix = isWin ? "+" : "-";
+
+        const contentHtml = `
+            <div class="gamble_result_body">
+                <div class="gamble_icon ${isWin ? 'anim_bounce' : 'anim_shake'}">${icon}</div>
+                <div class="gamble_msg">${msg}</div>
+                <div class="${amountClass}">${amountPrefix}${amount} 文</div>
+            </div>
+        `;
+
+        this._createTempCallback(onConfirm, (funcName) => {
+            const btnText = isWin ? "收钱离场" : "黯然离场";
+            const btnStyle = isWin ? "ink_btn_win" : "ink_btn_loss";
+
+            const footer = `
+                <div style="text-align:center; width:100%;">
+                    <button class="${btnStyle}" onclick="window['${funcName}']()">${btnText}</button>
+                </div>`;
+
+            this._showBaseModal('modal_gamble_result', title, contentHtml, footer, themeClass, 40, 45, { allowOutsideClick: false, allowEsc: false });
+        });
+    },
+
+    _injectGambleResultStyles: function() {
+        if (document.getElementById('style-modal-gamble-result')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-gamble-result';
+        style.innerHTML = `
+            /* 基础弹窗结构 */
+            .modal_gamble_result { border-radius: 12px !important; overflow: visible !important; min-width: 300px; }
+            .modal_gamble_result .modal_header { 
+                text-align: center !important; font-family: "LiSu", "隶书", cursive; 
+                font-size: 32px !important; letter-spacing: 4px; padding: 20px 0 !important; 
+                border: none !important; margin-bottom: 0 !important;
+            }
+            
+            /* === 胜利主题 (金红) === */
+            .gamble_win { background: #fff8e1 !important; border: 4px solid #fbc02d !important; box-shadow: 0 0 30px rgba(255, 193, 7, 0.6) !important; }
+            .gamble_win .modal_header { 
+                color: #d84315 !important; 
+                background: linear-gradient(to bottom, #fffde7, #fff9c4); 
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.1); 
+                border-bottom: 2px dashed #fbc02d !important;
+            }
+            .win_amount { font-size: 48px; font-weight: bold; color: #d84315; font-family: "KaiTi"; text-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-top: 10px; }
+            
+            /* 胜利按钮 */
+            .ink_btn_win { 
+                background: linear-gradient(to bottom, #fbc02d, #f57f17); color: #3e2723; 
+                border: 2px solid #f9a825; padding: 12px 50px; font-size: 24px; font-weight: bold; 
+                border-radius: 30px; cursor: pointer; box-shadow: 0 4px 5px rgba(0,0,0,0.2); font-family: "KaiTi"; 
+                transition: transform 0.1s;
+            }
+            .ink_btn_win:hover { transform: scale(1.05); filter: brightness(1.1); }
+            .ink_btn_win:active { transform: scale(0.95); }
+
+            /* === 失败主题 (灰暗) === */
+            .gamble_loss { background: #eceff1 !important; border: 4px solid #78909c !important; filter: grayscale(0.2); box-shadow: 0 0 20px rgba(0,0,0,0.5) !important; }
+            .gamble_loss .modal_header { 
+                color: #455a64 !important; background: #cfd8dc; 
+                border-bottom: 2px solid #b0bec5 !important;
+            }
+            .loss_amount { font-size: 48px; font-weight: bold; color: #546e7a; font-family: "KaiTi"; margin-top: 10px; text-decoration: line-through; opacity: 0.6; }
+            
+            /* 失败按钮 */
+            .ink_btn_loss { 
+                background: #90a4ae; color: #fff; border: 2px solid #607d8b; 
+                padding: 12px 50px; font-size: 22px; border-radius: 4px; cursor: pointer; font-family: "KaiTi"; 
+                transition: background 0.2s;
+            }
+            .ink_btn_loss:hover { background: #78909c; }
+
+            /* 内容布局 */
+            .gamble_result_body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; font-family: "KaiTi"; padding: 20px; }
+            .gamble_icon { font-size: 80px; margin-bottom: 10px; line-height: 1; }
+            .gamble_msg { font-size: 22px; color: #555; font-weight: bold; }
+            
+            /* 动画 */
+            @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+            .anim_bounce { animation: bounce 1s; }
+            
+            @keyframes shakeX { 0%, 100% {transform: translateX(0);} 10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);} 20%, 40%, 60%, 80% {transform: translateX(5px);} }
+            .anim_shake { animation: shakeX 0.5s; }
         `;
         document.head.appendChild(style);
     },
@@ -687,3 +823,5 @@ window.showDialogue = ModalManager.showDialogueModal.bind(ModalManager);
 window.showDeathModal = ModalManager.showDeathModal.bind(ModalManager);
 window.showDefeatModal = ModalManager.showDefeatModal.bind(ModalManager);
 window.showFortuneModal = ModalManager.showFortuneModal.bind(ModalManager);
+// 新增这一行
+window.showGambleResultModal = ModalManager.showGambleResultModal.bind(ModalManager);

@@ -1,22 +1,29 @@
 /**
  * js/action/util_cook.js
- * 烹饪核心逻辑 - 技艺关联增强版
+ * 烹饪核心逻辑 v3.0 - 适配新版技艺等级 (Lv.0 - Lv.10)
  */
 window.UtilCook = {
-    // 境界配置
-    LEVELS: [
-        { minExp: 999, name: "大成", doubleProb: 0.3, saveProb: 0.10 },
-        { minExp: 400, name: "进阶", doubleProb: 0.2, saveProb: 0.05 },
-        { minExp: 100, name: "入门", doubleProb: 0.1, saveProb: 0.00 },
-        { minExp: 0,   name: "未入门", doubleProb: 0.0, saveProb: 0.00 }
-    ],
 
     /**
-     * 获取当前烹饪境界数据
+     * 获取当前等级对应的加成属性
+     * @param {number} level 传入等级，如果不传则自动获取
      */
-    getCookingLevelData: function() {
-        const exp = (player.lifeSkills && player.lifeSkills.cooking) ? player.lifeSkills.cooking.exp : 0;
-        return this.LEVELS.find(l => exp >= l.minExp) || this.LEVELS[this.LEVELS.length - 1];
+    getCookStats: function(level) {
+        if (level === undefined) {
+            level = (window.UtilsLifeSkills) ? UtilsLifeSkills.getLevel('cooking') : 0;
+        }
+
+        // 1. 双倍产出概率：每级 3%，最高 30%
+        const doubleProb = Math.min(0.30, level * 0.03);
+
+        // 2. 食材保留概率：每级 1.5%，最高 15%
+        const saveProb = Math.min(0.15, level * 0.015);
+
+        return {
+            level: level,
+            doubleProb: doubleProb,
+            saveProb: saveProb
+        };
     },
 
     /**
@@ -36,7 +43,7 @@ window.UtilCook = {
     },
 
     /**
-     * 匹配配方并返回对应的食物对象
+     * 匹配配方并返回对应的食物对象 (保持原有逻辑不变)
      */
     getMatchResult: function(selectedMaterials, cookType) {
         const validity = this.checkValidity(selectedMaterials);
@@ -82,9 +89,44 @@ window.UtilCook = {
 
         return failedData;
     },
+// 【新增】根据当前食材推演最接近的配方
+    getRecipeHint: function(selectedMaterials) {
+        if (!selectedMaterials || selectedMaterials.length === 0) return null;
+        // 假设全局变量 foods 存在 (这是之前的逻辑里就在用的)
+        if (typeof foods === 'undefined') return null;
 
+        const selectedIds = selectedMaterials.map(m => m.id);
+
+        // 1. 筛选：必须包含至少一个当前选中的食材
+        let candidates = foods.filter(f => {
+            if (!f.recipe || f.recipe.length === 0) return false;
+            const rec = f.recipe[0];
+            return rec.some(id => selectedIds.includes(id));
+        });
+
+        if (candidates.length === 0) return null;
+
+        // 2. 排序：优先显示匹配度最高的
+        candidates.sort((a, b) => {
+            const recA = a.recipe[0];
+            const recB = b.recipe[0];
+
+            // 计算匹配的食材数量
+            const matchA = recA.filter(id => selectedIds.includes(id)).length;
+            const matchB = recB.filter(id => selectedIds.includes(id)).length;
+
+            // 规则1：匹配数量多的优先
+            if (matchA !== matchB) return matchB - matchA;
+
+            // 规则2：如果匹配数一样，配方总长度短的优先 (越简单的菜越容易猜中)
+            return recA.length - recB.length;
+        });
+
+        // 返回匹配度最高的那个配方
+        return candidates[0];
+    },
     /**
-     * 执行烹饪动作
+     * 执行烹饪动作 (核心修改：接入新版经验和概率)
      */
     executeCook: function(selectedMaterials, cookType) {
         const result = this.getMatchResult(selectedMaterials, cookType);
@@ -106,27 +148,20 @@ window.UtilCook = {
         }
 
         // --- 逻辑处理：技能与概率 ---
-        const levelData = this.getCookingLevelData();
+        // 获取基于等级的属性
+        const stats = this.getCookStats();
+
         let finalCount = 1;
-        let toastMsgs = [];
         let isDouble = false;
         let savedMaterials = [];
 
-        // 1. 熟练度增长 (正式配方才增加)
-        if (result.isRecipe) {
-            if (!player.lifeSkills.cooking) {
-                player.lifeSkills.cooking = { name: "烹饪", exp: 0 };
-            }
-            player.lifeSkills.cooking.exp += 1;
-            // 检查境界提升提示
-            const newLevel = this.getCookingLevelData();
-            if (newLevel.name !== levelData.name && window.showToast) {
-                window.showToast(`【烹饪】技艺精进，已达《${newLevel.name}》之境！`);
-            }
+        // 1. 熟练度增长 (统一调用新接口，固定+1)
+        if (window.UtilsLifeSkills) {
+            UtilsLifeSkills.addExp('cooking', 1);
         }
 
         // 2. 双倍产出概率判定
-        if (Math.random() < levelData.doubleProb) {
+        if (Math.random() < stats.doubleProb) {
             finalCount = 2;
             isDouble = true;
         }
@@ -134,7 +169,7 @@ window.UtilCook = {
         // 3. 食材不消耗概率判定 (针对每个食材独立判定)
         const finalMaterialsToConsume = [];
         selectedMaterials.forEach(mat => {
-            if (Math.random() < levelData.saveProb) {
+            if (Math.random() < stats.saveProb) {
                 savedMaterials.push(mat.name);
             } else {
                 finalMaterialsToConsume.push(mat);

@@ -210,6 +210,7 @@ const UIBag = {
             if (!item) return '';
 
             const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+
             const rarityColor = (window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
             const sid = slot.sid;
             const isSelected = this.selectedIndices.has(sid) ? 'selected' : '';
@@ -218,8 +219,12 @@ const UIBag = {
             const isActive = (!this.selectionMode && index === this.selectedIndex && !this.activeEquipSlot) ? 'active_item' : '';
 
             const isConsumableEquipped = player.consumables && player.consumables.includes(item.id);
-            const markHtml = isConsumableEquipped ? `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>` : '';
-
+            let markHtml = isConsumableEquipped ? `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>` : '';
+// 【新增代码】检测轮回标记 (samsaraItem)
+            if (item.samsaraItem) {
+                // 在格子左上角添加紫色太极，并稍微调整层级防止遮挡
+                markHtml += `<div style="position:absolute;top:2px;left:2px;font-size:12px;color:#9c27b0;line-height:1;text-shadow:1px 1px 0 #fff;z-index:5;" title="轮回物品">☯️</div>`;
+            }
             return `
                 <div class="bag_grid_item ${isSelected} ${isActive}" data-index="${index}" style="border-color:${rarityColor}">
                     ${this.selectionMode ? '<div class="bag_check_mark">✔</div>' : ''}
@@ -252,6 +257,8 @@ const UIBag = {
     },
 
     // --- 详情渲染核心 (接 Part 1) ---
+    // js/modules/ui_bag.js - renderDetail (只保留图标，去掉了文字前缀)
+
     renderDetail: function(item, context) {
         if (!item) return;
         const container = document.getElementById('bag_detail_panel');
@@ -261,9 +268,16 @@ const UIBag = {
         const rarityInfo = (typeof RARITY_CONFIG !== 'undefined' ? RARITY_CONFIG[item.rarity] : null) || {color:'#333', name:'普通'};
         const globalTypeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
         let displayType = item.subType || globalTypeMap[item.type] || item.type || "物品";
-        // 战斗风格高亮
+
         let combatTypeHtml = item.combatType ? ` <span style="color:#b8860b; font-weight:bold; margin-left:4px;">[${item.combatType}]</span>` : '';
         const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+
+        // 【保留】头部图标标记 (紫色太极)
+        let samsaraHeaderMark = item.samsaraItem ?
+            `<span style="color:#9c27b0; font-size:18px; margin-left:6px; vertical-align:middle; text-shadow:0 0 2px rgba(156,39,176,0.3);" title="轮回物品">☯️</span>`
+            : '';
+
+        // 【删除】这里不再定义 samsaraTag 文字前缀
 
         let typeSuffix = '';
         if (context.type === 'equip') typeSuffix = '<span style="font-size:16px; margin-left:5px;">(已装备)</span>';
@@ -292,7 +306,6 @@ const UIBag = {
             keys.forEach(key => {
                 const val = effects[key];
 
-                // 处理 Buff 对象 (如 {attr:'atk', val:10, days:3})
                 if (typeof val === 'object' && val.attr && val.val) {
                     const buffAttrs = String(val.attr).split('_');
                     const buffVals = String(val.val).split('_');
@@ -306,13 +319,11 @@ const UIBag = {
                     return;
                 }
 
-                // 处理数值属性
                 if (typeof val === 'number') {
                     let name = mapping[key] || key;
                     const sign = val > 0 ? "+" : "";
                     const color = val > 0 ? '#4caf50' : '#f44336';
 
-                    // 图标装饰
                     let p_icon = '✨';
                     if(key.includes('atk')) p_icon='⚔️';
                     else if(key.includes('def')) p_icon='🛡️';
@@ -321,7 +332,6 @@ const UIBag = {
                     else if(key.includes('speed')) p_icon='🏃';
                     else if(key.includes('crit')) p_icon='🎯';
 
-                    // 穿透显示优化
                     if (key === 'sharpness' || key === 'penetration') {
                         const pct = Math.floor((1 - (100 / (100 + val))) * 100);
                         name += ` <span style="font-size:14px; color:#888;">(穿透${pct}%)</span>`;
@@ -331,7 +341,7 @@ const UIBag = {
             });
         }
 
-        // --- 【新增】装备词条显示 (Entry) ---
+        // --- 装备词条显示 ---
         let entriesHtml = '';
         if (['weapon','head','body','feet','fishing_rod'].includes(item.type) && item.entries && item.entries.length > 0 && window.ENTRY_DB) {
             let entryListHtml = '';
@@ -345,19 +355,15 @@ const UIBag = {
                     valStr = ` <span style="font-weight:bold; margin-left:2px;">${entry.val > 0 ? '+' : ''}${entry.val}${def.unit || ''}</span>`;
                 }
 
-                // 获取配置颜色，默认为淡紫
                 const baseColor = def.color || '#b39ddb';
                 const icon = def.icon || '◆';
-
-                // 将 hex 颜色转为 rgba 以设置背景透明度 (简单处理：直接利用 CSS 变量或 opacity 叠加不太好控，这里使用 box-shadow inset 模拟或者直接假定背景黑)
-                // 最稳妥的水墨风：文字用彩色，边框细彩，背景极淡
 
                 entryListHtml += `
                 <div style="
                     display: flex;
                     align-items: center;
-                    border: 1px solid ${baseColor}4d; /* 30%透明度边框 */
-                    background: ${baseColor}1a;      /* 10%透明度背景 */
+                    border: 1px solid ${baseColor}4d; 
+                    background: ${baseColor}1a;      
                     border-radius: 4px; 
                     padding: 3px 8px; 
                     color: ${baseColor}; 
@@ -377,7 +383,6 @@ const UIBag = {
             });
 
             if (entryListHtml) {
-                // 使用 Flex 布局，gap:6px 让标签自动排列
                 entriesHtml = `
                 <div class="bag_detail_entries" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">
                     ${entryListHtml}
@@ -385,13 +390,14 @@ const UIBag = {
             }
         }
 
-        // 3. 组合属性区域 (statsHtml 包含属性列表，后面追加 entriesHtml)
+        // 3. 组合属性区域
         const finalStatsHtml = (statsRows.length > 0 || entriesHtml) ?
             `<div class="bag_detail_stats" style="margin-top:8px; padding:6px 8px; background:rgba(255,255,255,0.03); border-radius:4px; border:1px solid #444;">
                 ${statsRows.join('')}
                 ${entriesHtml ? (statsRows.length > 0 ? '<div style="margin:6px 0 6px 0; border-top:1px dashed #555;"></div>' : '') + entriesHtml : ''}
             </div>` : '';
-        // 4. 穿戴条件 & 描述 & 价格
+
+        // 4. 穿戴条件
         let reqHtml = '';
         if (item.req) {
             let reqList = [];
@@ -445,7 +451,7 @@ const UIBag = {
         // 6. 最终 HTML 注入
         container.innerHTML = `
             <div class="bag_detail_header" style="color:${rarityInfo.color}; border-bottom:2px solid ${rarityInfo.color}33; padding-bottom:4px; margin-bottom:4px;">
-                <span style="font-size:20px; font-weight:bold;">${icon} ${item.name}</span>
+                <span style="font-size:20px; font-weight:bold;">${icon} ${item.name}${samsaraHeaderMark}</span>
                 <span class="ink_tag" style="background:${rarityInfo.color}; color:#fff; font-size:12px; padding:1px 5px; border-radius:3px; float:right; margin-top:4px;">${rarityInfo.name}</span>
             </div>
             <div class="bag_detail_type" style="color:#666; font-size:16px; margin-bottom:4px;">${displayType}${combatTypeHtml} ${typeSuffix}</div>

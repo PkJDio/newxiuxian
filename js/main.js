@@ -12,10 +12,16 @@ window.onload = function() {
   checkSaveFile();
   bindMainMenuEvents();
 
+
+
     setTimeout(() => {
+
+
         CloudArchive.initSync();
         console.log("[CloudArchive] Cloud Archive Sync Initialized.");
     }, 500);
+
+
 };
 
 /**

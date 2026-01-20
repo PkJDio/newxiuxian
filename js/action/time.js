@@ -40,7 +40,7 @@ const TimeSystem = {
         if (t.minute === undefined) t.minute = 0;
 
         const yearChar = this.toChineseNum(Number(t.year) || 1);
-        return `秦始皇${yearChar}年 ${pad(t.month)}月 ${pad(t.day)}日 ${pad(t.hour)}:${pad(t.minute)}`;
+        return `秦始皇${yearChar}年 ${pad(t.month)}月${pad(t.day)}日 ${pad(t.hour)}:${pad(t.minute)}`;
     },
 
     setTime: function(year, month, day, hour, minute) {
@@ -90,6 +90,12 @@ const TimeSystem = {
             while (t.minute >= 60) {
                 t.minute -= 60;
                 t.hour += 1;
+
+                // --- 【核心修改】每小时检查是否有未处理的袭击 ---
+                if (player.startDanger === 1) {
+                    this.forceTriggerRaid(); // 发现待处理袭击，终止时间流转，强制进入战斗
+                    return;
+                }
             }
 
             while (t.hour >= 24) {
@@ -124,6 +130,12 @@ const TimeSystem = {
             if(TimeEvents.applyBuffReduction) TimeEvents.applyBuffReduction(count * 0.1);
         }
 
+        if (window.updateUI) window.updateUI();
+    },
+    /** 【新增辅助方法】用于从 TimeSystem 强行中断并进入战斗 */
+    forceTriggerRaid: function() {
+        console.log("%c[TimeSystem] 监测到待处理袭击，强制中断时间流转！", "color:red");
+        if (TimeRaid) TimeRaid.forceReconnectRaid();
         if (window.updateUI) window.updateUI();
     }
 };

@@ -63,6 +63,22 @@ const MapCamera = {
     requestRender: function() {
         this.isDirty = true;
     },
+    // 【新增】强制相机瞬间对齐玩家坐标（用于传送）
+    snapToPlayer: function() {
+        if (!window.player) return;
+        // 直接同步坐标，不等待 _loop 检测
+        this.x = player.coord.x;
+        this.y = player.coord.y;
+
+        // 标记需要渲染
+        this.isDirty = true;
+
+        // 立即调用一次渲染逻辑 (绕过 requestAnimationFrame 的等待)
+        // 注意：这里手动调用 MapAtlas.render 确保数据层面的绘制指令立即发出
+        if (window.MapAtlas && this.ctx) {
+            MapAtlas.render(this.ctx, this, window.GlobalEnemies);
+        }
+    },
 
     // 【新增】初始化移动速度控制按钮
     _initMoveControl: function() {

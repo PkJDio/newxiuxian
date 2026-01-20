@@ -24,11 +24,31 @@ const UIAlchemy = {
         }, 50);
     },
 
-    _renderBaseLayout: function() {
-        const skill = window.UtilAlchemy.getSkillLevel();
-        const levelName = skill >= 999 ? "大成" : skill >= 400 ? "进阶" : skill >= 100 ? "入门" : "未入门";
+        _renderBaseLayout: function() {
+            // 【修改点】使用新版数据获取等级和境界名
+            let skillLevel = 0;
+            let realmName = "未入门";
+            let expInfo = "";
 
-        this.lastContentHtml = `
+            if (window.UtilsLifeSkills) {
+                const skillData = UtilsLifeSkills.getSkillData('alchemy');
+                skillLevel = skillData.level;
+
+                // 获取境界名称 (0-3对应四个境界)
+                // 假设 UtilsLifeSkills.REALM_NAMES = ["初窥门径", "略有小成", "融会贯通", "登峰造极"]
+                // 简单映射逻辑：
+                const realmNames = ["初窥门径", "略有小成", "融会贯通", "登峰造极", "返璞归真"];
+                const idx = Math.min(Math.floor(skillLevel / 3), realmNames.length - 1);
+                realmName = realmNames[idx];
+
+                const maxExp = UtilsLifeSkills.getNextLevelExp(skillLevel);
+                expInfo = skillLevel >= 10 ? "已臻化境" : `${skillData.exp}/${maxExp}`;
+            }
+
+            // 构建显示字符串，例如: "Lv.3 略有小成"
+            const displayTag = `Lv.${skillLevel} ${realmName}`;
+
+            this.lastContentHtml = `
             <div class="alchemy_container">
                 <div class="alchemy_side">
                     <div class="side_header_row">
@@ -45,7 +65,7 @@ const UIAlchemy = {
 
                 <div class="alchemy_center">
                     <div class="forge_header">
-                        <div class="境界_tag">${levelName} (熟练度:${skill})</div>
+                        <div class="境界_tag">${displayTag} (熟练:${expInfo})</div>
                     </div>
                     
                     <div id="forge-stage" class="forge_stage">
@@ -97,7 +117,7 @@ const UIAlchemy = {
                 </div>
             </div>
         `;
-    },
+        },
 
     onRecipeFilterChange: function(val) {
         this.recipeFilter = val;

@@ -54,7 +54,7 @@ const AlchemyShop = {
             </div>
         `;
 
-        this.modalBody = window.showGeneralModal(`${townName} - 丹房`, html);
+        this.modalBody = window.showGeneralModal(`${townName} - 丹房`, html,null,"alchemy_shop_modal",68,85);
     },
 
     // ================= 库存生成 =================

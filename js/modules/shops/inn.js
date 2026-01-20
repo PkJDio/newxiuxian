@@ -101,7 +101,7 @@ const InnShop = {
             </div>
         `;
 
-        this.modalBody = window.showGeneralModal(`${townName} - 客栈`, html);
+        this.modalBody = window.showGeneralModal(`${townName} - 客栈`, html, null, "inn_modal", 68, 85);
     },
 
     // ================= 功能1：住宿 =================

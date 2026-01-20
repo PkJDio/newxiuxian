@@ -226,8 +226,9 @@ const PostStation = {
     },
 
     // ================= 执行传送 =================
+    // ================= 执行传送 =================
     executeTravel: function(targetId, cost, timeHours) {
-        // 1. 关闭确认弹窗（这是手动创建的 DOM，必须先关）
+        // 1. 关闭确认弹窗
         const overlay = document.getElementById('post-confirm-modal');
         if (overlay) document.body.removeChild(overlay);
 
@@ -238,63 +239,72 @@ const PostStation = {
 
         const towns = Array.isArray(window.WORLD_TOWNS) ? window.WORLD_TOWNS : Object.values(window.WORLD_TOWNS);
         const targetTown = towns.find(t => t.id === targetId);
-
         if (!targetTown) return;
 
-        // 2. 扣钱 & 增加时间
+        // 2. 数据更新 (扣钱/时间/坐标)
         player.money -= cost;
-
-        // 使用 TimeSystem (如果存在) 或手动增加
         if (window.TimeSystem && typeof TimeSystem.passTime === 'function') {
             TimeSystem.passTime(timeHours);
         } else {
-            // 手动增加时间的兜底逻辑
+            // ... (时间兜底逻辑保持不变) ...
             if (!player.time) player.time = { year: 1, month: 1, day: 1, hour: 0 };
             player.time.hour += timeHours;
-            while (player.time.hour >= 24) { player.time.hour -= 24; player.time.day += 1; }
-            while (player.time.day > 30) { player.time.day -= 30; player.time.month += 1; }
-            while (player.time.month > 12) { player.time.month -= 12; player.time.year += 1; }
         }
 
-        // 3. 移动坐标
+        // --- 核心修改开始 ---
+
+        // 3. 立即更新玩家坐标数据
         const tx = Math.floor(targetTown.x + targetTown.w / 2);
         const ty = Math.floor(targetTown.y + targetTown.h / 2);
         player.coord.x = tx;
         player.coord.y = ty;
 
-        // 4. 【核心修复】强制关闭所有弹窗
-        // 我们连续调用多次 closeModal，以防有叠在一起的窗口（比如：行动指令 -> 驿站 -> 确认框）
-        // 或者直接清空 modal 容器
+        // 4. 暴力关闭所有弹窗 (DOM 操作)
         if (window.closeModal) {
-            window.closeModal(); // 关闭驿站主界面
-            // 延时一小会儿再次尝试关闭，确保底层的“行动指令”窗口也被关掉
-            setTimeout(() => {
-                if (document.querySelector('.modal_overlay')) {
-                    window.closeModal();
-                }
-            }, 50);
+            let safety = 0;
+            while (document.querySelector('.modal_overlay') && safety < 5) {
+                window.closeModal();
+                safety++;
+            }
         }
+        const actionMenu = document.getElementById('modal_action_menu');
+        if (actionMenu) actionMenu.remove();
 
-        // 暴力清理：如果你的行动指令窗口有特定的 ID (比如 'modal_action_menu')，可以直接移除
-        // const actionMenu = document.getElementById('modal_action_menu');
-        // if (actionMenu) actionMenu.remove();
+        // 5. 【关键】使用 requestAnimationFrame 确保渲染顺序
+        // 这一帧：浏览器处理 DOM 删除（关弹窗）和数据更新
+        requestAnimationFrame(() => {
 
-        // 5. 刷新世界与UI
-        if (window.updateUI) window.updateUI();
-        if (window.MapView && window.MapView.render) window.MapView.render();
-        if (window.MapCamera && window.MapCamera.update) window.MapCamera.update();
+            // 6. 强制更新 UI 和 相机
+            if (window.updateUI) window.updateUI();
 
-        const timeStr = this._formatTime(timeHours);
-        window.showToast(`经过 ${timeStr} 的颠簸，终于抵达了 ${targetTown.name}`);
+            // 调用我们在第一步加的“瞬间传送”方法
+            if (window.MapCamera && window.MapCamera.snapToPlayer) {
+                window.MapCamera.snapToPlayer();
+            } else if (window.MapCamera) {
+                // 兜底：如果没有加 snapToPlayer，手动执行同步
+                MapCamera.x = player.coord.x;
+                MapCamera.y = player.coord.y;
+                MapCamera.requestRender();
+            }
 
-        // 6. 自动保存
+            // 7. 【关键】嵌套第二层 rAF
+            // 当代码运行到这里时，浏览器已经把“新位置的地图”列入绘制计划了
+            // 下一帧画面出来时，必然是新地图
+            requestAnimationFrame(() => {
 
-        setTimeout(() => {
-            if (window.saveGame) window.saveGame();
-            showDialogue("车夫", "客官，目的地到了！这一路颠簸辛苦，快下车活络下筋骨吧，咱们后会有期！", "left", () => {
+                const timeStr = this._formatTime(timeHours);
+                window.showToast(`经过 ${timeStr} 的颠簸，终于抵达了 ${targetTown.name}`);
 
-            }, true);
-        }, 1000);
+                if (window.saveGame) window.saveGame();
+
+                // 8. 弹出对话框 (此时背景绝对已经是新地图了)
+                showDialogue("车夫", "客官，目的地到了！这一路颠簸辛苦，快下车活络下筋骨吧，咱们后会有期！", "left", () => {
+                    // 对话结束后，保险起见再刷一次
+                    if (window.MapCamera) window.MapCamera.requestRender();
+                }, true);
+            });
+        });
+        // --- 核心修改结束 ---
     }
 };
 
