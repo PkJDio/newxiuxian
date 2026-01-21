@@ -1,133 +1,175 @@
 // js/modules/games/game_qingyun_model.js
-// 青云赛 - 数据模型层 (Model)
-// 职责：管理游戏状态、数值计算、堆叠逻辑、胜负判定
+// 青云赛 - 数据模型 v3.7 (新增随机AI名字库)
 
 class QingyunModel {
     constructor() {
-        // 赛道配置：层级与步数
         this.LAYERS = [
-            { id: 0, name: 'outer', steps: 18 }, // 外朝
-            { id: 1, name: 'mid', steps: 17 },   // 中朝
-            { id: 2, name: 'inner', steps: 16 }  // 内廷
+            { id: 0, name: 'outer', steps: 18 },
+            { id: 1, name: 'mid', steps: 17 },
+            { id: 2, name: 'inner', steps: 16 }
         ];
         this.COLORS = ['red', 'blue', 'green', 'yellow', 'white'];
+
+        // 【新增】AI 名字库 (按难度等级分类)
+        this.AI_NAMES = {
+            4: ['赵阿大', '钱掌柜', '孙屠户', '李秀才', '周货郎', '吴账房', '郑捕头', '王铁匠', '冯酒保', '陈脚夫'],
+            5: ['玉面郎君', '铁面判官', '追风侠', '夺命书生', '赛孟尝', '智多星', '入云龙', '没羽箭', '小李广', '混江龙'],
+            6: ['千手鬼', '神算子', '笑面佛', '摘星手', '鬼手王', '天机老人', '逍遥散人', '龙王', '财神', '不败战神']
+        };
 
         this.reset();
     }
 
     reset() {
-        this.state = 'setup'; // setup, playing, finished
+        this.state = 'setup';
         this.jackpot = 0;
         this.round = 1;
         this.turnIndex = 0;
-
-        // 玩家数据
+        this.roundStarter = 0;
         this.players = [];
-
-        // 棋子数据 { color, layer, index, stackPos }
         this.pieces = [];
-
-        // 卡池
         this.roundBetDeck = {};
         this.diceDeck = [];
-
-        // 最终押注
-        this.finalBets = { winner: [], loser: [] };
+        this.finalBets = {
+            winner: [],
+            loser: []
+        };
+        this.gameHistory = [];
+        this.strategyMap = {};
+        this.config = null;
     }
 
     initGame(tier, playerMoney) {
         const config = {
-            1: { entry: 5000, chipVal: 50, aiLv: 4 },
-            2: { entry: 30000, chipVal: 250, aiLv: 5 },
-            3: { entry: 50000, chipVal: 500, aiLv: 6 }
+            1: { entry: 5000, chipRate: 50, aiLv: 4, name: "低级场" },
+            2: { entry: 30000, chipRate: 250, aiLv: 5, name: "中级场" },
+            3: { entry: 50000, chipRate: 500, aiLv: 6, name: "高级场" }
         }[tier];
 
-        if (playerMoney < config.entry) return { success: false, msg: "资金不足" };
+        if (!config) return { success: false, msg: "场次错误" };
+        if (playerMoney < config.entry) return { success: false, msg: `资金不足，需要 ${config.entry} 文` };
 
-        // 1. 资金入池
-        this.jackpot += config.entry * 4; // 1玩家+3AI
+        this.config = config;
+        this.jackpot = config.entry * 4;
 
-        // 2. 初始化角色
+        // 【修改点】随机抽取 AI 名字
+        const pool = this.AI_NAMES[config.aiLv] || this.AI_NAMES[4];
+        const selectedNames = [...pool].sort(() => 0.5 - Math.random()).slice(0, 3);
+
+        const createPlayer = (id, name, isHuman) => ({
+            id, name, isHuman,
+            chips: 50,
+            chipVal: config.chipRate,
+            finalCards: [...this.COLORS],
+            roundCards: [],
+            hasStrategy: true
+        });
+
         this.players = [
-            { id: 'player', name: '你', isHuman: true, chips: 50, chipVal: config.chipVal, finalCards: [...this.COLORS], roundCards: [] },
-            { id: 'ai_1', name: '千手鬼', isHuman: false, chips: 50, chipVal: config.chipVal, finalCards: [...this.COLORS], roundCards: [] },
-            { id: 'ai_2', name: '神算子', isHuman: false, chips: 50, chipVal: config.chipVal, finalCards: [...this.COLORS], roundCards: [] },
-            { id: 'ai_3', name: '笑面佛', isHuman: false, chips: 50, chipVal: config.chipVal, finalCards: [...this.COLORS], roundCards: [] }
+            createPlayer('player', '你', true),
+            createPlayer('ai_1', selectedNames[0], false),
+            createPlayer('ai_2', selectedNames[1], false),
+            createPlayer('ai_3', selectedNames[2], false)
         ];
 
-        // 3. 初始化棋子 (随机叠在外圈起点附近)
+        this.turnIndex = Math.floor(Math.random() * 4);
+        this.roundStarter = this.turnIndex;
+
         this.pieces = this.COLORS.map(c => ({
-            color: c,
-            layer: 0,
-            index: Math.floor(Math.random() * 3), // 0-2格
-            stackPos: 0
+            color: c, layer: 0, index: Math.floor(Math.random() * 3), stackPos: 0
         }));
         this._recalculateStackHeights();
 
-        // 4. 洗牌
-        this._resetRoundDeck();
+        this.state = 'ready';
+        this.recordHistory([], "开局");
 
-        this.state = 'playing';
         return { success: true, cost: config.entry };
+    }
+
+    startGame() {
+        if (this.state !== 'ready') return;
+        this._resetRoundDeck();
+        this.state = 'playing';
     }
 
     _resetRoundDeck() {
         this.roundBetDeck = {};
-        this.COLORS.forEach(c => {
-            this.roundBetDeck[c] = [5, 3, 2, 2];
-        });
+        this.COLORS.forEach(c => this.roundBetDeck[c] = [5, 3, 2, 2]);
         this.diceDeck = [...this.COLORS];
         this.players.forEach(p => p.roundCards = []);
+        this.strategyMap = {};
+        this.players.forEach(p => p.hasStrategy = true);
     }
 
-    // 核心逻辑：移动与携带
+    checkStrategyValid(layer, index) {
+        const hasPiece = this.pieces.some(p => p.layer === layer && p.index === index);
+        if (hasPiece) return false;
+        if (this.strategyMap[`${layer}_${index}`]) return false;
+        const prevKey = `${layer}_${index - 1}`;
+        const nextKey = `${layer}_${index + 1}`;
+        if (this.strategyMap[prevKey] || this.strategyMap[nextKey]) return false;
+        return true;
+    }
+
+    placeStrategy(playerId, layer, index, type) {
+        if (!this.checkStrategyValid(layer, index)) return false;
+        this.strategyMap[`${layer}_${index}`] = { ownerId: playerId, type: type };
+        const p = this.players.find(pl => pl.id === playerId);
+        if(p) p.hasStrategy = false;
+        return true;
+    }
+
     movePieceLogic(color, type, steps) {
         const piece = this.pieces.find(p => p.color === color);
-        if (!piece) return;
+        if (!piece) return { finished: false };
 
-        // 1. 找到所有被携带的棋子 (同层、同格、stackPos >= 当前棋子)
+        const result = this._executeSingleMove(piece, type, steps);
+
+        if (!result.finished && (type === 'move' || type === 'promote' || type === 'demote')) {
+            const key = `${piece.layer}_${piece.index}`;
+            const trap = this.strategyMap[key];
+
+            if (trap) {
+                const owner = this.players.find(p => p.id === trap.ownerId);
+                if (owner) owner.chips += 1;
+                return this._executeSingleMove(piece, 'move', trap.type, true, trap.ownerId);
+            }
+        }
+        return result;
+    }
+
+    _executeSingleMove(piece, type, steps, isTriggered = false, trapOwnerId = null) {
         const stack = this.pieces.filter(p =>
             p.layer === piece.layer &&
             p.index === piece.index &&
             p.stackPos >= piece.stackPos
         );
 
-        // 2. 计算目标位置
         let tLayer = piece.layer;
         let tIndex = piece.index;
         let isWin = false;
 
-        if (type === 'promote') { // 升
-            tLayer++;
-            // 保持进度比例或直接平移？规则是平移index
-            if (tLayer > 2) isWin = true;
-        } else if (type === 'demote') { // 降
-            tLayer--;
-            if (tLayer < 0) tLayer = 0; // 碰壁
-        } else if (type === 'stay') {
-            // 原地不动
-        } else { // 正常移动
-            tIndex += steps;
-        }
+        if (type === 'promote') { tLayer++; if (tLayer > 2) isWin = true; }
+        else if (type === 'demote') { tLayer = Math.max(0, tLayer - 1); }
+        else if (type === 'move') { tIndex += steps; }
 
-        // 检查每一层的终点
         if (!isWin && tLayer <= 2) {
-            if (tIndex >= this.LAYERS[tLayer].steps) {
-                isWin = true;
-            }
+            if (tIndex < 0) tIndex = 0;
+            if (tIndex >= this.LAYERS[tLayer].steps) isWin = true;
         }
 
-        // 3. 执行移动更新
         if (isWin) {
             this.state = 'finished';
-            return { finished: true, winnerStack: stack };
+            return {
+                finished: true,
+                winnerStack: stack,
+                triggerInfo: isTriggered ? { type: steps, ownerId: trapOwnerId } : null
+            };
         }
 
-        // 找到目标格子上现有的棋子数量 (作为新stack的基底)
         const destPieces = this.pieces.filter(p => p.layer === tLayer && p.index === tIndex);
         let baseHeight = destPieces.length;
 
-        // 保持相对顺序搬运过去
         stack.sort((a,b) => a.stackPos - b.stackPos);
         stack.forEach((p, i) => {
             p.layer = tLayer;
@@ -135,33 +177,46 @@ class QingyunModel {
             p.stackPos = baseHeight + i;
         });
 
-        // 离开的格子需要重新整理 stackPos (虽然逻辑上不需要，但为了数据整洁)
-        this._recalculateStackHeights();
-
-        return { finished: false };
+        return {
+            finished: false,
+            triggerInfo: isTriggered ? { type: steps, ownerId: trapOwnerId } : null
+        };
     }
 
     _recalculateStackHeights() {
         const map = {};
         this.pieces.forEach(p => {
-            const key = `${p.layer}_${p.index}`;
-            if(!map[key]) map[key] = [];
-            map[key].push(p);
+            const k = `${p.layer}_${p.index}`;
+            if(!map[k]) map[k] = [];
+            map[k].push(p);
         });
         for(let k in map) {
-            map[k].sort((a,b) => a.stackPos - b.stackPos); // 应该按之前的顺序排序，这里简化
+            map[k].sort((a,b) => a.stackPos - b.stackPos);
             map[k].forEach((p, i) => p.stackPos = i);
         }
     }
 
-    // 获取当前排名 (用于结算)
     getRankList() {
         return [...this.pieces].sort((a, b) => {
-            if (a.layer !== b.layer) return b.layer - a.layer; // 内圈 > 外圈
-            if (a.index !== b.index) return b.index - a.index; // 走的远 > 走的近
-            return b.stackPos - a.stackPos; // 叠的高 > 叠的低
+            const lenA = this.LAYERS[a.layer].steps;
+            const lenB = this.LAYERS[b.layer].steps;
+            const ratioA = a.index / lenA;
+            const ratioB = b.index / lenB;
+            if (Math.abs(ratioA - ratioB) > 0.0001) {
+                return ratioB - ratioA;
+            }
+            if (a.layer !== b.layer) return b.layer - a.layer;
+            return b.stackPos - a.stackPos;
+        });
+    }
+
+    recordHistory(events = []) {
+        const p = this.players[0];
+        this.gameHistory.push({
+            round: this.round,
+            chips: p.chips,
+            events: events
         });
     }
 }
-
 window.QingyunModel = QingyunModel;

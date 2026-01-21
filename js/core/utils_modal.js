@@ -8,13 +8,169 @@ const ModalManager = {
 
     // ================= 初始化 =================
     init: function() {
-        // 自动清理页面上残留的旧版遮罩
         const legacyOverlay = document.getElementById('modal_overlay');
         if (legacyOverlay && !legacyOverlay.classList.contains('dynamic_modal')) {
             legacyOverlay.remove();
         }
+        this._injectQingyunStyles(); // 注入青云赛专用样式
+    },
+    /**
+     * 样式1：互动式决策弹窗 (确认/取消/自定义双按钮)
+     * @param {string} title 标题
+     * @param {string} content 内容
+     * @param {string} btn1Text 左侧主按钮文字 (如：阳谋)
+     * @param {string} btn2Text 右侧主按钮文字 (如：阴谋)
+     * @param {Function} onBtn1 点击左侧回调
+     * @param {Function} onBtn2 点击右侧回调
+     */
+    showQingyunDecision: function(title, content, btn1Text, btn2Text, onBtn1, onBtn2) {
+        const tempName1 = 'qy_cb_1_' + Date.now();
+        const tempName2 = 'qy_cb_2_' + Date.now();
+
+        window[tempName1] = () => { window.closeModal(); if(onBtn1) onBtn1(); delete window[tempName1]; delete window[tempName2]; };
+        window[tempName2] = () => { window.closeModal(); if(onBtn2) onBtn2(); delete window[tempName1]; delete window[tempName2]; };
+
+        const footer = `
+            <div class="qy_modal_footer">
+                <button class="qy_btn_choice yang" onclick="window['${tempName1}']()">${btn1Text}</button>
+                <button class="qy_btn_choice yin" onclick="window['${tempName2}']()">${btn2Text}</button>
+            </div>
+            <div style="margin-top:15px; text-align:center;">
+                <button class="qy_btn_cancel" onclick="window.closeModal()">取消操作</button>
+            </div>
+        `;
+
+        this._showBaseModal('modal_qingyun_decision', title, content, footer, "", 30, null, { allowOutsideClick: false });
     },
 
+    /**
+     * 样式2：中央提醒 Toast (3秒消失)
+     * @param {string} msg 消息内容
+     */
+    showQingyunToast: function(msg) {
+        // 清理旧的
+        document.querySelectorAll('.qy_center_toast').forEach(el => el.remove());
+
+        const toast = document.createElement('div');
+        toast.className = 'qy_center_toast';
+        toast.innerHTML = msg;
+        document.body.appendChild(toast);
+
+        // 动画进入
+        requestAnimationFrame(() => toast.classList.add('visible'));
+
+        // 3秒后移除
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    },
+
+    /**
+     * 样式3：消息告知弹窗 (单按钮确认)
+     * @param {string} title 标题
+     * @param {string} content 内容
+     * @param {Function} onClose 关闭回调(可选)
+     */
+    showQingyunNotice: function(title, content, onClose = null) {
+        const tempName = 'qy_cb_close_' + Date.now();
+        window[tempName] = () => {
+            window.closeModal();
+            if(onClose) onClose();
+            delete window[tempName];
+        };
+
+        const footer = `
+            <div class="qy_modal_footer" style="justify-content:center;">
+                <button class="qy_btn_confirm" onclick="window['${tempName}']()">知晓</button>
+            </div>
+        `;
+
+        this._showBaseModal('modal_qingyun_notice', title, content, footer, "", 35, null, { allowOutsideClick: false });
+    },
+
+    /**
+     * 【额外】颜色选择器 (替代 prompt)
+     */
+    showQingyunColorSelect: function(onSelect) {
+        const colors = [
+            { id: 'red', name: '赤 (红)', color: '#ef5350' },
+            { id: 'blue', name: '青 (蓝)', color: '#42a5f5' },
+            { id: 'green', name: '翠 (绿)', color: '#66bb6a' },
+            { id: 'yellow', name: '金 (黄)', color: '#ffee58', text: '#333' },
+            { id: 'white', name: '白 (白)', color: '#eceff1', text: '#333' }
+        ];
+
+        let html = `<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:10px;">`;
+        colors.forEach(c => {
+            const textColor = c.text || '#fff';
+            html += `<button onclick="window.selectQyColor('${c.id}')" 
+                style="background:${c.color}; color:${textColor}; padding:15px; border:none; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer; font-family:'KaiTi'; box-shadow:0 3px 5px rgba(0,0,0,0.2);">
+                ${c.name}
+            </button>`;
+        });
+        html += `</div>`;
+
+        // 挂载临时全局函数
+        window.selectQyColor = (colorId) => {
+            window.closeModal();
+            delete window.selectQyColor;
+            if (onSelect) onSelect(colorId);
+        };
+
+        this._showBaseModal('modal_qingyun_select', "请选择下注颜色", html, null, "", 30, null, { allowOutsideClick: true });
+    },
+
+    // 注入样式
+    _injectQingyunStyles: function() {
+        if (document.getElementById('style-qingyun-modals')) return;
+        const style = document.createElement('style');
+        style.id = 'style-qingyun-modals';
+        style.innerHTML = `
+            /* 通用弹窗容器 */
+            .modal_qingyun_decision, .modal_qingyun_notice, .modal_qingyun_select {
+                background: #263238 !important; border: 2px solid #546e7a !important; 
+                box-shadow: 0 0 30px rgba(0,0,0,0.8) !important; color: #eceff1;
+                font-family: "KaiTi", serif; border-radius: 8px !important;
+            }
+            .modal_qingyun_decision .modal_header, .modal_qingyun_notice .modal_header {
+                border-bottom: 1px solid #37474f !important; font-size: 22px !important;
+                text-align: center !important; padding: 15px !important; color: #b0bec5;
+            }
+            .modal_qingyun_decision .modal_body, .modal_qingyun_notice .modal_body {
+                font-size: 18px; line-height: 1.6; text-align: center; padding: 20px !important;
+            }
+
+            /* 按钮样式 */
+            .qy_modal_footer { display: flex; gap: 15px; justify-content: space-around; padding: 10px 20px 20px; }
+            .qy_btn_choice, .qy_btn_cancel, .qy_btn_confirm {
+                padding: 10px 25px; font-size: 18px; font-family: "KaiTi"; border-radius: 4px;
+                cursor: pointer; border: none; transition: transform 0.1s; font-weight: bold;
+            }
+            .qy_btn_choice.yang { background: #d32f2f; color: #fff; box-shadow: 0 4px 0 #b71c1c; }
+            .qy_btn_choice.yin { background: #1976d2; color: #fff; box-shadow: 0 4px 0 #0d47a1; }
+            .qy_btn_choice:active { transform: translateY(4px); box-shadow: none; }
+            
+            .qy_btn_cancel { background: transparent; border: 1px solid #546e7a; color: #90a4ae; font-size: 16px; padding: 8px 20px; }
+            .qy_btn_cancel:hover { background: #37474f; color: #fff; }
+
+            .qy_btn_confirm { background: #ffd700; color: #3e2723; padding: 10px 40px; box-shadow: 0 4px 0 #f57f17; }
+            .qy_btn_confirm:active { transform: translateY(4px); box-shadow: none; }
+
+            /* 中央提醒 Toast */
+            .qy_center_toast {
+                position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+                background: rgba(0, 0, 0, 0.85); color: #ffd700; border: 1px solid #ffd700;
+                padding: 20px 40px; font-size: 24px; font-family: "KaiTi"; font-weight: bold;
+                border-radius: 8px; z-index: 2000; pointer-events: none; opacity: 0;
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+                text-shadow: 1px 1px 0 #000;
+            }
+            .qy_center_toast.visible { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        `;
+        document.head.appendChild(style);
+    },
     // 1. Toast 提示
     showToast: function(msg, duration = 2000) {
         document.querySelectorAll('.ink_toast').forEach(el => el.remove());
@@ -825,3 +981,4 @@ window.showDefeatModal = ModalManager.showDefeatModal.bind(ModalManager);
 window.showFortuneModal = ModalManager.showFortuneModal.bind(ModalManager);
 // 新增这一行
 window.showGambleResultModal = ModalManager.showGambleResultModal.bind(ModalManager);
+

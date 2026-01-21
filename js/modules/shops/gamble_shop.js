@@ -230,10 +230,7 @@ const GambleShop = {
                         <div class="img-box">🎲</div><div class="title">樗 蒲</div>
                         <div class="desc">五木定乾坤，手动改命的刺激玩法。</div>
                     </div>
-                    <div class="game-card" onclick="GambleShop.selectGame('shengguantu')" style="${cardStyle}">
-                        <div class="img-box">🚀</div><div class="title">升 级</div>
-                        <div class="desc">升职加薪，需要高技能和运气。</div>
-                    </div>
+                    
                     <div class="game-card" onclick="GambleShop.selectGame('qingyun')" style="${cardStyle}; border-color:#0288d1; background:#e1f5fe;">
                         <div class="img-box" style="background:#b3e5fc;">☁️</div><div class="title">青 云</div>
                         <div class="desc">多人竞速，策略堆叠，冲击大奖池。</div>
@@ -396,15 +393,17 @@ const GambleShop = {
     launchQingyun: function(tier) {
         if (!window.QingyunGame) {
             console.error("青云赛模块未加载");
+            if(window.showToast) window.showToast("错误：青云赛模块未加载");
             return;
         }
 
-        // 实例化游戏，opponent 传空对象或模拟庄家对象
+        // 实例化游戏
         const dummyOpponent = { name: "青云赛庄家", id: "qy_host", bet: 0, currentMoney: 999999 };
         this.currentGame = new QingyunGame(dummyOpponent, this);
 
-        // 调用青云赛特有的初始化方法
-        this.currentGame.setupGame(tier);
+        // 调用初始化方法，并【传入当前的弹窗内容容器】
+        // this.modalBody 是 GambleShop 在 updateContent 时缓存的 DOM 元素
+        this.currentGame.setupGame(tier, this.modalBody);
     },
 
     // ================= 启动 传统游戏 =================
@@ -430,8 +429,6 @@ const GambleShop = {
             if (window.ChupuGame) this.currentGame = new ChupuGame(opponent, this);
         } else if (gameType === 'liubo') {
             if (window.LiuboGame) this.currentGame = new LiuboGame(opponent, this);
-        } else if (gameType === 'shengguantu') {
-            if (window.ShengGuanTuGame) this.currentGame = new ShengGuanTuGame(opponent, this);
         }
 
         if (this.currentGame) {
