@@ -149,7 +149,7 @@ const ENTRY_DB = {
     // ==========================================
     "gold_rate_up": {
         name: "聚财", type: "buff", trigger: "onLoot",
-        desc: "战斗灵石获取 +{val}%", color: "#ffd700", icon: "💰"
+        desc: "战斗 文获取 +{val}%", color: "#ffd700", icon: "💰"
     },
     "drop_rate_up": {
         name: "机缘", type: "buff", trigger: "onLoot",

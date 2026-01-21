@@ -907,7 +907,7 @@ const herbs_aux_r4_stable = [
     },
     // 8. 属性压制稳定 - 专门针对狂暴药性
     {
-        id: "herbs_104", name: "镇岳灵石粉", type: "material", subType: "herbs", grade: 1, rarity: 4, value: 55,
+        id: "herbs_104", name: "镇岳 文粉", type: "material", subType: "herbs", grade: 1, rarity: 4, value: 55,
         isPrimary: false,
         effects: { hp: 55 },
         properties: { stabilizer: 85, def: 20 },

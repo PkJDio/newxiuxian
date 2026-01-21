@@ -1,742 +1,477 @@
-// js/modules/games/game_chupu.js
-// 樗蒲 (五木之戏) - v3.0 (警戒系统 + 平滑成长 + 闲聊)
+// js/modules/games/game_shengguantu.js
+// 升官图 (Complex Version) - v2.0
+// 特性：可拖拽大地图、SVG连线、文武分科、浮动UI
 
-console.log("加载 樗蒲模块 v3.0");
+console.log("加载 升官图模块 v2.0 (复杂版)");
 
-// ================= 樗蒲专用样式 =================
-const chupuStyles = `
-<style id="game-chupu-styles">
-    /* --- 主容器 --- */
-    .chupu_board {
-        flex: 1; 
-        background: #211410; 
-        border: 6px solid #4e342e; 
-        border-radius: 12px;
-        padding: 10px; 
-        display: flex; 
-        flex-direction: column; 
-        color: #fff8e1; 
-        position: relative;
-        font-family: "KaiTi", serif; 
-        overflow: hidden; 
-        box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+// ================= 样式定义 =================
+const shengguanStyles = `
+<style id="game-shengguantu-styles">
+    /* 基础容器 */
+    .sg_layout {
+        position: relative; width: 100%; height: 100%; 
+        background: #2d1e1b; overflow: hidden; 
+        font-family: "KaiTi", serif; user-select: none;
     }
 
-    /* --- 1. 头部区域 --- */
-    .chupu_header {
-        display: flex; 
-        justify-content: space-between; 
-        align-items: flex-end;
-        border-bottom: 2px dashed #6d4c41; 
-        padding-bottom: 8px; 
-        margin-bottom: 5px;
-        flex-shrink: 0; 
-        height: 60px;
-        background: rgba(0,0,0,0.2); 
-        border-radius: 8px 8px 0 0; 
-        padding: 5px 20px;
-        box-sizing: border-box;
+    /* --- 可拖拽地图区域 --- */
+    .sg_map_viewport {
+        width: 100%; height: 100%; 
+        cursor: grab; overflow: hidden; position: relative;
+        background-color: #e0d0b0;
+        background-image: 
+            linear-gradient(rgba(93, 64, 55, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(93, 64, 55, 0.1) 1px, transparent 1px);
+        background-size: 40px 40px;
     }
+    .sg_map_viewport:active { cursor: grabbing; }
     
-    .chupu_header_left, .chupu_header_right { 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: space-between; 
-        height: 100%; 
-    }
-    .chupu_header_left { align-items: flex-start; }
-    .chupu_header_right { align-items: flex-end; margin-bottom: 6px; }
-
-    .chupu_header_row { 
-        display: flex; 
-        align-items: baseline; 
-        line-height: 1; 
-    }
-    .chupu_header_row:first-child { margin-bottom: 6px; }
-
-    /* 文字样式 */
-    .chupu_text_label { font-size: 20px; color: #aaa; margin-right: 8px; }
-    .chupu_text_name { font-size: 24px; font-weight: bold; color: #fff; }
-    .chupu_text_money_label { font-size: 18px; color: #8d6e63; margin-right: 5px; }
-    .chupu_text_money_val { font-size: 22px; color: #ffb74d; font-weight: bold; font-family: Arial, sans-serif; letter-spacing: 0.5px; }
-
-    /* --- 2. 警戒条样式 --- */
-    .chupu_suspicion_wrap {
-        width: 100px; height: 8px; 
-        background: #3e2723; border: 1px solid #5d4037;
-        margin-left: 10px; border-radius: 4px; 
-        overflow: hidden; position: relative;
-        display: inline-block; vertical-align: middle;
-    }
-    .chupu_suspicion_fill { height: 100%; transition: width 0.3s; }
-    .chupu_sus_low { background: #66bb6a; } /* 绿 */
-    .chupu_sus_med { background: #ffa726; } /* 橙 */
-    .chupu_sus_high { background: #ef5350; } /* 红 */
-    .chupu_suspicion_text { font-size: 14px; color: #ccc; margin-left: 5px; }
-
-    /* --- 3. 中间押注信息 --- */
-    .chupu_bet_area {
-        text-align: center; 
-        margin-bottom: 10px; 
-        position: relative; 
-        z-index: 10;
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        justify-content: center; 
-        margin-top: -5px;
-    }
-    .chupu_bet_title { font-size: 22px; color: #a1887f; font-weight: bold; letter-spacing: 2px; }
-    .chupu_bet_val { font-size: 34px; color: #d84315; font-weight: bold; text-shadow: 0 2px 0 rgba(0,0,0,0.3); line-height: 1.1; }
-
-    /* 规则按钮 (小) */
-    .chupu_btn_rules_small { 
-        font-size: 16px; background: none; border: 1px solid #8d6e63; 
-        color: #aaa; border-radius: 4px; padding: 2px 6px; cursor: pointer; margin-left: 10px; 
-    }
-    .chupu_btn_rules_small:hover { border-color: #d84315; color: #d84315; }
-
-    /* --- 4. 战场区域 (桌子) --- */
-    .chupu_battle_field { 
-        flex: 1; 
-        display: flex; 
-        flex-direction: row; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 0 5px; 
-        gap: 15px; 
-    }
-    
-    .chupu_bowl { 
-        flex: 1; height: 280px; 
-        position: relative; 
-        border: 10px solid; 
-        box-shadow: inset 0 10px 30px rgba(0,0,0,0.7), 0 10px 20px rgba(0,0,0,0.5); 
-        display: flex; justify-content: center; align-items: center; gap: 12px; 
-        border-radius: 30px; 
-    }
-    
-    /* 水印 */
-    .chupu_watermark { 
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        font-size: 120px; font-weight: bold; opacity: 0.15; pointer-events: none; user-select: none;
-    }
-    
-    .chupu_bowl_enemy { background: radial-gradient(circle at center, #455a64 0%, #263238 80%); border-color: #37474f; }
-    .chupu_bowl_enemy .chupu_watermark { color: #cfd8dc; }
-
-    .chupu_bowl_player { background: radial-gradient(circle at center, #6d4c41 0%, #3e2723 80%); border-color: #5d4037; }
-    .chupu_bowl_player .chupu_watermark { color: #ffcc80; }
-
-    /* --- 5. 骰子样式 --- */
-    .chupu_dice { 
-        width: 36px; height: 72px; 
-        border-radius: 14px; border: 2px solid #1a1a1a; 
-        cursor: pointer; 
-        display: flex; justify-content: center; align-items: center; 
-        font-size: 24px; position: relative; z-index: 2; 
-        transition: transform 0.2s; 
-        box-shadow: 3px 5px 8px rgba(0,0,0,0.6); 
-    }
-    .chupu_dice_black { background: #212121; color: #fff; } 
-    .chupu_dice_black::after { content: '🐮'; filter: grayscale(1); }
-    
-    .chupu_dice_white { background: #f5f5f5; color: #333; } 
-    .chupu_dice_white::after { content: '🐦'; }
-    
-    .chupu_dice_spinning { animation: chupuSpin 0.2s infinite linear; pointer-events: none; }
-    @keyframes chupuSpin { 0% { transform: rotateX(0); } 100% { transform: rotateX(360deg); } }
-    
-    .chupu_cheat_active .chupu_dice:hover { transform: scale(1.2); box-shadow: 0 0 15px #ffeb3b; border-color: #ffeb3b; z-index: 10; }
-
-    /* --- 6. 状态区域 (中间下方) --- */
-    .chupu_status_area { 
-        position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); 
-        text-align: center; width: 300px; z-index: 15; 
-    }
-    .chupu_status_text { 
-        font-size: 22px; font-weight: bold; color: #ffcc80; 
-        text-shadow: 0 2px 2px #000; margin-bottom: 5px; 
-    }
-    .chupu_timer_wrap { 
-        width: 100%; height: 8px; background: #424242; 
-        border-radius: 4px; overflow: hidden; border: 1px solid #aaa; 
-    }
-    .chupu_timer_fill { height: 100%; background: #ff9800; width: 100%; transition: width linear; }
-
-    /* --- 7. 倍率表 (右下角) --- */
-    .chupu_rates_panel { 
-        position: absolute; right: 15px; bottom: 15px; 
-        background: rgba(0,0,0,0.8); padding: 8px 12px; 
-        border-radius: 6px; border: 1px solid #5d4037; z-index: 30; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    .chupu_rate_row { 
-        font-size: 14px; color: #ccc; 
-        display: flex; justify-content: space-between; 
-        gap: 15px; margin-bottom: 2px; 
+    .sg_map_content {
+        position: absolute; top: 0; left: 0;
+        /* 地图实际尺寸，足够大以容纳官职图 */
+        width: 1200px; height: 1000px; 
+        transform-origin: 0 0;
+        transition: transform 0.1s linear; /* 拖拽时的平滑度 */
     }
 
-    /* --- 8. 底部控制栏 (修复对齐问题) --- */
-    .chupu_controls { 
-        margin-top: auto; 
-        height: 70px; 
-        display: flex; 
-        justify-content: center; /* 居中对齐所有按钮 */
-        align-items: center; 
-        gap: 30px; /* 按钮之间的间距 */
-        border-top: 1px dashed rgba(93, 64, 55, 0.5); 
-        padding-top: 5px; 
+    /* 连线层 (SVG) */
+    .sg_lines_svg {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;
     }
+    .sg_line { stroke: #a1887f; stroke-width: 2; fill: none; stroke-dasharray: 5,5; opacity: 0.6; }
 
-    /* 闲聊按钮 */
-    .chupu_btn_chat {
-        width: 60px; height: 60px; 
-        border-radius: 50%;
-        background: #fff; border: 2px solid #8d6e63; color: #5d4037;
-        font-size: 14px; font-weight: bold; cursor: pointer;
+    /* 官职节点 */
+    .sg_node {
+        position: absolute; width: 80px; height: 80px; 
+        background: #fff8e1; border: 2px solid #5d4037; border-radius: 8px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        box-shadow: 0 3px 5px rgba(0,0,0,0.2); transition: 0.2s;
-        flex-shrink: 0; /* 防止被挤压 */
+        z-index: 2; box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+        font-size: 16px; color: #3e2723; font-weight: bold;
+        transition: transform 0.3s, box-shadow 0.3s;
     }
-    .chupu_btn_chat:hover { background: #f5f5f5; transform: scale(1.05); }
-    .chupu_btn_chat:active { transform: scale(0.95); }
-    .chupu_btn_chat.disabled { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
-
-    /* 投掷按钮 (大按钮) */
-    .chupu_btn_throw {
-        background: linear-gradient(to bottom, #d84315, #bf360c); 
-        color: #fff; font-size: 26px; 
-        padding: 8px 50px; border-radius: 40px; 
-        border: 3px solid #ffcc80; cursor: pointer; 
-        box-shadow: 0 5px 0 #8d6e63; transition: 0.1s; 
-        width: 280px; font-family: "KaiTi";
-        flex-shrink: 0;
-    }
-    .chupu_btn_throw:active { transform: translateY(3px); box-shadow: 0 1px 0 #8d6e63; }
-    .chupu_btn_throw:disabled { filter: grayscale(1); cursor: not-allowed; opacity: 0.8; }
+    .sg_node.start { border-color: #2e7d32; background: #e8f5e9; border-radius: 50%; }
+    .sg_node.high { border-color: #ffd700; background: #fffde7; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .sg_node_rank { font-size: 12px; color: #8d6e63; font-weight: normal; margin-top: 2px; }
     
-    /* 占位符 (用于平衡布局，如果不需要可以去掉) */
-    .chupu_spacer { width: 60px; height: 60px; }
-
-    /* --- 其他组件 --- */
-    /* 胜负标签 */
-    .chupu_rank_badge { 
-        position: absolute; bottom: 10px; right: 10px; 
-        background: rgba(0,0,0,0.7); color: #fff; 
-        padding: 4px 12px; border-radius: 4px; font-weight: bold; 
-        border: 1px solid #aaa; font-size: 20px; z-index: 5; 
+    /* 棋子 */
+    .sg_piece {
+        position: absolute; width: 32px; height: 32px; border-radius: 50%;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 14px; font-weight: bold; color: #fff;
+        border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        z-index: 10; transition: top 0.5s ease-in-out, left 0.5s ease-in-out;
     }
-    .chupu_rank_badge.win { color: #ffd700; border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+    .sg_piece.p { background: #d84315; transform: translate(-10px, -10px); } /* 玩家偏移 */
+    .sg_piece.e { background: #455a64; transform: translate(10px, 10px); }   /* 对手偏移 */
 
-    /* 【修复点 1】技能悬浮窗样式：去掉 + 号，改为后代选择器 */
-    .chupu_skill_btn { background: #5d4037; border: 1px solid #8d6e63; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 16px; display: flex; align-items: center; gap: 5px; cursor: help; margin-right: 10px; position: relative; }
-    .chupu_skill_dropdown { visibility: hidden; opacity: 0; position: absolute; top: 100%; right: 0; width: 280px; background: rgba(40,30,20,0.98); border: 2px solid #d84315; border-radius: 6px; padding: 10px; z-index: 200; transform: translateY(10px); transition: all 0.2s; pointer-events: none; text-align: left; font-size: 14px; }
-    /* 这里修复了选择器 */
-    .chupu_skill_btn:hover .chupu_skill_dropdown { visibility: visible; opacity: 1; transform: translateY(5px); }
-    .chupu_skill_title { border-bottom: 1px solid #8d6e63; padding-bottom: 5px; margin-bottom: 5px; color: #d84315; font-weight: bold; text-align: center; }
-
-    /* 【修复点 2】规则弹窗样式 (加回) */
-    .chupu_rules_overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: left; }
-    .chupu_rules_overlay.active { display: flex; }
-    .chupu_rules_box { background: #fff8e1; color: #3e2723; padding: 25px; border-radius: 8px; border: 4px double #5d4037; max-width: 90%; max-height: 90%; overflow-y: auto; font-size: 18px; line-height: 1.6; position: relative; }
-        
-    /* --- 资金悬浮窗容器 --- */
-    .money-tooltip-wrap {
-        position: relative;
-        cursor: help;
-        display: inline-block;
+    /* --- 浮动 UI 层 --- */
+    .sg_hud_top {
+        position: absolute; top: 10px; left: 10px; right: 10px;
+        background: rgba(45, 30, 27, 0.9); border: 2px solid #8d6e63; border-radius: 8px;
+        padding: 8px 15px; z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        color: #fff8e1; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .sg_hud_info { display: flex; gap: 20px; align-items: center; }
+    .sg_hud_vs { font-size: 18px; font-weight: bold; color: #ffcc80; }
+    
+    .sg_hud_bottom {
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        z-index: 100; display: flex; gap: 20px; align-items: flex-end;
     }
 
-    /* --- 悬浮窗本体 (基础样式) --- */
-    /* --- 悬浮窗本体 (基础样式) --- */
-    .money-history-dropdown {
-        visibility: hidden;
-        opacity: 0;
-        position: absolute;
-        top: 100%;
-        /* 【修改】宽度从 240px 改为 340px，防止大字体换行 */
-        width: 340px; 
-        background: rgba(30, 20, 10, 0.98);
-        border: 1px solid #d84315;
-        border-radius: 6px;
-        padding: 10px;
-        z-index: 300;
-        transition: all 0.2s;
-        pointer-events: none;
-        text-align: left;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    /* 陀螺控制 */
+    .sg_spinner_btn {
+        width: 100px; height: 100px; border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ffcc80, #ef6c00);
+        border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        cursor: pointer; display: flex; justify-content: center; align-items: center;
+        font-size: 36px; font-weight: bold; color: #fff; text-shadow: 0 2px 2px #bf360c;
+        transition: transform 0.1s; position: relative;
     }
+    .sg_spinner_btn:active { transform: translateX(-50%) scale(0.95); }
+    .sg_spinner_btn.disabled { filter: grayscale(1); cursor: not-allowed; }
+    
+    .sg_cheat_btn {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: #5e35b1; border: 2px solid #b39ddb;
+        color: #fff; font-size: 14px; font-weight: bold;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .sg_cheat_btn:hover { transform: scale(1.1); }
+    .sg_cheat_btn.disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* 【新增】左侧定位 (用于对手)：左对齐，往右展开 */
-    .money-history-dropdown.pos-left {
-        left: 0;
-        transform: translateY(15px);
+    /* 结果展示浮层 */
+    .sg_toast {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8); color: #fff; padding: 20px 40px; border-radius: 12px;
+        font-size: 32px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 200;
+        border: 2px solid #ffcc80; text-align: center;
     }
+    .sg_toast.show { opacity: 1; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { from { transform: translate(-50%, -50%) scale(0.5); } to { transform: translate(-50%, -50%) scale(1); } }
 
-    /* 【新增】右侧定位 (用于玩家)：右对齐，往左展开 */
-    .money-history-dropdown.pos-right {
-        right: 0;
-        left: auto; /* 覆盖默认 */
-        transform: translateY(18px);
-    }
+    /* 旋转动画 */
+    .spinning_anim { animation: spin 0.1s linear infinite; }
+    @keyframes spin { 100% { transform: translateX(-50%) rotate(360deg); } } /* 注意保持 translateX */
 
-    /* 鼠标移入显示 + 上浮动画 */
-    .money-tooltip-wrap:hover .money-history-dropdown {
-        visibility: visible;
-        opacity: 1;
-    }
-    .money-tooltip-wrap:hover .money-history-dropdown.pos-left {
-        transform: translateY(5px);
-    }
-    .money-tooltip-wrap:hover .money-history-dropdown.pos-right {
-        transform: translateY(5px);
-    }
-
-    /* 悬浮窗标题 */
-    .history-title {
-        color: #ffcc80;
-        /* 【修改】字体从 14px 改为 24px */
-        font-size: 24px; 
-        font-weight: bold;
-        border-bottom: 1px solid #5d4037;
-        padding-bottom: 8px; /* 稍微增加下边距 */
-        margin-bottom: 8px;
-        text-align: center;
-    }
 </style>
 `;
 
-if (!document.getElementById('game-chupu-styles')) {
-    document.head.insertAdjacentHTML('beforeend', chupuStyles);
+if (!document.getElementById('game-shengguantu-styles')) {
+    document.head.insertAdjacentHTML('beforeend', shengguanStyles);
 }
 
-class ChupuGame {
-    constructor(opponent, uiParent, lastRoundData = null) {
-        this.opponent = opponent; // 包含 .suspicion, .chatCount
+class ShengGuanTuGame {
+    constructor(opponent, uiParent) {
+        this.opponent = opponent;
         this.ui = uiParent;
-        // 【核心修改】如果有旧数据，就用旧的；否则全0
-        if (lastRoundData) {
-            this.playerDices = lastRoundData.playerDices || [0, 0, 0, 0, 0];
-            this.enemyDices = lastRoundData.enemyDices || [0, 0, 0, 0, 0];
-            // 标记：处于“保留上一局结果”的状态
-            this.keepLastResult = true;
-        } else {
-            this.playerDices = [0, 0, 0, 0, 0];
-            this.enemyDices = [0, 0, 0, 0, 0];
-            this.keepLastResult = false;
-        }
 
-        // this.playerDices = [0, 0, 0, 0, 0];
-        // this.enemyDices = [0, 0, 0, 0, 0];
-
-        this.state = 'idle';
-        this.showRules = false;
-        this.lastWinAmount = 0;
-
+        // 游戏配置
+        this.maxRounds = 8; // 8轮定胜负
+        this.round = 1;
+        this.state = 'idle'; // idle, spinning, moving
         this.skillLevel = (window.UtilsLifeSkills) ? UtilsLifeSkills.getLevel('gambling') : 0;
 
-        // 【修改】使用新的平滑成长配置
-        this.config = this._getConfig(this.skillLevel);
+        // 玩家位置 (节点ID)
+        this.pNode = 0; // 0 = 白丁
+        this.eNode = 0;
 
-        this.cheatTimer = null;
-        this.remainingFlips = 0;
-
-        // 【新增】AI 反制状态记录
-        this.aiCounterTarget = null; // 'player' 或 'enemy'
-        this.aiCounterIndex = -1;    // 骰子索引
-
-        // 【修改】增加 desc 描述字段 (5黑/5白等)，用于日志显示
-        this.RANKS = {
-            'LU':   { name: '卢', score: 4, multi: 10, check: (b)=>b===5, desc: "5黑" },
-            'XIAO': { name: '枭', score: 3, multi: 8,  check: (b)=>b===0, desc: "5白" },
-            'ZHI':  { name: '雉', score: 2, multi: 5,  check: (b)=>b===4, desc: "4黑" },
-            'DU':   { name: '犊', score: 1, multi: 3,  check: (b)=>b===1, desc: "4白" },
-            'SAI':  { name: '塞', score: 0, multi: 1,  check: (b)=>b===2||b===3, desc: "杂色" }
-        };
-    }
-
-    // 【修改】核心成长配置 (严格对应 v3.5 修正版数值)
-    _getConfig(lv) {
-        // 默认 Lv0 基础属性 (0.5s, 10%, 1枚)
-        let cfg = { time: 0.5, chance: 0.10, flips: 1 };
-
-        if (lv >= 1) { cfg.time = 0.75; cfg.chance = 0.15; }
-        if (lv >= 2) { cfg.chance = 0.20; }
-        if (lv >= 3) { cfg.time = 1.0; cfg.chance = 0.25; }
-        if (lv >= 4) { cfg.time = 1.4; cfg.chance = 0.30; }
-        // Lv5 只有闲聊次数增加，不涉及时间概率
-        if (lv >= 6) { cfg.time = 1.6; cfg.chance = 0.35; }
-        if (lv >= 7) { cfg.time = 1.8; cfg.chance = 0.40; } // 修正点
-        if (lv >= 8) { cfg.time = 2.0; cfg.chance = 0.45; cfg.flips = 2; }
-        if (lv >= 9) { cfg.time = 2.5; cfg.chance = 0.50; }
-        if (lv >= 10) { cfg.time = 4.0; cfg.chance = 0.80; cfg.flips = 3; }
-
-        return cfg;
-    }
-// 【修改】获取最大闲聊次数
-    _getChatLimit() {
-        return (this.skillLevel >= 5) ? 5 : 3;
-    }
-    // 【修改】生成技能列表 (更新 v3.5 描述文案)
-    _generateSkillHtml() {
-        const skills = [
-            { lv: 1, text: "初窥门径 (解锁资金查看)" },
-            { lv: 2, text: "察言观色 (解锁警觉显示)" },
-            { lv: 3, text: "手疾眼快 (操作1s, 25%成功)" },
-            { lv: 4, text: "渐入佳境 (操作1.4s, 30%成功)" },
-            { lv: 5, text: "谈笑风生 (闲聊次数: 5)" },
-            { lv: 6, text: "游刃有余 (操作1.6s, 35%成功)" },
-            { lv: 7, text: "炉火纯青 (操作1.8s, 40%成功)" },
-            { lv: 8, text: "左右互搏 (操作2s, 45%成功, 可翻2枚)" },
-            { lv: 9, text: "心如止水 (操作2.5s, 50%成功)" },
-            { lv: 10, text: "天人合一 (窗口4s, 80%成功, 可翻3枚)" }
+        // 地图数据定义 (简化版复杂地图)
+        // 结构: id, name, rank(分数), x, y, moves: {德, 才, 功, 脏}
+        this.mapData = [
+            /* 0: 起点 */
+            { id: 0, name: "白丁", rank: 0, x: 100, y: 800, moves: { '德': 3, '才': 1, '功': 0, '脏': 0 } },
+            /* 1: 文路初阶 */
+            { id: 1, name: "童生", rank: 1, x: 250, y: 800, moves: { '德': 3, '才': 2, '功': 1, '脏': 0 } },
+            /* 2: 文路中阶 */
+            { id: 2, name: "秀才", rank: 2, x: 400, y: 800, moves: { '德': 4, '才': 3, '功': 1, '脏': 1 } },
+            /* 3: 举人 (分岔点) */
+            { id: 3, name: "举人", rank: 3, x: 550, y: 700, moves: { '德': 6, '才': 4, '功': 2, '脏': 1 } },
+            /* 4: 县丞 (地方官) */
+            { id: 4, name: "县丞", rank: 4, x: 700, y: 800, moves: { '德': 7, '才': 5, '功': 3, '脏': 2 } },
+            /* 5: 知县 (七品) */
+            { id: 5, name: "知县", rank: 5, x: 850, y: 750, moves: { '德': 8, '才': 6, '功': 4, '脏': 3 } },
+            /* 6: 翰林 (京官快车道) */
+            { id: 6, name: "翰林", rank: 6, x: 550, y: 550, moves: { '德': 9, '才': 7, '功': 3, '脏': 2 } },
+            /* 7: 知府 (四品) */
+            { id: 7, name: "知府", rank: 7, x: 850, y: 600, moves: { '德': 10, '才': 8, '功': 5, '脏': 4 } },
+            /* 8: 巡抚 (二品) */
+            { id: 8, name: "巡抚", rank: 8, x: 1000, y: 500, moves: { '德': 11, '才': 9, '功': 7, '脏': 5 } },
+            /* 9: 侍郎 (三品) */
+            { id: 9, name: "侍郎", rank: 8, x: 700, y: 450, moves: { '德': 11, '才': 10, '功': 7, '脏': 6 } },
+            /* 10: 尚书 (二品) */
+            { id: 10, name: "尚书", rank: 9, x: 850, y: 350, moves: { '德': 12, '才': 11, '功': 9, '脏': 7 } },
+            /* 11: 大学士 (一品) */
+            { id: 11, name: "大学士", rank: 10, x: 600, y: 300, moves: { '德': 13, '才': 12, '功': 10, '脏': 9 } },
+            /* 12: 太保 */
+            { id: 12, name: "太保", rank: 11, x: 400, y: 250, moves: { '德': 14, '才': 13, '功': 11, '脏': 10 } },
+            /* 13: 太傅 */
+            { id: 13, name: "太傅", rank: 12, x: 250, y: 200, moves: { '德': 14, '才': 13, '功': 12, '脏': 11 } },
+            /* 14: 太师 (极品) - 终点 */
+            { id: 14, name: "太师", rank: 15, x: 100, y: 150, moves: { '德': 14, '才': 14, '功': 14, '脏': 13 } },
         ];
 
-        let html = '<div class="chupu_skill_title">赌术成长表</div>';
-        skills.forEach(s => {
-            const isActive = this.skillLevel >= s.lv;
-            const color = isActive ? '#a5d6a7' : '#757575';
-            const icon = isActive ? '✅' : '🔒';
-            const opacity = isActive ? '1' : '0.7';
-            const shadow = isActive ? 'text-shadow: 0 0 1px #000;' : '';
+        // 拖拽相关
+        this.dragState = { isDown: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 };
 
-            html += `
-                <div style="font-size:14px; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.1); display:flex; justify-content:space-between; color:${color}; opacity:${opacity}; ${shadow}">
-                    <div><span style="font-weight:bold; color:#ffcc80; margin-right:8px;">Lv.${s.lv}</span> ${s.text}</div>
-                    <span style="font-size:12px;">${icon}</span>
-                </div>
-            `;
-        });
-        return html;
+        this.init();
     }
-    init() { this.render(); }
 
-    // 【修改】闲聊功能 (增加时间消耗)
-    chat() {
-        if (this.state !== 'idle' && this.state !== 'waiting_next') return;
+    init() {
+        // 先渲染基本 HTML 结构
+        this.renderStructure();
+        // 绑定拖拽事件
+        this.bindDragEvents();
+        // 绘制连线
+        this.drawLines();
+        // 初始化棋子位置
+        this.updatePieces(false);
+    }
 
-        const limit = this._getChatLimit();
-        if (this.opponent.chatCount >= limit) {
-            if(window.showToast) window.showToast("对方有些不耐烦了，改日再聊吧。");
+    renderStructure() {
+        // 生成节点 HTML
+        const nodesHtml = this.mapData.map(n => {
+            let cls = 'sg_node';
+            if (n.id === 0) cls += ' start';
+            if (n.id === 14) cls += ' high';
+            return `<div class="${cls}" style="left:${n.x}px; top:${n.y}px;">
+                <div>${n.name}</div>
+                <div class="sg_node_rank">品阶:${n.rank}</div>
+            </div>`;
+        }).join('');
+
+        const B = this.opponent.bet || 0;
+        const eMoney = (this.opponent.currentMoney || 0).toLocaleString();
+
+        const html = `
+        <div class="sg_layout">
+            <div class="sg_hud_top">
+                <div class="sg_hud_info">
+                    <button class="ink_btn_small" onclick="GambleShop.selectGame('shengguantu')">⬅ 退出</button>
+                    <div style="font-weight:bold;">${this.opponent.name}</div>
+                    <div style="font-size:14px; color:#aaa;">持有: ${eMoney}</div>
+                    ${this._getSuspicionUI()}
+                </div>
+                <div class="sg_hud_vs">轮次: <span id="sg_round_val">${this.round}</span> / ${this.maxRounds}</div>
+                <div class="sg_hud_info">
+                    <div style="text-align:right;">
+                        <div style="font-weight:bold;">你</div>
+                        <div style="font-size:14px; color:#ffb74d;">押注: ${B}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sg_map_viewport" id="sg_viewport">
+                <div class="sg_map_content" id="sg_content">
+                    <svg class="sg_lines_svg" id="sg_lines"></svg>
+                    ${nodesHtml}
+                    <div class="sg_piece p" id="sg_piece_p">我</div>
+                    <div class="sg_piece e" id="sg_piece_e">敌</div>
+                </div>
+            </div>
+
+            <div class="sg_hud_bottom">
+                <div class="sg_cheat_btn" onclick="GambleShop.currentGame.cheat()" title="暗度陈仓 (增加警戒)">
+                    <span>✋</span><span>出千</span>
+                </div>
+                <div class="sg_spinner_btn" id="sg_spin_btn" onclick="GambleShop.currentGame.spin()">
+                    <span id="sg_spin_text">转</span>
+                </div>
+                <div class="sg_cheat_btn disabled">
+                    <span>💬</span><span>闲聊</span>
+                </div>
+            </div>
+
+            <div class="sg_toast" id="sg_toast">德！连升两级！</div>
+        </div>`;
+
+        this.ui.updateContent(html);
+    }
+
+    // --- 拖拽逻辑 ---
+    bindDragEvents() {
+        const viewport = document.getElementById('sg_viewport');
+        const content = document.getElementById('sg_content');
+        if (!viewport || !content) return;
+
+        // 初始居中到起点 (左下角)
+        // 视口高 ~500px, 起点在 y=800. 需要向上滚
+        content.style.transform = `translate(-50px, -400px)`;
+        // 记录当前 transform
+        this.tx = -50;
+        this.ty = -400;
+
+        viewport.addEventListener('mousedown', (e) => {
+            this.dragState.isDown = true;
+            this.dragState.startX = e.pageX - this.tx;
+            this.dragState.startY = e.pageY - this.ty;
+            viewport.style.cursor = 'grabbing';
+        });
+
+        viewport.addEventListener('mouseleave', () => {
+            this.dragState.isDown = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        viewport.addEventListener('mouseup', () => {
+            this.dragState.isDown = false;
+            viewport.style.cursor = 'grab';
+        });
+
+        viewport.addEventListener('mousemove', (e) => {
+            if (!this.dragState.isDown) return;
+            e.preventDefault();
+            const x = e.pageX - this.dragState.startX;
+            const y = e.pageY - this.dragState.startY;
+
+            // 简单边界限制 (防止拖出视界太远)
+            this.tx = Math.min(200, Math.max(-1000, x));
+            this.ty = Math.min(200, Math.max(-800, y));
+
+            content.style.transform = `translate(${this.tx}px, ${this.ty}px)`;
+        });
+    }
+
+    // --- 绘制连线 ---
+    drawLines() {
+        const svg = document.getElementById('sg_lines');
+        if (!svg) return;
+
+        let html = '';
+        this.mapData.forEach(node => {
+            // 遍历该节点的 moves，画出指向
+            for (let type in node.moves) {
+                const targetId = node.moves[type];
+                if (targetId !== node.id) { // 不画原地
+                    const targetNode = this.mapData.find(n => n.id === targetId);
+                    if (targetNode) {
+                        // 简单的直线，加上 center offset (40, 40)
+                        const x1 = node.x + 40;
+                        const y1 = node.y + 40;
+                        const x2 = targetNode.x + 40;
+                        const y2 = targetNode.y + 40;
+                        // 颜色区分：德=红，才=蓝，脏=灰
+                        let color = "#a1887f";
+                        if (type === '德') color = "#ef5350";
+                        if (type === '才') color = "#42a5f5";
+                        if (type === '脏') color = "#78909c";
+
+                        html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="sg_line" style="stroke:${color}" />`;
+                        // 可以加个箭头marker，这里简化
+                    }
+                }
+            }
+        });
+        svg.innerHTML = html;
+    }
+
+    // --- 游戏流程 ---
+    spin() {
+        if (this.state !== 'idle') return;
+
+        // 检查警戒值
+        if (this.opponent.suspicion >= 100) {
+            this.triggerBlacklist();
             return;
         }
 
-        // 增加时间消耗 (0.2小时)
-        if (window.TimeSystem && window.TimeSystem.passTime) {
-            TimeSystem.passTime(0.2);
+        this.state = 'spinning';
+        const btn = document.getElementById('sg_spin_btn');
+        const txt = document.getElementById('sg_spin_text');
+        if(txt) txt.innerText = "";
+        if(btn) btn.classList.add('spinning_anim');
+
+        // 模拟旋转 1秒
+        setTimeout(() => {
+            if(btn) btn.classList.remove('spinning_anim');
+            if(txt) txt.innerText = "定";
+            this._resolveRound();
+        }, 1000);
+    }
+
+    _resolveRound() {
+        // 1. 结果判定
+        // 如果有 cheatFlag，则强制结果
+        let pRes = this._cheatFlag ? '德' : this._roll();
+        let eRes = this._roll();
+        this._cheatFlag = false; // 消耗掉出千标志
+
+        // 2. 移动逻辑
+        const pNodeObj = this.mapData.find(n => n.id === this.pNode);
+        const eNodeObj = this.mapData.find(n => n.id === this.eNode);
+
+        const pNextId = pNodeObj.moves[pRes];
+        const eNextId = eNodeObj.moves[eRes];
+
+        // 3. 执行移动
+        this.pNode = pNextId;
+        this.eNode = eNextId;
+        this.updatePieces(true); // 开启 focus 自动跟随
+
+        // 4. 显示 Toast
+        const toast = document.getElementById('sg_toast');
+        toast.innerHTML = `<span style="color:#ffcc80">你:${pRes}</span> <span style="color:#ccc">|</span> <span style="color:#fff">敌:${eRes}</span>`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+
+        // 5. 检查结束或下一轮
+        setTimeout(() => {
+            const txt = document.getElementById('sg_spin_text');
+            if(txt) txt.innerText = "转";
+
+            if (this.pNode === 14 || this.eNode === 14 || this.round >= this.maxRounds) {
+                this.finishGame();
+            } else {
+                this.round++;
+                document.getElementById('sg_round_val').innerText = this.round;
+                this.state = 'idle';
+            }
+        }, 1500);
+    }
+
+    _roll() {
+        const r = Math.random();
+        if (r < 0.15) return '德';
+        if (r < 0.50) return '才';
+        if (r < 0.85) return '功';
+        return '脏';
+    }
+
+    updatePieces(autoFocus = false) {
+        const pObj = this.mapData.find(n => n.id === this.pNode);
+        const eObj = this.mapData.find(n => n.id === this.eNode);
+
+        const pEl = document.getElementById('sg_piece_p');
+        const eEl = document.getElementById('sg_piece_e');
+
+        if (pEl && pObj) {
+            pEl.style.left = (pObj.x + 40 - 16) + 'px'; // +40是节点中心, -16是棋子半径
+            pEl.style.top = (pObj.y + 40 - 16) + 'px';
+        }
+        if (eEl && eObj) {
+            eEl.style.left = (eObj.x + 40 - 16) + 'px';
+            eEl.style.top = (eObj.y + 40 - 16) + 'px';
         }
 
-        this.opponent.chatCount++;
-        const drop = Math.floor(Math.random() * 11) + 15;
-        this.opponent.suspicion -= drop;
-        if (this.opponent.suspicion < 0) this.opponent.suspicion = 0;
+        // 自动聚焦到玩家棋子
+        if (autoFocus && pObj) {
+            const viewport = document.getElementById('sg_viewport');
+            const content = document.getElementById('sg_content');
+            if (viewport && content) {
+                // 计算目标 translate 值，使 pObj 居中
+                // 视口中心: w/2, h/2.
+                const vw = viewport.clientWidth;
+                const vh = viewport.clientHeight;
 
-        this.ui.updateOpponentState(this.opponent.level, this.opponent.suspicion, this.opponent.chatCount);
-        if(window.showToast) window.showToast(`闲聊片刻(耗时0.2h)，对方戒心降低了 ${drop} 点`);
-        this.render();
+                let targetX = (vw / 2) - (pObj.x + 40);
+                let targetY = (vh / 2) - (pObj.y + 40);
+
+                // 边界限制
+                targetX = Math.min(200, Math.max(-1000, targetX));
+                targetY = Math.min(200, Math.max(-800, targetY));
+
+                this.tx = targetX;
+                this.ty = targetY;
+                content.style.transform = `translate(${targetX}px, ${targetY}px)`;
+            }
+        }
     }
 
-    prepareNextRound(lastWinAmount) {
-        this.state = 'waiting_next';
-        this.lastWinAmount = lastWinAmount;
-        this.render();
-    }
+    // --- 出千 & 辅助 ---
+    cheat() {
+        if (this.state !== 'idle' && this.state !== 'spinning') return;
 
-    // 【修改】投掷功能 (增加时间消耗)
-    // 【修改】投掷功能
-    throwDice() {
-        if (this.state !== 'idle' && this.state !== 'waiting_next') return;
-
-        // 【核心修改】一旦开始投掷，就不再保留上一局结果
-        this.keepLastResult = false;
+        const noise = Math.max(15, 60 - this.skillLevel * 5);
+        this.opponent.suspicion += noise;
+        this.ui.updateContent(document.getElementById('modal_gamble').querySelector('.modal_body').innerHTML); // 暴力刷新UI显示警戒条? 不，最好只刷新局部
+        // 由于这里用 innerHTML 刷新会导致 DOM 重建，拖拽状态丢失，所以我们要手动更新警戒条 DOM
+        this._updateSuspicionDOM();
 
         if (this.opponent.suspicion >= 100) {
             this.triggerBlacklist();
             return;
         }
 
-        if (window.TimeSystem && window.TimeSystem.passTime) {
-            TimeSystem.passTime(0.5);
-        }
-
-        this.state = 'spinning';
-        this.render();
-
-        setTimeout(() => {
-            this.playerDices = this._rollRandom();
-            this.enemyDices = this._rollAI(this.opponent.level);
-            if (this.config.time > 0) this.startCheatPhase();
-            else this.settle();
-        }, 1000);
+        this._cheatFlag = true;
+        if(window.showToast) window.showToast("已暗中施法，下次必定出【德】！", "success");
     }
 
-
-
-    _rollRandom() {
-        let arr = [];
-        for(let i=0; i<5; i++) arr.push(Math.random() > 0.5 ? 1 : 0);
-        return arr;
-    }
-
-    _rollAI(level) {
-        // AI 策略：高等级有概率直接天胡
-        if (level >= 6 && Math.random() < 0.2) return [0, 0, 0, 0, 0];
-        let dices = this._rollRandom();
-        // Lv 3+ 懂得重掷杂色
-        if (level >= 3) {
-            const rank = this._getRank(dices);
-            if (rank.score === 0 && Math.random() < (level * 0.1)) {
-                dices = this._rollRandom();
-            }
-        }
-        return dices;
-    }
-
-    startCheatPhase() {
-        this.state = 'cheating';
-        this.remainingFlips = this.config.flips;
-        this.render();
-
-        setTimeout(() => {
-            const bar = document.getElementById('chupu_timer_bar');
-            if(bar) {
-                bar.style.transition = `width ${this.config.time}s linear`;
-                bar.style.width = '0%';
-            }
-        }, 50);
-
-        this.cheatTimer = setTimeout(() => {
-            if (this.state === 'cheating') { this.settle(); }
-        }, this.config.time * 1000);
-    }
-
-    // 【修改】翻面产生声响值
-    // 【修改】翻面产生声响值 + AI反制逻辑
-    // 【修改】翻面产生声响值 + 判定拉黑
-    tryFlip(target, index) {
-        if (this.state !== 'cheating' || this.remainingFlips <= 0) return;
-
-        // AI 反制检查
-        if (this.aiCounterTarget) return;
-
-        const roll = Math.random();
-        const arr = (target === 'player') ? this.playerDices : this.enemyDices;
-
-        if (roll < this.config.chance) {
-            arr[index] = 1 - arr[index];
-            this.remainingFlips--;
-
-            // 计算声响
-            const noise = Math.max(0, Math.floor((100 - this.skillLevel * 10 + this.opponent.level * 10) / 2));
-            this.opponent.suspicion += noise;
-
-            // 更新状态
-            this.ui.updateOpponentState(this.opponent.level, this.opponent.suspicion, this.opponent.chatCount);
-
-            // 【核心修改】检查是否达到 100
-            if (this.opponent.suspicion >= 100) {
-                this.opponent.suspicion = 100;
-                this.render(); // 刷新一下界面显示满条
-                this.triggerBlacklist(); // 触发拉黑流程
-                return; // 终止后续逻辑
-            }
-
-            // ... (原本的 AI 反制逻辑保持不变) ...
-            const aiChance = this.opponent.level * 0.08;
-            if (Math.random() < aiChance) {
-                if(window.showToast) window.showToast(`改命成功(警戒+${noise})，但对方眼神一凛...`, "warning");
-                this.render();
-                setTimeout(() => { this._triggerAiCounterFlip(target, index); }, 600);
-            } else {
-                if(window.showToast) window.showToast(`改命成功！(警戒+${noise})`, "success");
-                this.render();
-            }
-
-        } else {
-            this.remainingFlips--;
-            if(window.showToast) window.showToast("手抖了！", "error");
-            this.render();
-        }
-    }
-    // ================= 【新增】触发拉黑惩罚 =================
-    triggerBlacklist() {
-        this.state = 'finished'; // 锁定游戏状态
-
-        // 1. 调用工具类加入黑名单
-        if (window.UtilsGamble) {
-            UtilsGamble.addToBlacklist(this.ui.currentTown.id);
-        }
-
-        // 2. 构造惩罚弹窗 (强制退出)
-        const msg = "出千被抓！<br>你被赌坊打手扔了出去！<br><span style='font-size:18px; color:#b71c1c; font-weight:bold;'>（已被拉黑，下月前无法进入）</span>";
-
-        // 优先使用通用结算模态框 (如果有)
-        if (window.showGambleResultModal) {
-            window.showGambleResultModal(false, this.opponent.bet, () => {
-                // 第5个参数 true 代表 forceExit (强制回大厅)
-                this.ui.finishGame('chupu', false, this.opponent.bet, 0, true);
-            }, msg, "🚫 出 千 被 抓 🚫");
-        } else {
-            // 兜底弹窗
-            window.showGeneralModal("被抓现行", `
-                <div style="text-align:center; padding:20px;">
-                    <div style="font-size:60px;">😡</div>
-                    <div style="font-size:24px; font-weight:bold; color:#b71c1c; margin:10px 0;">出千被抓！</div>
-                    <div style="font-size:18px; color:#5d4037; margin-bottom:20px;">${msg}</div>
-                    <div>
-                        <button class="ink_btn" onclick="GambleShop.finishGame('chupu', false, ${this.opponent.bet}, 0, true)">
-                            自认倒霉
-                        </button>
-                    </div>
-                </div>
-            `);
+    _updateSuspicionDOM() {
+        // 寻找并更新 chupu_suspicion_fill (复用了类名)
+        const bar = document.querySelector('.chupu_suspicion_fill');
+        const txt = document.querySelector('.chupu_suspicion_text');
+        if (bar && txt) {
+            const s = this.opponent.suspicion;
+            bar.style.width = s + '%';
+            txt.innerText = s + '/100';
+            if (s > 80) bar.className = 'chupu_suspicion_fill chupu_sus_high';
+            else if (s > 50) bar.className = 'chupu_suspicion_fill chupu_sus_med';
         }
     }
 
-    // 【新增】AI 反制动画与逻辑
-    _triggerAiCounterFlip(target, index) {
-        // 1. 标记正在被 AI 操作的骰子
-        this.aiCounterTarget = target;
-        this.aiCounterIndex = index;
-
-        if(window.showToast) window.showToast("对手眼疾手快，将棋子拨回了原样！", 2000);
-
-        // 2. 渲染界面 (此时骰子会开始旋转并变红，见 render 修改)
-        this.render();
-
-        // 3. 动画结束后数值回滚
-        setTimeout(() => {
-            const arr = (target === 'player') ? this.playerDices : this.enemyDices;
-            arr[index] = 1 - arr[index]; // 翻回来 (0->1 或 1->0)
-
-            // 清除标记
-            this.aiCounterTarget = null;
-            this.aiCounterIndex = -1;
-
-            this.render(); // 渲染最终结果
-        }, 500); // 动画持续 0.5 秒
-    }
-
-    settle() {
-        this.state = 'finished';
-        if (this.cheatTimer) clearTimeout(this.cheatTimer);
-
-        const pInfo = this._getRank(this.playerDices);
-        const eInfo = this._getRank(this.enemyDices);
-
-        let isWin = false;
-        let isDraw = false;
-
-        if (pInfo.score > eInfo.score) isWin = true;
-        else if (pInfo.score < eInfo.score) isWin = false;
-        else {
-            if (pInfo.score > 0) isDraw = true;
-            else {
-                if (pInfo.blackCount > eInfo.blackCount) isWin = true;
-                else if (pInfo.blackCount < eInfo.blackCount) isWin = false;
-                else isDraw = true;
-            }
-        }
-
-        // ================= 【核心修改】保存详细信息供日志使用 =================
-        // 必须保存 lastMultiplier，否则大厅的日志不知道是几倍
-        if (isDraw) {
-            this.lastRankName = "平局";
-            this.lastMultiplier = 1;
-        } else if (isWin) {
-            // 保存格式：卢(5黑)
-            this.lastRankName = `${pInfo.name}(${pInfo.desc})`;
-            this.lastMultiplier = pInfo.multi;
-        } else {
-            this.lastRankName = `${eInfo.name}(${eInfo.desc})`;
-            this.lastMultiplier = eInfo.multi;
-        }
-        // ===================================================================
-
-        this.render();
-
-        setTimeout(() => {
-            const bet = this.opponent.bet;
-            let finalPayout = 0;
-            let realProfit = 0;
-
-            if (isDraw) {
-                finalPayout = bet;
-                if(window.showToast) window.showToast("势均力敌，退还本金");
-            }
-            else if (isWin) {
-                const multiplier = pInfo.multi;
-                const theoryWin = bet * multiplier;
-                const maxWin = this.opponent.maxMoney;
-                realProfit = Math.min(theoryWin, maxWin);
-                finalPayout = bet + realProfit;
-
-                if (window.UtilsLifeSkills) {
-                    let exp = Math.floor(realProfit / 100);
-                    if(exp < 1) exp = 1;
-                    UtilsLifeSkills.addExp('gambling', exp);
-                }
-            }
-            else {
-                const multiplier = eInfo.multi;
-                const theoryLoss = bet * multiplier;
-                const extraLossNeeded = theoryLoss - bet;
-                const playerMoney = window.player.money;
-                const actualExtraLoss = Math.min(extraLossNeeded, playerMoney);
-
-                finalPayout = -actualExtraLoss;
-                realProfit = -(bet + actualExtraLoss);
-                if (window.UtilsLifeSkills) UtilsLifeSkills.addExp('gambling', 1);
-            }
-// ================= 【核心修改】立即刷新对手金额 =================
-            // 逻辑：对手的钱 = 原有的钱 - 玩家赚的钱 (如果是负数则是玩家亏的，减负数等于加钱)
-            // 注意：realProfit 是玩家视角的净利润。
-            // 玩家赢 100 (realProfit=100) -> 对手减少 100
-            // 玩家输 100 (realProfit=-100) -> 对手增加 100
-            if (!isDraw) {
-                this.opponent.maxMoney -= realProfit;
-                // 防止显示负数 (虽然理论上逻辑保证了 maxWin，但防一手)
-                if (this.opponent.maxMoney < 0) this.opponent.maxMoney = 0;
-
-                // 立即重新渲染背景，让玩家透过弹窗缝隙或关闭弹窗瞬间看到最新金额
-                this.render();
-            }
-            // ==========================================================
-            if (this.ui && this.ui.showGameResult) {
-                // 这里传入的 finalPayout 就是要给玩家加/减的钱
-                // 如果是输了，finalPayout 是负数（例如 -400）
-                this.ui.showGameResult('chupu', isWin && !isDraw, bet, finalPayout, realProfit);
-            } else {
-                this.ui.finishGame('chupu', isWin && !isDraw, bet, finalPayout);
-            }
-
-        }, 1500);
-    }
-
-    _getRank(dices) {
-        const blackCount = dices.reduce((a,b)=>a+(b===0?1:0), 0);
-        for (let key in this.RANKS) {
-            if (this.RANKS[key].check(blackCount)) {
-                return { ...this.RANKS[key], blackCount };
-            }
-        }
-        return { name:'?', score:-1 };
-    }
-
-    toggleRules() {
-        this.showRules = !this.showRules;
-        this.render();
-    }
-
-
-    // 【修改】渲染 - 警戒值 UI (Lv.2 解锁)
     _getSuspicionUI() {
-        // Lv 2 以下完全隐藏察觉度
-        if (this.skillLevel < 2) {
-            return `<div style="font-size:14px; color:#777; margin-left:10px;">(状态未知)</div>`;
-        }
-
         const s = this.opponent.suspicion || 0;
         let barClass = "chupu_sus_low";
         if (s > 80) barClass = "chupu_sus_high";
@@ -747,176 +482,106 @@ class ChupuGame {
                 <div class="chupu_suspicion_wrap">
                     <div class="chupu_suspicion_fill ${barClass}" style="width:${s}%"></div>
                 </div>
-                <div class="chupu_suspicion_text">${s}/100</div>
+                <div class="chupu_suspicion_text" style="color:#fff;">${s}/100</div>
             </div>
-            <div style="font-size:12px; color:#aaa; margin-left:5px;">(警戒)</div>
         `;
     }
 
-    // 主渲染方法
-    // ================= 【修改】主渲染方法 (增加次数显示) =================
-    render() {
-        const pRank = this._getRank(this.playerDices);
-        const eRank = this._getRank(this.enemyDices);
-        // 【核心修改】在这里加上 || this.state === 'waiting_next'
-        // 【核心修改】增加判断：如果是 idle 状态且 keepLastResult 为 true，也要显示结果标签
-        const showRank = this.state === 'finished' ||
-            this.state === 'cheating' ||
-            this.state === 'waiting_next' ||
-            (this.state === 'idle' && this.keepLastResult);
+    // --- 结算系统 (复用之前的逻辑) ---
+    triggerBlacklist() {
+        this.state = 'finished';
+        if (window.UtilsGamble) UtilsGamble.addTownBlacklist(this.ui.currentTown.id);
 
-        const genDiceHtml = (arr, target) => {
-            return arr.map((val, i) => {
-                const color = val === 0 ? 'chupu_dice_black' : 'chupu_dice_white';
+        this.ui.renderResultView({
+            isWin: false,
+            title: "革 职 查 办",
+            msg: "吏部查出你履历造假，乱棍打出！<br><span style='color:red'>(本月拉黑)</span>",
+            moneyChange: 0,
+            opponent: this.opponent,
+            onExit: () => { window.closeModal(); window.updateUI(); },
+            onRetry: null
+        });
+        if(window.saveGame) window.saveGame();
+    }
 
-                // 判断是否正在被 AI 反制 (视觉特效)
-                const isAiCountering = (this.aiCounterTarget === target && this.aiCounterIndex === i);
-                const spin = (this.state === 'spinning' || isAiCountering) ? 'chupu_dice_spinning' : '';
-                const extraStyle = isAiCountering ? 'border-color:#b71c1c; box-shadow:0 0 15px #b71c1c; transform:scale(1.1);' : '';
+    finishGame() {
+        this.state = 'finished';
+        const pObj = this.mapData.find(n => n.id === this.pNode);
+        const eObj = this.mapData.find(n => n.id === this.eNode);
 
-                const click = (this.state === 'cheating') ? `onclick="GambleShop.currentGame.tryFlip('${target}', ${i})"` : '';
-                return `<div class="chupu_dice ${color} ${spin}" style="${extraStyle}" ${click}></div>`;
-            }).join('');
-        };
+        const isWin = pObj.rank > eObj.rank;
+        const isDraw = pObj.rank === eObj.rank;
 
-        // 状态文本逻辑：显示剩余翻动次数
-        let statusHtml = "";
-        const maxFlips = this.config.flips; // 当前等级的最大次数
-
-        if (this.state === 'idle') {
-            statusHtml = `请投箸 <div style="font-size:16px; color:#aaa; margin-top:4px; font-weight:normal;">(本局可翻: ${maxFlips})</div>`;
-        } else if (this.state === 'spinning') {
-            statusHtml = "博弈中...";
-        } else if (this.state === 'cheating') {
-            const count = this.remainingFlips;
-            const countColor = count > 0 ? '#66bb6a' : '#ef5350';
-            statusHtml = `妙手时刻！<div style="font-size:18px; color:${countColor}; margin-top:4px;">剩余次数: ${count} / ${maxFlips}</div>`;
-        } else if (this.state === 'finished') {
-            statusHtml = "结算中";
-        } else if (this.state === 'waiting_next') {
-            statusHtml = `赢取 ${this.lastWinAmount} 文<div style="font-size:16px; color:#aaa; margin-top:4px; font-weight:normal;">(下局可翻: ${maxFlips})</div>`;
+        // 官职差决定倍率
+        let multi = 1.0;
+        if (isWin) {
+            const diff = pObj.rank - eObj.rank;
+            if (diff >= 5) multi = 3.0; // 碾压
+            else if (diff >= 3) multi = 2.0;
+            else if (diff >= 1) multi = 1.5;
         }
 
-        // 资金显示
-        const pMoney = window.player.money.toLocaleString();
-        const showEM = this.skillLevel >= 1;
-        const eMoney = showEM ? this.opponent.maxMoney.toLocaleString() : "???";
+        const B = Number(this.opponent.bet) || 0;
+        const townId = this.ui.currentTown.id;
+        const npcCurrentBank = Number(this.opponent.currentMoney ?? 0);
 
-        // 闲聊按钮状态
-        const maxChat = this._getChatLimit();
-        const currentChat = this.opponent.chatCount || 0;
-        const chatCount = Math.max(0, maxChat - currentChat);
-        const chatDisabled = (this.state !== 'idle' && this.state !== 'waiting_next') || chatCount <= 0;
-        const chatStyle = chatDisabled ? 'disabled' : '';
+        let realProfit = 0;
+        let resultMoneyChange = 0;
+        let nextBet = B;
+        let title="", msg="";
 
-        // 【新增】生成资金历史 HTML
-        // 注意：这里依赖 GambleShop 中的 helper 方法，请确保上一轮的 gamble_shop.js 修改已生效
-        const pHistoryHtml = GambleShop._generateMoneyHistoryHtml ? GambleShop._generateMoneyHistoryHtml('player') : '';
-        const eHistoryHtml = GambleShop._generateMoneyHistoryHtml ? GambleShop._generateMoneyHistoryHtml('opponent') : '';
+        if (isDraw) {
+            window.player.money += B;
+            if (window.UtilsGamble) UtilsGamble.updateMoney(townId, 'shengguantu', this.opponent.id, 0, B, 3);
+            title = "🤝 同 朝 为 官 🤝";
+            msg = `官阶相当 (${pObj.name})，平局退款`;
+        } else if (isWin) {
+            let theoryProfit = Math.floor(B * multi);
+            realProfit = Math.min(theoryProfit, npcCurrentBank);
+            resultMoneyChange = realProfit;
+            window.player.money += (B + realProfit);
+            if (window.UtilsGamble) UtilsGamble.updateMoney(townId, 'shengguantu', this.opponent.id, realProfit, 0, 2);
+            title = "✨ 平 步 青 云 ✨";
+            msg = `官居【${pObj.name}】，力压【${eObj.name}】 (倍率 x${multi})`;
+            nextBet = Math.min(B, Number(this.opponent.currentMoney)||0);
+        } else {
+            resultMoneyChange = -B;
+            if (window.UtilsGamble) UtilsGamble.updateMoney(townId, 'shengguantu', this.opponent.id, 0, 0, 1);
+            title = "💀 告 老 还 乡 💀";
+            msg = `官场失意，止步【${pObj.name}】，不敌【${eObj.name}】`;
+            nextBet = Math.min(B, window.player.money);
+        }
 
-        const html = `
-            <div class="gamble-layout" style="background:#1a1210; color:#fff; overflow:hidden;">
-                <div class="chupu_board ${this.state === 'cheating' ? 'chupu_cheat_active' : ''}">
-                    
-                    <div class="chupu_header">
-                        <div class="chupu_header_left">
-                            <div class="chupu_header_row">
-                                <span class="chupu_text_label">对手</span>
-                                <span class="chupu_text_name">${this.opponent.name}</span>
-                                ${this._getSuspicionUI()}
-                            </div>
-                            <div class="chupu_header_row">
-                                <span class="chupu_text_money_label">持有:</span>
-                                
-                                <div class="money-tooltip-wrap">
-                                    <span class="chupu_text_money_val" style="color:${showEM?'#ffb74d':'#777'}">${eMoney}</span>
-                                    <div class="money-history-dropdown pos-left">
-                                        <div class="history-title">最近资金变动</div>
-                                        ${eHistoryHtml}
-                                    </div>
-                                </div>
+        if(window.saveGame) window.saveGame();
 
-                            </div>
-                        </div>
-                        
-                        <div class="chupu_header_right">
-                            <div class="chupu_header_row">
-                                <div class="chupu_skill_btn">
-                                    Lv.${this.skillLevel}
-                                    <div class="chupu_skill_dropdown">${this._generateSkillHtml()}</div>
-                                </div>
-                                <span class="chupu_text_name">你</span>
-                            </div>
-                            <div class="chupu_header_row">
-                                <span class="chupu_text_money_label">持有:</span>
-                                
-                                <div class="money-tooltip-wrap">
-                                    <span class="chupu_text_money_val">${pMoney}</span>
-                                    <div class="money-history-dropdown pos-right">
-                                        <div class="history-title">最近资金变动</div>
-                                        ${pHistoryHtml}
-                                    </div>
-                                </div>
+        let canRetry = nextBet > 0;
+        if (isWin && Number(this.opponent.currentMoney) <= 0) canRetry = false;
+        if (!isWin && window.player.money <= 0) canRetry = false;
 
-                            </div>
-                        </div>
-                    </div>
+        this.ui.renderResultView({
+            isWin, isDraw, title, msg, moneyChange: resultMoneyChange,
+            opponent: this.opponent, nextBet,
+            playerMoney: window.player.money, opponentMoney: this.opponent.currentMoney,
+            onExit: () => this.ui.selectGame('shengguantu'),
+            onRetry: canRetry ? (val) => {
+                this.opponent.bet = val;
+                this.startNewRound(val); // 直接重启
+            } : null
+        });
+    }
 
-                    <div class="chupu_bet_area">
-                        <div class="chupu_bet_title">本局押注</div>
-                        <div style="display:flex; align-items:center;">
-                            <div class="chupu_bet_val">${this.opponent.bet}</div>
-                            <button class="chupu_btn_rules_small" onclick="GambleShop.currentGame.toggleRules()">规则</button>
-                        </div>
-                    </div>
+    startNewRound(bet) {
+        if (window.player.money < bet) return;
+        window.player.money -= bet;
+        if (window.UtilsGamble) UtilsGamble.updateMoney(this.ui.currentTown.id, 'shengguantu', this.opponent.id, 0, bet, 0);
+        this.ui.addMoneyLog('player', '本局押注', -bet);
 
-                    <div class="chupu_battle_field">
-                        <div class="chupu_bowl chupu_bowl_enemy">
-                            <div class="chupu_watermark">对手</div>
-                            ${genDiceHtml(this.enemyDices, 'enemy')}
-                            ${showRank ? `<div class="chupu_rank_badge">${eRank.name}</div>` : ''}
-                        </div>
-                        <div class="chupu_bowl chupu_bowl_player">
-                            <div class="chupu_watermark">我方</div>
-                            ${genDiceHtml(this.playerDices, 'player')}
-                            ${showRank ? `<div class="chupu_rank_badge win">${pRank.name}</div>` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="chupu_status_area">
-                        <div class="chupu_status_text">${statusHtml}</div>
-                        <div class="chupu_timer_wrap" style="display:${this.state==='cheating'?'block':'none'}">
-                            <div class="chupu_timer_fill" id="chupu_timer_bar"></div>
-                        </div>
-                    </div>
-
-                    <div class="chupu_rates_panel">
-                        <div class="chupu_rate_row"><span>卢 (5黑)</span><span>x10</span></div>
-                        <div class="chupu_rate_row"><span>枭 (5白)</span><span>x8</span></div>
-                        <div class="chupu_rate_row"><span>雉 (4黑)</span><span>x5</span></div>
-                        <div class="chupu_rate_row"><span>犊 (4白)</span><span>x3</span></div>
-                        <div class="chupu_rate_row" style="color:#777"><span>塞 (杂色)</span><span>x1</span></div>
-                    </div>
-
-                    <div class="chupu_controls">
-                        <div class="chupu_btn_chat ${chatStyle}" onclick="GambleShop.currentGame.chat()" title="降低警戒值 (剩余${chatCount}次)">
-                            <div>💬</div>
-                            <div style="font-size:12px;">闲聊 (${chatCount})</div>
-                        </div>
-
-                        <button class="chupu_btn_throw"     
-                            ${(this.state !== 'idle' && this.state !== 'waiting_next') ? 'disabled' : ''} 
-                            onclick="GambleShop.currentGame.throwDice()">
-                            🎲 呼卢喝雉
-                        </button>
-                        
-                        <div class="chupu_spacer"></div>
-                    </div>
-                </div>
-                <button class="btn-resign" onclick="GambleShop.selectGame('chupu')" style="margin-top:5px; padding:5px;">⬅ 退出</button>
-            </div>
-        `;
-        this.ui._updateContent(html);
+        this.pNode = 0;
+        this.eNode = 0;
+        this.round = 1;
+        this.state = 'idle';
+        this.init();
     }
 }
-window.ChupuGame = ChupuGame;
+
+window.ShengGuanTuGame = ShengGuanTuGame;

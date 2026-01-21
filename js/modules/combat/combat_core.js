@@ -176,6 +176,24 @@ const CombatCore = {
         if (money > 0) { if (window.UtilsAdd) UtilsAdd.addMoney(money); else ctx.player.money += money; }
 
         const drops = this._calculateFinalDrops(ctx);
+
+        console.log("原始掉落物:", drops);
+        const realDrops = [];
+        drops.forEach(d => {
+            if (window.addItem) {
+                // 执行添加，并捕获返回值 (假设 addItem 返回添加成功的对象，失败返回 null)
+                const added = window.addItem(d.id, 1);
+                if (added) {
+                    // 标记是否为悬赏物品以便 UI 渲染
+                    added.isBounty = d.isBounty;
+                    realDrops.push(added);
+                } else {
+                    console.warn(`[CombatCore] 掉落物 ${d.id} 添加失败 (背包满或ID无效)`);
+                }
+            }
+        });
+        // ---【核心修复】结束 ---
+
         let rewardHtml = this._buildRewardHtml(ctx, money, drops);
 
         if (window.UtilsEnemy) UtilsEnemy.markDefeated(ctx.enemy.x, ctx.enemy.y);

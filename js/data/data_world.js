@@ -226,7 +226,7 @@ const WORLD_TOWNS_PART_6 = [
     { id: "t_v_26", name: "望海墩", level: "village", x: 4450, y: 1823, w: 40, h: 40, subRegion: "r_e_1_0", desc: "东海边缘的高地村落，可远眺碧波万顷。" },
     { id: "t_v_27", name: "牧马滩", level: "village", x: 832, y: 1245, w: 40, h: 40, subRegion: "r_w_1_2", desc: "水草丰美，曾是秦人祖先牧马繁衍之地。" },
     { id: "t_v_28", name: "翠微坞", level: "village", x: 1956, y: 3456, w: 40, h: 40, subRegion: "r_s_0_0", desc: "群山环抱，翠色欲滴，云雾缭绕其间。" },
-    { id: "t_v_29", name: "灵犀里", level: "village", x: 3345, y: 4821, w: 40, h: 40, subRegion: "r_s_2_2", desc: "相传村中有一通灵石，常有异兽出没。" },
+    { id: "t_v_29", name: "灵犀里", level: "village", x: 3345, y: 4821, w: 40, h: 40, subRegion: "r_s_2_2", desc: "相传村中有一通 文，常有异兽出没。" },
     { id: "t_v_30", name: "稻香里", level: "village", x: 2890, y: 3654, w: 40, h: 40, subRegion: "r_s_2_0", desc: "江南水乡，稻浪翻滚，一派丰收景象。" },
     { id: "t_v_31", name: "断桥里", level: "village", x: 3712, y: 3102, w: 40, h: 40, subRegion: "r_e_0_2", desc: "古桥半残，流水人家，透着一股凄美之感。" },
     { id: "t_v_32", name: "金沙滩", level: "village", x: 456, y: 2845, w: 40, h: 40, subRegion: "r_w_0_2", desc: "河岸遍布金色的细沙，落日下熠熠生辉。" },

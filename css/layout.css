@@ -460,7 +460,7 @@
     border-style: solid;
 }
 
-/* 针对“灵石/金钱”按钮的特殊样式（红色印章感） */
+/* 针对“ 文/金钱”按钮的特殊样式（红色印章感） */
 .ink_btn_small[onclick*="addMoney"] {
     /* 模拟朱砂印章的红色边缘 */
     border-color: #8e2323;

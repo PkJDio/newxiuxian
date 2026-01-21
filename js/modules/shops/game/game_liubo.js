@@ -1,7 +1,7 @@
 // js/modules/games/game_liubo.js
-// 六博棋 - 游戏核心逻辑 v4.2 (修复出千解锁逻辑)
+// 六博棋 - v5.1
 
-console.log("加载 六博棋模块 v4.2");
+console.log("加载 六博棋模块 v5.1 Refactored");
 
 // ================= 六博专用样式 (保持不变) =================
 const liuboStyles = `
@@ -21,9 +21,7 @@ const liuboStyles = `
     }
     .header-side { flex: 1; display: flex; align-items: center; }
     .header-left { justify-content: flex-start; }
-    /* 右侧布局：靠右对齐，内部元素有间距 */
     .header-right { justify-content: flex-end; gap: 15px; } 
-    /* 中间部分：绝对居中，不占 flex 空间，防止挤压 */
     .header-center { 
         position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); 
         text-align: center; white-space: nowrap;
@@ -31,9 +29,7 @@ const liuboStyles = `
     
     /* 状态与警觉值显示 */
     .enemy-status { font-size: 16px; color: #ffcc80; margin-left: 8px; border: 1px solid #8d6e63; padding: 1px 5px; border-radius: 4px; background: rgba(0,0,0,0.3); vertical-align: middle; }
-    .alert-meter { font-size: 16px; color: #e57373; margin-left: 8px; font-weight: bold; display: inline-flex; align-items: center; vertical-align: middle; }
-    .alert-icon { margin-right: 2px; font-size: 16px; }
-
+    
     /* --- 赌术悬浮窗样式 --- */
     .skill-info-wrap { position: relative; display: inline-block; cursor: help; }
     .skill-tag-btn { 
@@ -56,16 +52,15 @@ const liuboStyles = `
     
     .skill-list-title { border-bottom: 1px solid #8d6e63; padding-bottom: 5px; margin-bottom: 5px; color: #d84315; font-weight: bold; text-align: center; }
     .skill-list-item { font-size: 14px; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; }
-    .skill-list-item.active { color: #a5d6a7; text-shadow: 0 0 1px #000; } /* 激活绿色 */
-    .skill-list-item.inactive { color: #757575; opacity: 0.7; } /* 未激活灰色 */
+    .skill-list-item.active { color: #a5d6a7; text-shadow: 0 0 1px #000; } 
+    .skill-list-item.inactive { color: #757575; opacity: 0.7; }
     .skill-lv { font-weight: bold; margin-right: 8px; min-width: 40px; color: #ffcc80; }
     .skill-icon { font-size: 12px; }
 
     /* 中间区域：自适应高度 */
     .liubo-area { 
         flex: 1; display: flex; flex-direction: column; gap: 8px; 
-        min-height: 0; /* 允许压缩 */
-        justify-content: space-between; 
+        min-height: 0; justify-content: space-between; 
     }
     
     /* 棋子/状态条 */
@@ -102,7 +97,7 @@ const liuboStyles = `
     .stick.animating { animation: shake 0.1s infinite; }
     @keyframes shake { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } 100% { transform: translateY(2px); } }
 
-    /* 底部操作容器：固定在底部 */
+    /* 底部操作容器 */
     .bottom-controls {
         flex-shrink: 0; margin-top: 8px; padding-top: 8px; 
         border-top: 1px dashed rgba(141, 110, 99, 0.3);
@@ -163,7 +158,7 @@ const liuboStyles = `
     .rules-overlay.active { display: flex; }
     .rules-box { background: #fff8e1; color: #3e2723; padding: 25px; border-radius: 8px; border: 4px double #5d4037; max-width: 90%; max-height: 90%; overflow-y: auto; font-size: 18px; line-height: 1.6; }
 
-       /* ================= 【新增】警觉条样式 (仿樗蒲) ================= */
+    /* 警觉条样式 */
     .liubo_suspicion_wrap {
         width: 100px; height: 8px; 
         background: #3e2723; border: 1px solid #5d4037;
@@ -172,13 +167,10 @@ const liuboStyles = `
         display: inline-block; vertical-align: middle;
     }
     .liubo_suspicion_fill { height: 100%; transition: width 0.3s; }
-    .liubo_sus_low { background: #66bb6a; } /* 绿 */
-    .liubo_sus_med { background: #ffa726; } /* 橙 */
-    .liubo_sus_high { background: #ef5350; } /* 红 */
+    .liubo_sus_low { background: #66bb6a; }
+    .liubo_sus_med { background: #ffa726; }
+    .liubo_sus_high { background: #ef5350; }
     .liubo_suspicion_text { font-size: 14px; color: #ccc; margin-left: 5px; vertical-align: middle; }
-
-    /* 原有的状态文字样式微调 */
-    .enemy-status { font-size: 14px; color: #ffcc80; margin-left: 5px; border: 1px solid #8d6e63; padding: 0 4px; border-radius: 4px; background: rgba(0,0,0,0.3); vertical-align: middle; }
 </style>
 `;
 
@@ -190,11 +182,11 @@ if (!document.getElementById('game-liubo-styles')) {
 class LiuboGame {
     constructor(opponent, uiParent) {
         this.opponent = opponent;
-        this.ui = uiParent;
+        this.ui = uiParent; // GambleShop 实例
         this.logs = [];
-        // 【新增】实例唯一ID，用于区分不同局的定时器
+
+        // 实例ID与定时器管理 (用于 QTE)
         this.instanceId = "game_" + Date.now() + "_" + Math.random();
-        // 【新增】定时器引用
         this.qteTimer = null;
 
         // 游戏基础状态
@@ -212,40 +204,41 @@ class LiuboGame {
         this.rollResult = 0;
         this.isAnimating = false;
 
-        // 【系统】警觉与技能
+        // 技能等级
         this.skillLevel = (window.UtilsLifeSkills) ? UtilsLifeSkills.getLevel('gambling') : 0;
-        this.alertness = 0; // 0-100
-        this.chatCount = this._getChatLimit();
 
-        // 【系统】QTE 状态
+        // 【核心修改】从 opponent 对象恢复警觉状态
+        this.alertness = this.opponent.suspicion || 0;
+
+        // 计算剩余闲聊次数
+        const maxChat = this._getChatLimit();
+        const usedChat = this.opponent.chatCount || 0;
+        this.chatCount = Math.max(0, maxChat - usedChat);
+
+        // QTE 状态
         this.qteRunning = false;
         this.qtePos = 0;
-        this.qteDir = 1; // 1右, -1左
+        this.qteDir = 1;
         this.qteSpeed = this._getQTESpeed();
 
-        // 【修正】QTE 区域占比计算 (严格匹配设计文档)
-        // 默认(Lv0-3): 绿10, 橙20, 灰70
-        // Lv4: 绿10, 橙30, 灰60
-        // Lv7: 绿10, 橙40, 灰50
-        // Lv10: 绿30, 橙40, 灰30
-        if (this.skillLevel >= 10) {
-            this.greenPct = 30;
-            this.orangePct = 40;
-        } else if (this.skillLevel >= 7) {
-            this.greenPct = 10;
-            this.orangePct = 40;
-        } else if (this.skillLevel >= 4) {
-            this.greenPct = 10;
-            this.orangePct = 30;
-        } else {
-            this.greenPct = 10;
-            this.orangePct = 20;
-        }
+        // QTE 区域配置
+        if (this.skillLevel >= 10) { this.greenPct = 30; this.orangePct = 40; }
+        else if (this.skillLevel >= 7) { this.greenPct = 10; this.orangePct = 40; }
+        else if (this.skillLevel >= 4) { this.greenPct = 10; this.orangePct = 30; }
+        else { this.greenPct = 10; this.orangePct = 20; }
 
-        // 生成区域
         this.qteZones = this._generateQTEZones();
-
         this.hasCheated = false;
+    }
+
+    // 【新增】同步状态到持久化对象
+    _syncOpponentState() {
+        this.opponent.suspicion = this.alertness;
+        // 计算已聊次数 = 上限 - 剩余
+        const maxChat = this._getChatLimit();
+        this.opponent.chatCount = maxChat - this.chatCount;
+
+        if (window.saveGame) window.saveGame();
     }
 
     _getChatLimit() {
@@ -255,37 +248,20 @@ class LiuboGame {
     }
 
     _getQTESpeed() {
-        // 速度: 跑完100%所需时间(ms) -> 换算成每16ms增量
-        // 目标时间: 0.25s (极快), 0.5s (快), 0.75s (中), 1s (慢)
-
-        let duration = 250; // 默认 Lv0-2: 0.25秒跑完 (极难)
-
-        if (this.skillLevel >= 9) {
-            duration = 1000; // Lv9+: 1秒跑完 (最慢/最简单)
-        } else if (this.skillLevel >= 6) {
-            duration = 750;  // Lv6-8: 0.75秒跑完
-        } else if (this.skillLevel >= 3) {
-            duration = 500;  // Lv3-5: 0.5秒跑完
-        }
-
-        // 计算每一帧(约16.6ms)应该移动多少百分比
-        // 公式：总距离100% / (总时间 / 单帧时间)
+        let duration = 250;
+        if (this.skillLevel >= 9) duration = 1000;
+        else if (this.skillLevel >= 6) duration = 750;
+        else if (this.skillLevel >= 3) duration = 500;
         return 100 / (duration / 16.6);
     }
 
     _generateQTEZones() {
-        // 随机生成绿色区间在橙色区间内部
         const orangeW = this.orangePct;
         const greenW = this.greenPct;
-
-        // 橙色起始点随机
         const orangeStart = Math.floor(Math.random() * (100 - orangeW));
         const orangeEnd = orangeStart + orangeW;
-
-        // 绿色居中偏移
         const greenStart = orangeStart + Math.floor((orangeW - greenW) / 2);
         const greenEnd = greenStart + greenW;
-
         return { orangeStart, orangeEnd, greenStart, greenEnd };
     }
 
@@ -299,74 +275,55 @@ class LiuboGame {
         }
 
         this.render();
-        this._startQTELoop(); // 启动循环监听
+        this._startQTELoop();
     }
 
-    // --- QTE 动画循环 ---
-    // --- QTE 动画循环 ---
     _startQTELoop() {
         if (this.qteTimer) clearInterval(this.qteTimer);
-
         this.qteTimer = setInterval(() => {
             const cursor = document.getElementById('qte_cursor_el');
-
-            // 【核心】如果红线不存在，或者红线上的身份证和当前游戏不一致，说明这是旧定时器，必须停止
+            // 校验 ID 防止控制旧的弹窗
             if (!cursor || cursor.dataset.inst !== this.instanceId) {
                 clearInterval(this.qteTimer);
                 this.qteTimer = null;
                 return;
             }
-
             if (this.gameOver) return;
 
-            // 只有在玩家回合、未投掷、非动画状态下才移动
             if (this.isPlayerTurn && this.lastRoll === null && !this.isAnimating) {
                 this.qtePos += (this.qteSpeed * this.qteDir);
-
-                // 触右边：反弹并刷新区域
                 if (this.qtePos >= 100) {
                     this.qtePos = 100;
                     this.qteDir = -1;
-
-                    // 刷新区域并更新显示
                     this.qteZones = this._generateQTEZones();
                     this._updateQTEZonesDOM();
                 }
-
-                // 触左边：反弹
                 if (this.qtePos <= 0) {
                     this.qtePos = 0;
                     this.qteDir = 1;
                 }
-
                 cursor.style.left = `${this.qtePos}%`;
             }
         }, 16);
     }
-// 【新增】更新 QTE 区域的 DOM 显示 (不重新渲染整个界面)
+
     _updateQTEZonesDOM() {
         const orangeEl = document.getElementById('qte_zone_orange');
         const greenEl = document.getElementById('qte_zone_green');
         if (orangeEl && greenEl) {
             const z = this.qteZones;
             orangeEl.style.left = `${z.orangeStart}%`;
-            // 如果宽度也会变（比如某些动态难度），也可以更新 width
-            // orangeEl.style.width = `${this.orangePct}%`;
-
             greenEl.style.left = `${z.greenStart}%`;
-            // greenEl.style.width = `${this.greenPct}%`;
         }
     }
-    // --- 消耗时间 ---
+
     _passTime() {
         if (window.TimeSystem && window.TimeSystem.passTime) {
-            window.TimeSystem.passTime(0.2);
+            window.TimeSystem.passTime(0.5);
         }
     }
 
-    // --- 逻辑：获取状态描述 ---
     _getEnemyStatusText() {
-        // 警觉 < 30 才显示心情
         if (this.alertness < 30) {
             const diff = this.enemyHP - this.playerHP;
             if (diff > 40) return "欣喜若狂";
@@ -374,20 +331,15 @@ class LiuboGame {
             if (diff >= -10) return "面色平静";
             if (diff > -40) return "脸色难看";
             return "面如死灰";
-        } else if (this.alertness < 60) {
-            return "眼神狐疑";
-        } else if (this.alertness < 90) {
-            return "目光锐利";
-        } else {
-            return "即将暴走";
-        }
+        } else if (this.alertness < 60) return "眼神狐疑";
+        else if (this.alertness < 90) return "目光锐利";
+        else return "即将暴走";
     }
 
-    // --- 玩家动作：出千 (【核心修改】移除等级限制) ---
-    playerCheat() {
-        // 【修改点 1】移除 if (this.skillLevel < 4) return;
-        this._passTime();
+    // ================= 玩家动作 =================
 
+    playerCheat() {
+        this._passTime();
         const pos = this.qtePos;
         const z = this.qteZones;
         let roll = 0;
@@ -395,33 +347,23 @@ class LiuboGame {
         let alertAdd = 0;
 
         if (pos >= z.greenStart && pos <= z.greenEnd) {
-            // 完美出千
             const minBonus = Math.floor(this.skillLevel / 3) || 1;
             const maxBonus = Math.floor(this.skillLevel / 2) || 1;
             const bonus = Math.floor(Math.random() * (maxBonus - minBonus + 1)) + minBonus;
-
             let baseRoll = this.calculateRoll();
             roll = Math.min(6, baseRoll + bonus);
-
             logMsg = `【完美出千】手法如神！点数+${bonus}，对方毫无察觉。`;
             alertAdd = 0;
-        }
-        else if (pos >= z.orangeStart && pos <= z.orangeEnd) {
-            // 普通出千
+        } else if (pos >= z.orangeStart && pos <= z.orangeEnd) {
             let baseRoll = this.calculateRoll();
             roll = Math.min(6, baseRoll + 1);
             logMsg = `【出千】袖里藏刀，点数+1。`;
-
-            // 警觉公式：(赌徒Lv - 赌术Lv/2) * 10
             const reduction = Math.floor(this.skillLevel / 2);
             let val = (this.opponent.level - reduction) * 10;
             alertAdd = Math.max(0, val);
-        }
-        else {
-            // 失败
-            roll = this.calculateRoll(); // 原样
+        } else {
+            roll = this.calculateRoll();
             logMsg = `【出千失误】手法拙劣，险些穿帮！`;
-            // 警觉公式：180 - 赌术Lv*20
             let val = 180 - (this.skillLevel * 20);
             alertAdd = Math.max(20, val);
         }
@@ -439,76 +381,80 @@ class LiuboGame {
                 this.isAnimating = false;
                 let rollName = roll === 0 ? "枭 (0)" : (roll === 6 ? "卢 (6)" : `散 (${roll})`);
                 this.addLog(`最终掷出：<b style="color:purple">${rollName}</b>`);
-
-                // 重置 QTE 区域
                 this.qteZones = this._generateQTEZones();
                 this.render(true);
             }, 600);
         }
     }
 
-    // --- 玩家动作：闲聊 ---
     playerChat() {
         if (this.chatCount <= 0) return;
         this._passTime();
+
         this.chatCount--;
 
-        // 成功率：赌术Lv * 10%
         const chance = this.skillLevel * 0.1;
         if (Math.random() < chance) {
             const p = window.player;
             const jing = (p.attributes && p.attributes.jing) || 10;
             const shen = (p.attributes && p.attributes.shen) || 10;
             const reduce = Math.floor((jing + shen) / 2);
-
             this.alertness = Math.max(0, this.alertness - reduce);
             this.addLog(`【闲聊】你谈笑风生，对方放松了警惕 (警觉-${reduce})。`);
         } else {
             this.addLog(`【闲聊】对方对你的话题不感兴趣。`);
         }
+
+        // 【修改点】同步状态到对手引用，并调用 UtilsGamble.updateMoney 同步城镇账本（Type 1，金额为0，仅用于状态存盘）
+        this._syncOpponentState();
+        if (window.UtilsGamble) {
+            UtilsGamble.updateMoney(this.ui.currentTown.id, 'liubo', this.opponent.id, 0, 0, 1);
+        }
         this.render(true);
     }
 
-    // --- 警觉增加与拉黑判定 ---
     _addAlertness(val) {
         if (val <= 0) return;
         this.alertness += val;
+
+        // 【关键】同步回对象
+        this._syncOpponentState();
+
         if (this.alertness >= 100) {
             this.alertness = 100;
             this.triggerBlacklist();
         }
     }
 
+    // 【核心修改】触发拉黑 (对接新架构)
     triggerBlacklist() {
         this.gameOver = true;
         this.addLog(`<b style="color:red">【被发现了！】对方识破了你的千术！</b>`);
 
+        // 【修改点】改为调用新的 addTownBlacklist
         if (window.UtilsGamble) {
-            UtilsGamble.addToBlacklist(this.ui.currentTown.id);
+            UtilsGamble.addTownBlacklist(this.ui.currentTown.id);
         }
 
-        setTimeout(() => {
-            if (window.showGambleResultModal) {
-                const msg = "出千被抓！<br>你被赌坊打手扔了出去！<br><span style='font-size:18px; color:#b71c1c; font-weight:bold;'>（已被拉黑，下月前无法进入）</span>";
+        const msg = "出千被抓！<br>你被赌坊打手扔了出去！<br><span style='font-size:18px; color:#b71c1c; font-weight:bold;'>（已被拉黑，下月前无法进入）</span>";
 
-                // 参数：失败(false), 金额, 回调, 自定义消息, 自定义标题
-                window.showGambleResultModal(false, this.opponent.bet, () => {
-                    if (this.ui && this.ui.finishGame) {
-                        // 【核心修改】传入第 5 个参数 true，表示强制回到大厅
-                        this.ui.finishGame('liubo', false, this.opponent.bet, 0, true);
-                    }
-                }, msg, "🚫 出 千 被 抓 🚫");
-            } else {
-                // 兜底
-                alert("【出千被抓】\n你被赌坊打手扔了出去！\n该城镇赌坊已将你拉黑，下个月前无法进入。");
-                if (this.ui && this.ui.finishGame) {
-                    this.ui.finishGame('liubo', false, this.opponent.bet, 0, true);
-                }
-            }
+        // 延迟调用结算界面
+        setTimeout(() => {
+            this.ui.renderResultView({
+                isWin: false,
+                title: "🚫 出 千 被 抓 🚫",
+                msg: msg,
+                moneyChange: 0,
+                opponent: this.opponent,
+                onExit: () => {
+                    if (window.GambleShop) GambleShop.renderMainMenu();
+                    if (window.updateUI) window.updateUI();
+                },
+                onRetry: null // 无法重试
+            });
         }, 1000);
     }
 
-    // --- 基础逻辑 (复用) ---
     calculateRoll() {
         let blackCount = 0;
         for (let i = 0; i < 6; i++) { if (Math.random() > 0.5) blackCount++; }
@@ -526,59 +472,39 @@ class LiuboGame {
             const roll = this.calculateRoll();
             this.lastRoll = roll;
             this.rollResult = roll;
-
             let rollName = roll === 0 ? "枭 (0)" : (roll === 6 ? "卢 (6)" : `散 (${roll})`);
             this.addLog(`你掷出了：<b style="color:#ffa726">${rollName}</b>`);
-
             this.render(true);
         }, 800);
     }
 
+    // 玩家决策 (进军/杀枭/固守)
     playerAction(actionType) {
         const roll = this.rollResult;
-        let damage = 0;
         let msg = "";
         this._passTime();
 
         if (actionType === 'move') {
-            // 1. 基础增益
             let baseGain = roll === 0 ? 6 : (roll === 6 ? 6 : roll);
-
-            // 2. 赌术加成 (波动逻辑)
             let bonusGain = 0;
-            // 最大可能的加成值
             const maxBonus = Math.floor(this.skillLevel * 0.5);
-
-            // 规则：50% 概率触发赌术生效
             if (maxBonus > 0 && Math.random() < 0.5) {
-                // 生效后，在 [0, maxBonus] 之间随机取整数
                 bonusGain = Math.floor(Math.random() * (maxBonus + 1));
             }
-
-            // 3. 总增益
             let totalGain = baseGain + bonusGain;
-
             this.playerPos = Math.min(12, this.playerPos + totalGain);
 
-            // 日志显示
             msg = `你指挥散棋推进，优势+${baseGain}`;
-
-            // 只有当真正获得了额外点数时才显示提示，避免显示 "+0"
-            if (bonusGain > 0) {
-                msg += ` (赌术加成+${bonusGain})`;
-            }
-
+            if (bonusGain > 0) msg += ` (赌术加成+${bonusGain})`;
             msg += `，当前优势 ${this.playerPos}。`;
 
         } else if (actionType === 'atk') {
-            // ... (后续攻击逻辑保持不变) ...
             if (this.playerPos <= 0 && roll !== 6 && roll !== 0) {
                 if(window.showToast) window.showToast("位置劣势，难以进攻！");
                 return;
             }
             let baseDmg = roll === 0 ? 25 : (roll === 6 ? 30 : roll * 3);
-            damage = baseDmg + (this.playerPos * 2);
-
+            let damage = baseDmg + (this.playerPos * 2);
             if (Math.random() < (this.skillLevel * 0.02)) {
                 damage = Math.floor(damage * 1.5);
                 msg += "【神之一手】";
@@ -588,7 +514,6 @@ class LiuboGame {
             msg += `你抓住破绽，直取敌方枭棋！造成 ${damage} 点伤害。`;
 
         } else if (actionType === 'def') {
-            // ... (后续防守逻辑保持不变) ...
             let heal = roll === 0 ? 15 : (roll === 6 ? 20 : roll * 2);
             this.playerHP = Math.min(100, this.playerHP + heal);
             msg = `你回撤散棋，巩固防线，局势稍缓 (回血 ${heal})。`;
@@ -606,11 +531,9 @@ class LiuboGame {
 
     enemyTurn() {
         if (this.gameOver) return;
-
         const aiLevel = this.opponent.level || 1;
         let roll = this.calculateRoll();
 
-        // AI 逻辑 (保持不变)
         if (aiLevel >= 5 && roll < 3 && Math.random() < 0.25) roll += 3;
         if (aiLevel === 6 && Math.random() < 0.2) roll = (Math.random() > 0.5) ? 0 : 6;
 
@@ -618,7 +541,6 @@ class LiuboGame {
         this.addLog(`对手掷出了：${rollName}`);
 
         let action = 'move';
-        // 决策逻辑 (保持不变)
         if (this.enemyHP < 30) action = 'def';
         else if (roll === 0 || roll === 6) action = 'atk';
         else action = 'move';
@@ -632,7 +554,6 @@ class LiuboGame {
             if ((baseDmg + this.enemyPos*2) >= this.playerHP) action = 'atk';
         }
 
-        // 行动执行 (保持不变)
         if (action === 'move') {
             let gain = roll === 0 ? 6 : (roll === 6 ? 6 : roll);
             this.enemyPos = Math.min(12, this.enemyPos + gain);
@@ -656,9 +577,7 @@ class LiuboGame {
             this.lastRoll = null;
             this.hasCheated = false;
             this.render();
-
-            // 【核心修复】轮到玩家回合时，必须重新唤醒 QTE 定时器！
-            // 因为在上个回合结束时，定时器已经因为界面元素消失而自动停止了。
+            // 【重要】唤醒 QTE
             this._startQTELoop();
         }
     }
@@ -675,71 +594,103 @@ class LiuboGame {
         }
     }
 
+    // game_liubo.js 中的 endGame 方法修改
     endGame(isWin) {
         this.render();
         setTimeout(() => {
-            const bet = this.opponent.bet;
-            let finalPayout = 0;
+            const B = this.opponent.bet;
             let realProfit = 0;
+            let nextBet = 0;
+
+            const townId = this.ui.currentTown.id;
+            const latestOpponent = window.UtilsGamble.getGamblerById(townId, 'liubo', this.opponent.id);
+            const targetOpponent = latestOpponent || this.opponent;
 
             if (isWin) {
-                // 六博规则：赢了获得双倍押注 (本金 + 同等利润)
-                // 理论利润 = 押注额
-                const theoryWin = bet;
-
-                // 实际利润不能超过对手现在的钱
-                const maxWin = this.opponent.maxMoney;
-                realProfit = Math.min(theoryWin, maxWin);
-
-                // 最终给玩家的钱 = 本金 + 实际利润
-                finalPayout = bet + realProfit;
+                // 逻辑 3.2: 获胜，玩家获得 B*2 (本金+利润)
+                realProfit = Math.min(B, targetOpponent.currentMoney);
+                window.player.money += (B + realProfit);
+                if (window.UtilsGamble) {
+                    UtilsGamble.updateMoney(townId, 'liubo', targetOpponent.id, realProfit, B, 2);
+                }
+                // 逻辑 3.2: 乘胜追击 E = min(B, 赌徒剩余钱)
+                nextBet = Math.min(B, targetOpponent.currentMoney);
             } else {
-                // 输了
-                realProfit = -bet; // 净亏损
-                finalPayout = 0;   // 没收本金
+                // 逻辑 3.4: 失败，玩家 D = C (本金已在开局扣除)
+                if (window.UtilsGamble) {
+                    UtilsGamble.updateMoney(townId, 'liubo', targetOpponent.id, 0, B, 1);
+                }
+                // 逻辑 3.4: 再来一局 E = min(B, 玩家剩余钱)
+                nextBet = Math.min(B, window.player.money);
             }
 
-            // ================= 【核心修改】立即刷新对手金额 =================
-            if (isWin) {
-                // 玩家赢 -> 对手扣钱
-                this.opponent.maxMoney -= realProfit;
-                if (this.opponent.maxMoney < 0) this.opponent.maxMoney = 0;
-            } else {
-                // 玩家输 -> 对手加钱 (赢走了玩家的本金)
-                this.opponent.maxMoney += bet;
-            }
-            // 立即渲染一次，确保背景板金额更新
+            if(window.saveGame) window.saveGame();
             this.render();
-            // ==========================================================
 
-            // 经验池机制 (保留您原有的逻辑，修正利润变量)
-            if (window.UtilsLifeSkills && isWin) {
-                if (!window.player.lifeSkills.gambling_pool) {
-                    window.player.lifeSkills.gambling_pool = 0;
+            // 构造传递给 GambleShop 的数据
+            this.ui.renderResultView({
+                isWin: isWin,
+                title: isWin ? "✨ 大 获 全 胜 ✨" : "💀 棋 差 一 着 💀",
+                msg: isWin ? "运筹帷幄，击溃敌军" : "枭棋被斩，满盘皆输",
+                moneyChange: isWin ? realProfit : -B,
+                opponent: targetOpponent,
+                // 【核心】将计算好的下一局押注和逻辑标志传上去
+                nextBet: nextBet,
+                playerMoney: window.player.money,
+                opponentMoney: targetOpponent.currentMoney,
+                onExit: () => this.ui.selectGame('liubo'),
+                onRetry: (nextBetAmount) => {
+                    // 逻辑 4: 进入待机状态
+                    this.state = 'waiting_new';
+                    this.nextBetAmount = nextBetAmount;
+                    this.render();
                 }
+            });
+        }, 800);
+    }
 
-                // 使用计算好的 realProfit
-                window.player.lifeSkills.gambling_pool += realProfit;
+    // 【新增】对应逻辑 4：残影界面点击“点击开始新一局”后的正式启动逻辑
+    startNewRoundAfterWaiting() {
+        const B = this.nextBetAmount; // 获取预设的 E 金额
 
-                const levelFactor = Math.max(1, this.skillLevel) * 100;
-                if (window.player.lifeSkills.gambling_pool >= levelFactor) {
-                    const expGain = Math.floor(window.player.lifeSkills.gambling_pool / levelFactor);
-                    window.player.lifeSkills.gambling_pool = window.player.lifeSkills.gambling_pool % levelFactor;
-                    if (expGain > 0) {
-                        UtilsLifeSkills.addExp('gambling', expGain);
-                        // 可以加个Toast提示经验获得
-                        // if(window.showToast) window.showToast(`棋艺精进，获得 ${expGain} 点赌术经验`);
-                    }
-                }
-            }
+        // 检查玩家现金 (逻辑 3.4/3.1)
+        if (window.player.money < B) {
+            if(window.showToast) window.showToast("本金不足，无法开始！");
+            return;
+        }
 
-            // 调用通用结算弹窗 (传入完整 5 个参数)
-            if (this.ui && this.ui.showGameResult) {
-                this.ui.showGameResult('liubo', isWin, bet, finalPayout, realProfit);
-            } else {
-                this.ui.finishGame('liubo', isWin, bet, finalPayout);
-            }
-        }, 500);
+        // 1. 正式扣费与记账 (逻辑 3.1)
+        window.player.money -= B;
+        this.opponent.bet = B; // 更新本局实际押注金额
+
+        // 调用 v4.0 工具类 Type 0 (收取赌注)
+        if (window.UtilsGamble) {
+            UtilsGamble.updateMoney(this.ui.currentTown.id, 'liubo', this.opponent.id, 0, B, 0);
+        }
+
+        // 2. 记录 UI 流水日志
+        this.ui.addMoneyLog('player', '本局押注', -B);
+        this.ui.addMoneyLog('opponent', '本局对赌', -B);
+
+        // 3. 完全初始化对局状态 (重置血条、棋盘等)
+        this.state = 'playing';
+        this.turn = 1;
+        this.playerHP = 100;
+        this.enemyHP = 100;
+        this.playerPos = (this.skillLevel >= 5) ? 2 : 0;
+        this.enemyPos = 0;
+        this.isPlayerTurn = true;
+        this.gameOver = false;
+        this.lastRoll = null;
+        this.rollResult = 0;
+        this.logs = [`-- 新的对局开始 (押注 ${B} 文) --`];
+        this.hasCheated = false;
+
+        if(window.saveGame) window.saveGame();
+        if(window.updateUI) window.updateUI();
+
+        // 4. 进入正式游戏流程
+        this.init();
     }
 
     addLog(msg) {
@@ -751,180 +702,133 @@ class LiuboGame {
         this.showRules = !this.showRules;
         this.render(true);
     }
-    // ================= 【新增】获取警觉状态 UI =================
-    _getSuspicionUI() {
-        // Lv 2 以下隐藏具体数值
-        if (this.skillLevel < 2) {
-            let text = "毫无防备";
-            let color = "#66bb6a";
-            const s = this.alertness;
 
+    _getSuspicionUI() {
+        if (this.skillLevel < 2) {
+            let text = "毫无防备"; let color = "#66bb6a"; const s = this.alertness;
             if (s > 80) { text = "死死盯着"; color = "#ef5350"; }
             else if (s > 50) { text = "神色紧张"; color = "#ffa726"; }
             else if (s > 20) { text = "略有疑虑"; color = "#ffee58"; }
-
             return `<div style="font-size:14px; color:${color}; margin-left:10px; display:inline-block;">(状态: ${text})</div>`;
         }
-
         const s = this.alertness;
         let barClass = "liubo_sus_low";
-        if (s > 80) barClass = "liubo_sus_high";
-        else if (s > 50) barClass = "liubo_sus_med";
-
-        return `
-            <div style="display:inline-flex; align-items:center; vertical-align:middle;">
-                <div class="liubo_suspicion_wrap">
-                    <div class="liubo_suspicion_fill ${barClass}" style="width:${s}%"></div>
-                </div>
-                <div class="liubo_suspicion_text">${s}/100</div>
-            </div>
-        `;
+        if (s > 80) barClass = "liubo_sus_high"; else if (s > 50) barClass = "liubo_sus_med";
+        return `<div style="display:inline-flex; align-items:center; vertical-align:middle;"><div class="liubo_suspicion_wrap"><div class="liubo_suspicion_fill ${barClass}" style="width:${s}%"></div></div><div class="liubo_suspicion_text">${s}/100</div></div>`;
     }
-// 【新增】生成技能列表 HTML (用于悬浮窗)
+
     _generateSkillHtml() {
         const skills = [
-            { lv: 1, text: "洞察资金 (显示对手筹码)" },
-            { lv: 2, text: "察言观色 (显示警觉值)" },
-            { lv: 3, text: "眼疾手快 (QTE速度: 快速)" },
-            { lv: 4, text: "手法娴熟 (橙色区域: 30%)" },
-            { lv: 5, text: "谈笑风生 (闲聊次数: 5)" },
-            { lv: 6, text: "从容不迫 (QTE速度: 中速)" },
-            { lv: 7, text: "千术精湛 (橙色区域: 40%)" },
-            { lv: 8, text: "言语如簧 (闲聊次数: 7)" },
-            { lv: 9, text: "心如止水 (QTE速度: 慢速)" },
-            { lv: 10, text: "天人合一 (绿色区域: 30%)" }
+            { lv: 1, text: "洞察资金 (显示对手筹码)" }, { lv: 2, text: "察言观色 (显示警觉值)" },
+            { lv: 3, text: "眼疾手快 (QTE速度: 快速)" }, { lv: 4, text: "手法娴熟 (橙色区域: 30%)" },
+            { lv: 5, text: "谈笑风生 (闲聊次数: 5)" }, { lv: 6, text: "从容不迫 (QTE速度: 中速)" },
+            { lv: 7, text: "千术精湛 (橙色区域: 40%)" }, { lv: 8, text: "言语如簧 (闲聊次数: 7)" },
+            { lv: 9, text: "心如止水 (QTE速度: 慢速)" }, { lv: 10, text: "天人合一 (绿色区域: 30%)" }
         ];
-
         let html = '<div class="skill-list-title">赌术效果预览</div>';
         skills.forEach(s => {
             const isActive = this.skillLevel >= s.lv;
             const cls = isActive ? 'active' : 'inactive';
             const icon = isActive ? '✅' : '🔒';
-            html += `
-                <div class="skill-list-item ${cls}">
-                    <div><span class="skill-lv">Lv.${s.lv}</span> ${s.text}</div>
-                    <span class="skill-icon">${icon}</span>
-                </div>
-            `;
+            html += `<div class="skill-list-item ${cls}"><div><span class="skill-lv">Lv.${s.lv}</span> ${s.text}</div><span class="skill-icon">${icon}</span></div>`;
         });
         return html;
     }
+
+    // 【核心】渲染方法：使用 updateContent
     render(showActions = false) {
-        // --- 绘制筹码 ---
+        // --- 1. 筹策(筷子)显示逻辑 ---
         let sticksHtml = '';
-        if (this.isAnimating) { for(let i=0;i<6;i++) { const r=Math.random()>0.5; sticksHtml+=`<div class="stick ${r?'black':'white'} animating"></div>`; } }
-        else if (this.lastRoll!==null) { for(let i=0;i<6;i++) { const b=i<this.lastRoll; sticksHtml+=`<div class="stick ${b?'black':'white'}"></div>`; } }
-        else { const d=this.rollResult||0; for(let i=0;i<6;i++) { const b=i<d; sticksHtml+=`<div class="stick ${b?'black':'white'}"></div>`; } }
+        if (this.isAnimating) {
+            for(let i=0;i<6;i++) { const r=Math.random()>0.5; sticksHtml+=`<div class="stick ${r?'black':'white'} animating"></div>`; }
+        } else if (this.lastRoll!==null) {
+            for(let i=0;i<6;i++) { const b=i<this.lastRoll; sticksHtml+=`<div class="stick ${b?'black':'white'}"></div>`; }
+        } else {
+            const d=this.rollResult||0; for(let i=0;i<6;i++) { const b=i<d; sticksHtml+=`<div class="stick ${b?'black':'white'}"></div>`; }
+        }
 
-        // --- 绘制日志 ---
+        // --- 2. 日志与状态文本 ---
         const logsHtml = this.logs.map((l, i) => `<div class="${i===this.logs.length-1?'log-new':''}">${l}</div>`).join('');
-
-        // --- 头部信息 ---
         const statusText = this._getEnemyStatusText();
-
-        // 调用新方法获取警觉条 HTML
         const suspicionHtml = this._getSuspicionUI();
 
-        const showAlert = this.skillLevel >= 2;
-        const alertHtml = showAlert ? `<span class="alert-meter"><span class="alert-icon">⚠️警觉度</span>${this.alertness}%</span>` : '';
-
-        // --- 底部操作区 ---
+        // --- 3. 操作区逻辑 (核心修改点) ---
         let actionArea = '';
-        const z = this.qteZones;
-        // 【核心修改】注意这里增加了 data-inst="${this.instanceId}"
-        const qteHtml = `
-            <div class="qte-container">
-                <div class="qte-bar">
-                    <div class="qte-zone-gray" style="width:100%; left:0;"></div>
-                    <div class="qte-zone-orange" id="qte_zone_orange" style="left:${z.orangeStart}%; width:${this.orangePct}%"></div>
-                    <div class="qte-zone-green" id="qte_zone_green" style="left:${z.greenStart}%; width:${this.greenPct}%"></div>
-                    <div class="qte-cursor" id="qte_cursor_el" data-inst="${this.instanceId}" style="left:${this.qtePos}%"></div>
-                </div>
-            </div>
-        `;
-        const canCheat = !this.hasCheated && this.isPlayerTurn && !this.isAnimating;
-        const cheatClass = canCheat ? 'btn-skill' : 'btn-disabled';
-        const canChat = this.chatCount > 0 && this.isPlayerTurn && !this.isAnimating;
-        const chatClass = canChat ? 'btn-chat' : 'btn-disabled';
 
-        if (!this.isPlayerTurn) {
-            actionArea = `<div style="text-align:center; padding:30px; color:#ddd; font-size: 20px;">对手思考中...</div>`;
-        } else if (this.lastRoll === null && !this.isAnimating) {
+        // 逻辑 4：处理“点击再来/乘胜追击”后的残影待机状态
+        if (this.state === 'waiting_new') {
+            actionArea = `
+                <div style="text-align:center; padding:15px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px dashed #ffcc80;">
+                    <div style="color:#ffcc80; font-size:20px; margin-bottom:10px; font-weight:bold;">
+                        准备以 <span style="color:#fff; font-size:24px;">${this.nextBetAmount}</span> 文开始新局
+                    </div>
+                    <button class="btn-roll" style="width:280px; height:50px;" onclick="GambleShop.currentGame.startNewRoundAfterWaiting()">
+                        点击开始新一局
+                    </button>
+                </div>`;
+        }
+        // 正常对局：对手回合
+        else if (!this.isPlayerTurn && !this.gameOver) {
+            actionArea = `<div style="text-align:center; padding:30px; color:#ddd; font-size: 20px; letter-spacing:2px;">对手思考中...</div>`;
+        }
+        // 正常对局：玩家阶段 1 (待投箸)
+        else if (this.lastRoll === null && !this.isAnimating && !this.gameOver) {
+            const z = this.qteZones;
+            const qteHtml = `
+                <div class="qte-container">
+                    <div class="qte-bar">
+                        <div class="qte-zone-gray" style="width:100%; left:0;"></div>
+                        <div class="qte-zone-orange" id="qte_zone_orange" style="left:${z.orangeStart}%; width:${this.orangePct}%"></div>
+                        <div class="qte-zone-green" id="qte_zone_green" style="left:${z.greenStart}%; width:${this.greenPct}%"></div>
+                        <div class="qte-cursor" id="qte_cursor_el" data-inst="${this.instanceId}" style="left:${this.qtePos}%"></div>
+                    </div>
+                </div>`;
+            const canCheat = !this.hasCheated && this.isPlayerTurn;
+            const cheatClass = canCheat ? 'btn-skill' : 'btn-disabled';
+            const canChat = this.chatCount > 0 && this.isPlayerTurn;
+            const chatClass = canChat ? 'btn-chat' : 'btn-disabled';
+
             actionArea = `
                 <div style="display:flex; gap:20px; justify-content:center; margin:10px 0;">
                     <button class="game-btn btn-move" onclick="GambleShop.currentGame.playerRoll()" style="width:160px;">🎲 投 箸</button>
                     <button class="game-btn ${cheatClass}" style="width:140px; position:relative;" onclick="GambleShop.currentGame.playerCheat()">🖐️ 出 千${canCheat ? qteHtml : ''}</button>
                     <button class="game-btn ${chatClass}" style="width:140px;" onclick="GambleShop.currentGame.playerChat()">💬 闲聊 (${this.chatCount})</button>
                 </div>`;
-        } else if (this.isAnimating) {
-            actionArea = `<div style="text-align:center; padding:20px; color:#ffa726; font-size: 20px;">🎲 投掷中...</div>`;
-        } else {
+        }
+        // 正常对局：投掷动画中
+        else if (this.isAnimating) {
+            actionArea = `<div style="text-align:center; padding:20px; color:#ffa726; font-size: 24px; font-weight:bold; animation: pulse 0.8s infinite;">🎲 投掷中...</div>`;
+        }
+        // 正常对局：玩家阶段 2 (决策)
+        else if (!this.gameOver) {
             const roll = this.rollResult;
-            const p = roll===0?0:(roll===6?6:roll);
             const rn = roll===0?"枭 (0)":(roll===6?"卢 (6)":`散 (${roll})`);
+            const gain = roll===0?6:(roll===6?6:roll);
 
-            // ================= 【新增】计算预计伤害逻辑 =================
-            // 1. 计算基础伤害 (参考 playerAction 中的逻辑)
             let baseDmg = roll === 0 ? 25 : (roll === 6 ? 30 : roll * 3);
-
-            // 2. 加上位置优势加成
             let totalDmg = baseDmg + (this.playerPos * 2);
-
-            // 3. 判断显示文本
-            // 规则：如果 (位置优势 > 0) 或者 (掷出 0 或 6)，则允许攻击，显示伤害
-            // 否则显示 "需优势"
-            let atkSubText = "需优势";
-            if (this.playerPos > 0 || roll === 0 || roll === 6) {
-                atkSubText = `预计 -${totalDmg}`;
-            }
-            // ==========================================================
+            let atkSubText = (this.playerPos > 0 || roll === 0 || roll === 6) ? `预计 -${totalDmg}` : "需优势";
 
             actionArea = `
-                <div class="decision-hint">投箸出了 <span style="color:#fff;">${rn}</span> 点，用 ${p} 点做什么？</div>
+                <div class="decision-hint">投箸出了 <span style="color:#fff;">${rn}</span>，用这 <span style="color:#fff;">${gain}</span> 点优势做什么？</div>
                 <div class="action-grid">
-                    <button class="game-btn btn-move" onclick="GambleShop.currentGame.playerAction('move')">🏁 进 军<br><span style="font-size:14px; opacity:0.8">优势 +${this.rollResult===0?6:this.rollResult}</span></button>
-                    
+                    <button class="game-btn btn-move" onclick="GambleShop.currentGame.playerAction('move')">🏁 进 军<br><span style="font-size:14px; opacity:0.8">优势 +${gain}</span></button>
                     <button class="game-btn btn-atk" onclick="GambleShop.currentGame.playerAction('atk')">⚔️ 杀 枭<br><span style="font-size:14px; opacity:0.8">${atkSubText}</span></button>
-                    
                     <button class="game-btn btn-def" onclick="GambleShop.currentGame.playerAction('def')">🛡️ 固 守<br><span style="font-size:14px; opacity:0.8">回血</span></button>
                 </div>`;
         }
 
+        // --- 4. 整体界面组装 ---
         const html = `
             <div class="gamble-layout" style="background:#2d2d2d; color:#fff; overflow:hidden;">
                 <div class="liubo-board">
-                    
-                    <div class="rules-overlay ${this.showRules ? 'active' : ''}" onclick="GambleShop.currentGame.toggleRules()">
-                        <div class="rules-box" onclick="event.stopPropagation()">
-                            <h3>📜 六博棋规则</h3>
-                            <ul>
-                                <li><b>胜负</b>：率先将对方枭棋(血量)归零者胜。</li>
-                                <li><b>投箸</b>：掷出 0-6 点。0=枭(优势+6), 6=卢(优势+6), 1-5=散。</li>
-                                <li><b>行动</b>：
-                                    <ul>
-                                        <li><b>进军</b>：增加棋盘优势(黑棋)。</li>
-                                        <li><b>杀枭</b>：消耗棋盘优势扣除对方血量。</li>
-                                        <li><b>固守</b>：回复自身血量。</li>
-                                    </ul>
-                                </li>
-                                <li><b>出千</b>：QTE玩法，停在绿色区域完美作弊，橙色普通作弊。</li>
-                                <li><b>警觉</b>：作弊会增加对方警觉，满100被拉黑。</li>
-                            </ul>
-                            <div style="text-align:center; margin-top:20px;">
-                                <button class="ink_btn_small" onclick="GambleShop.currentGame.toggleRules()">关闭</button>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="liubo-header">
                         <div class="header-side header-left">
                             <div style="font-size:14px; color:#aaa; margin-right:5px;">对手</div>
                             <div style="font-weight:bold; font-size:22px; display:flex; align-items:center;">
-                                ${this.opponent.name} 
-                                <span class="enemy-status">${statusText}</span>
-                                ${suspicionHtml} </div>
+                                ${this.opponent.name} <span class="enemy-status">${statusText}</span> ${suspicionHtml}
+                            </div>
                         </div>
-                        
                         <div class="header-center">
                             <div style="font-size:26px; font-weight:bold; color:#a1887f;">第 ${this.turn} 回合</div>
                             <button class="btn-rules" onclick="GambleShop.currentGame.toggleRules()">📜 查看规则</button>
@@ -934,19 +838,29 @@ class LiuboGame {
                                 <div class="skill-tag-btn">🎲 赌术 Lv.${this.skillLevel}</div>
                                 <div class="skill-dropdown">${this._generateSkillHtml()}</div>
                             </div>
-                            <div style="text-align:right">
-                                <div style="font-size:14px; color:#aaa;">我方</div>
-                                <div style="font-weight:bold; font-size:22px;">你</div>
-                            </div>
+                            <div style="text-align:right"><div style="font-size:14px; color:#aaa;">我方</div><div style="font-weight:bold; font-size:22px;">你</div></div>
                         </div>
                     </div>
 
                     <div class="liubo-area">
-                        <div class="unit-bar"><div class="unit-icon">🦉</div><div class="hp-track"><div class="hp-fill enemy" style="width: ${this.enemyHP}%"></div></div><div style="width:50px; text-align:right;">${this.enemyHP}</div></div>
+                        <div class="unit-bar">
+                            <div class="unit-icon">🦉</div>
+                            <div class="hp-track"><div class="hp-fill enemy" style="width: ${this.enemyHP}%"></div></div>
+                            <div style="width:50px; text-align:right;">${this.enemyHP}</div>
+                        </div>
                         <div style="font-size:16px; color:#e57373; text-align:right; margin-top:-5px;">棋盘优势: ${"♙".repeat(this.enemyPos)} (${this.enemyPos})</div>
-                        <div class="center-display"><div class="game-log" id="liubo_game_log">${logsHtml}</div><div class="stick-area">${sticksHtml}</div></div>
+                        
+                        <div class="center-display">
+                            <div class="game-log" id="liubo_game_log">${logsHtml}</div>
+                            <div class="stick-area">${sticksHtml}</div>
+                        </div>
+
                         <div style="font-size:16px; color:#81c784; margin-bottom:-5px;">棋盘优势: ${"♟️".repeat(this.playerPos)} (${this.playerPos})</div>
-                        <div class="unit-bar"><div class="unit-icon">🦅</div><div class="hp-track"><div class="hp-fill player" style="width: ${this.playerHP}%"></div></div><div style="width:50px; text-align:right;">${this.playerHP}</div></div>
+                        <div class="unit-bar">
+                            <div class="unit-icon">🦅</div>
+                            <div class="hp-track"><div class="hp-fill player" style="width: ${this.playerHP}%"></div></div>
+                            <div style="width:50px; text-align:right;">${this.playerHP}</div>
+                        </div>
                     </div>
 
                     <div class="bottom-controls">${actionArea}</div>
@@ -955,9 +869,8 @@ class LiuboGame {
             </div>
         `;
 
-        this.ui._updateContent(html);
-        setTimeout(() => { const el = document.getElementById('liubo_game_log'); if(el) el.scrollTop = el.scrollHeight; }, 300);
+        this.ui.updateContent(html);
+        setTimeout(() => { const el = document.getElementById('liubo_game_log'); if(el) el.scrollTop = el.scrollHeight; }, 100);
     }
 }
-
 window.LiuboGame = LiuboGame;

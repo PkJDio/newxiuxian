@@ -294,7 +294,7 @@ const TooltipManager = {
             let val = item.value || item.price;
             html += `<div class="tt_row" style="margin-top:5px; border-top:1px solid #333; padding-top:5px;">
             <span>参考价值</span>
-            <span style="color:gold">💰 ${val.toLocaleString()} 灵石</span>
+            <span style="color:gold">💰 ${val.toLocaleString()}  文</span>
         </div>`;
         }
 
@@ -533,7 +533,7 @@ const TooltipManager = {
                 if (data.valType === 1) {
                     html += `<div class="tt_row"><span>${typeStr}攻击面板</span> <span>${data.panelVal}</span></div>`;
                     let dmgStr = `${data.ratio}% × ${typeStr}攻击`;
-                  
+
                     html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${dmgStr}</span></div>`;
                 } else {
                     html += `<div class="tt_row"><span>功法伤害数值</span> <span style="color:#ffb74d;">${data.fixedDmg}</span></div>`;
@@ -611,6 +611,90 @@ const TooltipManager = {
         this.el.style.width = '260px';
         this.el.innerHTML = html;
         this._show();
+    },
+    /* ================= 7. 【新增】料理配方详情 ================= */
+    showRecipe: function(e, itemId) {
+        this._init();
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        // 尝试查找物品 (先查数据库，再查foods全局变量)
+        let item = null;
+        if (window.GAME_DB && window.GAME_DB.items) {
+            item = window.GAME_DB.items.find(i => i.id === itemId);
+        }
+        if (!item && typeof foods !== 'undefined') {
+            item = foods.find(i => i.id === itemId);
+        }
+        if (!item) return;
+
+        // 稀有度/品质颜色
+        const rarityConf = (typeof RARITY_CONFIG !== 'undefined') ? (RARITY_CONFIG[item.rarity] || RARITY_CONFIG[item.quality]) : {};
+        const color = rarityConf.color || '#fff';
+
+        let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
+        html += `<div class="tt_sub">${item.type === 'food' ? '料理' : '物品'} · 配方详情</div>`;
+
+        // 1. 配方展示
+        if (item.recipe && item.recipe.length > 0) {
+            const recipeIds = item.recipe[0]; // 默认取第一个配方
+            let ingHtml = '';
+
+            recipeIds.forEach(rid => {
+                let mat = null;
+                if (window.GAME_DB && window.GAME_DB.items) {
+                    mat = window.GAME_DB.items.find(i => i.id === rid);
+                }
+                const name = mat ? mat.name : rid;
+                const icon = mat ? (mat.icon || '📦') : '📦';
+
+                // 食材颜色
+                let matColor = '#aaa';
+                if (mat && typeof RARITY_CONFIG !== 'undefined' && RARITY_CONFIG[mat.rarity]) {
+                    matColor = RARITY_CONFIG[mat.rarity].color;
+                }
+
+                ingHtml += `
+                    <div style="display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; margin-bottom:4px;">
+                        <span style="font-size:20px; margin-right:8px;">${icon}</span>
+                        <span style="color:${matColor}; font-weight:bold;">${name}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div style="margin:10px 0; border:1px dashed #555; padding:8px; border-radius:6px;">
+                    <div style="color:#d4af37; font-size:14px; margin-bottom:6px; font-weight:bold;">🥘 所需食材</div>
+                    ${ingHtml}
+                </div>
+            `;
+
+            // 烹饪方式
+            const methodMap = { "Boiling": "水煮", "Sauteing": "煎炒", "Roasting": "火烤", "Frying": "油炸" };
+            if (item.cookType) {
+                html += `<div class="tt_row"><span>🔥 烹饪方式</span> <span style="color:#ffccbc;">${methodMap[item.cookType] || item.cookType}</span></div>`;
+            }
+        } else {
+            html += `<div class="tt_desc">暂无明确配方</div>`;
+        }
+
+        // 2. 基础效果
+        if (item.effects) {
+            let effectStr = [];
+            if (item.effects.hunger) effectStr.push(`饱食度 +${item.effects.hunger}`);
+            if (item.effects.spirit) effectStr.push(`灵力 +${item.effects.spirit}`);
+            if (effectStr.length > 0) {
+                html += `<div style="margin-top:8px; padding-top:8px; border-top:1px solid #444; color:#9ccc65;">${effectStr.join('，')}</div>`;
+            }
+        }
+
+        // 3. 描述
+        html += `<div class="tt_desc" style="margin-top:8px; border-top:1px dashed #444; padding-top:8px;">${item.desc || '暂无描述'}</div>`;
+
+        this.el.className = 'ink_tooltip';
+        this.el.style.width = '260px';
+        this.el.innerHTML = html;
+        this._show();
     }
 };
 
@@ -625,6 +709,8 @@ window.showCombatTooltip = TooltipManager.showCombatDetail.bind(TooltipManager);
 window.showShopItemTooltip = TooltipManager.showShopItem.bind(TooltipManager);
 // 【新增】暴露词条悬浮窗接口
 window.showEntryTooltip = TooltipManager.showEntry.bind(TooltipManager);
+// 【新增】料理配方悬浮窗
+window.showRecipeTooltip = TooltipManager.showRecipe.bind(TooltipManager);
 document.addEventListener('mousemove', (e) => {
     TooltipManager._move(e);
 }, { passive: true });

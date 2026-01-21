@@ -65,9 +65,9 @@ const enemies_all = [
         stats: { hp: 25, phy_atk: 15, mag_atk: 5, phy_def: 2, mag_def: 1, speed: 12, toxicity: 40 },
         money: [0, 0],
         drops: [
-            { id: "materials_029", rate: 0.2 },
+
             { id: "materials_005", rate: 0.4 },
-            { id: "materials_010", rate: 0.4 }
+            { id: "materials_006", rate: 0.4 }
         ],
         skills: [
             // 低伤高频 (20%) - 毒牙视为物理穿刺
@@ -85,8 +85,7 @@ const enemies_all = [
         money: [0, 0],
         drops: [
             { id: "materials_007", rate: 0.5 },
-            { id: "materials_008", rate: 0.4 },
-            { id: "foodMaterial_053", rate: 0.6 }
+            { id: "materials_008", rate: 0.4 }
         ],
         skills: [
             // 低伤高频 (20%)
@@ -224,7 +223,6 @@ const enemies_all = [
         drops: [
             { id: "weapons_013", rate: 0.2 },
             { id: "head_017", rate: 0.2 },
-            { id: "pills_001", rate: 0.3 }
         ],
         skills: [
             // [Type 1]
@@ -266,7 +264,6 @@ const enemies_all = [
         money: [100, 200],
         drops: [
             { id: "weapons_013", rate: 0.1 },
-            { id: "pills_001", rate: 0.2 },
             { id: "book_body_r1_03_full", rate: 0.01 },
         ],
         skills: [
@@ -312,8 +309,7 @@ const enemies_all = [
         stats: { hp: 140, phy_atk: 45, mag_atk: 10, phy_def: 6, mag_def: 6, speed: 16, toxicity: 20 },
         money: [80, 150],
         drops: [
-            { id: "weapons_039", rate: 0.2 },
-            { id: "pills_053", rate: 0.3 }
+            { id: "weapons_039", rate: 0.2 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 毒刃
@@ -425,8 +421,7 @@ const enemies_all = [
         money: [0, 0],
         drops: [
             { id: "materials_023", rate: 0.6 },
-            { id: "materials_034", rate: 0.5 },
-            { id: "foodMaterial_006", rate: 0.1 }
+            { id: "materials_034", rate: 0.5 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 沉重拍击
@@ -446,8 +441,7 @@ const enemies_all = [
         stats: { hp: 120, phy_atk: 15, mag_atk: 0, phy_def: 20, mag_def: 5, speed: 3 },
         money: [0, 0],
         drops: [
-            { id: "materials_035", rate: 0.3 },
-            { id: "foodMaterial_002", rate: 0.1 }
+            { id: "materials_035", rate: 0.3 }
         ],
         skills: [
             // [Type 1] 低伤 (20%)
@@ -482,8 +476,7 @@ const enemies_all = [
         stats: { hp: 80, phy_atk: 12, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 8 },
         money: [0, 0],
         drops: [
-            { id: "materials_010", rate: 0.4 },
-            { id: "foodMaterial_005", rate: 0.1 }
+            { id: "materials_010", rate: 0.4 }
         ],
         skills: [
             // [Type 1] 低伤 (20%)
@@ -500,8 +493,7 @@ const enemies_all = [
         stats: { hp: 130, phy_atk: 16, mag_atk: 0, phy_def: 15, mag_def: 5, speed: 4 },
         money: [2, 8],
         drops: [
-            { id: "materials_022", rate: 0.15 },
-            { id: "foods_054", rate: 0.2 }
+            { id: "materials_022", rate: 0.15 }
         ],
         skills: [
             // [Type 1] 低伤 (20%)
@@ -518,8 +510,7 @@ const enemies_all = [
         stats: { hp: 110, phy_atk: 8, mag_atk: 12, phy_def: 8, mag_def: 10, speed: 6 },
         money: [10, 25],
         drops: [
-            { id: "materials_051", rate: 0.3 },
-            { id: "pills_001", rate: 0.1 }
+            { id: "materials_051", rate: 0.3 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 扔东西
@@ -554,8 +545,8 @@ const enemies_all = [
         stats: { hp: 60, phy_atk: 22, mag_atk: 5, phy_def: 2, mag_def: 2, speed: 12 , toxicity: 40},
         money: [0, 0],
         drops: [
-            { id: "materials_033", rate: 0.4 },
-            { id: "materials_034", rate: 0.3 }
+            { id: "materials_010", rate: 0.4 },
+            { id: "materials_029", rate: 0.3 }
         ],
         skills: [
             // [Type 1] 低伤 (20%)
@@ -628,8 +619,7 @@ const enemies_all = [
         stats: { hp: 110, phy_atk: 25, mag_atk: 5, phy_def: 8, mag_def: 5, speed: 10 },
         money: [20, 50],
         drops: [
-            { id: "weapons_253", rate: 0.08 },
-            { id: "pills_071", rate: 0.2 }
+            { id: "weapons_253", rate: 0.08 }
         ],
         skills: [
             // [Type 1] 低伤 (20%)
@@ -825,7 +815,7 @@ const enemies_all = [
         stats: { hp: 500, phy_atk: 45, mag_atk: 0, phy_def: 50, mag_def: 5, speed: 2 },
         money: [0, 0],
         drops: [
-            { id: "pills_101", rate: 0.1 },
+         
             { id: "body_181", rate: 0.05 }
         ],
         skills: [
@@ -1191,7 +1181,7 @@ const enemies_all = [
         stats: { hp: 756, phy_atk: 4, mag_atk: 41, phy_def: 11, mag_def: 18, speed: 12, toxicity: 50 },
         money: [200, 400],
         drops: [
-            { id: "pills_102", rate: 0.2 },
+         
             { id: "weapons_355", rate: 0.1 }
         ],
         skills: [
@@ -1923,7 +1913,7 @@ const enemies_r_c_1_1 = [
         drops: [
             { id: "weapons_090", rate: 0.01 }, // 大秦定秦剑
             { id: "materials_038", rate: 0.2 }, // 将军枯骨
-            { id: "pills_071", rate: 0.3 }      // 镇尸丹
+          
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 普通横扫
@@ -1995,7 +1985,7 @@ const enemies_r_c_1_1 = [
         money: [50, 150],
         drops: [
             { id: "weapons_039", rate: 0.2 },
-            { id: "pills_001", rate: 0.4 },
+       
             { id: "book_cultivation_r1_19_full", rate: 0.03 },
             { id: "book_cultivation_r1_19_full", rate: 0.03 },
             { id: "book_cultivation_r1_19_full", rate: 0.03 }
@@ -2018,7 +2008,7 @@ const enemies_r_c_1_1 = [
         stats: { hp: 80, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 5, speed: 6 },
         money: [20, 100],
         drops: [
-            { id: "pills_001", rate: 0.3 },
+     
             { id: "materials_010", rate: 0.2 },
             { id: "book_cultivation_r2_02_full", rate: 0.05 }
         ],
@@ -2363,8 +2353,7 @@ const enemies_r_c_2_1 = [
         stats: { hp: 1080, phy_atk: 6, mag_atk: 65, phy_def: 14, mag_def: 45, speed: 20 }, // 极高法抗，物理脆皮
         money: [100, 300],
         drops: [
-            { id: "book_cultivation_r3_20_full", rate: 0.1 },
-            { id: "pills_071", rate: 0.2 }
+            { id: "book_cultivation_r3_20_full", rate: 0.1 }
         ],
         skills: [
             // === 4个伤害技能 ===
@@ -2551,7 +2540,7 @@ const enemies_r_e_0_1 = [
         stats: { hp: 70, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 8, speed: 10 },
         money: [10, 50],
         drops: [
-            { id: "pills_001", rate: 0.4 },
+     
             { id: "book_cultivation_r1_01_full", rate: 0.05 }
         ],
         skills: [
@@ -2662,8 +2651,7 @@ const enemies_r_e_0_1 = [
         stats: { hp: 150, phy_atk: 10, mag_atk: 25, phy_def: 10, mag_def: 20, speed: 15 },
         money: [50, 200],
         drops: [
-            { id: "materials_019", rate: 0.3 },
-            { id: "pills_041", rate: 0.2 }
+            { id: "materials_019", rate: 0.3 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 幻术
@@ -2783,7 +2771,7 @@ const enemies_r_e_0_1 = [
     {
         id: "re01_lord_03", template: "lord", name: "泰山石敢当(灵)", region: "r_e_0_1", spawnType: "mountain", timeStart: 2,
         subType: "elemental",
-        defType: "plate", // 灵石之躯，极硬
+        defType: "plate", //  文之躯，极硬
         stats: { hp: 2592, phy_atk: 90, mag_atk: 45, phy_def: 86, mag_def: 65, speed: 4 }, // 物理免疫级的防御，血量之最
         money: [100, 300],
         drops: [
@@ -2818,7 +2806,7 @@ const enemies_r_e_0_1 = [
             // [Type 3] 大地之力 (加魔防)
             { id: "大地之力", rate: 0.1, type: 3, buffValue: 0.2, buffValType: 1, buffAttr: "mag_def", buffTimes: 6 }
         ],
-        desc: "【领主】泰山灵石化成的精怪，坚不可摧，镇压一切邪祟。"
+        desc: "【领主】泰山 文化成的精怪，坚不可摧，镇压一切邪祟。"
     }
 ];
 
@@ -2932,8 +2920,7 @@ const enemies_r_c_1_2 = [
         stats: { hp: 80, phy_atk: 10, mag_atk: 25, phy_def: 5, mag_def: 15, speed: 5 },
         money: [30, 80],
         drops: [
-            { id: "weapons_002", rate: 0.3 },
-            { id: "pills_001", rate: 0.2 }
+            { id: "weapons_002", rate: 0.3 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 摇铃
@@ -2954,8 +2941,7 @@ const enemies_r_c_1_2 = [
         stats: { hp: 648, phy_atk: 39, mag_atk: 53, phy_def: 8, mag_def: 16, speed: 18 },
         money: [100, 200],
         drops: [
-            { id: "materials_040", rate: 0.8 },
-            { id: "pills_053", rate: 0.2 }
+            { id: "materials_040", rate: 0.8 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 夜鸣
@@ -2982,7 +2968,7 @@ const enemies_r_c_1_2 = [
         stats: { hp: 40, phy_atk: 15, mag_atk: 20, phy_def: 10, mag_def: 10, speed: 4, toxicity: 30 },
         money: [0, 0],
         drops: [
-            { id: "pills_053", rate: 0.4 }
+      
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 舌头
@@ -3222,8 +3208,7 @@ const enemies_r_c_0_2 = [
             stats: { hp: 40, phy_atk: 25, mag_atk: 0, phy_def: 1, mag_def: 5, speed: 12, toxicity: 40 },
             money: [0, 0],
             drops: [
-                { id: "materials_010", rate: 0.3 },
-                { id: "pills_097", rate: 0.1 }
+                { id: "materials_010", rate: 0.3 }
             ],
             skills: [
                 { id: "毒牙突袭", rate: 0.2, type: 1, damage: 1.1, damageType: "phy", dmgValType: 1 },
@@ -3438,8 +3423,7 @@ const enemies_r_c_0_2 = [
         stats: { hp: 1944, phy_atk: 152, mag_atk: 20, phy_def: 24, mag_def: 35, speed: 28 }, // 攻速极致，防御纸糊
         money: [100, 300],
         drops: [
-            { id: "weapons_062", rate: 0.1 },
-            { id: "pills_053", rate: 0.5 }
+            { id: "weapons_062", rate: 0.1 }
         ],
         skills: [
             // --- 4个伤害技能 ---
@@ -3866,7 +3850,7 @@ const enemies_r_n = [
         stats: { hp: 140, phy_atk: 5, mag_atk: 25, phy_def: 5, mag_def: 20, speed: 8 },
         money: [20, 80],
         drops: [
-            { id: "pills_041", rate: 0.3 },
+         
             { id: "materials_035", rate: 0.4 }
         ],
         skills: [
@@ -3972,7 +3956,7 @@ const enemies_r_n = [
         stats: { hp: 1512, phy_atk: 10, mag_atk: 92, phy_def: 22, mag_def: 55, speed: 14 }, // TS1 最强法术爆发，物理脆皮
         money: [100, 300],
         drops: [
-            { id: "pills_041", rate: 0.5 },
+        
             { id: "book_cultivation_r3_01_full", rate: 0.1 }
         ],
         skills: [
@@ -4078,7 +4062,7 @@ const enemies_r_w = [
         money: [30, 80],
         drops: [
             { id: "weapons_043", rate: 0.15 },
-            { id: "pills_002", rate: 0.2 }
+           
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 劈砍
@@ -4135,8 +4119,7 @@ const enemies_r_w = [
         stats: { hp: 648, phy_atk: 49, mag_atk: 24, phy_def: 25, mag_def: 11, speed: 7 },
         money: [100, 200],
         drops: [
-            { id: "materials_018", rate: 0.5 },
-            { id: "pills_053", rate: 0.5 }
+            { id: "materials_018", rate: 0.5 }
         ],
         skills: [
             // [Type 1] 低伤 (20%) - 钻地
@@ -4248,8 +4231,7 @@ const enemies_r_w = [
         stats: { hp: 2160, phy_atk: 10, mag_atk: 85, phy_def: 52, mag_def: 65, speed: 10 }, // 法抗天花板，自带回血的法坦
         money: [100, 300],
         drops: [
-            { id: "herbs_025", rate: 1.0 },
-            { id: "pills_071", rate: 0.2 }
+            { id: "herbs_025", rate: 1.0 }
         ],
         skills: [
             // --- 4个伤害技能 ---
@@ -4354,7 +4336,7 @@ const enemies_r_s = [
         stats: { hp: 50, phy_atk: 30, mag_atk: 10, phy_def: 5, mag_def: 10, speed: 10, toxicity: 40 },
         money: [0, 0],
         drops: [
-            { id: "pills_053", rate: 0.3 },
+        
             { id: "materials_006", rate: 0.3 }
         ],
         skills: [
@@ -4518,7 +4500,7 @@ const enemies_r_s = [
         stats: { hp: 1458, phy_atk: 30, mag_atk: 95, phy_def: 32, mag_def: 65, speed: 20, toxicity: 60 }, // TS1 极速法系秒杀怪，自带高毒性
         money: [100, 300],
         drops: [
-            { id: "pills_053", rate: 1.0 },
+            
             { id: "materials_010", rate: 0.5 }
         ],
         skills: [
@@ -4755,7 +4737,7 @@ const enemies_1=[
             { id: "过载锯齿", rate: 0.1, type: 1, damage: 1.9, damageType: "phy", dmgValType: 1 },
             { id: "排气烟雾", rate: 0.1, type: 2, debuffValue: 0.3, debuffValType: 1, debuffAttr: "mag_atk", debuffTimes: 3 }
         ],
-        desc: "墨家遗留在世俗的耕作机关，核心灵石被狂暴灵气充能后彻底失控。"
+        desc: "墨家遗留在世俗的耕作机关，核心 文被狂暴灵气充能后彻底失控。"
     },
 
     // 5. 走火入魔的散修 (人类/纯法)
@@ -4903,7 +4885,7 @@ const enemies_1=[
             { id: "震荡波", rate: 0.1, type: 2, debuffValue: 0.4, debuffValType: 1, debuffAttr: "speed", debuffTimes: 3 },
             { id: "铜墙铁壁", rate: 0.1, type: 3, buffValue: 0.4, buffValType: 1, buffAttr: "phy_def", buffTimes: 4 }
         ],
-        desc: "原本沉睡在秦军武库中的战争机器，因灵石核心吸纳了过量的暴躁灵气而自动启动，敌我不分。"
+        desc: "原本沉睡在秦军武库中的战争机器，因 文核心吸纳了过量的暴躁灵气而自动启动，敌我不分。"
     },
     // 1. 秦陵守灵人 - 亡灵/肉盾 (Undead Tank)
     // Calc:
@@ -5198,7 +5180,7 @@ const enemies_2=[
         money: [150, 250],
         drops: [
             { id: "血祭阵图(残)", rate: 0.2 },
-            { id: "污秽的灵石", rate: 0.3 }
+            { id: "污秽的 文", rate: 0.3 }
         ],
         skills: [
             { id: "血煞咒", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
@@ -5383,7 +5365,7 @@ const enemies_2=[
         drops: [
             { id: "机关齿轮", rate: 0.4 },
             { id: "青铜处刑刃", rate: 0.1 },
-            { id: "血色灵石", rate: 0.2 }
+            { id: "血色 文", rate: 0.2 }
         ],
         skills: [
             { id: "旋刃斩", rate: 0.2, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
@@ -5709,7 +5691,7 @@ const enemies_3=[
         money: [180, 280],
         drops: [
             { id: "灵雨护符", rate: 0.2 },
-            { id: "纯净的灵石", rate: 0.2 }
+            { id: "纯净的 文", rate: 0.2 }
         ],
         skills: [
             { id: "唤雨术", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
@@ -6147,7 +6129,7 @@ const enemies_4= [
         money: [100, 200],
         drops: [
             { id: "机关木翼", rate: 0.3 },
-            { id: "失控的灵石", rate: 0.1 }
+            { id: "失控的 文", rate: 0.1 }
         ],
         skills: [
             { id: "失控俯冲", rate: 0.2, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },

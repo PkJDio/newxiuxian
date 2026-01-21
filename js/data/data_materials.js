@@ -470,7 +470,7 @@ const materials = [
     },
     {
         id: "materials_099",
-        name: "灵石碎片",
+        name: " 文碎片",
         type: "material",
         grade: 0,
         rarity: 2,
@@ -484,7 +484,7 @@ const materials = [
         grade: 0,
         rarity: 2,
         value: 135,
-        desc: "自然界中灵气凝结的产物，因含有较多杂质而显得灰暗，虽不如纯净灵石珍贵，但也是炼器时极佳的辅助材料。"
+        desc: "自然界中灵气凝结的产物，因含有较多杂质而显得灰暗，虽不如纯净 文珍贵，但也是炼器时极佳的辅助材料。"
     },
     {
         id: "materials_101",

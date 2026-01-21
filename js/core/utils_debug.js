@@ -10,8 +10,8 @@ const DebugSystem = {
         <div class="debug_group">
             <div class="debug_title" style="font-weight:bold; border-bottom:1px solid #eee; margin-bottom:8px; padding-bottom:4px;">💰 资源与属性</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="ink_btn_small" onclick="DebugSystem.addMoney(10000)">+1万 灵石</button>
-                <button class="ink_btn_small" onclick="DebugSystem.addMoney(100000)">+10万 灵石</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addMoney(10000)">+1万  文</button>
+                <button class="ink_btn_small" onclick="DebugSystem.addMoney(100000)">+10万  文</button>
                 <button class="ink_btn_small" onclick="DebugSystem.fullState()">❤ 状态全满</button>
             </div>
         </div>

@@ -51,7 +51,7 @@ const BlackMarket = {
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
         // 稀有度配比
-        const rarityWeights = { 1: 100, 2: 200, 3: 300, 4: 50, 5: 10, 6: 1 };
+        const rarityWeights = { 1: 1000, 2: 2000, 3: 3000, 4: 500, 5: 10, 6: 0 };
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;

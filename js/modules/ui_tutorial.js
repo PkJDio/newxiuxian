@@ -109,7 +109,7 @@ window.UITutorial = {
             { target: 'inn_panel_main', title: '悦来客栈', text: '【休憩】花费银两在客栈休息，可以安全地恢复全状态并消除疲劳。\n【打听】或许能听到一些特殊的传闻或任务线索。' }
         ],
         'bounty': [
-            { target: 'bounty_board_panel', title: '悬赏榜', text: '【接取悬赏】这里发布着官府或个人的委托。完成悬赏可获得灵石和声望。' },
+            { target: 'bounty_board_panel', title: '悬赏榜', text: '【接取悬赏】这里发布着官府或个人的委托。完成悬赏可获得 文和声望。' },
             { target: 'bounty_task_list', title: '任务列表', text: '接取前请留意任务的【难度】（骷髅头）和【时限】。量力而行，切勿贪功冒进。' }
         ],
         'blacksmith': [
@@ -121,7 +121,7 @@ window.UITutorial = {
             { target: 'btn_medical_buy', title: '丹药购买', text: '行走江湖，金疮药和回气丹是必备之物。' }
         ],
         'alchemy': [
-            { target: 'alchemy_panel_main', title: '丹房', text: '这里高价回收各类药材。如果你采集到了珍稀草药，不妨来这里换取灵石。' }
+            { target: 'alchemy_panel_main', title: '丹房', text: '这里高价回收各类药材。如果你采集到了珍稀草药，不妨来这里换取 文。' }
         ],
         'market': [
             { target: 'market_panel_main', title: '集市/黑市', text: '这里鱼龙混杂，经常会有稀奇古怪的宝物出售。' },

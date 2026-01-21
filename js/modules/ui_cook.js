@@ -1,14 +1,28 @@
 /**
  * js/modules/ui_cook.js
- * 烹饪 UI 模块 - 样式微调版 (去除公式等号 + 鼎内居中)
+ * 烹饪 UI 模块 - 完整版 (图鉴 + 一键放入 + 灵感提示优化)
  */
 let UICook = {
     selectedMaterials: [],
     currentCookType: "Boiling",
+    _boundKeyHandler: null,
 
     open: function() {
         if (!player.cooking_info) player.cooking_info = [];
         this.showModal();
+
+        // --- 绑定键盘事件 (E键触发一键放入) ---
+        if (!this._boundKeyHandler) {
+            this._boundKeyHandler = (e) => {
+                if ((e.key === 'e' || e.key === 'E')) {
+                    const btn = document.getElementById('ink_btn_onekey');
+                    if (btn && !btn.disabled && btn.style.display !== 'none') {
+                        this.onOneKeyAdd();
+                    }
+                }
+            };
+            document.addEventListener('keydown', this._boundKeyHandler);
+        }
     },
 
     showModal: function() {
@@ -26,18 +40,32 @@ let UICook = {
             level = skill.level;
             exp = skill.exp;
             maxExp = UtilsLifeSkills.getNextLevelExp(level);
-            // 获取境界名
             const realmNames = ["初窥门径", "略有小成", "融会贯通", "登峰造极", "返璞归真"];
             const idx = Math.min(Math.floor(level / 3), realmNames.length - 1);
             realmName = realmNames[idx];
         }
         const expStr = (level >= 10) ? "已臻化境" : `${exp} / ${maxExp}`;
 
+        // --- Tab 按钮 ---
+        const tabsHtml = cookTypes.map(t => `
+            <button id="btn_method_${t.id}" class="ink_tab ${t.id === this.currentCookType ? 'active' : ''}" 
+                    onclick="UICook.switchMethod('${t.id}', this)">
+                ${t.name}
+            </button>
+        `).join('') + `
+            <button id="ink_btn_onekey" class="ink_tab" style="margin-left:12px; border-style:dashed; opacity:0.5; cursor:not-allowed;" disabled onclick="UICook.onOneKeyAdd()">
+                一键放入(E)
+            </button>
+        `;
+
         const contentHtml = `
             <div class="ink_cook_root">
-                <div class="ink_cook_header" style="display:flex; justify-content:space-between; padding:12px 25px; background:rgba(0,0,0,0.03); border-bottom:1px solid #ddd;">
-                    <span style="color:#5d4037;">境界：<b style="color:#d84315;">Lv.${level} ${realmName}</b></span>
-                    <span style="color:#5d4037;">技艺熟练：<b style="color:#d84315;">${expStr}</b></span>
+                <div class="ink_cook_header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 25px; background:rgba(0,0,0,0.03); border-bottom:1px solid #ddd;">
+                    <div>
+                        <span style="color:#5d4037;">境界：<b style="color:#d84315;">Lv.${level} ${realmName}</b></span>
+                        <span style="color:#5d4037; margin-left:15px;">技艺熟练：<b style="color:#d84315;">${expStr}</b></span>
+                    </div>
+                    <button class="ink_btn_gallery" onclick="UICook.showRecipeGallery()">📖 料理图鉴</button>
                 </div>
 
                 <div class="ink_cook_upper">
@@ -47,12 +75,7 @@ let UICook = {
                             <span class="ink_hint_text">投料入鼎，定火候</span>
                         </div>
                         <div class="ink_method_tabs">
-                            ${cookTypes.map(t => `
-                                <button class="ink_tab ${t.id === this.currentCookType ? 'active' : ''}" 
-                                        onclick="UICook.switchMethod('${t.id}', this)">
-                                    ${t.name}
-                                </button>
-                            `).join('')}
+                            ${tabsHtml}
                         </div>
                     </div>
 
@@ -79,10 +102,59 @@ let UICook = {
         this.fullRefresh();
     },
 
+    showRecipeGallery: function() {
+        if (typeof foods === 'undefined') {
+            if(window.showToast) window.showToast("图鉴数据未加载");
+            return;
+        }
+
+        const list = foods.filter(f => f.obtain === "craft");
+        const qualityColors = ["#9e9e9e", "#388e3c", "#1976d2", "#7b1fa2", "#e65100", "#d32f2f"];
+
+        const gridHtml = list.map(f => {
+            const isUnlocked = player.cooking_info && player.cooking_info.includes(f.id);
+            const icon = isUnlocked ? (f.icon || '🍲') : '<span style="font-size:32px; font-weight:bold;">?</span>';
+            const name = isUnlocked ? f.name : '???';
+
+            let nameColor = "#999";
+            let bgStyle = "background:#f5f5f5; color:#aaa;";
+            let cursor = "cursor:default;";
+
+            if (isUnlocked) {
+                const q = f.quality || 0;
+                nameColor = qualityColors[q] || qualityColors[0];
+                bgStyle = "background:#fff;";
+                cursor = "cursor:pointer;";
+            }
+
+            const events = isUnlocked
+                ? `onmouseover="if(window.showRecipeTooltip) window.showRecipeTooltip(event, '${f.id}')" onmouseout="if(window.hideTooltip) window.hideTooltip()"`
+                : '';
+
+            return `
+                <div class="ink_gallery_card" style="${bgStyle} ${cursor}" ${events}>
+                    <div class="ink_gallery_icon" style="${isUnlocked?'':'opacity:0.5;'}">${icon}</div>
+                    <div class="ink_gallery_name" style="color:${nameColor};">${name}</div>
+                </div>
+            `;
+        }).join('');
+
+        const content = `
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; padding:10px; max-height:60vh; overflow-y:auto;">
+                ${gridHtml}
+            </div>
+        `;
+
+        if (window.UtilsModal) {
+            UtilsModal.showInteractiveModal("料理图鉴", content, null, "modal_gallery", 60, 70);
+        }
+    },
+
     switchMethod: function(type, btn) {
         this.currentCookType = type;
         document.querySelectorAll('.ink_tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        if (!btn) btn = document.getElementById('btn_method_' + type);
+        if (btn) btn.classList.add('active');
         this.updateResultPreview();
     },
 
@@ -105,9 +177,32 @@ let UICook = {
         this.updateHeaderInfo();
     },
 
+    onOneKeyAdd: function() {
+        const hint = window.UtilCook.getRecipeHint(this.selectedMaterials);
+        if (!hint) return;
+        const neededIds = hint.recipe[0];
+        const newSelection = [];
+        for (let id of neededIds) {
+            const item = player.inventory.find(i => i.id === id && i.count > 0);
+            if (item) {
+                newSelection.push(item);
+            } else {
+                if(window.showToast) window.showToast("材料不足，无法一键放入");
+                return;
+            }
+        }
+        this.selectedMaterials = newSelection;
+        if (this.currentCookType !== hint.cookType) {
+            this.switchMethod(hint.cookType);
+        } else {
+            this.fullRefresh();
+        }
+    },
+
     updateHeaderInfo: function() {
         const header = document.querySelector('.ink_cook_header');
         if (!header || !window.UtilsLifeSkills) return;
+
         const skill = UtilsLifeSkills.getSkillData('cooking');
         const maxExp = UtilsLifeSkills.getNextLevelExp(skill.level);
         const realmNames = ["初窥门径", "略有小成", "融会贯通", "登峰造极", "返璞归真"];
@@ -115,11 +210,19 @@ let UICook = {
         const realmName = realmNames[idx];
         const expStr = (skill.level >= 10) ? "已臻化境" : `${skill.exp} / ${maxExp}`;
 
-        // 【修改】保持内容结构，样式由 CSS .ink_cook_header 控制
-        header.innerHTML = `
-            <span style="color:#5d4037;">境界：<b style="color:#d84315;">Lv.${skill.level} ${realmName}</b></span>
-            <span style="color:#5d4037;">技艺熟练：<b style="color:#d84315;">${expStr}</b></span>
-        `;
+        const bTags = header.querySelectorAll('b');
+        if (bTags.length >= 2) {
+            bTags[0].innerText = `Lv.${skill.level} ${realmName}`;
+            bTags[1].innerText = expStr;
+        } else {
+            header.innerHTML = `
+                <div>
+                    <span style="color:#5d4037;">境界：<b style="color:#d84315;">Lv.${skill.level} ${realmName}</b></span>
+                    <span style="color:#5d4037; margin-left:15px;">技艺熟练：<b style="color:#d84315;">${expStr}</b></span>
+                </div>
+                <button class="ink_btn_gallery" onclick="UICook.showRecipeGallery()">📖 料理图鉴</button>
+            `;
+        }
     },
 
     renderMaterialGrid: function() {
@@ -156,8 +259,7 @@ let UICook = {
         `).join('');
     },
 
-    // --- 【修改 1】移除了 = xxx 的显示代码 ---
-    // --- 【修改 3】全面放大预览区 (左侧结果 + 右侧灵感推演) ---
+    // --- 【关键修改】更新预览逻辑：增加“背包有货”样式 ---
     updateResultPreview: function() {
         const frame = document.getElementById('ink_result_card');
         if (!frame) return;
@@ -165,9 +267,10 @@ let UICook = {
         const res = window.UtilCook.getMatchResult(this.selectedMaterials, this.currentCookType);
         const hintRecipe = window.UtilCook.getRecipeHint(this.selectedMaterials);
 
-        // ================= 左侧 HTML (预估所得) 放大 =================
+        this.checkAndToggleOneKeyBtn(hintRecipe);
+
+        // --- 左侧 HTML ---
         let leftHtml = "";
-        // 盒子尺寸 60->80, 图标 30->40
         const unknownBoxStyle = `width:80px;height:80px;border:2px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff;color:#ccc;font-size:40px;margin-right:15px;`;
         const knownBoxStyle = `width:80px;height:80px;border:1px solid #d7ccc8;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff;font-size:42px;margin-right:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05);`;
 
@@ -200,7 +303,7 @@ let UICook = {
                 </div>`;
         }
 
-        // ================= 右侧 HTML (灵感推演) 放大 =================
+        // --- 右侧 HTML (灵感) ---
         let rightHtml = "";
         if (hintRecipe && window.GAME_DB) {
             const recIds = hintRecipe.recipe[0];
@@ -208,15 +311,43 @@ let UICook = {
                 const it = window.GAME_DB.items.find(i => i.id === id);
                 const name = it ? it.name : '未知';
                 const icon = it ? (it.icon || '📦') : '📦';
-                const isSelected = this.selectedMaterials.some(m => m.id === id);
 
-                // 【修改】卡片尺寸放大: 40x48 -> 60x72
-                const cardStyle = `display:flex;flex-direction:column;align-items:center;justify-content:center;width:60px;height:72px;border:1px solid ${isSelected?'#8bc34a':'#e0e0e0'};background:${isSelected?'#f1f8e9':'#fafafa'};border-radius:6px;margin-right:6px;opacity:${isSelected?1:0.6};`;
+                // 状态检查
+                const isSelected = this.selectedMaterials.some(m => m.id === id);
+                // 检查背包是否有货 (id匹配且数量大于0)
+                const hasStock = player.inventory.some(i => i.id === id && i.count > 0);
+
+                let borderColor, bgColor, borderStyle, opacity, textColor;
+
+                if (isSelected) {
+                    // 已选中（绿色）
+                    borderColor = '#8bc34a';
+                    bgColor = '#f1f8e9';
+                    borderStyle = 'solid';
+                    opacity = 1;
+                    textColor = '#33691e';
+                } else if (hasStock) {
+                    // 背包有货未选（淡蓝虚线）
+                    borderColor = '#2d2d2d'; // 亮蓝边框
+                    bgColor = '#fafafa';     // 淡蓝背景
+                    borderStyle = 'solid';  // 虚线
+                    opacity = 1;
+                    textColor = '#2f2e2e';   // 深蓝文字
+                } else {
+                    // 无货（灰色）
+                    borderColor = '#e0e0e0';
+                    bgColor = '#fafafa';
+                    borderStyle = 'solid';
+                    opacity = 0.6;
+                    textColor = '#999';
+                }
+
+                const cardStyle = `display:flex;flex-direction:column;align-items:center;justify-content:center;width:60px;height:72px;border:1px ${borderStyle} ${borderColor};background:${bgColor};border-radius:6px;margin-right:6px;opacity:${opacity};`;
 
                 return `
-                    <div style="${cardStyle}" title="${name}">
+                    <div style="${cardStyle}" title="${name} (${hasStock ? '有库存' : '未持有'})">
                         <div style="font-size:32px;margin-bottom:4px;">${icon}</div>
-                        <div style="font-size:14px;color:${isSelected?'#33691e':'#999'};width:100%;text-align:center;overflow:hidden;white-space:nowrap;font-weight:bold;">${name}</div>
+                        <div style="font-size:14px;color:${textColor};width:100%;text-align:center;overflow:hidden;white-space:nowrap;font-weight:bold;">${name}</div>
                     </div>
                 `;
             }).join('<div style="color:#ccc;margin:0 4px;font-size:24px;">+</div>');
@@ -224,12 +355,10 @@ let UICook = {
             const methodMap = { "Boiling": "水煮", "Sauteing": "煎炒", "Roasting": "火烤", "Frying": "油炸" };
             const methodStr = methodMap[hintRecipe.cookType] || hintRecipe.cookType;
             const isMethodCorrect = (this.currentCookType === hintRecipe.cookType);
-
-            // 【修改】方式标签放大: font 11 -> 16
             const methodStyle = `padding:4px 10px;border-radius:6px;font-size:16px;background:${isMethodCorrect?'#ffccbc':'#eee'};color:${isMethodCorrect?'#d84315':'#999'};border:1px solid ${isMethodCorrect?'#ffab91':'#ddd'};margin-left:8px;font-weight:bold;`;
 
             rightHtml = `
-                <div class="ink_preview_right" style="flex:1.4;border-left:1px dashed #ccc;padding-left:15px;margin-left:10px;display:flex;flex-direction:column;justify-content:center;">
+                <div class="ink_preview_right" style="flex:2;border-left:1px dashed #ccc;padding-left:15px;margin-left:10px;display:flex;flex-direction:column;justify-content:center;">
                     <div style="font-size:16px;color:#aaa;margin-bottom:8px;display:flex;justify-content:space-between;font-weight:bold;">
                         <span>💡 灵感推演</span>
                     </div>
@@ -240,15 +369,41 @@ let UICook = {
                 </div>
             `;
         } else {
-            // 【修改】无头绪文字放大
             rightHtml = `
                 <div class="ink_preview_right" style="flex:1.4;border-left:1px dashed #ccc;padding-left:15px;margin-left:10px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:20px;">
                     毫无头绪...
                 </div>
             `;
         }
-
         frame.innerHTML = `<div style="display:flex;width:100%;height:100%;padding:5px;">${leftHtml}${rightHtml}</div>`;
+    },
+
+    checkAndToggleOneKeyBtn: function(hint) {
+        const btn = document.getElementById('ink_btn_onekey');
+        if (!btn) return;
+
+        let canAdd = false;
+        if (hint && hint.recipe && hint.recipe[0]) {
+            const requiredIds = hint.recipe[0];
+            const hasAll = requiredIds.every(reqId =>
+                player.inventory.some(i => i.id === reqId && i.count > 0)
+            );
+            if (hasAll) canAdd = true;
+        }
+
+        if (canAdd) {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.borderColor = "#d84315";
+            btn.style.color = "#d84315";
+            btn.style.cursor = "pointer";
+        } else {
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.style.borderColor = "#ccc";
+            btn.style.color = "#999";
+            btn.style.cursor = "not-allowed";
+        }
     },
 
     onListOut: function(e) { if (typeof hideTooltip === 'function') hideTooltip(); },
@@ -276,76 +431,54 @@ let UICook = {
         if (item && window.TooltipManager) window.TooltipManager.showShopItem(e, item.id);
     },
 
-    // --- 【修改 2】CSS 样式：ink_pot_list 增加 align-content: center ---
     _applyInkStyles: function() {
         if (document.getElementById('ink_pure_style')) return;
         const style = document.createElement('style');
         style.id = 'ink_pure_style';
         style.innerHTML = `
-            /* --- 全局字体 --- */
             .ink_cook_root { display: flex; flex-direction: column; height: 100%; font-family: "KaiTi", serif; }
-            
-            /* --- 顶部信息栏 (放大) --- */
             .ink_cook_header { font-size: 22px; line-height: 1.5; } 
-
-            /* --- 上半部分布局 --- */
             .ink_cook_upper { flex: 0 0 auto; display: flex; border-bottom: 1px dashed #ccc; padding: 12px; gap: 12px; background: #fffdfb; }
-            
-            /* --- 左上：预览区 --- */
-            .ink_preview_section { flex: 1; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background: #fff; display: flex; flex-direction: column; }
-            
-            /* 标题统一放大 */
+            .ink_preview_section { flex: 2; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background: #fff; display: flex; flex-direction: column; }
             .ink_sub_title { font-size: 22px; color: #5d4037; margin-bottom: 10px; font-weight: bold; border-left: 4px solid #d84315; padding-left: 8px; line-height: 1; }
-            
-            /* 结果框 & 提示字 */
             .ink_result_frame { flex: 1; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center; min-height: 90px; margin-bottom: 10px; border: 1px dashed #ddd; }
-            .ink_hint_text { color: #bbb; letter-spacing: 2px; font-size: 20px; } /* 放大提示字 */
-            
-            /* 烹饪方式 Tab 放大 */
+            .ink_hint_text { color: #bbb; letter-spacing: 2px; font-size: 20px; }
             .ink_method_tabs { display: flex; gap: 8px; justify-content: center; }
             .ink_tab { padding: 6px 16px; border: 1px solid #ccc; background: #fff; border-radius: 20px; cursor: pointer; color: #666; font-size: 18px; transition: all 0.2s; font-family: "KaiTi"; font-weight: bold; }
             .ink_tab.active { background: #5d4037; color: #fff; border-color: #5d4037; transform: scale(1.05); }
-            
-            /* --- 右上：锅 --- */
-            .ink_pot_section { width: 160px; display: flex; flex-direction: column; } /* 稍微加宽 */
+            .ink_pot_section { flex: 1; display: flex; flex-direction: column; }
             .ink_pot_list { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-content: center; justify-content: center; padding: 5px 0; }
-            
             .ink_pot_wrapper { width: 60px; display: flex; flex-direction: column; align-items: center; }
             .ink_pot_circle { width: 42px; height: 42px; border-radius: 50%; border: 1px solid #d7ccc8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; background: #fff; font-size: 22px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .ink_pot_del { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: #e57373; color: #fff; font-size: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; display: none; }
             .ink_pot_circle:hover .ink_pot_del { display: flex; }
             .ink_pot_text { font-size: 16px; color: #555; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; width: 100%; text-align: center; font-weight: bold; }
-            
-            /* 起锅按钮 放大 */
             .ink_btn_execute { margin-top: auto; background: #d84315; color: #fff; border: none; padding: 10px; border-radius: 6px; font-size: 22px; cursor: pointer; font-family: "KaiTi"; font-weight: bold; box-shadow: 0 2px 4px rgba(216, 67, 21, 0.3); transition: all 0.2s; }
             .ink_btn_execute:hover { background: #bf360c; transform: translateY(-1px); }
-            
-            /* --- 下半部分：食材列表 --- */
             .ink_cook_lower { flex: 1; display: flex; flex-direction: column; padding: 12px; background: #fdfbf7; overflow: hidden; }
             .ink_scroll_area { flex: 1; overflow-y: auto; padding-right: 5px; }
-            
-            /* 【核心调整】网格布局优化：宽度改回 100px，让一行能放更多，从而减少行数 */
             .ink_grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-            
             .ink_grid_item { aspect-ratio: 1; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: all 0.1s; }
             .ink_grid_item:hover { border-color: #8d6e63; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
             .ink_grid_item.selected { border: 3px solid #5d4037; background: #fffefe; }
-            
             .ink_corner_mark { position: absolute; top: 0; right: 0; width: 0; height: 0; border-top: 24px solid #5d4037; border-left: 24px solid transparent; border-top-right-radius: 6px; }
             .ink_corner_mark::after { content: "✓"; position: absolute; top: -22px; right: 2px; color: #fff; font-size: 14px; font-weight: bold; }
-            
-            /* 【核心调整】字体与图标平衡 */
-            .ink_mat_icon { font-size: 36px; margin-bottom: 2px; } /* 图标稍微缩小一点点，腾出空间给字 */
+            .ink_mat_icon { font-size: 36px; margin-bottom: 2px; }
             .ink_mat_name { font-size: 20px; color: #333; width: 95%; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: bold; line-height: 1.2; }
             .ink_mat_stock { font-size: 16px; color: #888; margin-top: 2px; font-weight: bold; }
-            
-            /* 结果详情文字放大 */
             .ink_res_item { display: flex; align-items: center; gap: 10px; width: 100%; }
             .ink_res_ico { font-size: 36px; }
             .ink_res_info { flex: 1; text-align: left; }
             .ink_res_name { font-size: 20px; font-weight: bold; color: #333; }
             .ink_res_desc { font-size: 16px; color: #888; }
             .ink_res_item.unknown .ink_res_ico { opacity: 0.5; }
+            /* --- 图鉴专用样式 --- */
+            .ink_btn_gallery { padding: 5px 12px; border: 1px solid #8d6e63; background: #fff; color: #5d4037; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: "KaiTi"; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .ink_btn_gallery:hover { background: #efebe9; color: #3e2723; }
+            .ink_gallery_card { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #d7ccc8; border-radius: 8px; padding: 10px; transition: all 0.2s; min-height: 100px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+            .ink_gallery_card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+            .ink_gallery_icon { font-size: 40px; margin-bottom: 5px; }
+            .ink_gallery_name { font-size: 16px; font-weight: bold; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         `;
         document.head.appendChild(style);
     }

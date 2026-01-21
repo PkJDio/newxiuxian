@@ -1033,7 +1033,7 @@ const weapons_r1_batch10 = [
         rarity: 1,
         effects: { phy_atk: 11, mag_atk: 3, crit: 1, speed: -3, sharpness: 11 },
         value: 1415,
-        desc: "木杆顶端钉着两块变形的铜片，因长期放置在灵石废矿边，带有细微的法力波动。"
+        desc: "木杆顶端钉着两块变形的铜片，因长期放置在 文废矿边，带有细微的法力波动。"
     },
     {
         id: "weapons_084",
@@ -1132,7 +1132,7 @@ const weapons_r1_batch11 = [
         rarity: 1,
         effects: { phy_atk: 11, mag_atk: 4, crit: 1, speed: -4, sharpness: 10 },
         value: 1450,
-        desc: "木杆顶端镶嵌了带尖角的碎灵石，并用废铜片固定，每次横扫都能带出一丝紊乱气流。"
+        desc: "木杆顶端镶嵌了带尖角的碎 文，并用废铜片固定，每次横扫都能带出一丝紊乱气流。"
     },
     {
         id: "weapons_093",
@@ -1231,7 +1231,7 @@ const weapons_r1_batch12 = [
         rarity: 1,
         effects: { phy_atk: 12, mag_atk: 4, crit: 1, speed: -4, sharpness: 8 },
         value: 1520,
-        desc: "在沉重的生铁块中嵌入了几枚废弃灵石，挥动时能带起一阵紊乱的重力波动。"
+        desc: "在沉重的生铁块中嵌入了几枚废弃 文，挥动时能带起一阵紊乱的重力波动。"
     },
     {
         id: "weapons_102",
@@ -1924,7 +1924,7 @@ const weapons_r1_batch19 = [
         rarity: 1,
         effects: { phy_atk: 12, mag_atk: 4, mag_crit: 1, speed: -6, penetration: 11 },
         value: 1460,
-        desc: "在灵石铺子用了几十年的老秤砣，因为长期接触灵物，铁块里渗入了一丝重力感。"
+        desc: "在 文铺子用了几十年的老秤砣，因为长期接触灵物，铁块里渗入了一丝重力感。"
     },
     {
         id: "weapons_165",
@@ -2617,7 +2617,7 @@ const weapons_r2_batch2 = [
         rarity: 2,
         effects: { phy_atk: 10, mag_atk: 4, crit: 6, speed: 5, sharpness: 20 },
         value: 5530,
-        desc: "在硬木杆上包了一层薄钢皮，并在槽内嵌入了碎灵石粉，手感扎实。"
+        desc: "在硬木杆上包了一层薄钢皮，并在槽内嵌入了碎 文粉，手感扎实。"
     },
     {
         id: "weapons_228",
@@ -2748,7 +2748,7 @@ const weapons_r2_batch3 = [
         rarity: 2,
         effects: { phy_atk: 14, mag_atk: 5, crit: 8, speed: 5, sharpness: 33 },
         value: 7410,
-        desc: "在淬火液中加入了灵石碎屑，钩身表面隐约可见如丝线般的符文脉络。"
+        desc: "在淬火液中加入了 文碎屑，钩身表面隐约可见如丝线般的符文脉络。"
     },
     {
         id: "weapons_240",
@@ -3508,7 +3508,7 @@ const weapons_r2_batch11 = [
         rarity: 2,
         effects: { phy_atk: 22, mag_atk: 7, crit: 2, speed: -7, sharpness: 20 },
         value: 5710,
-        desc: "在宽大的木刃上涂抹了一层灵石废灰，看起来脏兮兮的，但挥舞时确实带点法力感。"
+        desc: "在宽大的木刃上涂抹了一层 文废灰，看起来脏兮兮的，但挥舞时确实带点法力感。"
     },
     {
         id: "weapons_309",
@@ -4071,13 +4071,13 @@ const weapons_r2_batch16 = [
     },
     {
         id: "weapons_360",
-        name: "地摊上的古怪灵石弩",
+        name: "地摊上的古怪 文弩",
         type: "weapon" , subType: "弩",
         combatType: "远射",
         rarity: 2,
         effects: { phy_atk: 19, mag_atk: 19, crit: 6, speed: -12, sharpness: 48 },
         value: 8880,
-        desc: "弩身歪歪扭扭地镶嵌着几颗发乌的灵石，虽然看起来随时会散架，但对法力有奇特增幅。"
+        desc: "弩身歪歪扭扭地镶嵌着几颗发乌的 文，虽然看起来随时会散架，但对法力有奇特增幅。"
     }
 ];
 const weapons_r2_batch17 = [
@@ -4540,7 +4540,7 @@ const weapons_r2_batch21 = [
         rarity: 2,
         effects: { phy_atk: 14, mag_atk: 14, mag_crit: 8, speed: -5, penetration: 57 },
         value: 8610,
-        desc: "武馆淘汰的演练具，木料已经腐朽发黑，由于长期被劣质灵石摩擦，表面凹凸不平。"
+        desc: "武馆淘汰的演练具，木料已经腐朽发黑，由于长期被劣质 文摩擦，表面凹凸不平。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Pen 40, Spd 8) ---
@@ -4665,7 +4665,7 @@ const weapons_r2_batch22 = [
     },
     {
         id: "weapons_414",
-        name: "地摊上的古怪灵石片",
+        name: "地摊上的古怪 文片",
         type: "weapon" , subType: "灵镜",
         combatType: "法宝",
         rarity: 2,
@@ -4863,7 +4863,7 @@ const weapons_r2_batch24 = [
     },
     {
         id: "weapons_432",
-        name: "地摊上的古怪灵石片",
+        name: "地摊上的古怪 文片",
         type: "weapon" , subType: "玉佩",
         combatType: "法宝",
         rarity: 2,
@@ -7085,7 +7085,7 @@ const weapons_r3_batch21 = [
     },
     {
         id: "weapons_617",
-        name: "符纹淬灵石盘",
+        name: "符纹淬 文盘",
         type: "weapon" , subType: "阵盘",
         combatType: "法宝",
         rarity: 3,
@@ -7354,7 +7354,7 @@ const weapons_r3_batch23 = [
         effects: { phy_atk: 29, mag_atk: 29, mag_crit: 10, speed: -14, penetration: 72 },
         value: 21330,
         req: { jing: 9, qi: 32, shen: 4 },
-        desc: "名坊流水线出的顶级成品，幡面丝线掺杂了细微的灵石碎屑，法力爆发力在 R3 级别中冠绝全系。"
+        desc: "名坊流水线出的顶级成品，幡面丝线掺杂了细微的 文碎屑，法力爆发力在 R3 级别中冠绝全系。"
     }
 ];
 const weapons_r3_batch24 = [
@@ -7810,7 +7810,7 @@ const weapons_r4_batch2 = [
         effects: { phy_atk: 12, mag_atk: 12, crit: 16, speed: 12, sharpness: 32 },
         value: 23600,
         req: { jing: 18, qi: 0, shen: 42 },
-        desc: "江湖算计高手的随身物，算珠皆由导灵石磨制，不仅能计算账目，更是杀人于无形的法器。"
+        desc: "江湖算计高手的随身物，算珠皆由导 文磨制，不仅能计算账目，更是杀人于无形的法器。"
     },
     {
         id: "weapons_679",
@@ -8279,7 +8279,7 @@ const weapons_r4_batch4 = [
         effects: { phy_atk: 56, mag_atk: 19, crit: 13, speed: -16, sharpness: 96 },
         value: 37320,
         req: { jing: 36, qi: 0, shen: 24 },
-        desc: "矛头核心嵌入了一颗紫髓灵石，极大地增强了对真元的增幅作用，刺击时伴有雷鸣异响。"
+        desc: "矛头核心嵌入了一颗紫髓 文，极大地增强了对真元的增幅作用，刺击时伴有雷鸣异响。"
     },
     {
         id: "weapons_720",
@@ -9353,7 +9353,7 @@ const weapons_r4_batch10 = [
         effects: { phy_atk: 48, mag_atk: 16, mag_crit: 4, speed: -24, penetration: 44 },
         value: 23360,
         req: { jing: 24, qi: 30, shen: 6 },
-        desc: "印身流转着五彩光华，通过内部的灵石核心平衡阴阳，是成名散修常用的多功能攻防法宝。"
+        desc: "印身流转着五彩光华，通过内部的 文核心平衡阴阳，是成名散修常用的多功能攻防法宝。"
     },
     {
         id: "weapons_813",
@@ -9626,7 +9626,7 @@ const weapons_r4_batch11 = [
         effects: { phy_atk: 50, mag_atk: 16, mag_crit: 22, speed: -24, penetration: 152 },
         value: 41360,
         req: { jing: 6, qi: 24, shen: 30 },
-        desc: "盘眼中心嵌有一枚完整的紫髓灵石，极大地增幅了神识对阵法的操控力，法力输出极其狂暴。"
+        desc: "盘眼中心嵌有一枚完整的紫髓 文，极大地增幅了神识对阵法的操控力，法力输出极其狂暴。"
     },
     {
         id: "weapons_837",
@@ -11840,7 +11840,7 @@ const weapons_r5_batch10 = [
         effects: { phy_atk: 60, mag_atk: 20, mag_crit: 5, speed: -30, penetration: 55 },
         value: 36500,
         req: { jing: 30, qi: 38, shen: 7 },
-        desc: "印身流转着五彩斑斓的华光，能通过内部的灵石核心平衡五行。既是强力的攻击法宝，亦能作为稳固阵眼的基石。"
+        desc: "印身流转着五彩斑斓的华光，能通过内部的 文核心平衡五行。既是强力的攻击法宝，亦能作为稳固阵眼的基石。"
     },
     {
         id: "weapons_1128",
@@ -12657,7 +12657,7 @@ const weapons_r6_batch2 = [
         effects: { phy_atk: 45, mag_atk: 0, crit: 17, speed: 10, sharpness: 66 },
         value: 49320,
         req: { jing: 45, qi: 0, shen: 45 },
-        desc: "在灵气干枯后，从废弃的灵石矿脉中强行剥离出的曲刃。虽然表面粗糙，但每一次划击都带有沉重的物理撕裂感。"
+        desc: "在灵气干枯后，从废弃的 文矿脉中强行剥离出的曲刃。虽然表面粗糙，但每一次划击都带有沉重的物理撕裂感。"
     },
     {
         id: "weapons_1199",

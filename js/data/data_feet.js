@@ -144,7 +144,7 @@ const feet_r1_batch1 = [
         value: 585,
         durability: 45,
         effects: { phy_def: 4, mag_def: 12, speed: -18, hp_max: 50, phy_atk: 5 },
-        desc: "【板甲】鞋底似乎镶嵌过什么灵石，但早已脱落，只留下几个抗魔的孔洞。"
+        desc: "【板甲】鞋底似乎镶嵌过什么 文，但早已脱落，只留下几个抗魔的孔洞。"
     }
 ];
 // Batch 2: Rarity 1 - Heavy (重甲)
@@ -1081,7 +1081,7 @@ const feet_r2_batch5 = [
         value: 3060,
         durability: 25,
         effects: { phy_def: 1, mag_def: 5, speed: 18, mag_atk: 4, qi: 1, shen: 2 },
-        desc: "【布甲】锦面上的纹路因反复摩擦而变得模糊，原本镶嵌的细碎灵石也已脱落，仅余微弱灵气。"
+        desc: "【布甲】锦面上的纹路因反复摩擦而变得模糊，原本镶嵌的细碎 文也已脱落，仅余微弱灵气。"
     },
 
     // --- [High Tier] R2 布甲 (总防: 10 | 速: 30 | 法攻: 5 | 属性: 4 | 售价: 4770) ---
