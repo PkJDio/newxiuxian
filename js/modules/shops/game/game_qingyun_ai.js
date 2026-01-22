@@ -1,236 +1,446 @@
-// js/modules/games/game_qingyun_ai.js
-// 青云赛 - AI 决策核心 (AI Brain) v2.0 - 均等概率版
-// 核心算法：蒙特卡洛模拟 (Monte Carlo Simulation)
+// js/modules/shops/game/game_qingyun_ai.js
+// 青云赛 - AI 核心逻辑 v8.1 (引入默认敌意机制：非友即敌，平衡阴阳谋)
 
 class QingyunAI {
     constructor() {
-        // 骰子六面配置 (默认每一面概率相等，为 1/6)
-        this.DICE_FACES = [
-            { name: '德', type: 'move', steps: 3 },
-            { name: '才', type: 'move', steps: 2 },
-            { name: '功', type: 'move', steps: 1 },
-            { name: '脏', type: 'stay', steps: 0 },
-            { name: '升', type: 'promote', steps: 0 },
-            { name: '降', type: 'demote', steps: 0 }
-        ];
-
-        // 模拟次数 (保持 500 次以获得较好的准确度)
-        this.SIMULATION_COUNT = 500;
+        this.TIER_CONFIG = {
+            // 低级场
+            1: { turnDepth: 2, simCount: 20, errorMargin: 0.2, betThreshold: 0.6 },
+            // 中级场
+            2: { turnDepth: 5, simCount: 50, errorMargin: 0.1, betThreshold: 0.8 },
+            // 高级场
+            3: { turnDepth: -1, simCount: 100, errorMargin: 0.0, betThreshold: 0.9 }
+        };
     }
 
-    /**
-     * AI 决策入口
-     */
-    decide(model, aiPlayer, config) {
-        // 1. 根据智商调整模拟次数
-        const simCount = config.canPredictDice ? this.SIMULATION_COUNT : 50;
+    decide(model, aiPlayer, tier) {
+        const config = this.TIER_CONFIG[tier] || this.TIER_CONFIG[1];
+        const isBroke = aiPlayer.chips <= 0;
+        const earnings = aiPlayer.strategyEarnings || 0;
 
-        // 2. 运行蒙特卡洛模拟
-        const winProbs = this.runMonteCarlo(model, simCount);
+        console.groupCollapsed(`🤖 ${aiPlayer.name} (Lv.${tier}) | R${model.round} | 🎲剩${model.diceDeck.length} | 💰赚${earnings}`);
 
-        // 3. 评估行动
-        const actions = [];
+        // 1. 蒙特卡洛模拟
+        const simResult = this._runTurnBasedSimulation(model, aiPlayer, config.turnDepth, config.simCount);
+        const winProbs = simResult.winProbs;
+        const hotspots = simResult.hotspots;
 
-        // --- A: 拿本轮下注卡 ---
-        for (let color in model.roundBetDeck) {
-            const stack = model.roundBetDeck[color];
-            if (stack.length > 0) {
-                const cardVal = stack[0];
-                // 简单估值：胜率 * 卡值 - 成本
-                const ev = (winProbs[color].win * cardVal + winProbs[color].second * 1) * 10 - 10;
-                actions.push({ type: 'takeBet', color: color, score: ev });
+        // 找出领头羊
+        let maxProb = -1;
+        let leaderColor = null;
+        for(let c in winProbs) {
+            if(winProbs[c] > maxProb) { maxProb = winProbs[c]; leaderColor = c; }
+        }
+
+        console.log(`📊 [模拟预测] 领跑:${leaderColor}(${(maxProb*100).toFixed(0)}%)`,
+            Object.entries(winProbs).map(([k,v]) => `${k}:${(v*100).toFixed(0)}%`).join(', ')
+        );
+
+        let actions = [];
+
+        // ==========================================
+        // A. 拿取下注卡
+        // ==========================================
+        for (let color of model.COLORS) {
+            const deck = model.roundBetDeck[color];
+            if (deck && deck.length > 0) {
+                const cardVal = deck[0];
+                const cost = isBroke ? 0 : 1;
+                const pWin = winProbs[color];
+                const pSecond = (1 - pWin) * 0.3;
+
+                let baseEv = (pWin * cardVal) + (pSecond * 1) - cost;
+                let finalScore = baseEv;
+                let logTags = [];
+
+                if (color === leaderColor && pWin > 0.3) { finalScore += 0.6; logTags.push("👑领跑"); }
+                if (pWin > 0.8) { finalScore += 2.0; logTags.push("🔥稳赢"); }
+                else if (pWin > 0.6) { finalScore += 1.0; logTags.push("👍优选"); }
+                else if (pWin > 0.45) { finalScore += 0.4; logTags.push("👌潜力"); }
+
+                // 护盘
+                if (this._hasMyFinalBet(model, aiPlayer, 'winner', color)) {
+                    finalScore += 1.5; logTags.push("🛡️本命");
+                }
+
+                console.log(`   🎫 选项 [${color} x${cardVal}]: 胜率${(pWin*100).toFixed(0)}% | 基础EV:${baseEv.toFixed(2)} | 加成:[${logTags.join(',')}] -> 得分:${finalScore.toFixed(2)}`);
+                actions.push({ type: 'takeBet', color: color, score: finalScore, desc: `拿[${color} x${cardVal}]` });
             }
         }
 
-        // --- B: 掷骰子 ---
+        // ==========================================
+        // B. 随机掷骰子
+        // ==========================================
         if (model.diceDeck.length > 0) {
-            const myInterests = this._calculateInterests(aiPlayer, model);
+            const cost = isBroke ? 0 : 1;
+            let rollScore = 2 - cost;
 
-            model.diceDeck.forEach(diceColor => {
-                const impactScore = this._evaluateRollImpact(diceColor, model, myInterests);
+            const currentRankScore = this._calculateProjectedScore(model, aiPlayer, model.getRankList()[0].color);
+            const futureRankScore = this._calculateProjectedScore(model, aiPlayer, simResult.mostLikelyWinner);
+            const urgency = currentRankScore - futureRankScore;
 
-                // 基础分 15 + 策略分 + AI偏好
-                let rollScore = 15 + impactScore;
-                if (config.rollBias) rollScore += config.rollBias;
-
-                actions.push({ type: 'roll', color: diceColor, score: rollScore });
-            });
+            let logMsg = "";
+            if (tier >= 2) {
+                if (urgency > 0.5) { rollScore += urgency * 2.5; logMsg = `(⚡加速)`; }
+                else if (urgency < -0.5) { rollScore -= 2.0; logMsg = `(🐢拖延)`; }
+            } else {
+                let simpleBias = 0;
+                model.diceDeck.forEach(c => simpleBias += this._getColorInterest(aiPlayer, c));
+                rollScore += (simpleBias / model.diceDeck.length) * 0.3;
+                logMsg = `(🎲随缘)`;
+            }
+            console.log(`   🎲 选项 [随机骰子]: 保底1.0 ${logMsg} -> 得分:${rollScore.toFixed(2)}`);
+            actions.push({ type: 'roll', score: rollScore, desc: `随机掷骰` });
         }
 
-        // --- C: 最终下注 ---
-        if (aiPlayer.chips >= 10) {
-            for (let color of model.COLORS) {
-                if (aiPlayer.finalCards.includes(color)) {
-                    const prob = winProbs[color].win;
-                    const isLateGame = model.pieces.some(p => p.layer === 2); // 进内圈算后期
-                    if (isLateGame && prob > config.betThreshold) {
-                        const ev = (40 * prob * 10) - 50;
-                        actions.push({ type: 'finalBet', color: color, score: ev });
+        // ==========================================
+        // C. 放置计谋 (v8.1: 默认敌意 + 战术博弈)
+        // ==========================================
+        if (aiPlayer.hasStrategy && (isBroke || aiPlayer.chips >= 2)) {
+            const rivalInfo = this._getRivalInfo(model, aiPlayer);
+            const strat = this._findBestStrategy(model, aiPlayer, winProbs, isBroke ? 0 : 2, tier, hotspots, config.simCount, model.diceDeck.length, rivalInfo);
+
+            if (strat) {
+                console.log(`   💡 选项 [计谋]: ${strat.desc} -> 得分:${strat.score.toFixed(2)}`);
+                if (strat.score > -0.5) {
+                    actions.push(strat);
+                }
+            } else {
+                console.log(`   💡 选项 [计谋]: 时机不佳或无价值`);
+            }
+        }
+
+        // ==========================================
+        // D. 最终押注
+        // ==========================================
+        if (aiPlayer.chips >= 5 || isBroke) {
+            const maxProgress = Math.max(...model.pieces.map(p => this._getPieceProgress(p, model.LAYERS)));
+            // 【修改点】 只有进度 > 60% 才开始考虑终注
+            const progressLock = maxProgress < 0.6;
+
+            if (progressLock) {
+                console.log(`   🔒 [终注锁]: 进度${(maxProgress*100).toFixed(0)}% < 60%，跳过`);
+            } else {
+                model.COLORS.forEach(c => {
+                    if (aiPlayer.finalCards.includes(c)) {
+                        const wp = winProbs[c];
+
+                        // 押注冠军
+                        if (!this._hasBetType(model, aiPlayer, 'winner') && wp > config.betThreshold) {
+                            // 避嫌逻辑
+                            const isTakenByRival = model.finalBets.winner.some(b => b.color === c && b.playerId !== aiPlayer.id);
+                            if (isTakenByRival) {
+                                console.log(`   🚫 [避嫌]: ${c}已被抢注冠军，放弃跟投`);
+                            } else {
+                                const score = (40 * wp) - (isBroke?0:5);
+                                console.log(`   🏆 选项 [押注${c}冠军]: 胜率${(wp*100).toFixed(0)}% -> 得分:${score.toFixed(2)}`);
+                                actions.push({ type: 'finalBet', betType: 'winner', color: c, score: score, desc: `押注 [${c}] 冠军` });
+                            }
+                        }
+
+                        // 押注倒数
+                        const lp = 1.0 - wp - 0.1;
+                        if (!this._hasBetType(model, aiPlayer, 'loser') && lp > config.betThreshold) {
+                            const score = (40 * lp) - (isBroke?0:5);
+                            console.log(`   💩 选项 [押注${c}倒数]: 败率${(lp*100).toFixed(0)}% -> 得分:${score.toFixed(2)}`);
+                            actions.push({ type: 'finalBet', betType: 'loser', color: c, score: score, desc: `押注 [${c}] 倒数` });
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- E. 跳过 ---
+        const skipCost = isBroke ? 0 : 1;
+        actions.push({ type: 'skip', score: -skipCost - 0.1, desc: '跳过' });
+
+        if (config.errorMargin > 0) actions.forEach(a => a.score += (Math.random() - 0.5) * config.errorMargin);
+        actions.sort((a, b) => b.score - a.score);
+        const best = actions[0];
+
+        console.log(`✅ [最终决策] ${best.desc} (分值:${best.score.toFixed(2)})`);
+        console.groupEnd();
+
+        return best;
+    }
+
+    _runTurnBasedSimulation(realModel, aiPlayer, maxTurns, iterations) {
+        const winCounts = {};
+        realModel.COLORS.forEach(c => winCounts[c] = 0);
+        const hotspots = {};
+        if (realModel.diceDeck.length === 0) {
+            const ranks = realModel.getRankList();
+            const probs = {};
+            realModel.COLORS.forEach(c => probs[c] = (c === ranks[0].color ? 1.0 : 0.0));
+            return { winProbs: probs, mostLikelyWinner: ranks[0].color, hotspots: {} };
+        }
+        for (let i = 0; i < iterations; i++) {
+            const simState = this._cloneState(realModel);
+            let turnsToSimulate = (maxTurns === -1) ? 999 : maxTurns;
+            while (turnsToSimulate > 0 && simState.deck.length > 0) {
+                if (Math.random() < 0.6) {
+                    const randIndex = Math.floor(Math.random() * simState.deck.length);
+                    const color = simState.deck.splice(randIndex, 1)[0];
+                    this._simulateMove(simState, color, hotspots);
+                }
+                turnsToSimulate--;
+            }
+            const winner = this._getSimWinner(simState);
+            winCounts[winner]++;
+        }
+        const winProbs = {};
+        let mostLikelyWinner = null;
+        let maxCount = -1;
+        realModel.COLORS.forEach(c => {
+            const count = winCounts[c];
+            winProbs[c] = count / iterations;
+            if (count > maxCount) { maxCount = count; mostLikelyWinner = c; }
+        });
+        return { winProbs, mostLikelyWinner, hotspots };
+    }
+
+    _cloneState(model) {
+        return {
+            pieces: model.pieces.map(p => ({...p})),
+            deck: [...model.diceDeck],
+            layers: model.LAYERS
+        };
+    }
+
+    _simulateMove(state, color, hotspots) {
+        const p = state.pieces.find(pc => pc.color === color);
+        if (!p || p.isFinished) return;
+        const movingGroup = state.pieces.filter(other =>
+            !other.isFinished && other.layer === p.layer && other.index === p.index && other.stackPos >= p.stackPos
+        );
+        movingGroup.sort((a, b) => a.stackPos - b.stackPos);
+        const roll = Math.random();
+        if (roll < 0.5) {
+            const steps = Math.floor(Math.random() * 3) + 1;
+            this._applyStep(state, movingGroup, steps);
+        } else if (roll < 0.85) {
+            if (p.layer < 2) {
+                const r = p.index / state.layers[p.layer].steps;
+                const newLayer = p.layer + 1;
+                const newIndex = Math.floor(r * state.layers[newLayer].steps);
+                this._moveGroupTo(state, movingGroup, newLayer, newIndex);
+            }
+        }
+        if (hotspots) {
+            const leader = movingGroup[0];
+            if (!leader.isFinished) {
+                const key = `${leader.layer}_${leader.index}`;
+                hotspots[key] = (hotspots[key] || 0) + 1;
+            }
+        }
+    }
+
+    _applyStep(state, group, steps) {
+        const leader = group[0];
+        let layer = leader.layer;
+        let index = leader.index;
+        for (let i = 0; i < steps; i++) {
+            index++;
+            const maxIdx = state.layers[layer].steps - 1;
+            if (index > maxIdx) {
+                if (layer === 2) { group.forEach(p => p.isFinished = true); return; }
+                layer++;
+                index = state.layers[layer].steps - 1;
+            }
+        }
+        this._moveGroupTo(state, group, layer, index);
+    }
+
+    _moveGroupTo(state, group, layer, index) {
+        let baseStack = -1;
+        state.pieces.forEach(p => {
+            if (!p.isFinished && p.layer === layer && p.index === index && !group.includes(p)) {
+                if (p.stackPos > baseStack) baseStack = p.stackPos;
+            }
+        });
+        group.forEach((p, i) => {
+            p.layer = layer;
+            p.index = index;
+            p.stackPos = baseStack + 1 + i;
+        });
+    }
+
+    _getPieceProgress(p, layers) {
+        if (p.isFinished) return 1.1;
+        const offsets = [3, 2, 1];
+        const layerSteps = layers[p.layer].steps;
+        const offset = offsets[p.layer];
+        return (p.index + 1) / (layerSteps + offset);
+    }
+
+    _getSimWinner(state) {
+        let bestP = state.pieces[0];
+        for (let i = 1; i < state.pieces.length; i++) {
+            const p = state.pieces[i];
+            if (p.isFinished && !bestP.isFinished) { bestP = p; continue; }
+            if (!p.isFinished && bestP.isFinished) continue;
+            const scoreP = this._getPieceProgress(p, state.layers);
+            const scoreBest = this._getPieceProgress(bestP, state.layers);
+            if (scoreP > scoreBest + 0.00001) bestP = p;
+            else if (Math.abs(scoreP - scoreBest) <= 0.00001) {
+                if ((p.stackPos||0) > (bestP.stackPos||0)) bestP = p;
+            }
+        }
+        return bestP.color;
+    }
+
+    _calculateProjectedScore(model, ai, winnerColor) {
+        let s = 0;
+        ai.roundCards.forEach(c => { if (c.color === winnerColor) s += c.val; });
+        return s;
+    }
+
+    _getColorInterest(ai, color) {
+        let s = 0;
+        ai.roundCards.forEach(c => { if(c.color===color) s += 0.5; });
+        if(!ai.finalCards.includes(color)) s += 1;
+        return s;
+    }
+
+    _hasBetType(model, ai, type) { return model.finalBets[type].some(b => b.playerId === ai.id); }
+
+    _hasMyFinalBet(model, ai, type, color) {
+        return model.finalBets[type].some(b => b.playerId === ai.id && b.color === color);
+    }
+
+    _getRivalInfo(model, ai) {
+        const rivalWin = [];
+        const rivalLose = [];
+        model.finalBets.winner.forEach(b => { if (b.playerId !== ai.id) rivalWin.push(b.color); });
+        model.finalBets.loser.forEach(b => { if (b.playerId !== ai.id) rivalLose.push(b.color); });
+        return { rivalWin, rivalLose };
+    }
+
+    // ==========================================
+    // 核心升级：_findBestStrategy (v8.1: 默认敌意 + 阴阳平衡)
+    // ==========================================
+    _findBestStrategy(model, ai, winProbs, cost, tier, hotspots, simCount, diceCount, rivalInfo) {
+        const earnings = ai.strategyEarnings || 0;
+        const isSweet = earnings > 0;
+        const isAddicted = earnings > 12;
+
+        let timeBonus = 0;
+        if (diceCount === 5) timeBonus = 3.0;
+        else if (diceCount === 4) timeBonus = 1.0;
+        else if (diceCount === 3 && isAddicted && tier < 3) timeBonus = 0.5;
+        else return null;
+
+        const greedScore = isSweet && tier < 3 ? Math.min(earnings * 0.05, 2.0) : 0;
+
+        let best = null;
+        let maxS = -999;
+
+        model.pieces.forEach(p => {
+            if(p.isFinished) return;
+
+            const stack = model.pieces.filter(other =>
+                !other.isFinished && other.layer === p.layer && other.index === p.index && other.stackPos >= p.stackPos
+            );
+
+            let stackTacticalVal = 0;
+
+            stack.forEach(sp => {
+                const prob = winProbs[sp.color] || 0;
+                let weight = 0;
+
+                // A. 基础持仓
+                let cardVal = 0;
+                ai.roundCards.forEach(c => { if(c.color===sp.color) cardVal += c.val; });
+
+                if (cardVal > 0) {
+                    weight += 2.0; // 持有卡片 -> 友军
+                } else {
+                    // 【核心修改】没有卡片 -> 默认为敌人 (Default Hostility)
+                    // 只有这样，AI 才会去害那些它没买的、但跑得很快的颜色
+                    weight -= 2.0;
+                }
+
+                // B. 自身终注
+                if (this._hasMyFinalBet(model, ai, 'winner', sp.color)) weight += 10.0;
+                if (this._hasMyFinalBet(model, ai, 'loser', sp.color)) weight -= 10.0;
+
+                // C. 对手终注
+                if (rivalInfo.rivalWin.includes(sp.color)) weight -= 8.0;
+                if (rivalInfo.rivalLose.includes(sp.color)) weight += 8.0;
+
+                // 战术分 = 权重 * 胜率
+                // 如果是没买的领头羊 (weight=-2, prob=0.8) -> 战术分 -1.6 -> 触发阴谋
+                stackTacticalVal += (weight * prob);
+            });
+
+            // 3. 全维扫描
+            const potentialMoves = [];
+            for(let s=1; s<=3; s++) {
+                let tLayer = p.layer;
+                let tIndex = p.index + s;
+                const maxIdx = model.LAYERS[tLayer].steps - 1;
+                if (tIndex > maxIdx) {
+                    if (tLayer < 2) { tLayer++; tIndex = model.LAYERS[tLayer].steps - 1; }
+                    else continue;
+                }
+                potentialMoves.push({ l: tLayer, i: tIndex, type: 'move' });
+            }
+            if (p.layer < 2) {
+                const r = p.index / model.LAYERS[p.layer].steps;
+                const nextL = p.layer + 1;
+                const nextI = Math.floor(r * model.LAYERS[nextL].steps);
+                potentialMoves.push({ l: nextL, i: nextI, type: 'promote' });
+            }
+            if (p.layer > 0) {
+                const r = p.index / model.LAYERS[p.layer].steps;
+                const prevL = p.layer - 1;
+                const prevI = Math.floor(r * model.LAYERS[prevL].steps);
+                potentialMoves.push({ l: prevL, i: prevI, type: 'demote' });
+            }
+
+            // 4. 遍历并评分
+            for (let move of potentialMoves) {
+                const { l, i, type } = move;
+                if (!model.checkStrategyValid(l, i)) continue;
+
+                const key = `${l}_${i}`;
+                const visitCount = hotspots[key] || 0;
+                const prob = visitCount / simCount;
+                const economicEv = prob * 4.0;
+
+                // 阳谋：
+                if (stackTacticalVal > 0) {
+                    let yS = stackTacticalVal + economicEv + timeBonus + greedScore - cost;
+                    if (yS > maxS) {
+                        maxS = yS;
+                        let descType = type === 'move' ? '' : (type==='promote' ? '[升]' : '[降]');
+                        best = {
+                            type:'strategy', layer:l, index:i, stratType:1,
+                            score:yS,
+                            desc:`阳谋${descType}(率:${(prob*100).toFixed(0)}% 赚:${economicEv.toFixed(2)} 战:${stackTacticalVal.toFixed(2)} 贪:${greedScore.toFixed(1)})`
+                        };
+                    }
+                }
+                // 阴谋：
+                else if (tier >= 2 || timeBonus > 0 || greedScore > 0) {
+                    // stackTacticalVal 为负数，取绝对值表示"我有多想害它"
+                    let nS = Math.abs(stackTacticalVal) + economicEv + timeBonus + greedScore - cost;
+
+                    if(model.factories && model.factories.some(f => f.layer===l && f.index===i-1)) nS += 3;
+
+                    if (nS > maxS) {
+                        maxS = nS;
+                        let descType = type === 'move' ? '' : (type==='promote' ? '[升]' : '[降]');
+                        best = {
+                            type:'strategy', layer:l, index:i, stratType:-1,
+                            score:nS,
+                            desc:`阴谋${descType}(率:${(prob*100).toFixed(0)}% 赚:${economicEv.toFixed(2)} 战:${Math.abs(stackTacticalVal).toFixed(2)} 贪:${greedScore.toFixed(1)})`
+                        };
                     }
                 }
             }
-        }
-
-        // 4. 排序与选择
-        actions.sort((a, b) => b.score - a.score);
-
-        if (actions.length === 0 || aiPlayer.chips <= 0) {
-            return { type: 'skip', score: 0 };
-        }
-
-        // 犯错机制
-        if (Math.random() < config.errorRate && actions.length > 1) {
-            const idx = Math.floor(Math.random() * Math.min(3, actions.length));
-            return actions[idx];
-        }
-
-        return actions[0];
-    }
-
-    // ==========================================
-    // 蒙特卡洛模拟引擎 (均等概率版)
-    // ==========================================
-
-    runMonteCarlo(realModel, iterations) {
-        const stats = {};
-        realModel.COLORS.forEach(c => stats[c] = { win: 0, second: 0 });
-
-        const baseState = {
-            pieces: JSON.parse(JSON.stringify(realModel.pieces)),
-            diceDeck: [...realModel.diceDeck],
-            layers: realModel.LAYERS
-        };
-
-        for (let i = 0; i < iterations; i++) {
-            this._simulateOneGame(baseState, stats);
-        }
-
-        const results = {};
-        realModel.COLORS.forEach(c => {
-            results[c] = {
-                win: stats[c].win / iterations,
-                second: stats[c].second / iterations
-            };
         });
-        return results;
-    }
-
-    _simulateOneGame(baseState, stats) {
-        let pieces = JSON.parse(JSON.stringify(baseState.pieces));
-        let deck = [...baseState.diceDeck];
-
-        let winner = null;
-        let loopGuard = 0;
-
-        while (!winner && loopGuard < 100) {
-            loopGuard++;
-
-            // 1. 补充骰子堆 (模拟未来回合)
-            if (deck.length === 0) {
-                deck = ['red', 'blue', 'green', 'yellow', 'white'];
-            }
-
-            // 2. 随机抽一个骰子颜色
-            const rndIdx = Math.floor(Math.random() * deck.length);
-            const color = deck.splice(rndIdx, 1)[0];
-
-            // 3. 随机掷骰子结果 (【修改点】使用均等概率)
-            // 直接从 6 个面中随机选一个
-            const faceIdx = Math.floor(Math.random() * this.DICE_FACES.length);
-            const result = this.DICE_FACES[faceIdx];
-
-            // 4. 执行极速移动逻辑
-            winner = this._fastMoveLogic(pieces, color, result.type, result.steps, baseState.layers);
-        }
-
-        if (winner) {
-            stats[winner.color].win++;
-            const rank = this._fastGetRank(pieces);
-            if (rank[1]) stats[rank[1].color].second++;
-        }
-    }
-
-    // 极速移动逻辑 (保持不变，处理堆叠)
-    _fastMoveLogic(pieces, color, type, steps, layers) {
-        const piece = pieces.find(p => p.color === color);
-        const stack = pieces.filter(p =>
-            p.layer === piece.layer &&
-            p.index === piece.index &&
-            p.stackPos >= piece.stackPos
-        );
-
-        let tLayer = piece.layer;
-        let tIndex = piece.index;
-        let finished = false;
-
-        if (type === 'promote') {
-            tLayer++;
-            if (tLayer > 2) finished = true;
-        } else if (type === 'demote') {
-            tLayer = Math.max(0, tLayer - 1);
-        } else if (type === 'move') {
-            tIndex += steps;
-        }
-
-        if (!finished && tLayer <= 2) {
-            if (tIndex >= layers[tLayer].steps) finished = true;
-        }
-
-        if (finished) {
-            stack.sort((a,b) => a.stackPos - b.stackPos);
-            return stack[stack.length - 1];
-        }
-
-        const destPieces = pieces.filter(p => p.layer === tLayer && p.index === tIndex);
-        let baseHeight = destPieces.length;
-
-        stack.sort((a,b) => a.stackPos - b.stackPos);
-        stack.forEach((p, i) => {
-            p.layer = tLayer;
-            p.index = tIndex;
-            p.stackPos = baseHeight + i;
-        });
-
-        return null;
-    }
-
-    _fastGetRank(pieces) {
-        return [...pieces].sort((a, b) => {
-            if (a.layer !== b.layer) return b.layer - a.layer;
-            if (a.index !== b.index) return b.index - a.index;
-            return b.stackPos - a.stackPos;
-        });
-    }
-
-    // 辅助计算
-    _calculateInterests(aiPlayer, model) {
-        const interests = {};
-        model.COLORS.forEach(c => interests[c] = 0);
-        aiPlayer.roundCards.forEach(c => interests[c.color] += c.val);
-        aiPlayer.finalCards.forEach(c => interests[c] += 2);
-        return interests;
-    }
-
-    _evaluateRollImpact(diceColor, model, interests) {
-        const piece = model.pieces.find(p => p.color === diceColor);
-        if (!piece) return 0;
-
-        const stack = model.pieces.filter(p =>
-            p.layer === piece.layer &&
-            p.index === piece.index &&
-            p.stackPos >= piece.stackPos
-        );
-
-        let score = 0;
-        stack.forEach(p => {
-            if (interests[p.color] > 0) {
-                // 均等概率下，期望步数是 (3+2+1+0+0+0)/6 = 1.0，但还有升降层
-                // 这里简单给个权重即可
-                score += interests[p.color] * 2;
-            }
-        });
-        return score;
+        return best;
     }
 }
-
 window.QingyunAI = QingyunAI;

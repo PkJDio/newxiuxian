@@ -54,9 +54,24 @@ const qingyunUIStyles = `
     .qy_cell.valid-target { background: rgba(100, 255, 100, 0.3) !important; border-color: #00e676 !important; cursor: pointer; animation: pulse 1s infinite; }
     @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(0,230,118,0.4);} 70% {box-shadow: 0 0 0 10px rgba(0,230,118,0);} 100% {box-shadow: 0 0 0 0 rgba(0,230,118,0);} }
 
-    .qy_strategy_token { position: absolute; width: 28px; height: 28px; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 60; pointer-events: none; }
-    .qy_strategy_token.yang { background: #d32f2f; border: 2px solid #ffcdd2; }
-    .qy_strategy_token.yin { background: #1976d2; border: 2px solid #bbdefb; }
+    /* --- 计谋令牌基础样式 --- */
+.qy_strategy_token { 
+    position: absolute; width: 28px; height: 28px; border-radius: 4px; 
+    display: flex; justify-content: center; align-items: center; 
+    font-size: 16px; font-weight: 900; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.8); z-index: 60; 
+    pointer-events: none; border: 2px solid rgba(255,255,255,0.5);
+}
+
+/* 阳谋/阴谋的文字颜色区别 */
+.qy_strategy_token.yang { color: #b71c1c; text-shadow: 0 0 2px #fff; } /* 深红色文字 */
+.qy_strategy_token.yin { color: #0d47a1; text-shadow: 0 0 2px #fff; }  /* 深蓝色文字 */
+
+/* 归属底色区分 (分子/所有者占比逻辑相关) */
+.qy_strategy_token.owner_player { background: #ffca28; border-color: #ff8f00; box-shadow: 0 0 10px #ffca28; } /* 玩家：金色 */
+.qy_strategy_token.owner_ai1 { background: #29b6f6; border-color: #0288d1; } /* AI 1: 天蓝色 */
+.qy_strategy_token.owner_ai2 { background: #66bb6a; border-color: #388e3c; } /* AI 2: 翠绿色 */
+.qy_strategy_token.owner_ai3 { background: #ec407a; border-color: #c2185b; } /* AI 3: 玫红色 */
 
     .qy_card.strategy { border-color: #9c27b0; color: #e1bee7; background: #4a148c; width: 60px; }
     .qy_card.strategy:hover { background: #6a1b9a; }
@@ -72,7 +87,11 @@ const qingyunUIStyles = `
     .qy_pawn.green { background: linear-gradient(135deg, #66bb6a, #1b5e20); }
     .qy_pawn.yellow { background: linear-gradient(135deg, #ffee58, #f57f17); color: #3e2723; text-shadow:none; }
     .qy_pawn.white { background: linear-gradient(135deg, #eceff1, #546e7a); color: #37474f; text-shadow:none; }
-
+    
+    /* 【新增】厂卫样式 */
+    .qy_pawn.west_factory { background: linear-gradient(135deg, #212121, #424242); border: 2px solid #ffd700; color: #ffd700; box-shadow: 0 0 10px #ffd700; }
+    .qy_pawn.east_factory { background: linear-gradient(135deg, #4a148c, #7b1fa2); border: 2px solid #e1bee7; color: #fff; box-shadow: 0 0 10px #e1bee7; }
+    
     /* 底部栏 - relative */
     .qy_bottom { 
         height: 230px; background: #212121; border-top: 3px double #4e342e; 
@@ -168,7 +187,7 @@ class QingyunUI {
                         <div class="qy_pool_val" id="qy_jackpot">0</div>
                     </div>
                     
-                    <div id="qy_piece_layer" class="qy_track_layer" style="z-index:10; pointer-events:none;"></div>
+                    <div id="qy_piece_layer" class="qy_track_layer" style="z-index:50; pointer-events:none;"></div>
                 </div>
 
                 <div class="qy_bottom" id="qy_bottom_panel">
@@ -198,29 +217,72 @@ class QingyunUI {
     // 【修改点】规则弹窗字体颜色优化
     showRulesModal() {
         const rulesHtml = `
-            <div style="text-align:left; font-size:16px; line-height:1.6; color:#3c3f41; padding:10px;">
-                <ul style="list-style-type: disc; padding-left: 20px; margin:0;">
-                    <li style="margin-bottom:8px;"><b>基本玩法</b>：四人竞速，棋子从外圈(18格) -> 中圈(17格) -> 内圈(16格) -> 终点。最先到达终点者获胜。</li>
-                    <li style="margin-bottom:8px;"><b>回合行动</b>：每轮轮流行动，可选择 <span style="color:#ef5350">【拿牌下注】</span> 或 <span style="color:#42a5f5">【掷骰移动】</span>。
-                        <br><small style="color:#546e7a">下注卡用于每轮结束结算筹码；掷骰移动对应颜色的棋子。</small>
+            <div style="text-align:left; font-size:15px; line-height:1.5; color:#3c3f41; padding:10px; font-family:'KaiTi'; height: 500px; overflow-y: auto;">
+                <ul style="list-style-type: none; padding-left: 5px; margin:0;">
+                    
+                    <li style="margin-bottom:12px;">
+                        <div style="font-size:18px; font-weight:bold; color:#3e2723; border-bottom:1px solid #d7ccc8; margin-bottom:6px;">一、入场与机制</div>
+                        ● <b>分级</b>：低级(>5k) / 中级(>3w) / 高级(>5w)。<br>
+                        ● <b>初始</b>：扣除入场费入池。每人发 <b style="color:#d84315">50筹码</b> (汇率随场次提升)。<br>
+                        ● <b>流程</b>：每轮轮流先手。当 <b style="color:#2e7d32">5张骰子卡</b> 被拿完时，一轮结束结算。
                     </li>
-                    <li style="margin-bottom:8px;"><b>特殊点数</b>：
-                        <br>🎲 <b>升</b>：直接晋升到下一圈层。
-                        <br>🎲 <b>降</b>：跌回上一圈层。
-                        <br>🎲 <b>脏</b>：原地不动。
+                    
+                    <li style="margin-bottom:12px;">
+                        <div style="font-size:18px; font-weight:bold; color:#3e2723; border-bottom:1px solid #d7ccc8; margin-bottom:6px;">二、回合行动</div>
+                        <span style="color:#757575; font-size:12px;">(每次行动消耗筹码注入奖池，跳过也会消耗1筹码)</span><br>
+                        
+                        1. <span style="color:#ef5350; font-weight:bold;">【拿牌下注】</span> <span style="font-size:12px; border:1px solid #ef5350; padding:0 2px; border-radius:3px;">耗1筹</span><br>
+                           拿取一张下注卡(x6 / x4 / x3)。结算时第一名得倍数奖励。<br>
+                        
+                        2. <span style="color:#42a5f5; font-weight:bold;">【掷骰移动】</span> <span style="font-size:12px; border:1px solid #42a5f5; padding:0 2px; border-radius:3px;">耗1筹</span><br>
+                           拿取骰子卡并移动对应颜色棋子。<br>
+                           🎲 <b>德(3)/才(2)/功(1)</b>：前进对应步数。<br>
+                           🎲 <b>脏</b>：原地不动。<br>
+                           🎲 <b>升</b>：晋升里道 (外→中→内)。<span style="color:#d84315">注意：内道投出升=原地不动。</span><br>
+                           🎲 <b>降</b>：跌落外道 (内→中→外)。外道投出降=原地不动。<br>
+                           <span style="color:#5d4037; font-size:12px;">* 晋升路线：外18 → 中17 → 内16 → 终点。</span><br>
+                        
+                        3. <span style="color:#9c27b0; font-weight:bold;">【放置计谋】</span> <span style="font-size:12px; border:1px solid #9c27b0; padding:0 2px; border-radius:3px;">耗2筹</span><br>
+                           在空地放置陷阱 (不可放厂卫脚下，不可相邻)。<br>
+                           &nbsp;&nbsp;🔥 <b>阳谋</b>：踩中者 <b>继续向前</b> 1步。<br>
+                           &nbsp;&nbsp;💧 <b>阴谋</b>：踩中者 <b>被迫后退</b> 1步。<br>
+                           &nbsp;&nbsp;💰 <b>收益</b>：任何单位踩中，放置者得 <b style="color:#d84315">4筹码</b>。<br>
+                        
+                        4. <span style="color:#f57f17; font-weight:bold;">【最终押注】</span> <span style="font-size:12px; border:1px solid #f57f17; padding:0 2px; border-radius:3px;">耗5筹</span><br>
+                           押注 <b>冠军</b> 或 <b>倒数第一</b>。每种限1次，颜色不可复用。
                     </li>
-                    <li style="margin-bottom:8px;"><b>计谋系统</b>：消耗手牌中的计谋卡（需1筹码），在空地放置陷阱。
-                        <br><span style="color:#ef5350">🔥 阳谋</span>：踩中者前进1步。
-                        <br><span style="color:#42a5f5">💧 阴谋</span>：踩中者后退1步。
+
+                    <li style="margin-bottom:12px;">
+                        <div style="font-size:18px; font-weight:bold; color:#3e2723; border-bottom:1px solid #d7ccc8; margin-bottom:6px;">三、每轮结算</div>
+                        ● <b>排名规则</b>：<br>
+                        &nbsp;&nbsp;1. 优先看进度 (位置/赛道总长)。<br>
+                        &nbsp;&nbsp;2. 同位置看堆叠：<b style="color:#d84315">上面的 > 下面的</b>。<br>
+                        ● <b>奖励分配</b>：<br>
+                        &nbsp;&nbsp; - <b>下注卡</b>：颜色第一名得面值筹码，第二名得1筹码。<br>
+                        &nbsp;&nbsp; - <b>骰子卡</b>：手中每张得 <b style="color:#2e7d32">2筹码</b>。
                     </li>
-                    <li style="margin-bottom:8px;"><b>最终押注</b>：消耗5筹码和对应的【最终卡】，押注某颜色的棋子夺得 <b>冠军</b> 或 <b>倒数第一</b>。
-                        <br><small style="color:#f57f17">注意：已使用的颜色不可再次押注！</small>
+
+                    <li style="margin-bottom:12px;">
+                        <div style="font-size:18px; font-weight:bold; color:#3e2723; border-bottom:1px solid #d7ccc8; margin-bottom:6px;">四、中高级场专属：厂卫</div>
+                        ● <b style="color:#7b1fa2">东厂</b>(内16) 与 <b style="color:#212121">西厂</b>(外18) 加入战局。<br>
+                        ● <b>反向巡逻</b>：它们从终点往起点(数字小)的方向移动。<br>
+                        ● <b>携带机制</b>：移动时会 <b>带走压在它们身上</b> 的所有棋子。<br>
+                        ● <b>特殊规则</b>：<br>
+                        &nbsp;&nbsp; - 只有厂卫能穿越起点(1)回到上一层终点。<br>
+                        &nbsp;&nbsp; - 普通棋子若被带回起点(1)，会被“甩下”留在该层，不会跟随跨层。<br>
+                        &nbsp;&nbsp; - 厂卫踩中阳谋=继续变小(顺行)，踩中阴谋=变大(逆行)。
                     </li>
-                    <li><b>奖池规则</b>：奖池金额固定。比赛结束后，根据排名和押注结果瓜分奖金。</li>
+
+                    <li style="margin-bottom:5px;">
+                        <div style="font-size:18px; font-weight:bold; color:#3e2723; border-bottom:1px solid #d7ccc8; margin-bottom:6px;">五、终局清算</div>
+                        1. <b>最终押注奖</b>：前4名猜对者分别得 <b style="color:#d84315">40 / 25 / 5 / 0</b> 筹码。<br>
+                        2. <b>瓜分奖池</b>：按 <b style="color:#f57f17">最终持有筹码比例</b> 瓜分奖池现金。
+                    </li>
                 </ul>
             </div>
         `;
-        window.showGeneralModal("📜 青云赛规则", rulesHtml, null, "", 50);
+        // 适当增加了高度以容纳更多规则
+        window.showGeneralModal("📜 青云赛详细规则", rulesHtml, null, "", 60);
     }
 
     addLog(text, isHighlight=false) {
@@ -258,7 +320,7 @@ class QingyunUI {
 
                 cell.style.left = (pos.x - 22) + 'px';
                 cell.style.top = (pos.y - 22) + 'px';
-                cell.innerText = idx;
+                cell.innerText = idx + 1;
 
                 cell.dataset.layer = i;
                 cell.dataset.index = idx;
@@ -269,10 +331,18 @@ class QingyunUI {
 
                 const key = `${i}_${idx}`;
                 const trap = model.strategyMap[key];
+
+                // 【修改点】动态生成带有归属和类型标记的令牌
                 if (trap) {
                     const token = document.createElement('div');
-                    token.className = `qy_strategy_token ${trap.type === 1 ? 'yang' : 'yin'}`;
+
+                    // 将 ownerId (如 'player', 'ai_1') 转换为类名 (如 'owner_player', 'owner_ai1')
+                    const ownerSuffix = trap.ownerId.replace('_', '');
+                    const typeClass = trap.type === 1 ? 'yang' : 'yin';
+
+                    token.className = `qy_strategy_token owner_${ownerSuffix} ${typeClass}`;
                     token.innerText = trap.type === 1 ? '阳' : '阴';
+
                     token.style.left = (pos.x - 14) + 'px';
                     token.style.top = (pos.y - 40) + 'px';
                     mapLayer.appendChild(token);
@@ -334,32 +404,90 @@ class QingyunUI {
         const chipEl = document.getElementById('qy_my_chips');
         if(chipEl) chipEl.innerText = model.players[0].chips;
 
+        // --- 棋子渲染逻辑 (含获胜居中 & 厂卫) ---
         const pieceLayer = document.getElementById('qy_piece_layer');
-        if(pieceLayer && this.mapCoords.length > 0) {
+        const stage = document.getElementById('qy_stage');
+
+        if(pieceLayer && stage && this.mapCoords.length > 0) {
             pieceLayer.innerHTML = '';
+
+            const centerX = stage.clientWidth / 2;
+            const centerY = stage.clientHeight / 2;
+
             const piecesByLoc = {};
+
+            // 1. 普通棋子
             model.pieces.forEach(p => {
-                const key = `${p.layer}_${p.index}`;
+                const key = p.isFinished ? 'finished' : `${p.layer}_${p.index}`;
                 if (!piecesByLoc[key]) piecesByLoc[key] = [];
                 piecesByLoc[key].push(p);
             });
 
+            // 2. 【新增】厂卫 (视为特殊的棋子，参与同位置堆叠)
+            if (model.factories && model.factories.length > 0) {
+                model.factories.forEach(f => {
+                    const key = `${f.layer}_${f.index}`;
+                    if (!piecesByLoc[key]) piecesByLoc[key] = [];
+                    // 【修复点】这里必须要把 f.layer 和 f.index 也传进去，否则下面计算坐标时会读不到
+                    piecesByLoc[key].unshift({
+                        color: f.color,
+                        isFactory: true,
+                        name: f.name,
+                        layer: f.layer,
+                        index: f.index
+                    });
+                });
+            }
+
+            // 遍历每个位置的堆叠列表
             for (let key in piecesByLoc) {
                 const stack = piecesByLoc[key];
+
+                // 【核心修改】只按 stackPos 排序，移除 "isFactory 沉底" 逻辑
+                stack.sort((a, b) => (a.stackPos || 0) - (b.stackPos || 0));
+
+                // 排序后进行渲染，保证 visually correct
                 stack.forEach((p, visualIndex) => {
-                    const coords = this.mapCoords[p.layer];
-                    if (!coords) return;
-                    const safeIndex = Math.min(p.index, coords.length - 1);
-                    const pos = coords[safeIndex];
+                    let left, top;
+
+                    if (p.isFinished) {
+                        left = centerX;
+                        top = centerY;
+                    } else {
+                        const layerIdx = p.isFactory ? p.layer : p.layer;
+                        const idx = p.isFactory ? p.index : p.index;
+
+                        const coords = this.mapCoords[layerIdx];
+                        if (!coords) return;
+
+                        const safeIndex = Math.min(idx, coords.length - 1);
+                        const pos = coords[safeIndex];
+                        left = pos.x;
+                        top = pos.y;
+                    }
 
                     const el = document.createElement('div');
                     el.className = `qy_pawn ${p.color}`;
+                    if (p.isFinished) el.classList.add('finished');
+
+                    // visualIndex 现在对应排序后的位置：0在底，N在上
                     const offsetY = visualIndex * 14;
 
-                    el.style.left = (pos.x - 16) + 'px';
-                    el.style.top = (pos.y - 16 - offsetY) + 'px';
-                    el.style.zIndex = 100 + visualIndex;
-                    el.innerText = this._getColorName(p.color).charAt(0);
+                    el.style.left = (left - 16) + 'px';
+                    el.style.top = (top - 16 - offsetY) + 'px';
+                    // zIndex 也随 visualIndex 增加，保证点击和遮挡关系正确
+                    el.style.zIndex = p.isFinished ? 200 + visualIndex : 100 + visualIndex;
+
+                    if (p.isFactory) {
+                        el.innerText = p.name.charAt(0);
+                        el.style.borderRadius = "4px";
+                    } else {
+                        el.innerText = this._getColorName(p.color).charAt(0);
+                    }
+
+                    // 标记ID
+                    el.dataset.uid = p.isFactory ? p.color : p.color;
+
                     pieceLayer.appendChild(el);
                 });
             }
@@ -370,6 +498,7 @@ class QingyunUI {
         const bottomPanel = document.getElementById('qy_bottom_panel');
         if (!bottomPanel) return;
 
+        // ... (剩余的底部栏渲染代码保持不变) ...
         if (model.state === 'ready') {
             const config = model.config || {};
             if (!document.getElementById('btn_qy_start')) {
@@ -401,7 +530,7 @@ class QingyunUI {
                 </div>
                 <div class="qy_panel_m">
                     <div style="color:#ffca28; font-size:20px; font-weight:bold;">
-                        🪙 筹码: <span id="qy_my_chips">0</span>
+                        🎟️ 筹码: <span id="qy_my_chips">0</span>
                     </div>
                     <div style="font-size:16px; color:#b0bec5; margin-top:15px;">📜 手牌 (终注/计谋)</div>
                     <div class="qy_hand" id="qy_my_hand"></div>
@@ -414,23 +543,22 @@ class QingyunUI {
         }
 
         const isMyTurn = model.players[model.turnIndex].id === 'player';
-
         let aiMask = bottomPanel.querySelector('.qy_ai_mask');
         if (!isMyTurn) {
             if (!aiMask) {
                 aiMask = document.createElement('div');
                 aiMask.className = 'qy_ai_mask';
-                aiMask.innerHTML = `🤖 ${currP.name} 行动中...`;
+                aiMask.innerHTML = `🤖 ${model.players[model.turnIndex].name} 行动中...`;
                 bottomPanel.appendChild(aiMask);
             } else {
-                aiMask.innerHTML = `🤖 ${currP.name} 行动中...`;
+                aiMask.innerHTML = `🤖 ${model.players[model.turnIndex].name} 行动中...`;
             }
         } else {
             if (aiMask) aiMask.remove();
         }
 
         this._renderCardPool('qy_pool_bets', model.roundBetDeck, 'bet');
-        this._renderCardPool('qy_pool_dice', model.diceDeck, 'dice');
+        this._renderCardPool('qy_pool_dice', model, 'dice');
 
         const handDiv = document.getElementById('qy_my_hand');
         if(handDiv) {
@@ -439,11 +567,7 @@ class QingyunUI {
                 html += `<div class="qy_card ${c}"><span style="margin-top:15px; font-weight:bold;">${this._getColorName(c)}</span></div>`;
             });
             const hasStrat = model.players[0].hasStrategy;
-            html += `
-                <div class="qy_card strategy ${!hasStrat ? 'disabled' : ''}" id="btn_strategy_card">
-                    <div style="font-size:20px;">📜</div>
-                    <div style="font-size:12px;">计谋</div>
-                </div>`;
+            html += `<div class="qy_card strategy ${!hasStrat ? 'disabled' : ''}" id="btn_strategy_card"><div style="font-size:20px;">📜</div><div style="font-size:12px;">计谋</div></div>`;
             handDiv.innerHTML = html;
         }
 
@@ -453,31 +577,119 @@ class QingyunUI {
         if(btnSkip) btnSkip.disabled = !isMyTurn;
     }
 
+    // 【修改点】接收 finalReportHtml 参数
+    setEndGameState(finalReportHtml) {
+        const bottomPanel = document.getElementById('qy_bottom_panel');
+        if (!bottomPanel) return;
+
+        // 移除 AI 遮罩 (如果有)
+        const mask = bottomPanel.querySelector('.qy_ai_mask');
+        if(mask) mask.remove();
+
+        // 禁用所有交互元素
+        const buttons = bottomPanel.querySelectorAll('button, .qy_card');
+        buttons.forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.filter = 'grayscale(1)';
+            btn.style.opacity = '0.5';
+        });
+
+        // 在右下角插入“最终战报”和“返回大厅”按钮
+        const rightPanel = bottomPanel.querySelector('.qy_panel_r');
+        if (rightPanel) {
+            // 使用 flex column 布局，添加两个按钮
+            rightPanel.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:8px; height:100%; justify-content:center;">
+                    <button class="qy_btn" id="btn_review_report" style="flex:1; font-size:16px; background:linear-gradient(to bottom, #7b1fa2, #4a148c); border:1px solid #8e24aa; pointer-events:auto; filter:none; opacity:1; box-shadow:0 2px 5px rgba(0,0,0,0.5);">
+                        📜 最终战报
+                    </button>
+                    <button class="qy_btn bet" onclick="GambleShop.selectGame('qingyun')" style="flex:1; font-size:16px; background:linear-gradient(to bottom, #d84315, #bf360c); pointer-events:auto; filter:none; opacity:1; box-shadow:0 2px 5px rgba(0,0,0,0.5);">
+                        🚪 返回大厅
+                    </button>
+                </div>
+            `;
+
+            // 绑定回顾按钮事件
+            setTimeout(() => {
+                const btnReview = document.getElementById('btn_review_report');
+                if(btnReview) {
+                    btnReview.onclick = () => {
+                        if(window.UtilsModal && window.UtilsModal.showQingyunNotice) {
+                            UtilsModal.showQingyunNotice("🏁 最终战报 (回顾) 🏁", finalReportHtml, () => {});
+                        }
+                    };
+                }
+            }, 0);
+        }
+    }
+
+    // 【修改点3】支持厂卫的动画查找
+    async animatePieceMove(color, path) {
+        // color 参数可能是 'red' 也可能是 'west_factory'
+        const pieceEl = document.querySelector(`.qy_pawn.${color}`);
+        if (!pieceEl) return;
+
+        pieceEl.classList.add('animating');
+
+        for (let step of path) {
+            let targetX, targetY;
+
+            if (step.index === 'finish') {
+                const stage = document.getElementById('qy_stage');
+                targetX = stage.clientWidth / 2;
+                targetY = stage.clientHeight / 2;
+            } else {
+                const coords = this.mapCoords[step.layer];
+                if (!coords || !coords[step.index]) continue;
+                targetX = coords[step.index].x;
+                targetY = coords[step.index].y;
+            }
+
+            const currentTop = parseInt(pieceEl.style.top);
+            const currentLeft = parseInt(pieceEl.style.left);
+
+            pieceEl.style.left = (targetX - 16) + 'px';
+            pieceEl.style.top = (targetY - 16) + 'px';
+            pieceEl.style.zIndex = 300;
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        pieceEl.classList.remove('animating');
+    }
+
+    // 【修改点】战绩统计 (支持实时显示)
     _renderStatsChart(model) {
         const chartDiv = document.getElementById('qy_stats_chart');
         if (!chartDiv || !model.gameHistory) return;
 
         let html = `<table class="qy_stats_table">
-            <thead>
-                <tr>
-                    <th width="20%">轮</th>
-                    <th width="30%">盈亏</th>
-                    <th>特殊操作</th>
-                </tr>
-            </thead>
+            <thead><tr><th width="20%">轮</th><th width="30%">盈亏</th><th>特殊操作</th></tr></thead>
             <tbody>`;
 
+        // 1. 如果有本轮待处理事件，优先显示在第一行
+        if (model.currentRoundEvents && model.currentRoundEvents.length > 0) {
+            let eventsHtml = '';
+            model.currentRoundEvents.forEach(ev => {
+                let className = 'qy_event_win';
+                if (ev.indexOf('倒数') !== -1) className = 'qy_event_lose';
+                eventsHtml += `<div class="qy_event_tag ${className}">${ev}</div> `;
+            });
+            html += `
+                <tr style="background:rgba(255,255,255,0.05);">
+                    <td style="color:#4fc3f7;">本轮</td>
+                    <td style="color:#90a4ae;">...</td>
+                    <td>${eventsHtml}</td>
+                </tr>
+            `;
+        }
+
+        // 2. 历史记录 (倒序)
         const history = model.gameHistory;
-
-        for (let i = history.length - 1; i >= 0; i--) {
+        for (let i = history.length - 1; i >= 1; i--) {
             const curr = history[i];
-
-            let prevChips = 50;
-            if (i > 0) {
-                prevChips = history[i-1].chips;
-            }
-
-            const diff = curr.chips - prevChips;
+            const prev = history[i-1];
+            const diff = curr.chips - prev.chips;
             const sign = diff > 0 ? '+' : '';
             const color = diff > 0 ? '#ffca28' : (diff < 0 ? '#ef5350' : '#cfd8dc');
             const diffStr = diff === 0 ? '-' : `${sign}${diff}`;
@@ -493,13 +705,7 @@ class QingyunUI {
                 eventsHtml = '<span style="color:#546e7a">-</span>';
             }
 
-            html += `
-                <tr>
-                    <td>${curr.round}</td>
-                    <td style="color:${color}; font-weight:bold;">${diffStr}</td>
-                    <td>${eventsHtml}</td>
-                </tr>
-            `;
+            html += `<tr><td>${curr.round}</td><td style="color:${color}; font-weight:bold;">${diffStr}</td><td>${eventsHtml}</td></tr>`;
         }
 
         html += `</tbody></table>`;
@@ -512,6 +718,7 @@ class QingyunUI {
 
         let html = '';
         if (type === 'bet') {
+            // data 是 roundBetDeck
             let hasCards = false;
             for (let color in data) {
                 const arr = data[color];
@@ -535,16 +742,48 @@ class QingyunUI {
             }
             if(!hasCards) html = '<div style="color:#666; padding:10px;">暂无下注卡</div>';
         } else {
-            if (!data || data.length === 0) {
+            // 【修改点】 骰子区渲染
+            // 此时 data 实际上是 model (因为在 render 里改了传参)
+            const model = data;
+            const deck = model.diceDeck || [];
+            const history = model.drawnDiceRecords || [];
+
+            // 容器样式调整，让它们横向排列
+            div.style.justifyContent = 'flex-start';
+
+            if (deck.length === 0 && history.length === 0) {
                 html = '<div style="color:#666; padding:10px;">本轮结束</div>';
             } else {
-                data.forEach(color => {
+                // 1. 渲染随机按钮 (如果还有牌)
+                if (deck.length > 0) {
+                    const count = deck.length;
+                    let shadow = '';
+                    const visualStack = Math.min(count, 5);
+                    for(let i=1; i<visualStack; i++) {
+                        shadow += `${i*2}px ${i*2}px 0 #1b262c, ${i*2+1}px ${i*2+1}px 0 #546e7a`;
+                        if(i < visualStack-1) shadow += ', ';
+                    }
+                    const style = shadow ? `box-shadow: ${shadow}; margin-right: ${visualStack*2}px; margin-bottom: ${visualStack*2}px;` : '';
+
                     html += `
-                    <div class="qy_card ${color}" data-action="roll" data-color="${color}">
-                        <div style="font-size:24px;">🎲</div>
-                        <div style="font-size:14px;">${this._getColorName(color)}</div>
+                    <div class="qy_card white" style="${style}; background: linear-gradient(135deg, #455a64, #263238); border-color:#90a4ae; min-width:55px;" data-action="rollRandom">
+                        <div style="font-size:24px;">❓</div>
+                        <div style="font-size:13px; color:#cfd8dc;">随机掷骰</div>
+                        <div style="position:absolute; top:-5px; right:-5px; background:#fbc02d; color:#000; border-radius:50%; width:18px; height:18px; font-size:10px; display:flex; justify-content:center; align-items:center; font-weight:bold;">${count}</div>
                     </div>`;
-                });
+                }
+
+                // 2. 渲染已抽出的历史记录 (渲染在右侧)
+                if (history.length > 0) {
+                    // 加一个分隔或者直接接在后面
+                    history.forEach(rec => {
+                        html += `
+                        <div class="qy_card ${rec.color}" style="opacity:0.9; cursor:default; transform:none; border-style:dashed; background:rgba(0,0,0,0.2);">
+                            <div style="font-size:18px; font-weight:bold;">${rec.result}</div>
+                            <div style="font-size:12px; margin-top:2px;">${this._getColorName(rec.color)}</div>
+                        </div>`;
+                    });
+                }
             }
         }
         div.innerHTML = html;
@@ -567,14 +806,7 @@ class QingyunUI {
         });
     }
 
-    _getColorName(c) {
-        const map = { red:'赤', blue:'青', green:'翠', yellow:'金', white:'白' };
-        return map[c] || c;
-    }
-
-    _getColorHex(c) {
-        const map = { red:'#ef5350', blue:'#42a5f5', green:'#66bb6a', yellow:'#ffee58', white:'#eceff1' };
-        return map[c] || '#fff';
-    }
+    _getColorName(c) { return { red:'赤', blue:'青', green:'翠', yellow:'金', white:'白', west_factory:'西', east_factory:'东' }[c] || c; }
+    _getColorHex(c) { return { red:'#ef5350', blue:'#42a5f5', green:'#66bb6a', yellow:'#ffee58', white:'#eceff1' }[c] || '#fff'; }
 }
 window.QingyunUI = QingyunUI;

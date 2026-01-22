@@ -320,11 +320,16 @@ const UICombatModal = {
 
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
+                // 【新增】获取当前已保存的倍率，默认为 1.0
+                const currentScale = (window.CombatCore && window.CombatCore.CONFIG && window.CombatCore.CONFIG.TIME_SCALE) ? window.CombatCore.CONFIG.TIME_SCALE : 1.0;
+
                 footerDiv.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:5px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
-                        <button class="ink_btn_small" style="width:24px; padding:0;" onclick="window['${spdCB}'](-500)">+</button>
-                        <span id="combat_speed_display" style="font-size:12px; min-width:30px; text-align:center;">1.0x</span>
-                        <button class="ink_btn_small" style="width:24px; padding:0;" onclick="window['${spdCB}'](500)">-</button>
+                    <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-1)">⏬</button>
+                        
+                        <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">${currentScale.toFixed(1)}x</span>
+                        
+                        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](1)">⏫</button>
                     </div>
                     <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; font-size:16px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
                     ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; border-color:#d32f2f; color:#d32f2f; font-size:16px;" onclick="window['${stopCB}']()">🏃 撤退</button>` : ''}
@@ -540,12 +545,17 @@ const UICombatModal = {
                 window[pauseCB] = () => { if(window.Combat) Combat.togglePause(); };
                 window[spdCB] = (delta) => { if(window.Combat) Combat.changeSpeed(delta); };
 
+                // 【新增】获取当前倍率
+                const currentScale = (window.CombatCore && window.CombatCore.CONFIG && window.CombatCore.CONFIG.TIME_SCALE) ? window.CombatCore.CONFIG.TIME_SCALE : 1.0;
+
                 footerDiv.innerHTML = `
-                <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
-                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-500)">⏫</button>
-                    <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">1.0x</span>
-                    <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](500)">⏬</button>
-                </div>
+    <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
+        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-1)">⏬</button>
+        
+        <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">${currentScale.toFixed(1)}x</span>
+        
+        <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](1)">⏫</button>
+    </div>
                 <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; height:40px; font-size:18px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
                 ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; height:40px; border-color:#d32f2f; color:#d32f2f; font-size:18px;" onclick="window['${stopCB}']()">🏃 拼死逃跑</button>` : ''}
                 `;

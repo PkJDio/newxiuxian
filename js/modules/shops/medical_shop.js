@@ -64,8 +64,9 @@ const MedicalShop = {
     _generateStock: function(town) {
         if (!window.getSeededRandom || !player) return;
 
-        const monthIndex = player.time.month;
-        const shopKey = `medical_${town.id}_${monthIndex}`;
+        // 【修改】加入 day
+        const timeKey = `${player.time.month}_${player.time.day}`;
+        const shopKey = `medical_${town.id}_${timeKey}`;
 
         // 医馆配置
         let config = { minType: 4, maxType: 8, minTotal: 10, maxTotal: 20, maxRarity: 3 };
@@ -196,6 +197,18 @@ const MedicalShop = {
 
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
             let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer;`;
+
+            // 【新增】批量按钮
+            let bulkBtnHtml = '';
+            if (!isSoldOut && canAfford) {
+                const maxCanBuy = Math.floor(player.money / entry.price);
+                const buyNum = Math.min(entry.qty, maxCanBuy);
+                if (buyNum > 1) {
+                    const bulkStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b; cursor: pointer; margin-right:5px;`;
+                    bulkBtnHtml = `<button style="${bulkStyle}" onclick="MedicalShop.handleBuyBulk(${index})">全买</button>`;
+                }
+            }
+
             if (isSoldOut || !canAfford) btnStyle = `${btnBase} background: #bdbdbd; border-color: #9e9e9e; color: #616161; cursor: not-allowed;`;
 
             return `
@@ -214,7 +227,8 @@ const MedicalShop = {
                         <div style="color:#d84315; font-weight:bold; font-size: 20px;">${entry.price} 文</div>
                         <div style="font-size:16px; color:${isSoldOut ? 'red' : '#999'};">库存: ${entry.qty}</div>
                     </div>
-                    <div style="width:90px; text-align:right; flex-shrink:0;">
+                    <div style="width:160px; text-align:right; flex-shrink:0;">
+                        ${bulkBtnHtml}
                         <button style="${btnStyle}" ${isSoldOut || !canAfford ? '' : `onclick="MedicalShop.handleBuy(${index})"`}>${isSoldOut ? '售罄' : (canAfford ? '购买' : '缺钱')}</button>
                     </div>
                 </div>
@@ -260,6 +274,31 @@ const MedicalShop = {
         }
         if(window.showToast) window.showToast(`购入 ${entry.item.name}`);
         this.uiBuy(); if(window.updateUI) window.updateUI(); window.saveGame();
+    },
+    handleBuyBulk: function(index) {
+        const entry = this.currentStock[index];
+        if (!entry || entry.qty <= 0) return;
+
+        const maxCanBuy = Math.floor(player.money / entry.price);
+        const buyQty = Math.min(entry.qty, maxCanBuy);
+
+        if (buyQty <= 0) { window.showToast("没钱啦！"); return; }
+
+        player.money -= (buyQty * entry.price);
+        entry.qty -= buyQty;
+
+        if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
+
+        if (entry.shopKey) {
+            if (!player.shopLogs) player.shopLogs = {};
+            if (!player.shopLogs[entry.shopKey]) player.shopLogs[entry.shopKey] = {};
+            player.shopLogs[entry.shopKey][entry.id] = (player.shopLogs[entry.shopKey][entry.id] || 0) + buyQty;
+        }
+
+        if(window.showToast) window.showToast(`扫货成功，获得 ${buyQty} 份 ${entry.item.name}`);
+        this.uiBuy();
+        if(window.updateUI) window.updateUI();
+        window.saveGame();
     },
 
     // ================= 疗伤界面 =================

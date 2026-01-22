@@ -24,6 +24,9 @@ const CombatInit = {
         ctx.isPaused = false;
         ctx.isEnded = false;
 
+        // 【新增】初始化时间倍率，默认为 1.0
+        ctx.timeScale = 1.0;
+
         // 冷却与Buff
         ctx.itemCDs = [0, 0, 0];
         ctx.skillCDs = {};

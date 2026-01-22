@@ -1,5 +1,5 @@
 // js/modules/ui_train.js
-// 修炼界面 UI v1.6 (记忆上次选择 + 自动滚动)
+// 修炼界面 UI v1.7 (增加客栈休息快捷入口)
 
 const UITrain = {
     selectedSkillId: null,
@@ -78,22 +78,12 @@ const UITrain = {
             return { id: id, item: item, data: player.skills[id] };
         }).filter(x => x.item && (x.item.subType === 'body' || x.item.subType === 'cultivation'));
 
-        // 排序：未满级优先 > 稀有度高优先
         // 排序：未满级优先 > 稀有度高优先 > 名字排序
         list.sort((a, b) => {
-            // 1. 未满级优先 (Mastered: false 排在前面)
-            // if (a.data.mastered !== b.data.mastered) {
-            //     return a.data.mastered ? 1 : -1;
-            // }
-
-            // 2. 稀有度高优先 (Rarity: 大的排在前面)
             const rarityDiff = (b.item.rarity || 1) - (a.item.rarity || 1);
             if (rarityDiff !== 0) {
                 return rarityDiff;
             }
-
-            // 3. 名字排序 (中文拼音顺序)
-            // 使用 localeCompare 确保中文按拼音排序，而不是按Unicode编码
             const nameA = a.item.name || "";
             const nameB = b.item.name || "";
             return nameA.localeCompare(nameB, 'zh-CN');
@@ -106,15 +96,12 @@ const UITrain = {
 
             const el = document.createElement('div');
             el.className = `train_skill_item ${isActive ? 'active' : ''}`;
-            // 标记ID方便调试或查找
             el.dataset.id = entry.id;
 
             // 点击选择
             el.onclick = () => {
                 this.selectedSkillId = entry.id;
-                // 【新增】保存选择记录到 player 对象
                 player.lastTrainId = entry.id;
-                // 点击切换时不需要自动滚动
                 this.shouldScroll = false;
                 this.refresh();
             };
@@ -145,20 +132,15 @@ const UITrain = {
             `;
             container.appendChild(el);
 
-            // 【新增】自动滚动逻辑
-            // 只有当这是激活项，且处于“应该滚动”的状态（即刚打开界面时）
             if (isActive && this.shouldScroll) {
-                // 使用 setTimeout 确保 DOM 已经渲染完毕
                 setTimeout(() => {
                     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
                 }, 100);
-                // 滚动一次后关闭标记，避免后续点击刷新时乱跳
                 this.shouldScroll = false;
             }
         });
     },
 
-    // 渲染右侧详情
     // 渲染右侧详情
     renderRightPanel: function() {
         const container = document.getElementById('train_dashboard');
@@ -172,7 +154,7 @@ const UITrain = {
         const skillId = this.selectedSkillId;
         const item = GAME_DB.items.find(i => i.id === skillId);
 
-        // 获取实时数据：这里包含了 mastered 和 isCapped
+        // 获取实时数据
         const info = window.UtilsSkill.getSkillInfo(skillId);
 
         // 【数据获取】预测收益
@@ -185,7 +167,7 @@ const UITrain = {
         let effValue = predict.efficiency || 1.0;
         const effPercent = Math.round(effValue * 100);
 
-        // 1. 标题头 (保持不变)
+        // 1. 标题头
         const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#333', name: '普通' };
         const headerHtml = `
             <div class="td_header">
@@ -214,7 +196,7 @@ const UITrain = {
             </div>
         `;
 
-        // 3. 效率详情 (保持不变)
+        // 3. 效率详情
         let breakdownHtml = (predict.breakdown || []).map(b => {
             return `<div class="eff_row"><span>${b.label}</span><span style="color:${b.color || '#666'}">${b.val}</span></div>`;
         }).join('');
@@ -234,8 +216,7 @@ const UITrain = {
             </div>
         `;
 
-        // 4. 【核心修改】按钮逻辑
-        // 只有当既没有大成(mastered)，也没有遇到瓶颈(isCapped)时，才可以点击
+        // 4. 按钮逻辑
         const canTrain = !info.isCapped && !info.mastered;
 
         let btnText = "🧘 开始修炼";
@@ -243,11 +224,35 @@ const UITrain = {
 
         if (info.mastered) {
             btnText = "✅ 已臻大成";
-            btnClass += " disabled"; // 变灰
+            btnClass += " disabled";
         } else if (info.isCapped) {
             btnText = "🚫 进阶瓶颈";
-            btnClass += " disabled"; // 变灰
+            btnClass += " disabled";
         }
+
+        // ============================================
+        // 【新增】客栈休息按钮逻辑
+        // ============================================
+        let isInTown = false;
+        if (window.UtilsPlayer && window.UtilsPlayer.isInTown) {
+            isInTown = window.UtilsPlayer.isInTown();
+        } else if (typeof window.currentTown !== 'undefined' && window.currentTown !== null) {
+            isInTown = true;
+        }
+
+        let restBtnHtml = '';
+        if (isInTown) {
+            // 复用 train_big_btn 的样式，但修改背景色为绿色系，与其他按钮区分
+            restBtnHtml = `
+                <button class="train_big_btn" 
+                    style="background:linear-gradient(to bottom, #81c784, #388e3c); margin-left: 15px; min-width:180px;"
+                    onclick="window.UtilStudy.quickRest()"
+                    title="花100文，回复200饱食，清空疲劳">
+                    🛏️ 客栈小憩
+                </button>
+            `;
+        }
+        // ============================================
 
         const btnHtml = `
             <div class="td_actions">
@@ -256,6 +261,7 @@ const UITrain = {
                     ${!canTrain ? 'disabled' : ''}>
                     ${btnText}
                 </button>
+                ${restBtnHtml}
                 <div class="train_cost_tip">
                     ${canTrain ? '消耗: 4时辰 / -20饱食度 / +20疲劳' : '当前状态无法修炼'}
                 </div>
@@ -268,11 +274,9 @@ const UITrain = {
     // 内联样式注入
     _injectStyles: function() {
         if (document.getElementById('style-ui-train')) return;
-        // 所有字体大小 +2px
         const css = `
             .train_layout { display:flex; height:100%; gap:20px; font-family:"KaiTi"; overflow:hidden; }
             
-            /* 左侧列表 */
             .train_sidebar { flex:1; border:1px solid #ddd; background:#fff; border-radius:6px; overflow-y:auto; display:flex; flex-direction:column; max-width:260px; }
             .train_skill_item { padding:12px; border-bottom:1px solid #eee; cursor:pointer; display:flex; gap:10px; align-items:center; transition:0.2s; }
             .train_skill_item:hover { background:#fafafa; }
@@ -284,7 +288,6 @@ const UITrain = {
             .ts_sub { font-size:14px; color:#666; display:flex; justify-content:space-between; }
             .ts_tag { background:#eee; padding:1px 4px; border-radius:3px; }
 
-            /* 右侧面板 */
             .train_main { flex:2; display:flex; flex-direction:column; gap:15px; padding:10px; overflow-y:auto; }
             
             .td_header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; }

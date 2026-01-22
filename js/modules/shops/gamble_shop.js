@@ -1,5 +1,5 @@
 // js/modules/shops/gamble_shop.js
-// 赌坊大厅模块 v6.0 (适配青云赛场次选择)
+// 赌坊大厅模块 v6.1 (增加游戏实例销毁逻辑)
 
 console.log("加载 赌坊大厅模块 v6.0 Refactored");
 
@@ -171,6 +171,16 @@ const GambleShop = {
         this.playerSessionHistory = [];
         this.opponentSessionHistory = [];
     },
+    // 【v6.1 新增】清理当前游戏实例，杀死后台定时器
+    _clearCurrentGame: function() {
+        if (this.currentGame) {
+            // 如果游戏实例有 stop 方法 (如 QingyunGame)，调用它
+            if (typeof this.currentGame.stop === 'function') {
+                this.currentGame.stop();
+            }
+            this.currentGame = null;
+        }
+    },
 
     // ================= 入口逻辑 =================
     enter: function(town) {
@@ -185,7 +195,10 @@ const GambleShop = {
 
     renderMainMenu: function() {
         // 清理悬浮窗历史 (防止把上一局的流水带到大厅)
+        // 【修改点】清理旧游戏
+        this._clearCurrentGame();
         this._clearMoneyHistory();
+
         this.currentGame = null;
         this.currentGameType = null;
 
@@ -246,6 +259,9 @@ const GambleShop = {
 
     // ================= 游戏选择路由 =================
     selectGame: function(gameType) {
+        // 【修改点】清理旧游戏 (虽然 renderMainMenu 已经清了，但安全起见)
+        this._clearCurrentGame();
+
         this.currentGameType = gameType;
         this._clearMoneyHistory();
 
@@ -397,6 +413,9 @@ const GambleShop = {
             return;
         }
 
+        // 【修改点】确保旧游戏被清理
+        this._clearCurrentGame();
+
         // 实例化游戏
         const dummyOpponent = { name: "青云赛庄家", id: "qy_host", bet: 0, currentMoney: 999999 };
         this.currentGame = new QingyunGame(dummyOpponent, this);
@@ -412,6 +431,9 @@ const GambleShop = {
             if(window.showToast) window.showToast("本金不足！");
             return;
         }
+
+        // 【修改点】清理
+        this._clearCurrentGame();
 
         const roster = window.UtilsGamble.getGamblers(this.currentTown.id, gameType);
         const opponent = roster.find(g => g.id === gamblerId);

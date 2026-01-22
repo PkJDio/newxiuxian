@@ -45,7 +45,7 @@ const foodMaterial = [
     { id: "foodMaterial_052", name: "蛇肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 10, effects: { hunger: 10, hp: 5, toxicity: -1 }, desc: "肉质洁白细腻，微量解毒。" },
     { id: "foodMaterial_053", name: "狼肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 6, effects: { hunger: 15, atk: 1 }, desc: "口感发酸，吃完充满野性。" },
     { id: "foodMaterial_054", name: "熊肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 20, effects: { hunger: 30, hp: 10 }, desc: "含有丰富的油脂，极度耐饿。" },
-    { id: "foodMaterial_055", name: "虎肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 3, obtain: "wild", value: 50, effects: { hunger: 25, atk: 2, jing: 1 }, desc: "大补之物，食之气力大增。" },
+    { id: "foodMaterial_055", name: "虎肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 3, obtain: "wild", value: 50, effects: { hunger: 25, atk: 1 }, desc: "大补之物，食之气力大增。" },
     { id: "foodMaterial_056", name: "鳄鱼肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 25, effects: { hunger: 20, def: 1 }, desc: "据说能治哮喘，口感像鸡肉。" },
     { id: "foodMaterial_057", name: "生鱼片", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 5, effects: { hunger: 8, hp: 2 }, desc: "刚捕捞上来的鲜鱼切片。" },
     { id: "foodMaterial_058", name: "蝎子肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 15, effects: { hunger: 5, toxicity: -2 }, desc: "去毒后酥脆可口，以毒攻毒。" }

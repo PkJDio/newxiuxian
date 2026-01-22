@@ -19,7 +19,9 @@ const BlackMarket = {
         if (!window.getSeededRandom || !player) return;
 
         const monthIndex = player.time.month;
-        const shopKey = `blackShop_${town.id}_${monthIndex}`;
+        //加上day
+        const  dayIndex = player.time.day;
+        const shopKey = `blackShop_${town.id}_${monthIndex}_${dayIndex}`;
 
         // 种类10-30，总数10-50，最高稀有度6
         let config = { minType: 10, maxType: 30, minTotal: 10, maxTotal: 50, maxRarity: 6 };

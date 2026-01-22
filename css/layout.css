@@ -689,3 +689,124 @@
     flex: 1; /* 平均分布 */
     font-size: 15px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* 右上角存档卡片样式 */
+.menu_save_info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #5d4037;
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    max-width: 300px;
+}
+
+.menu_save_info:hover {
+    transform: translateY(2px);
+    background: #fff8e1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.save_avatar {
+    width: 40px;
+    height: 40px;
+    background: #3e2723;
+    color: #ffd700;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+    border: 2px solid #d7ccc8;
+}
+
+.save_details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.save_acc {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3e2723;
+    font-family: 'KaiTi';
+}
+
+.save_meta {
+    font-size: 13px;
+    color: #795548;
+    margin-top: 2px;
+}
+
+.save_divider {
+    margin: 0 4px;
+    color: #bdbdbd;
+}
+
+.save_action_icon {
+    font-size: 20px;
+    opacity: 0.5;
+    margin-left: 5px;
+}
+
+/* 存档对比弹窗样式 */
+.compare_container {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.compare_box {
+    flex: 1;
+    border: 2px solid #d7ccc8;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fdfbf7;
+    text-align: left;
+    font-size: 14px;
+}
+
+.compare_box.cloud { border-color: #42a5f5; }
+.compare_box.local { border-color: #66bb6a; }
+
+.compare_title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+    text-align: center;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #ccc;
+}
+
+.compare_row {
+    margin: 4px 0;
+    color: #5d4037;
+}
+.compare_val {
+    float: right;
+    font-weight: bold;
+}
+.compare_new { color: #2e7d32; } /* 较新的数据高亮 */
+.compare_old { color: #c62828; }

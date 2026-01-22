@@ -1,56 +1,39 @@
 // js/modules/ui_study.js
-// 研读界面 UI v3.6 (记忆上次选择 + 自动滚动)
+// 研读界面 UI v3.7 (增加客栈休息快捷入口)
 
 const UIStudy = {
-    selectedBookId: null, // 这里存储当前选中的书籍ID
+    selectedBookId: null,
     modalBody: null,
-    shouldScroll: false,  // 新增：控制是否需要滚动定位
+    shouldScroll: false,
 
-    // 入口
     open: function() {
-        this.shouldScroll = true; // 标记：打开时允许自动滚动
+        this.shouldScroll = true;
         this.autoSelectBook();
         this.renderModal();
     },
 
-    // 自动选中逻辑
     autoSelectBook: function() {
-        // 1. 优先读取上次记录 (如果存在且玩家确实拥有该书且未读完)
         if (player.lastStudyId && this._isBookAvailable(player.lastStudyId)) {
             this.selectedBookId = player.lastStudyId;
             return;
         }
-
-        // 2. 其次检查当前内存中的选中项是否有效
         if (this.selectedBookId && this._isBookAvailable(this.selectedBookId)) {
             return;
         }
-
-        // 3. 如果没有记录，或者记录的书无效，则重新获取列表
         const list = this._getReadableBooks();
-
         if (list.length > 0) {
-            // 按照稀有度排序 (确保自动选中的是“最好”的一本)
             list.sort((a, b) => (b.item.rarity || 1) - (a.item.rarity || 1));
-
-            // 选中第一本
             this.selectedBookId = list[0].id;
         } else {
-            // 一本能读的都没有
             this.selectedBookId = null;
         }
     },
 
     _isBookAvailable: function(bookId) {
-        // 检查背包是否有这本书，且进度未满
         const book = GAME_DB.items.find(i => i.id === bookId);
         if (!book) return false;
-
-        // 必须在背包里
         const hasInBag = player.inventory.some(slot => slot.id === bookId);
         if (!hasInBag) return false;
-
-        // 且未读完
         const progress = (player.studyProgress && player.studyProgress[bookId]) || 0;
         const max = book.studyCost || 100;
         return progress < max;
@@ -58,7 +41,6 @@ const UIStudy = {
 
     _getReadableBooks: function() {
         if (!player.inventory) return [];
-        // 获取背包里所有的书
         const bookIds = player.inventory
             .filter(slot => {
                 const item = GAME_DB.items.find(i => i.id === slot.id);
@@ -66,10 +48,8 @@ const UIStudy = {
             })
             .map(slot => slot.id);
 
-        // 去重
         const uniqueIds = [...new Set(bookIds)];
 
-        // 过滤掉已读完的
         return uniqueIds.map(id => {
             const item = GAME_DB.items.find(i => i.id === id);
             return { id: id, item: item };
@@ -102,7 +82,6 @@ const UIStudy = {
         this.renderRightPanel();
     },
 
-    // 渲染左侧列表
     renderLeftList: function() {
         const container = document.getElementById('study_book_list');
         container.innerHTML = "";
@@ -114,7 +93,6 @@ const UIStudy = {
             return;
         }
 
-        // 排序：稀有度高优先
         list.sort((a, b) => (b.item.rarity || 1) - (a.item.rarity || 1));
 
         list.forEach(entry => {
@@ -126,18 +104,14 @@ const UIStudy = {
             const el = document.createElement('div');
             el.className = `study_item ${isActive ? 'active' : ''}`;
 
-            // 点击事件
             el.onclick = () => {
                 this.selectedBookId = entry.id;
-                // 【新增】保存选择记录
                 player.lastStudyId = entry.id;
                 saveGame();
-                // 点击切换不触发滚动
                 this.shouldScroll = false;
                 this.refresh();
             };
 
-            // 悬浮框事件
             el.onmouseenter = (e) => {
                 if(window.showSkillTooltip) window.showSkillTooltip(e, entry.id);
             };
@@ -163,7 +137,6 @@ const UIStudy = {
             `;
             container.appendChild(el);
 
-            // 【新增】自动滚动逻辑
             if (isActive && this.shouldScroll) {
                 setTimeout(() => {
                     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -173,11 +146,10 @@ const UIStudy = {
         });
     },
 
-    // 渲染右侧详情
     renderRightPanel: function() {
         const container = document.getElementById('study_dashboard');
         container.innerHTML = "";
-        console.log('renderRightPanel', this.selectedBookId);
+
         if (!this.selectedBookId) {
             container.innerHTML = `<div class="empty_tip">请选择要研读的典籍</div>`;
             return;
@@ -186,18 +158,14 @@ const UIStudy = {
         const bookId = this.selectedBookId;
         const item = player.inventory.find(i => i.id === bookId);
 
-        // 获取详细计算数据 (来自 util_study.js 的 predictGain)
-        console.log('predictGain', bookId)
         const predict = window.UtilStudy.calcGain(item);
         const progress = (player.studyProgress && player.studyProgress[bookId]) || 0;
         const max = item.studyCost || 100;
 
-        // 数值安全处理
         let effValue = predict.efficiency;
         if (isNaN(effValue) || effValue === undefined) effValue = 1.0;
         const effPercent = Math.round(effValue * 100);
 
-        // 1. 标题头
         const rarityConfig = (typeof RARITY_CONFIG !== 'undefined') ? RARITY_CONFIG[item.rarity] : { color: '#333', name: '普通' };
         const headerHtml = `
             <div class="sd_header">
@@ -206,7 +174,6 @@ const UIStudy = {
             </div>
         `;
 
-        // 2. 进度条
         const pct = Math.min(100, (progress / max) * 100).toFixed(1);
         const gainPct = Math.min(100, (predict.gain / max) * 100).toFixed(1);
 
@@ -224,7 +191,6 @@ const UIStudy = {
             </div>
         `;
 
-        // 3. 效率详情
         let breakdownHtml = "";
         if (predict.breakdown) {
             breakdownHtml = predict.breakdown.map(b => {
@@ -248,13 +214,34 @@ const UIStudy = {
             </div>
         `;
 
-        // 4. 按钮
+        // 【修改点】使用 UtilsPlayer 判断是否在城镇中
+        let isInTown = false;
+        if (window.UtilsPlayer) {
+            isInTown = window.UtilsPlayer.isInTown();
+        } else {
+            // 降级兼容：如果在 utils_player 加载前就调用了
+            isInTown = (typeof window.currentTown !== 'undefined' && window.currentTown !== null);
+        }
+
+        let restBtnHtml = '';
+        if (isInTown) {
+            restBtnHtml = `
+                <button class="study_big_btn" 
+                    style="background:linear-gradient(to bottom, #81c784, #388e3c); margin-left: 15px; padding: 15px 40px; min-width:180px;"
+                    onclick="window.UtilStudy.quickRest()"
+                    title="花100文，回复200饱食，清空疲劳">
+                    🛏️ 客栈小憩
+                </button>
+            `;
+        }
+
         const btnHtml = `
             <div class="sd_actions">
                 <button class="study_big_btn" 
                     onclick="window.UtilStudy.performStudy('${bookId}')">
                     🕯️ 秉烛夜读
                 </button>
+                ${restBtnHtml}
                 <div class="study_cost_tip">
                     消耗: 2时辰 / -10饱食度 / +10疲劳
                 </div>
@@ -269,7 +256,6 @@ const UIStudy = {
         const css = `
             .study_layout { display:flex; height:100%; gap:20px; font-family:"KaiTi"; overflow:hidden; }
             
-            /* 左侧列表 */
             .study_sidebar { flex:1; border:1px solid #ddd; background:#fff; border-radius:6px; overflow-y:auto; display:flex; flex-direction:column; max-width:260px; }
             .study_item { padding:12px; border-bottom:1px solid #eee; cursor:pointer; display:flex; gap:10px; align-items:center; transition:0.2s; }
             .study_item:hover { background:#fafafa; }
@@ -281,7 +267,6 @@ const UIStudy = {
             .si_sub { font-size:14px; color:#666; display:flex; justify-content:space-between; }
             .si_tag { background:#eee; padding:1px 4px; border-radius:3px; }
 
-            /* 右侧面板 */
             .study_main { flex:2; display:flex; flex-direction:column; gap:15px; padding:10px; overflow-y:auto; }
             
             .sd_header { text-align:center; border-bottom:1px dashed #ccc; padding-bottom:10px; }

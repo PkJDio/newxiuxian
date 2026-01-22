@@ -12,7 +12,7 @@ const RARITY_CONFIG = {
 };
 
 const TYPE_MAPPING = {
-    'material': '材料', 'foodMaterial': '食材', 'food': '料理','fish':'鱼', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
+    'material': '材料', 'foodMaterial': '食材',"fooding":"食材", 'food': '料理','fish':'鱼', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
 };
 // 【新增】属性名映射表 (用于悬浮窗显示)
 const ATTR_MAPPING = {
@@ -31,7 +31,7 @@ const ATTR_MAPPING = {
     "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运",
     "storage": "背包空间", "hunger": "饱食度",
     "max_skill_level": "修行上限", "studyEff": "研读效率",
-    "money": "金钱", "stabilizer": '稳定', "catalyst": '药引', "heal": "愈合"
+    "money": "金钱", "stabilizer": '稳定', "catalyst": '药引', "heal": "愈合","fooding":"食材"
 };
 
 /* ================= 游戏核心常量配置 ================= */

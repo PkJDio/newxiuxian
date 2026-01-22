@@ -30,6 +30,8 @@ const CombatCore = {
         // 1. 状态检查：暂停或结束后停止心跳
         if (ctx.isStopped || ctx.isEnded || ctx.isPaused) return;
 
+
+
         // 2. 获取动态属性 (实时速度)
         const pStats = CombatCalc.getDynamicStats(ctx, 'player');
         const eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
@@ -47,10 +49,14 @@ const CombatCore = {
         const eTargetTime = this.CONFIG.BASE_TIME / (1 + eStats.speed * this.CONFIG.SPD_FACTOR);
         const eInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, eTargetTime) * fps);
 
-        // 应用增量
-        ctx.gauges.player += pInc;
-        ctx.gauges.enemy += eInc;
-        ctx.globalTimer += this.CONFIG.TICK_RATE;
+        // 【核心修改】应用时间倍率
+        // 获取当前倍率，默认为 1.0
+        const scale = this.CONFIG.TIME_SCALE || 1.0;
+
+        // 增量乘以倍率
+        ctx.gauges.player += pInc * scale;
+        ctx.gauges.enemy += eInc * scale;
+        ctx.globalTimer += this.CONFIG.TICK_RATE * scale; // 逻辑时间也加速
 
         // 4. 更新 UI 进度条
         const pPct = Math.min(100, (ctx.gauges.player / this.CONFIG.MAX_GAUGE) * 100);
@@ -254,19 +260,25 @@ const CombatCore = {
 
     /** 变速 */
     changeSpeed: function(ctx, delta) {
-        // 通过调整 TICK_RATE 来改变速度
-        let newRate = this.CONFIG.TICK_RATE;
-        if (delta < 0) newRate = Math.max(10, newRate - 10); // 加速 (间隔变小)
-        else newRate = Math.min(100, newRate + 10); // 减速 (间隔变大)
+        // 获取当前倍率
+        let current = this.CONFIG.TIME_SCALE || 1.0;
 
-        this.CONFIG.TICK_RATE = newRate;
+        // delta > 0 代表加速，delta < 0 代表减速 (配合下面 ui_combat_modal.js 的修改)
+        if (delta > 0) {
+            current += 0.5; // 每次 +0.5x
+        } else {
+            current -= 0.5; // 每次 -0.5x
+        }
 
+        // 限制范围 (0.5x ~ 5.0x)
+        current = Math.max(0.5, Math.min(5.0, current));
+
+        // 应用设置
+        this.CONFIG.TIME_SCALE = current;
+
+        // 更新 UI 显示文本
         const spdEl = document.getElementById('combat_speed_display');
-        const baseFps = 1000 / 50; // 基准 20fps
-        const currentFps = 1000 / newRate;
-        const displaySpd = (currentFps / baseFps).toFixed(1);
-
-        if(spdEl) spdEl.innerText = displaySpd + "x";
+        if(spdEl) spdEl.innerText = current.toFixed(1) + "x";
     },
 
     // --- 内部辅助 (保持不变) ---

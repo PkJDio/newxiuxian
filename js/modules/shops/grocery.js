@@ -61,8 +61,9 @@ let GroceryShop = {
     _generateStock: function(town) {
         if (!window.GAME_DB || !player) return;
 
-        const monthIndex = player.time.month;
-        const shopKey = `groceryShop_${town.id}_${monthIndex}`;
+        // 【修改】加入 day
+        const timeKey = `${player.time.month}_${player.time.day}`;
+        const shopKey = `groceryShop_${town.id}_${timeKey}`;
 
         let config = { minType: 5, maxType: 10, maxRarity: 4 };
         if (town.level === 'city') config = { minType: 8, maxType: 15, maxRarity: 6 };
@@ -143,6 +144,17 @@ let GroceryShop = {
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
             let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer;`;
 
+            // 【新增】批量按钮
+            let bulkBtnHtml = '';
+            if (!isSoldOut && canAfford) {
+                const maxCanBuy = Math.floor(player.money / entry.price);
+                const buyNum = Math.min(entry.qty, maxCanBuy);
+                if (buyNum > 1) {
+                    const bulkStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b; cursor: pointer; margin-right:5px;`;
+                    bulkBtnHtml = `<button style="${bulkStyle}" onclick="GroceryShop.handleBuyBulk(${index})">全买</button>`;
+                }
+            }
+
             if (isSoldOut) {
                 btnText = "售罄";
                 btnStyle = `${btnBase} background: #bdbdbd; border-color: #9e9e9e; color: #616161; cursor: not-allowed;`;
@@ -169,7 +181,7 @@ let GroceryShop = {
                         <div style="color:#d84315; font-weight:bold; font-size: 20px;">${entry.price} 文</div>
                         <div style="font-size:14px; color:${isSoldOut ? 'red' : '#999'};">库存: ${entry.qty}</div>
                     </div>
-                    <div style="width:90px; text-align:right;">
+                    <div style="width:160px; text-align:right;"> ${bulkBtnHtml}
                         <button style="${btnStyle}" ${isSoldOut || !canAfford ? '' : `onclick="GroceryShop.handleBuy(${index})"`}>${btnText}</button>
                     </div>
                 </div>
@@ -226,6 +238,35 @@ let GroceryShop = {
         this.uiBuy();
         if (window.updateUI) window.updateUI();
         if (window.saveGame) window.saveGame();
+    },
+    handleBuyBulk: function(index) {
+        const entry = this.currentStock[index];
+        if (!entry || entry.qty <= 0) return;
+
+        const maxCanBuy = Math.floor(player.money / entry.price);
+        const buyQty = Math.min(entry.qty, maxCanBuy);
+
+        if (buyQty <= 0) { window.showToast("银子不够！"); return; }
+
+        player.money -= (buyQty * entry.price);
+        entry.qty -= buyQty;
+
+        if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
+        else {
+            if (!player.inventory[entry.id]) player.inventory[entry.id] = 0;
+            player.inventory[entry.id] += buyQty;
+        }
+
+        if (entry.shopKey) {
+            if (!player.shopLogs) player.shopLogs = {};
+            if (!player.shopLogs[entry.shopKey]) player.shopLogs[entry.shopKey] = {};
+            player.shopLogs[entry.shopKey][entry.id] = (player.shopLogs[entry.shopKey][entry.id] || 0) + buyQty;
+        }
+
+        if(window.showToast) window.showToast(`进货成功，获得 ${buyQty} 个 ${entry.item.name}`);
+        this.uiBuy();
+        if(window.updateUI) window.updateUI();
+        if(window.saveGame) window.saveGame();
     },
 
     // ================= 出售界面 (独立实现 + SID适配) =================

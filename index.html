@@ -14,6 +14,19 @@
 
         <h1 class="menu_title">修仙模拟器</h1>
 
+        <div id="menu_save_slot" class="menu_save_info" onclick="CloudArchive.uiOpenSwitchModal()">
+            <div class="save_avatar">道</div>
+            <div class="save_details">
+                <div id="menu_save_account" class="save_acc">未读取</div>
+                <div class="save_meta">
+                    <span id="menu_save_gen">第 - 世</span>
+                    <span class="save_divider">|</span>
+                    <span id="menu_save_date">--年--月</span>
+                </div>
+            </div>
+            <div class="save_action_icon">🔄</div>
+        </div>
+
         <div class="menu_btn_group">
             <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
             <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
@@ -336,6 +349,7 @@
     <script src="js/core/cloud_archive.js"></script>
     <script src="js/core/utils_life_skills.js"></script>
     <script src="js/core/utils_gamble.js"></script>
+    <script src="js/core/utils_player.js"></script>
 
 
     <script src="js/modules/ink_generator.js"></script>

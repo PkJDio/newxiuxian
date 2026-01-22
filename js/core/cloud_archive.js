@@ -1,206 +1,264 @@
 /**
- * js/core/cloud_archive.js - 云同步逻辑 v5.0
- * 包含：主动保存、身份认证、价值判定同步
+ * js/core/cloud_archive.js - 云同步逻辑 v6.0
+ * 包含：主动保存、身份认证、存档切换与对比
  */
 const CloudArchive = {
-    // 【新增】环境检测：判断是否在生产服务器运行
+    // 环境检测
     _isServerEnv: function() {
         const hostname = window.location.hostname;
-        // 如果是本地 IP 或 localhost，返回 false
         const isLocal = hostname === 'localhost' ||
             hostname === '127.0.0.1' ||
             hostname.startsWith('192.168.') ||
-            hostname === ''; // 本地文件直接打开
+            hostname === '';
         return !isLocal;
     },
 
-    // ================= 1. 游戏启动初始化 =================
+    // ================= 1. 初始化与渲染 =================
     initSync: function() {
-        // 【环境检查】
+        // 渲染主页右上角（无论是否联网，先读本地显示）
+        this.renderMenuProfile();
+
         if (!this._isServerEnv()) {
-            console.log("[CloudArchive] 检测到本地环境，云同步已禁用");
+            console.log("[CloudArchive] 本地环境，云同步禁用");
             return;
         }
-        // 强制重新从存储中获取，防止内存变量不同步
-        const localDataStr = localStorage.getItem(window.SAVE_KEY);
 
-        // 如果完全没数据，或者有数据但 account 字段为空白/不存在
+        // 自动检查同步
+        const localDataStr = localStorage.getItem(window.SAVE_KEY);
         if (!localDataStr) {
-            this.showAccountBindingModal();
+            // 首次无存档，不强制弹窗，等玩家点击开始或切换
             return;
         }
 
         let localData = JSON.parse(localDataStr);
-        console.log("本地存档数据：", localData);
-        if (!localData.account || localData.account.trim() === "") {
-            this.showAccountBindingModal();
-        } else {
-            this.syncWithCloud(localData);
+        if (localData.account) {
+            // 后台静默同步一次，不打扰玩家
+            this.syncWithCloud(localData, true);
         }
     },
 
-    // ================= 2. 主动保存 UI (手动点击按钮触发) =================
-    uiSave: function() {
+    // 【新增】渲染主页右上角的存档胶囊
+    renderMenuProfile: function() {
+        const elAccount = document.getElementById('menu_save_account');
+        const elGen = document.getElementById('menu_save_gen');
+        const elDate = document.getElementById('menu_save_date');
+
+        if (!elAccount) return; // 不在主页场景
+
         const localDataStr = localStorage.getItem(window.SAVE_KEY);
         if (!localDataStr) {
-            window.showToast("❌ 本地暂无存档数据");
-            return;
-        }
-        const localData = JSON.parse(localDataStr);
-
-        // 如果用户还没起名号，提示去绑定
-        if (!localData.account) {
-            this.showAccountBindingModal();
+            elAccount.innerText = "点击建立仙缘";
+            elGen.innerText = "无存档";
+            elDate.innerText = "";
             return;
         }
 
+        try {
+            const data = JSON.parse(localDataStr);
+            elAccount.innerText = data.account || "未命名道友";
+            elGen.innerText = `第 ${data.generation || 1} 世`;
+
+            // 格式化时间
+            if (data.time) {
+                const y = data.time.year || 1;
+                const m = data.time.month || 1;
+                const d = data.time.day || 1;
+                elDate.innerText = `${y}年${m}月${d}日`;
+            } else {
+                elDate.innerText = "初入仙途";
+            }
+        } catch (e) {
+            console.error("存档解析失败", e);
+            elAccount.innerText = "存档损坏";
+        }
+    },
+
+    // ================= 2. 存档切换 UI =================
+
+    // 点击右上角触发：打开输入账号弹窗
+    uiOpenSwitchModal: function() {
         const contentHtml = `
             <div style="padding:15px; font-family:'KaiTi'; text-align:center;">
-                <p style="font-size:20px; color:#5d4037; margin-bottom:10px;">名号：<b>${localData.account}</b></p>
-                <p style="font-size:16px; color:#666;">是否将当前进度（第${localData.generation || 1}世）同步至云端魂灯？</p>
-                <p style="font-size:14px; color:#d84315; margin-top:10px;">※ 此操作将覆盖该名号在云端的旧存档。</p>
+                <p style="font-size:18px; color:#5d4037; margin-bottom:10px;">🔮 <b>存档切换 / 读取</b></p>
+                <p style="font-size:14px; color:#666; margin-bottom:15px;">输入【名号】以读取云端记录。<br>若名号不存在，则视为新建。</p>
+                <input type="text" id="switch_account_input" 
+                    style="width:80%; padding:10px; font-size:20px; border:2px solid #8d6e63; border-radius:4px; text-align:center;"
+                    placeholder="输入名号..." maxlength="20">
             </div>
         `;
+
         const footerHtml = `
-            <div style="display:flex; gap:10px; width:100%;">
-                <button class="ink_btn_normal" onclick="window.closeModal()" style="flex:1;">暂缓</button>
-                <button class="ink_btn" onclick="CloudArchive.executeSave(false)" style="flex:1; background:#d84315; color:#fff; border:none;">确认同步</button>
-            </div>
+            <button class="ink_btn" id="btn_check_account" onclick="CloudArchive.handleAccountCheck()" style="width:100%;">🔍 读取并对比</button>
         `;
-        window.UtilsModal.showInteractiveModal("💾 存档同步", contentHtml, footerHtml, "modal_cloud_sync", 30,30);
+
+        window.UtilsModal.showInteractiveModal("🔁 切换存档", contentHtml, footerHtml, "modal_switch_acc", 40, 35);
+
+        // 自动填入当前账号方便修改
+        setTimeout(() => {
+            const local = JSON.parse(localStorage.getItem(window.SAVE_KEY) || "{}");
+            if(local.account) document.getElementById('switch_account_input').value = local.account;
+        }, 50);
     },
 
-    // ================= 3. 核心同步与逻辑比对 =================
-    syncWithCloud: function(localData) {
-        fetch('/newgame/api/load', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: localData.account })
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.data) {
-                    const decision = this._compareArchiveValue(localData, res.data);
-                    if (decision === 'CLOUD_BETTER') {
-                        console.log("云端存档价值更高，执行拉取...");
-                        this._applyCloudData(res.data);
-                    } else if (decision === 'LOCAL_BETTER') {
-                        console.log("本地进度领先，自动备份...");
-                        this.executeSave(true);
-                    }
-                } else {
-                    this.executeSave(true);
-                }
-            });
-    },
+    // 核心逻辑：从云端拉取数据，并弹出对比窗口
+    handleAccountCheck: function() {
+        const inputVal = document.getElementById('switch_account_input').value.trim();
+        if (!inputVal) return window.showToast("名号不能为空");
 
-    /**
-     * 判定存档价值：轮回次数 > 游戏时长 > 现实更新时间
-     */
-    _compareArchiveValue: function(local, cloud) {
-        // 1. 比较轮回次数
-        const genL = local.generation || 1;
-        const genC = cloud.generation || 1;
-        if (genC > genL) return 'CLOUD_BETTER';
-        if (genL > genC) return 'LOCAL_BETTER';
-
-        // 2. 比较游戏内总时间 (换算为小时)
-        const timeL = this._getGameTotalHours(local.time);
-        const timeC = this._getGameTotalHours(cloud.time);
-        if (timeC > timeL) return 'CLOUD_BETTER';
-        if (timeL > timeC) return 'LOCAL_BETTER';
-
-        // 3. 比较同步更新时间
-        const upL = local.update_time || 0;
-        const upC = cloud.update_time || 0;
-        if (upC > upL) return 'CLOUD_BETTER';
-        if (upL > upC) return 'LOCAL_BETTER';
-
-        return 'EQUAL';
-    },
-
-    _getGameTotalHours: function(t) {
-        if (!t) return 0;
-        // 1年=12月, 1月=30日, 1日=24时 (用于比对大小的粗略权重)
-        return (t.year * 8640) + (t.month * 720) + (t.day * 24) + (t.hour || 0);
-    },
-
-    // ================= 4. 账号绑定流程 =================
-    showAccountBindingModal: function() {
-        const contentHtml = `
-            <div style="padding:15px; font-family:'KaiTi'; text-align:center;">
-                <p style="font-size:18px; color:#5d4037; margin-bottom:15px;">初次见面，请刻下您的<b>名号 (账号)</b><br><small>用于云端同步，不可更改</small></p>
-                <input type="text" id="bind_account_input" 
-                    style="width:100%; padding:12px; font-size:20px; border:2px solid #8d6e63; border-radius:4px; background:#fdfbf7; box-sizing:border-box;"
-                    placeholder="输入账号名..." maxlength="20">
-                <p style="font-size:14px; color:#d32f2f; margin-top:10px;">※ 若已有存档，输入旧名号即可接续仙缘。</p>
-            </div>
-        `;
-        const footerHtml = `
-            <button class="ink_btn" id="confirm_bind_btn" onclick="CloudArchive.confirmBinding()" style="width:100%;">确认身份</button>
-        `;
-        window.UtilsModal.showInteractiveModal("📜 身份认证", contentHtml, footerHtml, "modal_bind", 35, 30, { allowOutsideClick: false, allowEsc: false });
-    },
-
-    confirmBinding: function() {
-        const acc = document.getElementById('bind_account_input').value.trim();
-        if (!acc) return window.showToast("名号不可为空");
-
-        const btn = document.getElementById('confirm_bind_btn');
+        const btn = document.getElementById('btn_check_account');
         btn.disabled = true;
-        btn.innerText = "正在感应魂灯...";
+        btn.innerText = "正在搜寻天道记录...";
 
+        // 1. 获取本地当前数据（作为对比方A）
+        const localData = JSON.parse(localStorage.getItem(window.SAVE_KEY) || "{}");
+
+        // 2. 从云端获取目标账号数据（作为对比方B）
         fetch('/newgame/api/load', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: acc })
+            body: JSON.stringify({ key: inputVal })
         })
             .then(res => res.json())
             .then(res => {
-                let localData = JSON.parse(localStorage.getItem(window.SAVE_KEY) || "{}");
-                if (res.data) {
-                    const decision = this._compareArchiveValue(localData, res.data);
-                    if (decision === 'CLOUD_BETTER') {
-                        window.closeModal();
-                        window.showWarningModal("发现旧识", `寻得名号【${acc}】的旧日残影（第${res.data.generation || 1}世），是否以此重塑真身？`, () => {
-                            this._applyCloudData(res.data);
-                        });
-                    } else {
-                        this._completeBinding(acc, localData);
-                    }
-                } else {
-                    this._completeBinding(acc, localData);
-                }
+                btn.disabled = false;
+                btn.innerText = "🔍 读取并对比";
+
+                // 关闭输入弹窗
+                if(window.closeModal) window.closeModal();
+
+                const cloudData = res.data; // 可能为 null (新账号)
+
+                // 弹出对比决策窗口
+                this.showConflictDecisionModal(inputVal, localData, cloudData);
             })
             .catch(err => {
+                console.error(err);
                 btn.disabled = false;
-                btn.innerText = "确认身份";
-                window.showToast("❌ 无法连接魂灯");
+                btn.innerText = "重试";
+                window.showToast("❌ 网络连接失败");
             });
     },
 
-    _completeBinding: function(acc, localData) {
-        localData.account = acc;
+    // 显示对比窗口：左边本地，右边云端（目标账号）
+    showConflictDecisionModal: function(targetAccount, localData, cloudData) {
+        // 格式化信息的辅助函数
+        const formatInfo = (data) => {
+            if (!data) return `<div style="padding:20px; color:#999;">无记录<br>(将新建)</div>`;
+            const dateStr = new Date(data.update_time || 0).toLocaleString();
+            const gameTime = data.time ? `${data.time.year}年${data.time.month}月` : "初始";
+            return `
+                <div class="compare_row">名号 <span class="compare_val">${data.account || "未知"}</span></div>
+                <div class="compare_row">轮回 <span class="compare_val">第 ${data.generation || 1} 世</span></div>
+                <div class="compare_row">修为 <span class="compare_val">${data.player?.level?.name || "凡人"}</span></div>
+                <div class="compare_row">时间 <span class="compare_val">${gameTime}</span></div>
+                <div class="compare_row" style="font-size:12px; color:#999; margin-top:5px;">存档时间: ${dateStr}</div>
+            `;
+        };
+
+        const html = `
+            <div style="padding:10px; font-family:'KaiTi';">
+                <p style="text-align:center; font-size:16px; color:#5d4037; margin-bottom:15px;">
+                    目标名号：<b style="font-size:20px; color:#d84315;">${targetAccount}</b>
+                </p>
+                
+                <div class="compare_container">
+                    <div class="compare_box local">
+                        <div class="compare_title" style="color:#2e7d32;">💻 当前本地存档</div>
+                        ${formatInfo(localData.account ? localData : null)}
+                    </div>
+
+                    <div class="compare_box cloud">
+                        <div class="compare_title" style="color:#1565c0;">☁️ 目标云端存档</div>
+                        ${formatInfo(cloudData)}
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:center; font-size:14px; color:#666;">
+                    请选择操作方向：
+                </div>
+            </div>
+        `;
+
+        const footerHtml = `
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="ink_btn" style="flex:1; background:#ef5350; font-size:16px;" 
+                    onclick="CloudArchive.confirmOverwriteCloud('${targetAccount}')">
+                    📤 本地覆盖云端<br><span style="font-size:12px; opacity:0.8">(视为以此存档覆盖${targetAccount})</span>
+                </button>
+                
+                <button class="ink_btn" style="flex:1; background:#42a5f5; font-size:16px;" 
+                    onclick="CloudArchive.confirmLoadCloud('${targetAccount}')">
+                    📥 云端覆盖本地<br><span style="font-size:12px; opacity:0.8">(读取${targetAccount}的进度)</span>
+                </button>
+            </div>
+        `;
+
+        // 临时存储云端数据以便后续读取使用
+        this._tempCloudData = cloudData;
+        window.UtilsModal.showInteractiveModal("⚖️ 存档裁决", html, footerHtml, "modal_conflict", 70, 60);
+    },
+
+    // 操作 A: 本地覆盖云端 (Save As / Upload)
+    confirmOverwriteCloud: function(targetAccount) {
+        if (!confirm(`确定要用当前本地进度覆盖云端【${targetAccount}】的记录吗？\n云端原有数据将丢失！`)) return;
+
+        // 1. 获取本地数据
+        let localData = JSON.parse(localStorage.getItem(window.SAVE_KEY) || "{}");
+
+        // 2. 修改 Account 为目标账号
+        localData.account = targetAccount;
         localData.update_time = Date.now();
+
+        // 3. 保存回本地 (先改名)
         localStorage.setItem(window.SAVE_KEY, JSON.stringify(localData));
+
+        // 4. 上传
+        this.executeSave(false, () => {
+            window.showToast(`✅ 已将当前进度保存至【${targetAccount}】`);
+            this.renderMenuProfile(); // 刷新右上角
+            window.closeModal();
+        });
+    },
+
+    // 操作 B: 云端覆盖本地 (Load Game)
+    confirmLoadCloud: function(targetAccount) {
+        if (!this._tempCloudData) {
+            window.showToast("云端该名号无记录，无法读取！");
+            return;
+        }
+
+        if (!confirm(`确定要读取云端【${targetAccount}】的进度吗？\n当前未保存的本地进度将丢失！`)) return;
+
+        // 1. 写入本地
+        localStorage.setItem(window.SAVE_KEY, JSON.stringify(this._tempCloudData));
+
+        // 2. 刷新页面以重载
+        window.showToast("🔄 读取成功，正在重塑世界...");
         window.closeModal();
-        this.executeSave(false);
+        setTimeout(() => location.reload(), 1000);
     },
 
-    // ================= 5. 执行读写 =================
-    _applyCloudData: function(data) {
-        localStorage.setItem(window.SAVE_KEY, JSON.stringify(data));
-        window.showToast("🔄 仙缘已接续，即将重塑真身...");
-        setTimeout(() => location.reload(), 1500);
+    // ================= 3. 基础功能 =================
+
+    // 主动保存 UI (左下角按钮)
+    uiSave: function() {
+        const localDataStr = localStorage.getItem(window.SAVE_KEY);
+        if (!localDataStr) return window.showToast("无数据");
+        const localData = JSON.parse(localDataStr);
+
+        if (!localData.account) {
+            this.uiOpenSwitchModal(); // 如果没账号，引导去起名/切换
+            return;
+        }
+
+        if (confirm(`将当前进度保存至【${localData.account}】的云端记录？`)) {
+            this.executeSave(false);
+        }
     },
 
-    executeSave: function(isSilent = false) {
-        let localDataStr = localStorage.getItem(window.SAVE_KEY);
-        if (!localDataStr) return;
-        let localData = JSON.parse(localDataStr);
-        if (!localData.account) return;
-
-        // 每次保存强制刷新更新时间
+    // 执行保存 API
+    executeSave: function(isSilent = false, callback = null) {
+        let localData = JSON.parse(localStorage.getItem(window.SAVE_KEY));
         localData.update_time = Date.now();
         localStorage.setItem(window.SAVE_KEY, JSON.stringify(localData));
 
@@ -211,13 +269,31 @@ const CloudArchive = {
         })
             .then(res => res.json())
             .then(res => {
-                if (window.closeModal) window.closeModal();
-                if (!isSilent) window.showToast("✨ 云端留影完成");
+                if (!isSilent) window.showToast("☁️ 云端同步完成");
+                if (callback) callback();
+            })
+            .catch(() => {
+                if (!isSilent) window.showToast("❌ 同步失败");
+            });
+    },
+
+    // 静默同步 (仅对比时间，若云端更新则提示)
+    syncWithCloud: function(localData, isSilent) {
+        fetch('/newgame/api/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: localData.account })
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (res.data && res.data.update_time > (localData.update_time || 0)) {
+                    console.log("发现云端有更新的存档");
+                    // 可以在这里加一个红点提示，暂时不强制弹窗
+                }
             });
     }
 };
 
-// 页面加载自动运行同步
 window.addEventListener('load', () => {
     if (window.CloudArchive) CloudArchive.initSync();
 });

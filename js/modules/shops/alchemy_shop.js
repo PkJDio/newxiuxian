@@ -61,8 +61,8 @@ const AlchemyShop = {
     _generateStock: function(town) {
         if (!window.getSeededRandom || !player) return;
 
-        const monthIndex = player.time.month;
-        const shopKey = `alchemy_${town.id}_${monthIndex}`;
+        const timeKey = `${player.time.month}_${player.time.day}`;
+        const shopKey = `alchemy_${town.id}_${timeKey}`;
 
         let config = { minType: 5, maxType: 8, minTotal: 10, maxTotal: 16, maxRarity: 3 };
         if (town.level === 'city') config = { minType: 10, maxType: 15, minTotal: 20, maxTotal: 30, maxRarity: 6 };
@@ -86,7 +86,7 @@ const AlchemyShop = {
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
         let targetTotalQty = Math.max(Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
 
-        const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
+        const rarityWeights = { 1: 1000, 2: 600, 3: 300, 4: 100, 5: 10, 6: 0 };
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;
@@ -165,6 +165,18 @@ const AlchemyShop = {
 
             const btnBase = "border-radius: 4px; box-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size:18px; padding: 8px 18px; color: #fff; border: 1px solid;";
             let btnStyle = `${btnBase} background: linear-gradient(to bottom, #81c784, #4caf50); border-color: #2e7d32; cursor: pointer;`;
+
+            // 【新增】批量购买按钮逻辑
+            let bulkBtnHtml = '';
+            if (!isSoldOut && canAfford) {
+                const maxCanBuy = Math.floor(player.money / entry.price);
+                const buyNum = Math.min(entry.qty, maxCanBuy);
+                if (buyNum > 1) {
+                    const bulkStyle = `${btnBase} background: linear-gradient(to bottom, #4fc3f7, #0288d1); border-color: #01579b; cursor: pointer; margin-right:5px;`;
+                    bulkBtnHtml = `<button style="${bulkStyle}" onclick="AlchemyShop.handleBuyBulk(${index})">全买</button>`;
+                }
+            }
+
             if (isSoldOut) btnStyle = `${btnBase} background: #bdbdbd; border-color: #9e9e9e; color: #616161; cursor: not-allowed;`;
             else if (!canAfford) btnStyle = `${btnBase} background: #e0e0e0; border-color: #bdbdbd; color: #9e9e9e; cursor: not-allowed;`;
 
@@ -186,7 +198,7 @@ const AlchemyShop = {
                         <div style="color:#d84315; font-weight:bold; font-size: 20px;">${entry.price} 文</div>
                         <div style="font-size:16px; color:${isSoldOut ? 'red' : '#999'};">库存: ${entry.qty}</div>
                     </div>
-                    <div style="width:90px; text-align:right; flex-shrink:0;">
+                    <div style="width:160px; text-align:right; flex-shrink:0;"> ${bulkBtnHtml}
                         <button style="${btnStyle}" ${isSoldOut || !canAfford ? '' : `onclick="AlchemyShop.handleBuy(${index})"`}>${isSoldOut ? '售罄' : (canAfford ? '购买' : '缺钱')}</button>
                     </div>
                 </div>
@@ -233,6 +245,39 @@ const AlchemyShop = {
         }
         if(window.showToast) window.showToast(`购入 ${entry.item.name}`);
         this.uiBuy(); if(window.updateUI) window.updateUI(); window.saveGame();
+    },
+    // 【新增】批量购买
+    handleBuyBulk: function(index) {
+        const entry = this.currentStock[index];
+        if (!entry || entry.qty <= 0) return;
+
+        const maxCanBuy = Math.floor(player.money / entry.price);
+        const buyQty = Math.min(entry.qty, maxCanBuy);
+
+        if (buyQty <= 0) {
+            window.showToast("银子不够！");
+            return;
+        }
+
+        const totalCost = buyQty * entry.price;
+        player.money -= totalCost;
+        entry.qty -= buyQty;
+
+        if (window.UtilsAdd && window.UtilsAdd.addItem) {
+            window.UtilsAdd.addItem(entry.id, buyQty);
+        }
+
+        // 更新购买记录
+        if (entry.shopKey) {
+            if (!player.shopLogs) player.shopLogs = {};
+            if (!player.shopLogs[entry.shopKey]) player.shopLogs[entry.shopKey] = {};
+            player.shopLogs[entry.shopKey][entry.id] = (player.shopLogs[entry.shopKey][entry.id] || 0) + buyQty;
+        }
+
+        if(window.showToast) window.showToast(`豪掷千金，购入 ${buyQty} 个 ${entry.item.name}`);
+        this.uiBuy();
+        if(window.updateUI) window.updateUI();
+        window.saveGame();
     },
 
     // ================= 出售界面 (适配 SID + 批量) =================

@@ -36,7 +36,7 @@ function recalcStats() {
     if (!player) return;
 
     // 【调试】开启分组，方便折叠查看
-    console.groupCollapsed("📊 [属性计算] 详细追踪 log");
+    //console.groupCollapsed("📊 [属性计算] 详细追踪 log");
 
     // 1. 初始化 derived (最终属性) - 包含所有拆分后的新字段
     player.derived = {
@@ -76,7 +76,7 @@ function recalcStats() {
     };
 
     // ================= A. 基础数值层 (精气神) =================
-    console.log("--- A. 基础属性 ---");
+    //console.log("--- A. 基础属性 ---");
     // 基础属性通常只有 jing, qi, shen
     for (let k in player.attr) {
         add(k, player.attr[k], "基础属性");
@@ -90,7 +90,7 @@ function recalcStats() {
     }
 
     // ================= B. 装备层 (核心修改：全属性累加) =================
-    console.log("--- B. 装备加成 ---");
+    //console.log("--- B. 装备加成 ---");
     if (player.equipment) {
         // 定义装备槽位
         const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'fishing_rod'];
@@ -335,7 +335,7 @@ function recalcStats() {
     player.derived.hunger = player.status.hunger;
     player.derived.fatigue = player.status.fatigue;
 
-    console.groupEnd();
+    //console.groupEnd();
 }
 
 // 暴露给全局

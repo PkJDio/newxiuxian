@@ -5,8 +5,8 @@ const UtilTrain = {
     // ================= 配置区域 =================
     COST_TIME: 4,       // 消耗 4 时辰
     COST_STAMINA: 0,    // 消耗 0 精力
-    FATIGUE_ADD: 16,    // 增加 16 疲劳
-    HUNGER_COST: 16,    // 消耗 16 饱食
+    FATIGUE_ADD: 20,    // 增加 16 疲劳
+    HUNGER_COST: 20,    // 消耗 16 饱食
 
     /**
      * 【核心公式】计算基础产出点数
@@ -79,6 +79,12 @@ const UtilTrain = {
         // 3. 计算综合效率 (按新公式)
         // 公式：1.0 * (疲惫0.5) * (饥饿0.5) * (1 + Buff加成)
         let efficiency = 1.0;
+
+        // 【新增】城镇惩罚逻辑
+        if (window.UtilsPlayer && window.UtilsPlayer.isInTown()) {
+            efficiency *= 0.5;
+            breakdown.push({ label: "红尘扰心", val: "-50%", color: "#f44336" }); // 红色表示减益
+        }
 
         // 应用负面 (乘法)
         if (hasFatigue) {
