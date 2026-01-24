@@ -66,7 +66,7 @@ window.performDirectRebirth = function() {
         newPlayer.need_kill = 0;
         newPlayer.timeStart = 0;
         newPlayer.generation = nextGen;
-        newPlayer.name = "道友" + newPlayer.account  + nextGen + "世";
+        newPlayer.name =  newPlayer.account  + "第" + nextGen + "世";
         newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
         newPlayer.isNewLife = true;
 

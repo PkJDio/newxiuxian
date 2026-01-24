@@ -34,6 +34,7 @@ const TimeHistory = {
                         if (!player.startDanger) {
                             player.startDanger = 1;
                             console.log("[TimeHistory] ⚠️ 乱世已至，危机计数器启动 (startDanger = 1)");
+                            LogManager.add(" 乱世已至,危险即将到来！")
                         }
 
                         // 3. 保存

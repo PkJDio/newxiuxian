@@ -277,6 +277,8 @@ const UIBag = {
 
         let displayType = item.type === "weapon" ? item.subType :  (globalTypeMap[item.type]  || item.subType || item.type || "物品");
 
+
+
         let combatTypeHtml = item.combatType ? ` <span style="color:#b8860b; font-weight:bold; margin-left:4px;">[${item.combatType}]</span>` : '';
         const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
 

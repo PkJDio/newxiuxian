@@ -118,7 +118,7 @@ const ModalManager = {
             if (onSelect) onSelect(colorId);
         };
 
-        this._showBaseModal('modal_qingyun_select', "请选择下注颜色", html, null, "", 30, null, { allowOutsideClick: true });
+        this._showBaseModal('modal_qingyun_select', "请选择下注颜色", html, null, "", 30, null, { allowOutsideClick: false });
     },
 
     // 注入样式
@@ -200,7 +200,7 @@ const ModalManager = {
 
     // 3. 技能弹窗 (默认允许关闭)
     showSkillModal: function(title, contentHtml) {
-        return this._showBaseModal('modal_skill', title, contentHtml, null, "", null, null, { allowOutsideClick: true, allowEsc: true }).body;
+        return this._showBaseModal('modal_skill', title, contentHtml, null, "", null, null, { allowOutsideClick: false, allowEsc: true }).body;
     },
 
     // 4. 事件弹窗 (默认允许关闭)
@@ -316,7 +316,7 @@ const ModalManager = {
         }
 
         // 大地图默认允许 ESC 和 点击外部关闭
-        const mapOptions = { allowOutsideClick: true, allowEsc: true };
+        const mapOptions = { allowOutsideClick: false, allowEsc: true };
         const { overlay, box } = this._createModalStructure('九州舆图', mapOptions);
 
         box.className = `modal_content ink_modal_box ink_card modal_map_box`;
@@ -609,7 +609,7 @@ const ModalManager = {
         const footerHtml = `<button class="ink_btn_fortune" onclick="window.closeModal()">顺应天命</button>`;
 
         // 计算 1/5 的尺寸 (约 20vw)
-        this._showBaseModal('modal_fortune', titlePrefix, contentHtml, footerHtml, themeClass, 25, 35, { allowOutsideClick: true });
+        this._showBaseModal('modal_fortune', titlePrefix, contentHtml, footerHtml, themeClass, 25, 35, { allowOutsideClick: false });
     },
 
     _injectFortuneStyles: function() {
@@ -801,7 +801,7 @@ const ModalManager = {
 
         // 合并默认配置
         const finalOptions = Object.assign({
-            allowOutsideClick: true,
+            allowOutsideClick: false,
             allowEsc: true,
             onClose: null
         }, options);

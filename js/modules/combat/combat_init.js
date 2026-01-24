@@ -12,7 +12,7 @@ const CombatInit = {
         // 1. 克隆敌人数据并打补丁
         ctx.enemy = JSON.parse(JSON.stringify(enemyObj));
         this._patchEnemyData(ctx.enemy);
-
+        console.log("ctx.enemy", ctx.enemy);
         ctx.player = window.player;
         if (ctx.player.status.toxicity === undefined) ctx.player.status.toxicity = 0;
 

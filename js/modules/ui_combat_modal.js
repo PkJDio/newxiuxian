@@ -1,6 +1,3 @@
-// js/modules/ui_combat_modal.js
-// 战斗弹窗UI管理器 v4.6 (丹药/功法 样式完全物理隔离)
-
 const UICombatModal = {
     _isStyleInjected: false,
 
@@ -50,7 +47,6 @@ const UICombatModal = {
             .attr-val { font-weight: bold; color: #333; font-family: Arial, sans-serif; }
             .attr-extra { color: #aaa; font-size: 14px; margin-left: 3px; transform: scale(0.9); }
 
-            /* 【新增】Buff 容器与标签样式 */
             .buff-container { 
                 display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; 
                 min-height: 20px; align-content: flex-start;
@@ -63,9 +59,7 @@ const UICombatModal = {
                 transition: all 0.2s;
             }
             .buff-tag:hover { filter: brightness(0.95); transform: translateY(-1px); }
-            /* 增益样式 (绿色系) */
             .buff-tag.buff { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
-            /* 减益/DoT样式 (红色系) */
             .buff-tag.debuff { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
 
             /* 日志与侧边栏 */
@@ -120,13 +114,19 @@ const UICombatModal = {
         if (enemy.mag_def === undefined) enemy.mag_def = enemy.def;
     },
 
+    // 【修改】计算行动时间：现在会考虑 CombatCore.CONFIG.TIME_SCALE
     _calcActionTime: function(speed) {
-        const config = (window.CombatCore && window.CombatCore.CONFIG) ? window.CombatCore.CONFIG : { BASE_TIME: 3.0, SPD_FACTOR: 0.01 };
-        const baseTime = config.BASE_TIME;
-        const factor = config.SPD_FACTOR;
+        // 强制读取 CombatCore.CONFIG，如果不存在则使用默认值
+        const config = (window.CombatCore && window.CombatCore.CONFIG) ? window.CombatCore.CONFIG : { BASE_TIME: 3.0, SPD_FACTOR: 0.01, TIME_SCALE: 1.0 };
+        const baseTime = config.BASE_TIME || 3.0;
+        const scale = config.TIME_SCALE || 1.0;
+        const factor = config.SPD_FACTOR || 0.01;
+
         const multiplier = 1 + (speed * factor);
         const safeMult = Math.max(0.1, multiplier);
-        const time = baseTime / safeMult;
+
+        // 计算实际秒数 = (基础时间 / 速度加成) / 时间倍率
+        const time = (baseTime / safeMult) / scale;
         return time.toFixed(1);
     },
 
@@ -246,9 +246,9 @@ const UICombatModal = {
                             </div>
                             
                             <div class="attr-grid">
-                                <div class="attr-box" id="p_attr_atk"><span class="attr-label">物攻</span><span class="attr-val">${pDerived.phy_atk || pDerived.atk}</span></div>
+                                <div class="attr-box" id="p_attr_phy_atk"><span class="attr-label">物攻</span><span class="attr-val">${pDerived.phy_atk || pDerived.atk}</span></div>
                                 <div class="attr-box" id="p_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${pDerived.mag_atk || pDerived.atk}</span></div>
-                                <div class="attr-box" id="p_attr_def"><span class="attr-label">物防</span><span class="attr-val">${pDerived.phy_def || pDerived.def}</span></div>
+                                <div class="attr-box" id="p_attr_phy_def"><span class="attr-label">物防</span><span class="attr-val">${pDerived.phy_def || pDerived.def}</span></div>
                                 <div class="attr-box" id="p_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${pDerived.mag_def || pDerived.def}</span></div>
                                 <div class="attr-box" id="p_attr_crit"><span class="attr-label">物暴</span><span class="attr-val">${pDerived.crit || 0}%</span></div>
                                 <div class="attr-box" id="p_attr_mag_crit"><span class="attr-label">法暴</span><span class="attr-val">${pDerived.mag_crit || 0}%</span></div>
@@ -295,7 +295,17 @@ const UICombatModal = {
 
         window[stopCB] = () => { if(window.Combat) Combat.stop(); };
         window[pauseCB] = () => { if(window.Combat) Combat.togglePause(); };
-        window[spdCB] = (delta) => { if(window.Combat) Combat.changeSpeed(delta); };
+
+        // 【核心修复】直接调用 CombatCore.changeSpeed，确保修改的是核心配置
+        window[spdCB] = (delta) => {
+            if(window.CombatCore) {
+                CombatCore.changeSpeed(delta);
+                // 刷新 UI 上显示的时间
+                if(window.Combat && window.Combat.ctx && window.CombatUI && window.CombatUI.updateStats) {
+                    window.CombatUI.updateStats(window.Combat.ctx);
+                }
+            }
+        };
 
         const cleanCallbacks = () => {
             delete window[startCB]; delete window[stopCB]; delete window[pauseCB]; delete window[spdCB];
@@ -306,7 +316,9 @@ const UICombatModal = {
             if(descEl) descEl.style.display = 'none';
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
-                const currentScale = (window.CombatCore && window.CombatCore.CONFIG && window.CombatCore.CONFIG.TIME_SCALE) ? window.CombatCore.CONFIG.TIME_SCALE : 1.0;
+                // 获取当前倍率，优先从 CombatCore 读取
+                const currentScale = (window.CombatCore && window.CombatCore.CONFIG) ? (window.CombatCore.CONFIG.TIME_SCALE || 1.0) : 1.0;
+
                 footerDiv.innerHTML = `
                     <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
                         <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-1)">⏬</button>
@@ -352,7 +364,6 @@ const UICombatModal = {
 
     /** 更新侧边栏 (丹药与功法完全分离) */
     updateSidebar: function() {
-        // 1. 丹药栏 (Danyao)
         const consContainer = document.getElementById('sidebar_consumables');
         if (consContainer) {
             let html = '';
@@ -371,7 +382,6 @@ const UICombatModal = {
                 const onclick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useConsumable('${idx}')`;
                 const disabled = !item ? 'disabled' : '';
 
-                // 【核心修改】Wrapper使用 danyao_slot_wrapper
                 html += `
                 <div class="danyao_slot_wrapper" ${tooltipAttr}>
                     <div class="c-slot-box">${inner}</div>
@@ -382,30 +392,20 @@ const UICombatModal = {
             consContainer.innerHTML = html;
         }
 
-        // 2. 功法栏 (Gongfa) - 现已修改为从存档读取已装配招式
-        // 2. 功法栏 (修改为：从存档 zhaoshi_equipped 读取最新招式)
         const skillContainer = document.getElementById('sidebar_skills');
         if (skillContainer) {
             let html = '';
-
-            // 【核心改动】直接读取存档中已装备的招式 ID 列表
             const equippedIds = window.player.zhaoshi_equipped || [];
 
             if (equippedIds.length === 0) {
                 html = `<div style="color:#999; font-size:12px; margin-top:10px;">(未装备招式)</div>`;
             } else {
                 equippedIds.forEach((skillId) => {
-                    // 从存档存档的 zhaoshi_list 中获取具体招式数据
                     const skillData = window.player.zhaoshi_list ? window.player.zhaoshi_list[skillId] : null;
 
                     if (skillData) {
-                        // 【核心改动】使用你 utils_tip.js 里暴露的 showZhaoshiTooltip
                         const tooltipAttr = `onmouseenter="showZhaoshiTooltip(event, '${skillId}')" onmouseleave="hideTooltip()" onmousemove="moveTooltip(event)"`;
-
-                        // 点击释放招式，依然调用 Combat 模块
-                        const onclick = `
-                        hideTooltip();Combat.useSkill('${skillId}')
-                        `;
+                        const onclick = `hideTooltip();Combat.useSkill('${skillId}')`;
 
                         html += `
                         <div class="gongfa_slot_wrapper" ${tooltipAttr}>
@@ -424,7 +424,6 @@ const UICombatModal = {
     },
 
 
-    // ... (nextWave 逻辑保持与之前一致，仅需确保 updateSidebar 被调用) ...
     nextWave: function(enemy, nextOnWin = null, options = { canEscape: false, isMultiWave: false }) {
         let modalEl = document.getElementById('combat_modal');
         if (!modalEl) {
@@ -529,10 +528,18 @@ const UICombatModal = {
                 const pauseCB = 'cb_pause_' + ts;
                 const spdCB = 'cb_spd_' + ts;
                 window[pauseCB] = () => { if(window.Combat) Combat.togglePause(); };
-                window[spdCB] = (delta) => { if(window.Combat) Combat.changeSpeed(delta); };
 
-                // 【新增】获取当前倍率
-                const currentScale = (window.CombatCore && window.CombatCore.CONFIG && window.CombatCore.CONFIG.TIME_SCALE) ? window.CombatCore.CONFIG.TIME_SCALE : 1.0;
+                // 【核心修复】多波次同样强制使用 CombatCore.changeSpeed
+                window[spdCB] = (delta) => {
+                    if(window.CombatCore) {
+                        CombatCore.changeSpeed(delta);
+                        if(window.Combat && window.Combat.ctx && window.CombatUI && window.CombatUI.updateStats) {
+                            window.CombatUI.updateStats(window.Combat.ctx);
+                        }
+                    }
+                };
+
+                const currentScale = (window.CombatCore && window.CombatCore.CONFIG) ? (window.CombatCore.CONFIG.TIME_SCALE || 1.0) : 1.0;
 
                 footerDiv.innerHTML = `
     <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">

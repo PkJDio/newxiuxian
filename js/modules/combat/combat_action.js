@@ -152,20 +152,24 @@ const CombatAction = {
         }
     },
 
-    /** 敌人行为决策 AI */
+    /** 敌人行为决策 AI (修改：生成唯一BuffID) */
     enemyAction: function(ctx, eStats, pStats) {
         let actionDone = false;
 
         if (ctx.enemy.skills && ctx.enemy.skills.length > 0) {
-            for (let skill of ctx.enemy.skills) {
-                // 简单的AI判定: 只有当buff层数不够时才放buff (可选逻辑，这里简化处理)
-                let canCast = true;
-                if (!canCast || Math.random() > skill.rate) continue;
+            for (let i = 0; i < ctx.enemy.skills.length; i++) {
+                let skill = ctx.enemy.skills[i];
+                // 简单的AI判定
+                if (Math.random() > skill.rate) continue;
 
                 const skillHtml = this._buildSkillLogHtml(skill, eStats);
 
+                // 【核心修改】生成唯一 Buff ID (防止不同技能互相覆盖，也防止和玩家技能冲突)
+                // 格式: enemy_{技能索引}_{技能ID}
+                const uniqueSkillId = `enemy_sk_${i}_${skill.id}`;
+
                 if (skill.type === 1) {
-                    // --- 伤害技能 ---
+                    // --- 伤害技能 (保持不变) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
                     const dmgType = skill.damageType || 'mag';
                     const valType = skill.dmgValType !== undefined ? skill.dmgValType : 0;
@@ -180,21 +184,18 @@ const CombatAction = {
                         atkStats.skillMult = 0;
                         atkStats.skillFlat = skill.damage || 0;
                     }
-
                     const dmg = CombatCalc.calcDamage(ctx, atkStats, pStats, false, "技能");
                     ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
 
                 } else if (skill.type === 2) {
-                    // --- Debuff ---
+                    // --- Debuff (修改：传入唯一ID) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
-                    // 传入 skill.id 作为 buffId
-                    this.applyBuff(ctx, 'player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id, skill.debuffValType, skill.id);
+                    this.applyBuff(ctx, 'player', skill.debuffAttr, -skill.debuffValue, skill.debuffTimes, 'debuff', skill.id, skill.debuffValType, uniqueSkillId);
 
                 } else if (skill.type === 3) {
-                    // --- Buff ---
+                    // --- Buff (修改：传入唯一ID) ---
                     ctx._log(`${ctx.enemy.name} 施展了 ${skillHtml}！`);
-                    // 传入 skill.id 作为 buffId
-                    this.applyBuff(ctx, 'enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id, skill.buffValType, skill.id);
+                    this.applyBuff(ctx, 'enemy', skill.buffAttr, skill.buffValue, skill.buffTimes, 'buff', skill.id, skill.buffValType, uniqueSkillId);
                 }
 
                 actionDone = true;
@@ -202,94 +203,103 @@ const CombatAction = {
             }
         }
 
+        // --- 核心修改部分 ---
         if (!actionDone) {
+            // 智能普攻：判断 物理攻击 vs 法术攻击，取高者
+            const phyAtk = eStats.phy_atk || 0;
+            const magAtk = eStats.mag_atk || 0;
+
+            // 标记伤害类型：如果法攻更高，就用法术普攻
+            eStats.damageType = (magAtk > phyAtk) ? 'mag' : 'phy';
+
+            // 构造日志描述 (可选：让玩家知道敌人用了法术普攻)
+            const atkDesc = (eStats.damageType === 'mag') ? "法术普攻" : "普攻";
+            // 可以在 performAttack 内部根据 damageType 自动处理，这里直接调用即可
+
             const dmg = CombatCalc.performAttack(ctx, ctx.enemy.name, eStats, pStats, false);
             ctx.currentPHp = Math.max(0, ctx.currentPHp - dmg);
         }
     },
 
-    /** 应用 Buff/Debuff (修改：接收并存储 metaData)
-     * @param {Object} metaData - (新增) 伤害计算快照数据
-     */
+    /** 应用 Buff/Debuff (修改：全属性数组化支持共存) */
     applyBuff: function(ctx, targetKey, attr, val, turns, type, name, valType = 0, buffId = null, metaData = null) {
+        // 确保 buffs 容器存在 (且完全独立于存档)
         if (!ctx.buffs[targetKey]) ctx.buffs[targetKey] = {};
 
         const targetName = targetKey === 'player' ? '你' : ctx.enemy.name;
-        const uniqueId = buffId || name;
+        const uniqueId = buffId || name; // 如果没传ID，用名字兜底(玩家技能通常用名字或ID)
 
-        // --- 处理 HP/MP (使用数组存储以支持多重DoT) ---
-        if (attr === 'hp' || attr === 'mp') {
-            if (!Array.isArray(ctx.buffs[targetKey][attr])) {
-                ctx.buffs[targetKey][attr] = [];
-            }
+        // 1. 初始化该属性的 Buff 数组
+        if (!Array.isArray(ctx.buffs[targetKey][attr])) {
+            ctx.buffs[targetKey][attr] = [];
+        }
 
-            const list = ctx.buffs[targetKey][attr];
-            const existing = list.find(b => b.buffId === uniqueId);
+        const list = ctx.buffs[targetKey][attr];
+        // 2. 查找是否已有同源 Buff (ID相同)
+        const existing = list.find(b => b.buffId === uniqueId);
 
-            if (existing) {
-                // 刷新持续时间
-                existing.turns = turns;
-                existing.val = val;
-                existing.valType = valType;
-                // 更新快照数据 (如果这次攻击更强，覆盖旧的)
-                if (metaData) existing.metaData = metaData;
+        if (existing) {
+            // --- 刷新现有 Buff ---
+            existing.turns = turns;
+            existing.val = val;
+            existing.valType = valType;
+            if (metaData) existing.metaData = metaData; // 更新快照
 
-                ctx._log(`> ${targetName} 的 [${name}] 持续时间刷新了。`);
-            } else {
-                // 新增 Buff，存入 metaData
-                list.push({ val, turns, type, name, valType, buffId: uniqueId, isNew: true, metaData: metaData });
-
-                // 构造初始显示的数值 HTML
-                let displayVal = Math.abs(val);
-                if (valType === 1) displayVal = (Math.abs(val) * 100).toFixed(0) + "%";
-
-                // 【新增】如果存在 metaData，给初始日志的数值加上悬浮窗
-                if (metaData) {
-                    const encoded = encodeURIComponent(JSON.stringify(metaData));
-                    displayVal = `<span class="combat-tooltip-trigger" 
-                        style="cursor:help; border-bottom:1px dotted; font-weight:bold;"
-                        onmouseenter="window.showCombatTooltip(event, '${encoded}')" 
-                        onmouseleave="window.hideTooltip()" 
-                        onmousemove="window.moveTooltip(event)">${displayVal}</span>`;
-                }
-
-                const actionDesc = val < 0 ? "损失" : "恢复";
-                const attrName = (typeof ATTR_MAPPING !== 'undefined') ? (ATTR_MAPPING[attr] || attr) : attr;
-
-                ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b> 影响: 每回合${actionDesc} ${displayVal} ${attrName} (${turns}回合)`);
-            }
-
+            ctx._log(`> ${targetName} 的 [${name}] 持续时间刷新了。`);
         } else {
-            // --- 普通属性 (覆盖式) ---
-            ctx.buffs[targetKey][attr] = { val, turns, type, name, valType, buffId: uniqueId, isNew: true };
+            // --- 新增 Buff (推入数组，实现共存) ---
+            list.push({
+                val, turns, type, name, valType,
+                buffId: uniqueId,
+                isNew: true,
+                metaData: metaData
+            });
 
-            let valStr = "";
-            if (valType === 1) valStr = (val > 0 ? "+" : "") + (val * 100).toFixed(0) + "%";
-            else valStr = (val > 0 ? "+" : "") + val;
+            // 构造日志显示
+            let displayVal = Math.abs(val);
+            if (valType === 1) displayVal = (Math.abs(val) * 100).toFixed(0) + "%";
+
+            // 如果有 metaData (DoT)，加 Tooltip
+            if (metaData) {
+                const encoded = encodeURIComponent(JSON.stringify(metaData));
+                displayVal = `<span class="combat-tooltip-trigger" 
+                    style="cursor:help; border-bottom:1px dotted; font-weight:bold;"
+                    onmouseenter="window.showCombatTooltip(event, '${encoded}')" 
+                    onmouseleave="window.hideTooltip()" 
+                    onmousemove="window.moveTooltip(event)">${displayVal}</span>`;
+            }
+
+            const actionDesc = val < 0 ? "降低" : "提升";
+            // 特殊处理 HP/MP 的描述
+            let finalDesc = actionDesc;
+            if (attr === 'hp') finalDesc = val < 0 ? "损失" : "恢复";
+            if (attr === 'mp') finalDesc = val < 0 ? "流失" : "恢复";
 
             const attrName = (typeof ATTR_MAPPING !== 'undefined') ? (ATTR_MAPPING[attr] || attr) : attr;
-            ctx._log(`> ${targetName} 受到 <b style="color:${type==='debuff'?'#f57f17':'#388e3c'}">[${name}]</b> 影响: ${attrName} ${valStr} (${turns}回合)`);
+            const color = type === 'debuff' ? '#f57f17' : '#388e3c';
+
+            ctx._log(`> ${targetName} 受到 <b style="color:${color}">[${name}]</b> 影响: 每回合${finalDesc} ${displayVal} ${attrName} (${turns}回合)`);
         }
 
         ctx._updateUIStats();
     },
 
-    /** 回合结束处理 Buff (修改：读取 metaData 并渲染悬浮窗) */
+    /** 回合结束处理 Buff (修改：统一处理数组) */
     processBuffs: function(ctx, target) {
         const buffMap = ctx.buffs[target];
         const targetName = target === 'player' ? '你' : ctx.enemy.name;
 
+        // 遍历所有属性 (hp, mp, speed, atk...)
         for (let attr in buffMap) {
+            const list = buffMap[attr];
+            if (!Array.isArray(list)) continue; // 防御性检查
 
-            // --- 处理 HP/MP (数组) ---
-            if (attr === 'hp' || attr === 'mp') {
-                const list = buffMap[attr];
-                if (!Array.isArray(list)) continue;
+            // 倒序遍历以便安全删除
+            for (let i = list.length - 1; i >= 0; i--) {
+                const b = list[i];
 
-                // 倒序遍历以便删除
-                for (let i = list.length - 1; i >= 0; i--) {
-                    const b = list[i];
-
+                // --- 1. 处理每回合生效的属性 (HP/MP) ---
+                if (attr === 'hp' || attr === 'mp') {
                     const max = (attr === 'hp')
                         ? (target === 'player' ? ctx.player.derived.hpMax : ctx.enemy.maxHp)
                         : (target === 'player' ? ctx.player.derived.mpMax : 100);
@@ -298,62 +308,41 @@ const CombatAction = {
                         ? (target === 'player' ? 'currentPHp' : 'currentEHp')
                         : (target === 'player' ? 'currentPMp' : null);
 
-                    if (!currProp) continue;
+                    if (currProp) {
+                        const change = b.valType === 1 ? Math.floor(max * b.val) : b.val;
+                        const oldVal = ctx[currProp];
+                        ctx[currProp] = Math.max(0, Math.min(max, oldVal + change));
 
-                    // 计算数值
-                    const change = b.valType === 1 ? Math.floor(max * b.val) : b.val;
-                    const oldVal = ctx[currProp];
-                    ctx[currProp] = Math.max(0, Math.min(max, oldVal + change));
-
-                    // --- 【核心修改】构造日志数值 HTML ---
-                    const absChange = Math.abs(change);
-                    let valHtml = absChange;
-
-                    // 如果 Buff 对象里存有 metaData，则生成悬浮窗
-                    if (b.metaData) {
-                        const encoded = encodeURIComponent(JSON.stringify(b.metaData));
-                        valHtml = `<span class="combat-tooltip-trigger" 
-                            style="cursor:help; border-bottom:1px dotted;"
-                            onmouseenter="window.showCombatTooltip(event, '${encoded}')" 
-                            onmouseleave="window.hideTooltip()" 
-                            onmousemove="window.moveTooltip(event)">
-                            ${absChange}
-                        </span>`;
+                        // 日志与Tooltip逻辑
+                        const absChange = Math.abs(change);
+                        let valHtml = absChange;
+                        if (b.metaData) {
+                            const encoded = encodeURIComponent(JSON.stringify(b.metaData));
+                            valHtml = `<span class="combat-tooltip-trigger" style="cursor:help; border-bottom:1px dotted;" onmouseenter="window.showCombatTooltip(event, '${encoded}')" onmouseleave="window.hideTooltip()" onmousemove="window.moveTooltip(event)">${absChange}</span>`;
+                        }
+                        const actionStr = change > 0 ? "恢复" : "流失";
+                        const color = change > 0 ? "#4caf50" : "#e53935";
+                        if (change !== 0) {
+                            ctx._log(`> ${targetName} 因 [${b.name}] ${actionStr} <span style="color:${color}">${valHtml}</span> ${(attr==='hp'?'生命':'灵力')}`);
+                        }
                     }
+                }
 
-                    const actionStr = change > 0 ? "恢复" : "流失";
-                    const color = change > 0 ? "#4caf50" : "#e53935"; // 绿/红
-                    const attrName = (typeof ATTR_MAPPING !== 'undefined') ? (ATTR_MAPPING[attr] || attr) : attr;
-
-                    // 只有当数值不为0时才打印日志 (防止刷屏)
-                    if (change !== 0) {
-                        ctx._log(`> ${targetName} 因 [${b.name}] ${actionStr} <span style="color:${color}">${valHtml}</span> ${attrName}`);
-                    }
-
-                    // 扣除回合
+                // --- 2. 扣除回合数 ---
+                // 对于属性 Buff (如 +speed)，虽然不每回合跳数字，但要扣回合
+                if (b.isNew) {
+                    b.isNew = false; // 跳过当回合的扣除
+                } else {
                     b.turns--;
                     if (b.turns <= 0) {
                         ctx._log(`<span style="color:#888; font-size:12px;">> ${targetName} 的 [${b.name}] 效果结束。</span>`);
-                        list.splice(i, 1);
+                        list.splice(i, 1); // 移除过期的
                     }
                 }
-
-                if (list.length === 0) delete buffMap[attr];
-
-            } else {
-                // --- 处理普通属性 (对象) ---
-                const b = buffMap[attr];
-                if (b.isNew) {
-                    b.isNew = false;
-                } else {
-                    b.turns--;
-                }
-
-                if (b.turns <= 0) {
-                    ctx._log(`<span style="color:#888; font-size:12px;">> ${targetName} 的 [${b.name}] 效果结束。</span>`);
-                    delete buffMap[attr];
-                }
             }
+
+            // 如果该属性下没有 Buff 了，可以清理掉 key (可选)
+            if (list.length === 0) delete buffMap[attr];
         }
     },
 

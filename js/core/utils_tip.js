@@ -429,7 +429,7 @@ const TooltipManager = {
         this.showItem(e, sid, null, 'normal');
     },
 
-    /* ================= 5. 战斗详细悬浮窗 (V4.9 增强版) ================= */
+    /* ================= 5. 战斗详细悬浮窗 (V5.0 增加战斗风格显示) ================= */
     showCombatDetail: function(e, encodedData) {
         this._init();
         this._mouseX = e.clientX;
@@ -477,11 +477,34 @@ const TooltipManager = {
             // 3. 结果端
             html += `<div class="tt_row"><span>折后基础伤害</span> <span>${data.dmgAfterMitigation}</span></div>`;
 
+            // 暴击
             if (data.isCrit) {
                 html += `<div class="tt_row" style="color:#ffeb3b; font-weight:bold;"><span>暴击伤害 (Rate:${(data.critRate*100).toFixed(0)}%)</span> <span>x${data.critDmg}</span></div>`;
             } else {
                 html += `<div class="tt_row" style="color:#aaa;"><span>未暴击 (率:${(data.critRate*100).toFixed(0)}%)</span> <span>-</span></div>`;
             }
+
+            // --- 【核心新增】战斗风格克制显示 (Style Matrix) ---
+            // 只有当存在 styleMult 且不为 1.0 时显示，或者你想一直显示也可以去掉 !== '1.0'
+            if (data.styleMult) {
+                const sm = parseFloat(data.styleMult);
+                let sColor = '#aaa';
+                let sIcon = '';
+
+                // 1.1 -> 绿色 (增益), 0.8 -> 红色 (减益)
+                if (sm > 1.0) { sColor = '#66bb6a'; sIcon = '▲'; }
+                else if (sm < 1.0) { sColor = '#ef5350'; sIcon = '▼'; }
+                else { sIcon = '='; }
+
+                const atkStr = data.atkModule || '未知';
+                const defStr = data.defArmor || '未知';
+
+                html += `<div class="tt_row">
+                    <span style="font-size:12px; color:#bbb;">风格克制 (${atkStr} vs ${defStr})</span>
+                    <span style="color:${sColor}; font-weight:bold;">${sIcon} x${data.styleMult}</span>
+                </div>`;
+            }
+            // ----------------------------------------------------
 
             html += `<div class="tt_row"><span>随机浮动</span> <span style="color:#aaa;">${data.variance}</span></div>`;
 
@@ -502,7 +525,6 @@ const TooltipManager = {
             html += `<div class="tt_row"><span>伤害类型</span> <span style="color:${color}">${typeStr}</span></div>`;
             html += `<div class="tt_row"><span>当前${typeStr}攻击</span> <span>${data.panelVal}</span></div>`;
 
-            // 计算预览数值
             let dmgStr = "";
             let finalVal = 0;
             if (data.formulaType === '百分比') {
@@ -513,7 +535,6 @@ const TooltipManager = {
                 dmgStr = `<span style="color:#fff; font-weight:bold;">${finalVal}</span> (固定值)`;
             }
 
-            // 根据类型显示不同的描述
             let label = "预估伤害";
             if (data.subType && data.subType.includes("治疗")) label = "预估治疗";
             else if (data.subType && data.subType.includes("增益")) label = "增益数值";
@@ -533,19 +554,16 @@ const TooltipManager = {
             html += `<div class="tt_row"><span>冷却时间</span> <span>${data.cd} 回合</span></div>`;
         }
 
-        // --- C. 敌人技能/闪避/词条 (保持原有逻辑) ---
+        // --- C. 其他 (保持不变) ---
         else if (data.type === 'evasion') {
-            // ... (保持原代码) ...
             const isPlayer = data.source === 'player';
             html += `<div class="tt_header">闪避判定</div>`;
             html += `<div class="tt_row"><span>${isPlayer?'玩家':'敌人'}闪避率</span> <span>${data.final}%</span></div>`;
             html += `<div class="tt_row" style="color:#aaa; font-size:12px;">(基础 ${data.base}% - 命中 ${data.acc}%)</div>`;
         }
         else if (data.type === 'enemy_skill') {
-            // ... (保持原代码) ...
             const color = data.subType === 1 ? '#d32f2f' : (data.subType === 2 ? '#f57f17' : '#388e3c');
             html += `<div class="tt_header" style="color:${color};">${data.name}</div>`;
-            // 简单展示
             if (data.valType === 1) {
                 html += `<div class="tt_row"><span>威力</span> <span>${data.ratio}% 面板</span></div>`;
             } else {
@@ -554,7 +572,6 @@ const TooltipManager = {
             if (data.effect) html += `<div class="tt_row"><span>效果</span> <span>${ATTR_MAPPING[data.effect]||data.effect}</span></div>`;
         }
         else if (data.type === 'entry') {
-            // ... (保持原代码) ...
             html += `<div class="tt_header" style="color:#ab47bc;">${data.name}</div>`;
             html += `<div class="tt_row"><span>触发数值</span> <span>${data.finalVal}</span></div>`;
         }

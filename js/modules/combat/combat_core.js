@@ -1,13 +1,10 @@
-// js/modules/combat/combat_core.js
-// 职责：时间轴管控、自动攻击逻辑 (Auto-Battler Core)
-// 适配：V4.8 全局3秒心跳机制 (Buff/CD 与 攻速解耦)
-
 const CombatCore = {
     CONFIG: {
         MAX_GAUGE: 10000,
         TICK_RATE: 50,    // 50ms 刷新一次 (物理帧)
-        BASE_TIME: 3.0,   // 3.0秒 = 1个标准回合周期 (用于Buff/CD结算)
-        SPD_FACTOR: 0.01  // 速度系数
+        BASE_TIME: 4.0,   // 4.0秒 = 1个标准回合周期 (用于Buff/CD结算)
+        SPD_FACTOR: 0.01, // 速度系数
+        TIME_SCALE: 1.0   // 默认时间倍率
     },
 
     /** 初始化战斗数据 */
@@ -16,10 +13,13 @@ const CombatCore = {
         ctx.state = 'running';
         ctx.globalTimer = 0;
 
-        // 【新增】3秒周期累积器
+        // 【新增】标准回合周期累积器
         ctx.roundAccumulator = 0;
         // 显示用的回合数计数
         ctx.displayTurn = 1;
+
+        // 确保使用最新的配置倍率 (如果UI修改了CombatCore.CONFIG.TIME_SCALE，这里会继承)
+        if (!CombatCore.CONFIG.TIME_SCALE) CombatCore.CONFIG.TIME_SCALE = 1.0;
     },
 
     /** 启动时间循环 */
@@ -34,20 +34,25 @@ const CombatCore = {
         // 1. 状态检查
         if (ctx.isStopped || ctx.isEnded || ctx.isPaused) return;
 
-        // 获取时间倍率 (默认为 1.0)
-        const scale = this.CONFIG.TIME_SCALE || 1.0;
-        // 计算本帧流逝的“逻辑时间” (ms)
-        const delta = this.CONFIG.TICK_RATE * scale;
+        // A. 获取时间倍率 (直接读取 CombatCore 静态配置)
+        const scale = CombatCore.CONFIG.TIME_SCALE || 1.0;
+
+        // B. 计算本帧流逝的“逻辑时间” (ms)
+        const delta = CombatCore.CONFIG.TICK_RATE * scale;
 
         // ---------------------------------------------------------
-        // 【模块 A】全局 3秒 心跳 (Buff / DoT / CD 结算)
+        // 【模块 A】全局心跳 (Buff / DoT / CD 结算)
         // ---------------------------------------------------------
+        // 这里的 accumulator 累加的是 delta (经过倍率放大的时间)
+        // 1.0x时: 每秒加1000ms -> 4秒触发一次
+        // 2.0x时: 每秒加2000ms -> 2秒触发一次
         ctx.roundAccumulator += delta;
-        const ROUND_INTERVAL = this.CONFIG.BASE_TIME * 1000; // 3000ms
+        const ROUND_INTERVAL = CombatCore.CONFIG.BASE_TIME * 1000; // 4000ms
 
-        // 可能因为高倍速一次跳过多个周期，用 while 处理
         while (ctx.roundAccumulator >= ROUND_INTERVAL) {
             ctx.roundAccumulator -= ROUND_INTERVAL;
+
+            // 执行全局结算 (CD -1, Buff回合 -1, DoT伤害)
             this._processGlobalRound(ctx);
 
             // 如果结算由于DoT导致战斗结束，立即中止
@@ -65,25 +70,25 @@ const CombatCore = {
         const pStats = CombatCalc.getDynamicStats(ctx, 'player');
         const eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
 
-        // 计算跑条增量 (基于 3.0s 基准时间)
-        const fps = 1000 / this.CONFIG.TICK_RATE;
+        // 计算跑条增量 (基于 BASE_TIME 基准时间)
+        const fps = 1000 / CombatCore.CONFIG.TICK_RATE;
 
         // 玩家增量
-        const pTargetTime = this.CONFIG.BASE_TIME / (1 + pStats.speed * this.CONFIG.SPD_FACTOR);
-        const pInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, pTargetTime) * fps);
+        const pTargetTime = CombatCore.CONFIG.BASE_TIME / (1 + pStats.speed * CombatCore.CONFIG.SPD_FACTOR);
+        const pInc = CombatCore.CONFIG.MAX_GAUGE / (Math.max(0.1, pTargetTime) * fps);
 
         // 敌人增量
-        const eTargetTime = this.CONFIG.BASE_TIME / (1 + eStats.speed * this.CONFIG.SPD_FACTOR);
-        const eInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, eTargetTime) * fps);
+        const eTargetTime = CombatCore.CONFIG.BASE_TIME / (1 + eStats.speed * CombatCore.CONFIG.SPD_FACTOR);
+        const eInc = CombatCore.CONFIG.MAX_GAUGE / (Math.max(0.1, eTargetTime) * fps);
 
-        // 应用增量 (受倍速影响)
+        // 应用增量 (同样受 scale 影响，跑条变快)
         ctx.gauges.player += pInc * scale;
         ctx.gauges.enemy += eInc * scale;
         ctx.globalTimer += delta;
 
         // 更新 UI 进度条
-        const pPct = Math.min(100, (ctx.gauges.player / this.CONFIG.MAX_GAUGE) * 100);
-        const ePct = Math.min(100, (ctx.gauges.enemy / this.CONFIG.MAX_GAUGE) * 100);
+        const pPct = Math.min(100, (ctx.gauges.player / CombatCore.CONFIG.MAX_GAUGE) * 100);
+        const ePct = Math.min(100, (ctx.gauges.enemy / CombatCore.CONFIG.MAX_GAUGE) * 100);
 
         if (window.CombatUI && CombatUI.updateGauges) {
             CombatUI.updateGauges(ctx, pPct, ePct);
@@ -95,20 +100,19 @@ const CombatCore = {
         let actionHappened = false;
 
         // --- 玩家满条 ---
-        if (ctx.gauges.player >= this.CONFIG.MAX_GAUGE) {
-            ctx.gauges.player -= this.CONFIG.MAX_GAUGE;
+        if (ctx.gauges.player >= CombatCore.CONFIG.MAX_GAUGE) {
+            ctx.gauges.player -= CombatCore.CONFIG.MAX_GAUGE;
 
             // 执行自动普攻
             const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
             ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg);
 
-            // 【注意】这里不再调用 _onTurnEnd 结算Buff/CD，只负责行动
             actionHappened = true;
         }
 
         // --- 敌人满条 ---
-        if (ctx.gauges.enemy >= this.CONFIG.MAX_GAUGE) {
-            ctx.gauges.enemy -= this.CONFIG.MAX_GAUGE;
+        if (ctx.gauges.enemy >= CombatCore.CONFIG.MAX_GAUGE) {
+            ctx.gauges.enemy -= CombatCore.CONFIG.MAX_GAUGE;
 
             // 执行敌人 AI
             CombatAction.enemyAction(ctx, eStats, pStats);
@@ -126,33 +130,33 @@ const CombatCore = {
             if (ctx.isEnded) return;
         }
 
-        // 继续下一帧
-        ctx.timer = setTimeout(() => this._tick(ctx), this.CONFIG.TICK_RATE);
+        // 继续下一帧 (物理时间不变，保持 50ms 间隔)
+        ctx.timer = setTimeout(() => CombatCore._tick(ctx), CombatCore.CONFIG.TICK_RATE);
     },
 
-    /** * 【核心新增】全局回合结算 (每3秒触发一次)
-     * 职责：刷新CD、结算DoT/HoT、更新Buff回合数
+    /** * 全局回合结算
+     * 触发频率：受 TIME_SCALE 影响。
      */
     _processGlobalRound: function(ctx) {
         // 1. 日志分割线
         if (window.CombatUI) {
-            CombatUI.log(ctx, `<div class="turn-divider">--- 第 ${ctx.displayTurn} 回合 (3秒) ---</div>`);
+            CombatUI.log(ctx, `<div class="turn-divider">--- 第 ${ctx.displayTurn} 回合 (心跳周期) ---</div>`);
         }
         ctx.displayTurn++;
 
-        // 2. 结算 玩家 身上的 Buff/DoT
+        // 2. 结算 玩家 身上的 Buff/DoT (回合数-1)
         if (CombatAction.processBuffs) {
             CombatAction.processBuffs(ctx, 'player');
-            CombatAction.processPoisonOnPlayer(ctx); // 毒素结算
+            CombatAction.processPoisonOnPlayer(ctx);
         }
 
-        // 3. 结算 敌人 身上的 Buff/DoT
+        // 3. 结算 敌人 身上的 Buff/DoT (回合数-1)
         if (CombatAction.processBuffs) {
             CombatAction.processBuffs(ctx, 'enemy');
-            CombatAction.processPoisonOnEnemy(ctx); // 毒素结算
+            CombatAction.processPoisonOnEnemy(ctx);
         }
 
-        // 4. 刷新 玩家 冷却时间 (CD)
+        // 4. 刷新 玩家 冷却时间 (CD -1)
         // 技能 CD
         for (let k in ctx.skillCDs) {
             if (ctx.skillCDs[k] > 0) ctx.skillCDs[k]--;
@@ -163,6 +167,7 @@ const CombatCore = {
         }
 
         // 5. 统一刷新 UI (CD遮罩、状态栏)
+        // 强制刷新 CD UI，确保用户看到数字变动
         if (ctx._refreshSkillCDUI) ctx._refreshSkillCDUI();
         if (ctx._refreshItemCDUI) ctx._refreshItemCDUI();
         if (ctx._updateToxUI) ctx._updateToxUI();
@@ -182,7 +187,7 @@ const CombatCore = {
         return false;
     },
 
-    // ================== 结算与控制 (保持原有逻辑) ==================
+    // ================== 结算与控制 ==================
 
     syncStatus: function(ctx) {
         if(ctx.player.status) {
@@ -195,7 +200,6 @@ const CombatCore = {
         return !(ctx.isStopped || ctx.isEnded || ctx.isPaused);
     },
 
-    /** 逃跑 */
     stop: function(ctx) {
         if (ctx.options && ctx.options.canEscape === false) {
             if(window.showToast) window.showToast("强敌环伺，无路可退！");
@@ -212,9 +216,8 @@ const CombatCore = {
         ctx.clearCache();
     },
 
-    /** 胜利 */
     handleVictory: function(ctx) {
-        if (ctx.isEnded) return; // 防止重复结算
+        if (ctx.isEnded) return;
         ctx.isEnded = true;
         if (ctx.timer) clearTimeout(ctx.timer);
 
@@ -226,22 +229,39 @@ const CombatCore = {
 
         ctx._log(`<div style="color:green; font-weight:bold; margin-top:10px; font-size:16px;">🏆 战斗胜利！</div>`);
 
-        const money = this._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
-        if (money > 0) { if (window.UtilsAdd) UtilsAdd.addMoney(money); else ctx.player.money += money; }
+        // 1. 金钱结算
+        let baseMoney = this._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
+        let ExMoney = 0;
+        let finalMoney = baseMoney + ExMoney;
 
+        if (finalMoney > 0) {
+            if (window.UtilsAdd) UtilsAdd.addMoney(finalMoney);
+            else ctx.player.money += finalMoney;
+        }
+
+        // 2. 物品掉落结算
         const drops = this._calculateFinalDrops(ctx);
         const realDrops = [];
+
         drops.forEach(d => {
             if (window.addItem) {
-                const added = window.addItem(d.id, 1);
-                if (added) {
-                    added.isBounty = d.isBounty;
-                    realDrops.push(added);
+                let baseCount = d.count || 1;
+                let ExNums = 0;
+                let finalCount = baseCount + ExNums;
+
+                if (finalCount > 0) {
+                    const added = window.addItem(d.id, finalCount);
+                    if (added) {
+                        added.isBounty = d.isBounty;
+                        added.count = finalCount;
+                        realDrops.push(added);
+                    }
                 }
             }
         });
 
-        let rewardHtml = this._buildRewardHtml(ctx, money, drops);
+        // 3. 构建奖励 UI
+        let rewardHtml = this._buildRewardHtml(ctx, finalMoney, realDrops);
 
         if (window.UtilsEnemy) UtilsEnemy.markDefeated(ctx.enemy.x, ctx.enemy.y);
         this.syncStatus(ctx);
@@ -255,7 +275,6 @@ const CombatCore = {
         CombatUI.renderEnd(ctx, "胜利", rewardHtml);
     },
 
-    /** 失败 */
     handleDefeat: function(ctx) {
         if (ctx.isEnded) return;
         ctx.isEnded = true;
@@ -287,28 +306,32 @@ const CombatCore = {
         ctx.clearCache();
     },
 
-    /** 暂停控制 */
     togglePause: function(ctx) {
         if (ctx.isStopped || ctx.isEnded) return;
         ctx.isPaused = !ctx.isPaused;
-
         const btn = document.getElementById('combat_btn_pause');
         if (btn) btn.innerHTML = ctx.isPaused ? "▶ 继续" : "⏸ 暂停";
-
-        if (!ctx.isPaused && ctx.state === 'running') {
-            this._tick(ctx);
-        } else if (ctx.timer) {
-            clearTimeout(ctx.timer);
-        }
+        if (!ctx.isPaused && ctx.state === 'running') this._tick(ctx);
     },
 
-    /** 变速 */
-    changeSpeed: function(ctx, delta) {
-        let current = this.CONFIG.TIME_SCALE || 1.0;
+    /**
+     * 【重要】变速控制
+     * 智能识别参数 (delta) 或 (ctx, delta)
+     */
+    changeSpeed: function(arg1, arg2) {
+        let delta = 0;
+        if (typeof arg1 === 'number') delta = arg1;
+        else if (arg2 !== undefined && typeof arg2 === 'number') delta = arg2;
+
+        if (delta === 0) return;
+
+        let current = CombatCore.CONFIG.TIME_SCALE || 1.0;
+
         if (delta > 0) current += 0.5;
         else current -= 0.5;
+
         current = Math.max(0.5, Math.min(5.0, current));
-        this.CONFIG.TIME_SCALE = current;
+        CombatCore.CONFIG.TIME_SCALE = current;
 
         const spdEl = document.getElementById('combat_speed_display');
         if(spdEl) spdEl.innerText = current.toFixed(1) + "x";
@@ -318,11 +341,17 @@ const CombatCore = {
 
     _calculateFinalDrops: function(ctx) {
         const drops = [];
-        if (ctx.enemy.drops) ctx.enemy.drops.forEach(e => { if (Math.random() <= e.rate) drops.push({ id: e.id }); });
+        if (ctx.enemy.drops) {
+            ctx.enemy.drops.forEach(e => {
+                if (Math.random() <= e.rate) drops.push({ id: e.id, count: 1 });
+            });
+        }
         if (this._checkBountyDrops) {
             const bounty = this._checkBountyDrops(ctx);
-            bounty.forEach(b => drops.push({ id: b.id, isBounty: true }));
+            bounty.forEach(b => drops.push({ id: b.id, isBounty: true, count: 1 }));
         }
+        const timeDrops = this._calculateTimeDrops(ctx);
+        timeDrops.forEach(t => drops.push(t));
         return drops;
     },
 
@@ -361,12 +390,51 @@ const CombatCore = {
                 let itemData = (Array.isArray(window.GAME_DB.items) ? window.GAME_DB.items.find(i=>i.id===d.id) : window.GAME_DB.items[d.id]);
                 let name = itemData ? itemData.name : d.id;
                 let extra = d.isBounty ? "border-color:#ff9800; background:#fff3e0; color:#e65100;" : "";
-                h += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${extra}">${d.isBounty?'✨ ':''}${name}</span>`;
+                const countStr = (d.count && d.count > 1) ? ` x${d.count}` : "";
+                h += `<span style="background:#fff; border:1px solid #ccc; padding:2px 6px; font-size:12px; border-radius:3px; ${extra}">${d.isBounty?'✨ ':''}${name}${countStr}</span>`;
             });
             h += `</div>`;
         }
         return h + `</div>`;
-    }
+    },
+
+    _calculateTimeDrops: function(ctx) {
+        const t = window.timeStart;
+        if (!t || t <= 0) return [];
+        const ITEM_IDS = {
+            frag: "lingshi_fragment", low: "lingshi_low", mid: "lingshi_mid", high: "lingshi_high", top: "lingshi_top"
+        };
+        const rank = ctx.enemy.template || "minion";
+        const drops = [];
+        const checkProb = (multiplier) => Math.random() < (multiplier * t);
+        const randRange = (min, max) => this._randomInt(min, max);
+        const halfT = Math.ceil((t + 1) / 2);
+
+        switch (rank) {
+            case 'minion':
+                if (checkProb(0.5)) { const count = randRange(0, t + 1); if (count > 0) drops.push({ id: ITEM_IDS.frag, count: count }); }
+                if (checkProb(0.1)) { const count = randRange(0, halfT); if (count > 0) drops.push({ id: ITEM_IDS.low, count: count }); }
+                break;
+            case 'elite':
+            { const count = randRange(1, t + 2); if (count > 0) drops.push({ id: ITEM_IDS.frag, count: count }); }
+                if (checkProb(0.5)) { const count = randRange(1, halfT + 1); if (count > 0) drops.push({ id: ITEM_IDS.low, count: count }); }
+                if (checkProb(0.1)) { const count = randRange(1, halfT); if (count > 0) drops.push({ id: ITEM_IDS.mid, count: count }); }
+                if (checkProb(0.01)) { const count = randRange(1, halfT); if (count > 0) drops.push({ id: ITEM_IDS.high, count: count }); }
+                break;
+            case 'boss':
+            { const count = randRange(1, t + 3); if (count > 0) drops.push({ id: ITEM_IDS.low, count: count }); }
+                if (checkProb(0.2)) { const count = randRange(1, halfT + 1); if (count > 0) drops.push({ id: ITEM_IDS.mid, count: count }); }
+                if (checkProb(0.05)) { const count = randRange(1, halfT); if (count > 0) drops.push({ id: ITEM_IDS.high, count: count }); }
+                if (checkProb(0.01)) { const count = randRange(0, halfT + 1); if (count > 0) drops.push({ id: ITEM_IDS.top, count: count }); }
+                break;
+            case 'lord':
+            { const count = randRange(3, t + 4); if (count > 0) drops.push({ id: ITEM_IDS.mid, count: count }); }
+                if (checkProb(0.1)) { const count = randRange(1, halfT + 2); if (count > 0) drops.push({ id: ITEM_IDS.high, count: count }); }
+                if (checkProb(0.05)) { const count = randRange(0, halfT + 1); if (count > 0) drops.push({ id: ITEM_IDS.top, count: count }); }
+                break;
+        }
+        return drops;
+    },
 };
 
 window.CombatCore = CombatCore;

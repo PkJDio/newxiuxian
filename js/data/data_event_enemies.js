@@ -18,25 +18,14 @@ let EVENT_RAID_ENEMIES = {
             rank: "minion",
             subType: "human",
             defType: "light",
-            stats: {
-                hp: 90,
-                phy_atk: 18, mag_atk: 2,
-                phy_def: 4, mag_def: 2,
-                speed: 11
-            },
+            atkType: "Agile", // 逻辑：乱剑挥砍、快速抽打，典型的高频物理输出
+            stats: { hp: 90, phy_atk: 18, mag_atk: 2, phy_def: 4, mag_def: 2, speed: 11 },
             money: [5, 10],
-            drops: [
-                { id: "materials_088", rate: 0.4 }, // 锈蚀铁片
-                { id: "materials_089", rate: 0.5 }  // 污秽的布条
-            ],
+            drops: [{ id: "materials_088", rate: 0.4 }, { id: "materials_089", rate: 0.5 }],
             skills: [
-                // 高伤害 (10%)
                 { id: "舍命一击", rate: 0.1, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%)
                 { id: "快速抽打", rate: 0.2, type: 1, damage: 0.8, damageType: "phy", dmgValType: 1 },
-                // 常规 (50%)
                 { id: "乱剑挥砍", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
-                // 功能 (20%)
                 { id: "凶光", rate: 0.2, type: 2, debuffAttr: "phy_atk", debuffValue: 0.1, debuffValType: 1, debuffTimes: 3 }
             ],
             desc: "守卫在行宫外的士兵，因法力入体导致血管暴裂，只剩下杀戮本能。"
@@ -48,25 +37,14 @@ let EVENT_RAID_ENEMIES = {
             rank: "minion",
             subType: "human",
             defType: "cloth",
-            stats: {
-                hp: 80,
-                phy_atk: 12, mag_atk: 6,
-                phy_def: 2, mag_def: 5,
-                speed: 12
-            },
+            atkType: "Agile", // 逻辑：胡乱投掷与拍打，虽然身板弱，但攻击频率高且无规律
+            stats: { hp: 80, phy_atk: 12, mag_atk: 6, phy_def: 2, mag_def: 5, speed: 12 },
             money: [2, 8],
-            drops: [
-                { id: "materials_089", rate: 0.6 },
-                { id: "materials_094", rate: 0.2 }
-            ],
+            drops: [{ id: "materials_089", rate: 0.6 }, { id: "materials_094", rate: 0.2 }],
             skills: [
-                // 高伤害 (10%)
                 { id: "器皿重砸", rate: 0.1, type: 1, damage: 2.0, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%)
                 { id: "拍打", rate: 0.2, type: 1, damage: 0.7, damageType: "phy", dmgValType: 1 },
-                // 常规 (50%)
                 { id: "胡乱投掷", rate: 0.5, type: 1, damage: 1.1, damageType: "phy", dmgValType: 1 },
-                // 功能 (20%)
                 { id: "哀嚎", rate: 0.2, type: 2, debuffAttr: "speed", debuffValue: 3, debuffTimes: 2 }
             ],
             desc: "行宫内的侍从，被突如其来的剧变吓疯了，手中抓着沉重的青铜器皿疯狂乱砸。"
@@ -78,25 +56,14 @@ let EVENT_RAID_ENEMIES = {
             rank: "minion",
             subType: "beast",
             defType: "leather",
-            stats: {
-                hp: 108,
-                phy_atk: 20, mag_atk: 0,
-                phy_def: 6, mag_def: 3,
-                speed: 20
-            },
+            atkType: "Heavy", // 逻辑：核心伤害来自“绝命践踏”和“重踢”，利用冲撞力和自重造成的重型物理伤害
+            stats: { hp: 108, phy_atk: 20, mag_atk: 0, phy_def: 6, mag_def: 3, speed: 20 },
             money: [0, 0],
-            drops: [
-                { id: "materials_086", rate: 0.4 },
-                { id: "materials_093", rate: 0.4 }
-            ],
+            drops: [{ id: "materials_086", rate: 0.4 }, { id: "materials_093", rate: 0.4 }],
             skills: [
-                // 高伤害 (10%)
                 { id: "绝命践踏", rate: 0.1, type: 1, damage: 2.5, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%)
                 { id: "轻踢", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
-                // 常规 (50%)
                 { id: "后蹄重踢", rate: 0.5, type: 1, damage: 1.3, damageType: "phy", dmgValType: 1 },
-                // 功能 (20%)
                 { id: "暴走", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 10, buffTimes: 3 }
             ],
             desc: "原本温顺的御马受法力惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
@@ -108,25 +75,14 @@ let EVENT_RAID_ENEMIES = {
             rank: "minion",
             subType: "human",
             defType: "light",
-            stats: {
-                hp: 90,
-                phy_atk: 20, mag_atk: 0,
-                phy_def: 8, mag_def: 5,
-                speed: 18
-            },
+            atkType: "Range", // 逻辑：传令兵强调“透甲”和“突刺”，类似于侦查兵的精准打击模组
+            stats: { hp: 90, phy_atk: 20, mag_atk: 0, phy_def: 8, mag_def: 5, speed: 18 },
             money: [10, 20],
-            drops: [
-                { id: "materials_089", rate: 0.4 },
-                { id: "materials_092", rate: 0.3 }
-            ],
+            drops: [{ id: "materials_089", rate: 0.4 }, { id: "materials_092", rate: 0.3 }],
             skills: [
-                // 高伤害 (10%)
                 { id: "绝命透甲", rate: 0.1, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%)
                 { id: "挥砍", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
-                // 常规 (50%)
                 { id: "短剑突刺", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
-                // 功能 (20%)
                 { id: "喘息", rate: 0.2, type: 3, buffAttr: "phy_def", buffValue: 5, buffTimes: 2 }
             ],
             desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴法力占据了身体。"
@@ -138,25 +94,14 @@ let EVENT_RAID_ENEMIES = {
             rank: "minion",
             subType: "beast",
             defType: "leather",
-            stats: {
-                hp: 100,
-                phy_atk: 22, mag_atk: 0,
-                phy_def: 4, mag_def: 2,
-                speed: 22
-            },
+            atkType: "Agile", // 逻辑：22点高机动，撕咬与疯狂撕碎，标准的物理敏捷暴击怪
+            stats: { hp: 100, phy_atk: 22, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 22 },
             money: [0, 0],
-            drops: [
-                { id: "materials_086", rate: 0.5 },
-                { id: "materials_092", rate: 0.4 }
-            ],
+            drops: [{ id: "materials_086", rate: 0.5 }, { id: "materials_092", rate: 0.4 }],
             skills: [
-                // 高伤害 (10%)
                 { id: "疯狂撕碎", rate: 0.1, type: 1, damage: 2.3, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%)
                 { id: "扑击", rate: 0.2, type: 1, damage: 0.9, damageType: "phy", dmgValType: 1 },
-                // 常规 (50%)
                 { id: "撕咬", rate: 0.5, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
-                // 功能 (20%)
                 { id: "嗜血", rate: 0.2, type: 3, buffAttr: "phy_atk", buffValue: 8, buffTimes: 3 }
             ],
             desc: "沙丘行宫附近的野狼，嗅到了宫殿内浓郁的生机与死亡交织的气息，变得异常亢奋。"
@@ -175,6 +120,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "elite",
             subType: "human",
             defType: "heavy",
+            atkType: "Heavy", // 逻辑：重劈与真气暴血，强调单次高伤害与破甲感
             stats: {
                 hp: 315,
                 phy_atk: 38, mag_atk: 4,
@@ -187,15 +133,10 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_117", rate: 0.2 }
             ],
             skills: [
-                // 很高伤害 (10%) - 真气暴血 (物理百分比)
                 { id: "真气暴血", rate: 0.1, type: 1, damage: 3.2, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%) - 旋风重劈
                 { id: "旋风重劈", rate: 0.2, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 },
-                // 常规技能 (40%)
                 { id: "破空斩", rate: 0.4, type: 1, damage: 1.3, damageType: "phy", dmgValType: 1 },
-                // Debuff (10%) - 缴械
                 { id: "缴械", rate: 0.1, type: 2, debuffAttr: "phy_atk", debuffValue: 0.15, debuffValType: 1, debuffTimes: 2 },
-                // Buff (20%)
                 { id: "校尉威压", rate: 0.2, type: 3, buffAttr: "phy_atk", buffValue: 12, buffTimes: 3 }
             ],
             desc: "原本负责寝殿安保的将领，此刻浑身肌肉扭曲，皮肤呈现出金属般的乌青。"
@@ -207,6 +148,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "elite",
             subType: "human",
             defType: "cloth",
+            atkType: "Relic", // 逻辑：纯法术输出(42)，利用天地炉火进行大范围覆盖，专克凡铁防具
             stats: {
                 hp: 250,
                 phy_atk: 5, mag_atk: 42,
@@ -219,18 +161,13 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_114", rate: 0.2 }
             ],
             skills: [
-                // 很高伤害 (10%) - 天地炉火 (法术百分比)
                 { id: "天地炉火", rate: 0.1, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
-                // 低伤害 (20%) - 废丹引爆
                 { id: "废丹引爆", rate: 0.2, type: 1, damage: 1.6, damageType: "mag", dmgValType: 1 },
-                // 常规技能 (40%)
                 { id: "汞毒粉末", rate: 0.4, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
-                // Debuff (10%) - 腐蚀药雾
                 { id: "腐蚀药雾", rate: 0.1, type: 2, debuffAttr: "phy_def", debuffValue: 0.2, debuffValType: 1, debuffTimes: 3 },
-                // Buff (20%)
                 { id: "服药", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 3 }
             ],
-            desc: "曾为始皇炼丹的方士，在法力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
+            desc: "曾为始皇炼丹的方士，在法力倒灌时贪婪汲取，导致神智崩溃。"
         },
         {
             id: "raid_elite_guard_captain",
@@ -239,6 +176,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "elite",
             subType: "human",
             defType: "plate",
+            atkType: "Reach", // 逻辑：持盾禁卫，盾击与绝杀，具备典型的物理压制与防御特性
             stats: {
                 hp: 380,
                 phy_atk: 25, mag_atk: 15,
@@ -251,15 +189,10 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_117", rate: 0.3 }
             ],
             skills: [
-                // 很高伤害 (10%) - 禁卫绝杀
                 { id: "禁卫绝杀", rate: 0.1, type: 1, damage: 2.8, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%) - 盾击
                 { id: "盾击", rate: 0.2, type: 1, damage: 1.5, damageType: "phy", dmgValType: 1 },
-                // 常规技能 (40%)
                 { id: "突刺", rate: 0.4, type: 1, damage: 1.1, damageType: "phy", dmgValType: 1 },
-                // Debuff (10%) - 锁足
                 { id: "锁足", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 8, debuffTimes: 3 },
-                // Buff (20%)
                 { id: "铁壁之志", rate: 0.2, type: 3, buffAttr: "phy_def", buffValue: 15, buffTimes: 4 }
             ],
             desc: "大秦最精锐的卫兵，即便在癫狂中依然保持着死守行宫的战斗姿势。"
@@ -271,6 +204,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "elite",
             subType: "human",
             defType: "cloth",
+            atkType: "Relic", // 逻辑：以笔墨诛心，属性偏向法术爆发(38)，具备超凡打击特征
             stats: {
                 hp: 260,
                 phy_atk: 10, mag_atk: 38,
@@ -283,18 +217,13 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_099", rate: 0.4 }
             ],
             skills: [
-                // 很高伤害 (10%) - 笔墨诛心
                 { id: "笔墨诛心", rate: 0.1, type: 1, damage: 3.3, damageType: "mag", dmgValType: 1 },
-                // 低伤害 (20%) - 简牍重击
                 { id: "简牍重击", rate: 0.2, type: 1, damage: 1.7, damageType: "mag", dmgValType: 1 },
-                // 常规技能 (40%)
                 { id: "飞毫如箭", rate: 0.4, type: 1, damage: 1.3, damageType: "mag", dmgValType: 1 },
-                // Debuff (10%) - 律令·禁
                 { id: "律令·禁", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 12, debuffTimes: 3 },
-                // Buff (20%)
                 { id: "文气护体", rate: 0.2, type: 3, buffAttr: "mag_def", buffValue: 10, buffTimes: 5 }
             ],
-            desc: "正在记录陛下遗诏的史官，受惊后将手中的青铜笔当成了致命的杀器。"
+            desc: "正在记录遗诏的史官，受惊后将手中的青铜笔当成了致命杀器。"
         },
         {
             id: "raid_elite_shadow_guard",
@@ -303,6 +232,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "elite",
             subType: "human",
             defType: "light",
+            atkType: "Agile", // 逻辑：25点极致攻速，瞬狱杀与背刺，纯粹的敏捷爆发刺客
             stats: {
                 hp: 240,
                 phy_atk: 48, mag_atk: 12,
@@ -315,15 +245,10 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_082", rate: 0.1 }
             ],
             skills: [
-                // 很高伤害 (10%) - 瞬狱杀
                 { id: "瞬狱杀", rate: 0.1, type: 1, damage: 3.8, damageType: "phy", dmgValType: 1 },
-                // 低伤害 (20%) - 背刺
                 { id: "背刺", rate: 0.2, type: 1, damage: 2.2, damageType: "phy", dmgValType: 1 },
-                // 常规技能 (40%)
                 { id: "影袭", rate: 0.4, type: 1, damage: 1.5, damageType: "phy", dmgValType: 1 },
-                // Debuff (10%) - 烟幕
                 { id: "烟幕", rate: 0.1, type: 2, debuffAttr: "phy_atk", debuffValue: 0.2, debuffValType: 1, debuffTimes: 2 },
-                // Buff (20%)
                 { id: "暗涌", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 20, buffTimes: 3 }
             ],
             desc: "潜伏在行宫暗影处的保镖，法力倒灌让他们与阴影的融合失去了控制。"
@@ -342,7 +267,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "boss",
             subType: "human",
             defType: "cloth",
-            // 倾向性: mag (纯法术)
+            atkType: "Relic", // 逻辑：高额法伤(63)，技能多为法术伤害与精神压制，属于降维打击模组
             stats: {
                 hp: 756,
                 phy_atk: 6, mag_atk: 63,
@@ -363,7 +288,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "内侍威仪", rate: 0.1, type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 4 },
                 { id: "绝望目光", rate: 0.1, type: 2, debuffAttr: "mag_def", debuffValue: 0.2, debuffValType: 1, debuffTimes: 4 }
             ],
-            desc: "【头目】沙丘行宫的总管，最先目睹陛下驾崩的人。他在极度的恐惧中吞噬了陛下逸散的第一缕龙气。"
+            desc: "【头目】沙丘行宫的总管，他在极度的恐惧中吞噬了陛下逸散的第一缕龙气。"
         },
         {
             id: "raid_boss_general",
@@ -372,7 +297,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "boss",
             subType: "human",
             defType: "plate",
-            // 倾向性: tank (肉盾)
+            atkType: "Heavy", // 逻辑：定秦绝剑与山崩地裂具有极高的物理加成，追求单次高压破甲
             stats: {
                 hp: 756,
                 phy_atk: 37, mag_atk: 37,
@@ -393,7 +318,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "战阵杀气", rate: 0.1, type: 3, buffAttr: "phy_atk", buffValue: 0.25, buffValType: 1, buffTimes: 5 },
                 { id: "沉重威压", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 10, debuffTimes: 5 }
             ],
-            desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的法力撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
+            desc: "【头目】驻扎沙丘的最高统帅，每一寸皮肤都充满了爆发性的毁灭力量。"
         },
         {
             id: "raid_boss_chief_fangshi",
@@ -402,7 +327,7 @@ let EVENT_RAID_ENEMIES = {
             rank: "boss",
             subType: "human",
             defType: "cloth",
-            // 倾向性: mag (纯法术)
+            atkType: "Relic", // 逻辑：纯法术爆发(63)，长生幻灭(5.0倍率)的核弹级输出，法宝克制逻辑
             stats: {
                 hp: 756,
                 phy_atk: 6, mag_atk: 63,
@@ -423,7 +348,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "入道疯魔", rate: 0.1, type: 3, buffAttr: "mag_atk", buffValue: 0.3, buffValType: 1, buffTimes: 3 },
                 { id: "感官剥夺", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 20, debuffTimes: 4 }
             ],
-            desc: "【头目】始皇最信赖的首席方士，因在驾崩现场试图通过禁术挽回圣命，导致灵魂被天地之威瞬间冲垮。"
+            desc: "【头目】始皇最信赖的首席方士，灵魂被天地之威瞬间冲垮。"
         }
     ]
 };

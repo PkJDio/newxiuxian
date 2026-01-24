@@ -170,34 +170,71 @@ const CombatUI = {
     },
 
     // ... _updateAttrStyle, _updateActionTimeText 保持不变 ...
+    /** 核心修改：更新属性面板上的红绿字 (支持数组汇总) */
     _updateAttrStyle: function(ctx, target, buffs) {
         const prefix = target === 'player' ? 'p_attr_' : 'e_attr_';
+
+        // 1. 清理旧的加成显示
         const allBoxes = document.querySelectorAll(`[id^="${prefix}"]`);
         allBoxes.forEach(box => {
             const buffSpan = box.querySelector('.attr-buff-val');
             if (buffSpan) buffSpan.remove();
         });
+
         if (!buffs) return;
-        const map = { 'atk': ['phy_atk', 'mag_atk'], 'def': ['phy_def', 'mag_def'], 'phy_atk': ['phy_atk'], 'mag_atk': ['mag_atk'], 'phy_def': ['phy_def'], 'mag_def': ['mag_def'], 'speed': ['spd'], 'spd': ['spd'] };
+
+        // 映射关系：Buff属性 -> UI元素ID后缀列表
+        const map = {
+            'atk': ['phy_atk', 'mag_atk'],
+            'def': ['phy_def', 'mag_def'],
+            'phy_atk': ['phy_atk'], 'mag_atk': ['mag_atk'],
+            'phy_def': ['phy_def'], 'mag_def': ['mag_def'],
+            'speed': ['spd'], 'spd': ['spd']
+        };
 
         for (let attr in buffs) {
-            const entry = buffs[attr];
-            // 这里只处理非数组的属性Buff，因为DoT不显示在属性旁
-            if (Array.isArray(entry)) continue;
+            const list = buffs[attr];
+            // 必须是数组且非空
+            if (!Array.isArray(list) || list.length === 0) continue;
+            // 跳过 HP/MP (它们显示在 Buff 图标栏，不显示在属性面板旁)
+            if (attr === 'hp' || attr === 'mp') continue;
 
             const targetSuffixes = map[attr];
             if (targetSuffixes) {
+                // 汇总该属性的所有 Buff 值
+                let totalFlat = 0;
+                let totalPct = 0;
+
+                list.forEach(b => {
+                    if (b.valType === 1) totalPct += b.val;
+                    else totalFlat += b.val;
+                });
+
+                // 构造显示字符串
+                // 策略：如果有百分比，显示百分比；如果有固定值，追加固定值。
+                // 例如: "+10%", "+50", "+50 +10%"
+                let displayHtml = "";
+                let color = '#388e3c'; // 默认绿
+
+                // 简单的颜色判断：只要有减益，或者总值降低，就变红
+                if (totalFlat < 0 || totalPct < 0) color = '#d32f2f';
+
+                if (totalFlat !== 0) {
+                    const sign = totalFlat > 0 ? "+" : "";
+                    displayHtml += `${sign}${totalFlat} `;
+                }
+                if (totalPct !== 0) {
+                    const sign = totalPct > 0 ? "+" : "";
+                    displayHtml += `${sign}${(totalPct * 100).toFixed(0)}%`;
+                }
+
+                if (displayHtml === "") continue;
+
                 targetSuffixes.forEach(suffix => {
                     const elId = prefix + suffix;
                     const el = document.getElementById(elId);
                     if (el) {
-                        const isDebuff = (entry.val < 0);
-                        const color = isDebuff ? '#d32f2f' : '#388e3c';
-                        const sign = entry.val > 0 ? "+" : "";
-                        let displayVal = "";
-                        if (entry.valType === 1) displayVal = `${sign}${(entry.val * 100).toFixed(0)}%`;
-                        else displayVal = `${sign}${entry.val}`;
-                        const html = `<span class="attr-buff-val" style="color:${color}; margin-left:4px; font-size:12px; font-weight:bold;">${displayVal}</span>`;
+                        const html = `<span class="attr-buff-val" style="color:${color}; margin-left:4px; font-size:12px; font-weight:bold;">${displayHtml}</span>`;
                         el.insertAdjacentHTML('beforeend', html);
                     }
                 });

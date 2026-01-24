@@ -67,8 +67,8 @@ const UtilsEnemy = {
         if (window.player && typeof window.player.timeStart === 'number') {
             timeStart = window.player.timeStart;
         }
-        // 成长系数：每多一周目/时间线，属性增加 10%
-        const timeMult = 1 + (timeStart * 0.1);
+        // 成长系数：每多一周目/时间线，属性增加 40%
+        const timeMult = 1 + (timeStart * 0.4);
 
         // 辅助函数：安全乘法 (保留 undefined)
         const scaleVal = (val) => {
@@ -100,6 +100,8 @@ const UtilsEnemy = {
             mag_atk: scaleVal(template.stats.mag_atk),
             phy_def: scaleVal(template.stats.phy_def),
             mag_def: scaleVal(template.stats.mag_def),
+            defType: template.defType || "none",
+            atkType: template.atkType || "Bal",
 
             speed: scaleVal(template.stats.speed),
 
