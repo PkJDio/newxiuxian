@@ -74,10 +74,10 @@ const TimeSystem = {
 
         player.status.hunger = Math.max(0, (player.status.hunger || 0) - hungerLoss);
         player.status.fatigue = Math.min(200, (player.status.fatigue || 0) + fatigueGain);
+        console.log("时间流逝了")
 
-        if (window.TimeEvents && TimeEvents.checkStatusDebuffs) {
-            TimeEvents.checkStatusDebuffs();
-        }
+        TimeEvents.checkStatusDebuffs();
+
 
         // 物理时间进位
         t.accMins = (t.accMins || 0) + hoursToAdd * 60;

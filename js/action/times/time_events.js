@@ -39,7 +39,7 @@ const TimeEvents = {
         if (!player || !player.buffs) return;
         const p = player;
         const maxFatigue = p.derived.fatigueMax || 100;
-
+        console.log("maxFatigue",maxFatigue)
         if (p.status.fatigue >= maxFatigue) {
             if (!p.buffs['debuff_fatigue']) {
                 p.buffs['debuff_fatigue'] = { name: "疲惫", attr: "全属性", val: "减半", color: "#d32f2f", days: 9999, isDebuff: true };

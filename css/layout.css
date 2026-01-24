@@ -359,7 +359,7 @@
 #buff_list {
     /* 1. 设置最大高度，防止撑开整个侧边栏 */
     /* 你可以根据实际界面调整这个值，比如 200px, 30vh 等 */
-    max-height: 250px;
+    max-height: 320px;
 
     /* 2. 允许垂直滚动 */
     overflow-y: auto;

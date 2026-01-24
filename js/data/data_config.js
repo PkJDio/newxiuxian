@@ -71,8 +71,17 @@ const PLAYER_TEMPLATE = {
     version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10,
     // 【新增】灵气资源
     spiritEnergy: 0,
-    gongfa_nums: 3,
-    zhaoshi_nums: 3,
+    gongfa_nums: 1,
+    zhaoshi_nums: 1,
+    // --- 新增凡尘修行字段 ---
+    mortal_rank: 0,        // 当前境界索引 (0:开窍...4:登峰)
+    mortal_exp: 0,         // 当前积淀值
+    mortal_exp_max: 1200,  // 当前境界所需最大值
+    is_bottleneck: false,  // 是否处于瓶颈期
+
+    // 记录每层突破的选择，用于 recalcStats 计算属性加成
+    // 格式示例: [ {path: 'attack', val: 0.15}, {path: 'balance', val: 0.05} ]
+    mortal_path_history: {},
     studyProgress: {},
     currentStudyTarget: null,
     age: 16, dayCount: 0, timeHours: 7,
@@ -90,7 +99,10 @@ const PLAYER_TEMPLATE = {
         phy_atk: 0, mag_atk: 0, // 新增
         phy_def: 0, mag_def: 0, // 新增
         speed: 0, space: 0,
-        hpMax: 200, mpMax: 100, hungerMax: 0, fatigueMax: 0
+        hpMax: 200, mpMax: 100, hungerMax: 0, fatigueMax: 0,
+        //物理暴击率
+
+
     },
 
     // 【修改】额外加成

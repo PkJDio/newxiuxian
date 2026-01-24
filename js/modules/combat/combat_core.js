@@ -402,7 +402,7 @@ const CombatCore = {
         const t = window.timeStart;
         if (!t || t <= 0) return [];
         const ITEM_IDS = {
-            frag: "lingshi_fragment", low: "lingshi_low", mid: "lingshi_mid", high: "lingshi_high", top: "lingshi_top"
+            frag: "spirit_stone_0", low: "spirit_stone_1", mid: "spirit_stone_2", high: "spirit_stone_3", top: "spirit_stone_4"
         };
         const rank = ctx.enemy.template || "minion";
         const drops = [];
