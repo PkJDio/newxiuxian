@@ -86,11 +86,11 @@ const AlchemyShop = {
         const randForTotal = window.getSeededRandom(shopKey, "totalQty");
         let targetTotalQty = Math.max(Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal, targetTypeCount);
 
-        const rarityWeights = { 1: 1000, 2: 600, 3: 300, 4: 100, 5: 10, 6: 0 };
+        const rarityWeights = { 1: 1000, 2: 600, 3: 300, 4: 100, 5: 0, 6: 0 };
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;
-            const weight = rarityWeights[r] || 10;
+            const weight = rarityWeights[r] || 0;
             const randVal = window.getSeededRandom(shopKey, item.id, "rank");
             const score = Math.pow(randVal > 0 ? randVal : 0.0001, 1 / (weight > 0 ? weight : 1));
             return { item: item, score: score, maxQty: 0 };

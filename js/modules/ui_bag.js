@@ -183,6 +183,9 @@ const UIBag = {
         });
 
         equipRow.innerHTML = html;
+        if (window.twemoji) {
+            window.twemoji.parse(equipRow);
+        }
     },
 
     // 点击装备槽逻辑
@@ -237,6 +240,9 @@ const UIBag = {
         }).join('');
 
         container.innerHTML = html;
+        if (window.twemoji) {
+            window.twemoji.parse(container);
+        }
     },
 
     // --- 详情显示 Wrapper 方法 ---
@@ -267,7 +273,9 @@ const UIBag = {
         // 1. 头部信息
         const rarityInfo = (typeof RARITY_CONFIG !== 'undefined' ? RARITY_CONFIG[item.rarity] : null) || {color:'#333', name:'普通'};
         const globalTypeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
-        let displayType = item.subType || globalTypeMap[item.type] || item.type || "物品";
+        //武器专属的weaponTypes
+
+        let displayType = item.type === "weapon" ? item.subType :  (globalTypeMap[item.type]  || item.subType || item.type || "物品");
 
         let combatTypeHtml = item.combatType ? ` <span style="color:#b8860b; font-weight:bold; margin-left:4px;">[${item.combatType}]</span>` : '';
         const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
@@ -461,6 +469,10 @@ const UIBag = {
             ${priceHtml}
             ${btnsHtml}
         `;
+
+        if (window.twemoji) {
+            window.twemoji.parse(container);
+        }
     },
 
     // --- 装备操作 (自动切换焦点) ---

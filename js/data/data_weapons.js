@@ -38,7 +38,7 @@
  * 长兵 Reach| 0.9  | 1.0  | 1.1  | 1.1  | 1.0  | 1.2  | 物理压制，自带防御
  * 重型 Heavy| 1.3  | 1.2  | 1.1  | 0.9  | 0.7  | 1.1  | 牺牲速度，追求破甲
  * 远射 Range| 0.7  | 0.8  | 1.0  | 1.2  | 1.4  | 1.5  | 远程打击，面板压制
- * 法宝 Relic| 1.1  | 1.0  | 0.9  | 0.8  | 0.6  | 1.2  | 灵力穿透，专克凡铁
+ * 法宝 Relic| 1.1  | 1.0  | 0.9  | 0.8  | 0.6  | 1.2  | 法力穿透，专克凡铁
  *
  * =========================================================================================
  * 5. 武器子类定制系数与属性需求配比 (Weapon Stats & Req Multipliers)
@@ -109,11 +109,11 @@ const weaponTypes = [
     // --- 法宝 (Relic) ---
     { type: "飞剑", icon: "🌠", module: "Relic", jing: 1, qi: 6, shen: 3, desc: "御剑乘风，以气驭剑，神识导向。" }, // 流星（象征飞行的速度与轨迹）
     { type: "法印", icon: "🔲", module: "Relic", jing: 4, qi: 5, shen: 1, desc: "镇压之宝，需浑厚灵气与强健体魄。" }, // 方块按钮（象征方正的印章）
-    { type: "宝葫芦", icon: "🍶", module: "Relic", jing: 2, qi: 7, shen: 1, desc: "纳藏天地，核心在于海量的灵力储量。" }, // 酒壶（最接近葫芦的通用图标）
-    { type: "阵盘", icon: "☯️", module: "Relic", jing: 1, qi: 4, shen: 5, desc: "演化阵法，极度看重悟性(神)与灵力。" }, // 阴阳鱼（象征阵法与道）
+    { type: "宝葫芦", icon: "🍶", module: "Relic", jing: 2, qi: 7, shen: 1, desc: "纳藏天地，核心在于海量的法力储量。" }, // 酒壶（最接近葫芦的通用图标）
+    { type: "阵盘", icon: "☯️", module: "Relic", jing: 1, qi: 4, shen: 5, desc: "演化阵法，极度看重悟性(神)与法力。" }, // 阴阳鱼（象征阵法与道）
     { type: "灵镜", icon: "💿", module: "Relic", jing: 1, qi: 3, shen: 6, desc: "神光直射，需精准的神识锁定目标。" }, // 光盘（象征镜面的反光与科技感）
-    { type: "长幡", icon: "🏴", module: "Relic", jing: 2, qi: 7, shen: 1, desc: "招魂引气，乃是纯粹的灵力(气)操控之器。" }, // 黑旗（象征招魂幡）
-    { type: "玉佩", icon: "💮", module: "Relic", jing: 0, qi: 4, shen: 6, desc: "随身灵宝，需极高的悟性与灵力共鸣。" } // 白花（象征精致雕琢的玉器纹路）
+    { type: "长幡", icon: "🏴", module: "Relic", jing: 2, qi: 7, shen: 1, desc: "招魂引气，乃是纯粹的法力(气)操控之器。" }, // 黑旗（象征招魂幡）
+    { type: "玉佩", icon: "💮", module: "Relic", jing: 0, qi: 4, shen: 6, desc: "随身灵宝，需极高的悟性与法力共鸣。" } // 白花（象征精致雕琢的玉器纹路）
 ];
 /*
 * R1 级别数据生成逻辑：
@@ -152,7 +152,7 @@ const weapons_r1_batch1 = [
         rarity: 1,
         effects: { phy_atk: 2, mag_atk: 3, crit: 5, speed: 4, sharpness: 12 },
         value: 1650,
-        desc: "折断的旧筷子，断口处参差不齐，却意外地对灵力有着不错的传导性。"
+        desc: "折断的旧筷子，断口处参差不齐，却意外地对法力有着不错的传导性。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -174,7 +174,7 @@ const weapons_r1_batch1 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 1, crit: 8, speed: 6, sharpness: 18 },
         value: 2430,
-        desc: "从富人家打碎的灵瓷瓶里捡出的碎片，边缘极利，带有微弱的灵力残余。"
+        desc: "从富人家打碎的灵瓷瓶里捡出的碎片，边缘极利，带有微弱的法力残余。"
     },
     {
         id: "weapons_006",
@@ -283,7 +283,7 @@ const weapons_r1_batch2 = [
         rarity: 1,
         effects: { phy_atk: 4, mag_atk: 4, crit: 5, speed: 4, sharpness: 15 },
         value: 1950,
-        desc: "由名贵但已腐朽的琴颈削制，依然保留着极佳的灵力共鸣。"
+        desc: "由名贵但已腐朽的琴颈削制，依然保留着极佳的法力共鸣。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Sharp 20, Spd 4) ---
@@ -350,7 +350,7 @@ const weapons_r1_batch3 = [
         rarity: 1,
         effects: { phy_atk: 4, mag_atk: 4, crit: 3, speed: 2, sharpness: 11 },
         value: 1460,
-        desc: "原本是撑起窗户的竹钩，由于长期接触书香雅气，意外地适合灵力运转。"
+        desc: "原本是撑起窗户的竹钩，由于长期接触书香雅气，意外地适合法力运转。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -382,7 +382,7 @@ const weapons_r1_batch3 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 5, crit: 4, speed: 2, sharpness: 17 },
         value: 1880,
-        desc: "曾用于牵引祭祀火盆的长钩，金属表面布满了灵力侵蚀的暗纹。"
+        desc: "曾用于牵引祭祀火盆的长钩，金属表面布满了法力侵蚀的暗纹。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Sharp 20, Spd 4) ---
@@ -414,7 +414,7 @@ const weapons_r1_batch3 = [
         rarity: 1,
         effects: { phy_atk: 6, mag_atk: 6, crit: 6, speed: 3, sharpness: 22 },
         value: 2515,
-        desc: "由于灵力枯竭而石质化的古蔓，保留了天然的弯钩形状，灵透力惊人。"
+        desc: "由于法力枯竭而石质化的古蔓，保留了天然的弯钩形状，灵透力惊人。"
     }
 ];
 const weapons_r1_batch4 = [
@@ -449,7 +449,7 @@ const weapons_r1_batch4 = [
         rarity: 1,
         effects: { phy_atk: 3, mag_atk: 3, crit: 4, speed: 3, sharpness: 8 },
         value: 1475,
-        desc: "破损的乐器碎片，灌注灵力后能发出刺耳的哨音，扰乱敌人的心神。"
+        desc: "破损的乐器碎片，灌注法力后能发出刺耳的哨音，扰乱敌人的心神。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -513,7 +513,7 @@ const weapons_r1_batch4 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 5, crit: 8, speed: 6, sharpness: 16 },
         value: 2770,
-        desc: "原本是观测星象的圆盘，虽然已经无法运作，但内部积攒的星辰灵力依然充盈。"
+        desc: "原本是观测星象的圆盘，虽然已经无法运作，但内部积攒的星辰法力依然充盈。"
     }
 ];
 const weapons_r1_batch5 = [
@@ -612,7 +612,7 @@ const weapons_r1_batch5 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 7, crit: 4, speed: 0, sharpness: 20 },
         value: 2270,
-        desc: "破落道观中供奉的铁剑，剑格已裂，但剑身积聚的灵力尚未散尽。"
+        desc: "破落道观中供奉的铁剑，剑格已裂，但剑身积聚的法力尚未散尽。"
     }
 ];
 const weapons_r1_batch6 = [
@@ -746,7 +746,7 @@ const weapons_r1_batch7 = [
         rarity: 1,
         effects: { phy_atk: 6, mag_atk: 6, crit: 2, speed: -2, sharpness: 12 },
         value: 1470,
-        desc: "渔民废弃的竹管尖枪，矛头虽然已裂，但竹管内部对灵力的传导性不错。"
+        desc: "渔民废弃的竹管尖枪，矛头虽然已裂，但竹管内部对法力的传导性不错。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -800,7 +800,7 @@ const weapons_r1_batch7 = [
         rarity: 1,
         effects: { phy_atk: 14, mag_atk: 4, crit: 3, speed: -4, sharpness: 24 },
         value: 2220,
-        desc: "浸泡在火山灰中的坚韧木杆，前端尖锐，其内部蕴含着微弱的火系灵力。"
+        desc: "浸泡在火山灰中的坚韧木杆，前端尖锐，其内部蕴含着微弱的火系法力。"
     },
     {
         id: "weapons_063",
@@ -835,7 +835,7 @@ const weapons_r1_batch8 = [
         rarity: 1,
         effects: { phy_atk: 10, mag_atk: 3, crit: 2, speed: -2, sharpness: 12 },
         value: 1560,
-        desc: "带有铁钩的竹质长杆，因为常年晾晒被灵气浸润的道袍，附带了一丝灵力。"
+        desc: "带有铁钩的竹质长杆，因为常年晾晒被灵气浸润的道袍，附带了一丝法力。"
     },
     {
         id: "weapons_066",
@@ -899,7 +899,7 @@ const weapons_r1_batch8 = [
         rarity: 1,
         effects: { phy_atk: 14, mag_atk: 5, crit: 3, speed: -4, sharpness: 24 },
         value: 2310,
-        desc: "枪杆上缠满了褪色的咒符布条，每一次穿刺都能带起细微的灵力波动。"
+        desc: "枪杆上缠满了褪色的咒符布条，每一次穿刺都能带起细微的法力波动。"
     },
     {
         id: "weapons_072",
@@ -976,7 +976,7 @@ const weapons_r1_batch9 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 8, crit: 2, speed: -4, sharpness: 14 },
         value: 1760,
-        desc: "被雷击中的老柳木，天然裂成了戈形，内部碳化的木质中封存了暴躁的自然灵力。"
+        desc: "被雷击中的老柳木，天然裂成了戈形，内部碳化的木质中封存了暴躁的自然法力。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Sharp 20, Spd 4) ---
@@ -1075,7 +1075,7 @@ const weapons_r1_batch10 = [
         rarity: 1,
         effects: { phy_atk: 9, mag_atk: 8, crit: 2, speed: -5, sharpness: 17 },
         value: 1835,
-        desc: "被天雷劈裂的铁桦木，形状天然似戟，内部残留的雷击能量对灵力极为敏感。"
+        desc: "被天雷劈裂的铁桦木，形状天然似戟，内部残留的雷击能量对法力极为敏感。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Sharp 20, Spd 4) ---
@@ -1241,7 +1241,7 @@ const weapons_r1_batch12 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 8, crit: 1, speed: -4, sharpness: 8 },
         value: 1520,
-        desc: "在阴冷地牢中弃置多年的大钺，虽然木柄已朽，但其承载的阴冷之气对灵力反应剧烈。"
+        desc: "在阴冷地牢中弃置多年的大钺，虽然木柄已朽，但其承载的阴冷之气对法力反应剧烈。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -1273,7 +1273,7 @@ const weapons_r1_batch12 = [
         rarity: 1,
         effects: { phy_atk: 10, mag_atk: 9, crit: 1, speed: -7, sharpness: 12 },
         value: 1695,
-        desc: "被天雷击中的生铁块，由于瞬间的高温和电击，内部结构发生了奇妙的灵力化转变。"
+        desc: "被天雷击中的生铁块，由于瞬间的高温和电击，内部结构发生了奇妙的法力化转变。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Sharp 20, Spd 4) ---
@@ -1305,7 +1305,7 @@ const weapons_r1_batch12 = [
         rarity: 1,
         effects: { phy_atk: 12, mag_atk: 12, crit: 2, speed: -9, sharpness: 16 },
         value: 2275,
-        desc: "从地脉深处挖出的巨大金属块，虽无利刃，但能通过灵力渗透直接粉碎敌人的经络。"
+        desc: "从地脉深处挖出的巨大金属块，虽无利刃，但能通过法力渗透直接粉碎敌人的经络。"
     }
 ];
 const weapons_r1_batch13 = [
@@ -1340,7 +1340,7 @@ const weapons_r1_batch13 = [
         rarity: 1,
         effects: { phy_atk: 9, mag_atk: 8, crit: 1, speed: -5, sharpness: 9 },
         value: 1575,
-        desc: "将半块生锈的铁片绑在磨损的石斧上，虽然简陋，却对灵力有着奇妙的感应。"
+        desc: "将半块生锈的铁片绑在磨损的石斧上，虽然简陋，却对法力有着奇妙的感应。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -1528,7 +1528,7 @@ const weapons_r1_batch15 = [
         rarity: 1,
         effects: { phy_atk: 12, mag_atk: 4, crit: 1, speed: -4, sharpness: 5 },
         value: 1490,
-        desc: "原本是洗衣服用的木棒槌，因为长期在灵泉边拍打，木头里渗入了一些微弱灵力。"
+        desc: "原本是洗衣服用的木棒槌，因为长期在灵泉边拍打，木头里渗入了一些微弱法力。"
     },
     {
         id: "weapons_129",
@@ -1538,7 +1538,7 @@ const weapons_r1_batch15 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 8, crit: 1, speed: -4, sharpness: 5 },
         value: 1490,
-        desc: "军阵遗落的重型鼓槌，木质中积攒了多年的擂鼓震荡感，对灵力共鸣极其强烈。"
+        desc: "军阵遗落的重型鼓槌，木质中积攒了多年的擂鼓震荡感，对法力共鸣极其强烈。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -1602,7 +1602,7 @@ const weapons_r1_batch15 = [
         rarity: 1,
         effects: { phy_atk: 12, mag_atk: 11, crit: 2, speed: -8, sharpness: 10 },
         value: 2170,
-        desc: "挖掘自地底祭坛的古老长兵，其材质具有奇特的吸能性，能将对手的灵力防护敲出裂痕。"
+        desc: "挖掘自地底祭坛的古老长兵，其材质具有奇特的吸能性，能将对手的法力防护敲出裂痕。"
     }
 ];
 const weapons_r1_batch16 = [
@@ -1637,7 +1637,7 @@ const weapons_r1_batch16 = [
         rarity: 1,
         effects: { phy_atk: 7, mag_atk: 7, crit: 2, speed: -4, sharpness: 0 },
         value: 1440,
-        desc: "虽然弩架已经腐朽，但这种木材天生对灵力敏感，能将内气转化为箭矢的推动力。"
+        desc: "虽然弩架已经腐朽，但这种木材天生对法力敏感，能将内气转化为箭矢的推动力。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -1736,7 +1736,7 @@ const weapons_r1_batch17 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 5, crit: 3, speed: -1, sharpness: 0 },
         value: 1395,
-        desc: "武馆淘汰的幼童练习弓，木质虽然朽烂，但由于长期被灵墨浸润，灵力传导极其流畅。"
+        desc: "武馆淘汰的幼童练习弓，木质虽然朽烂，但由于长期被灵墨浸润，法力传导极其流畅。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Sharp 15, Spd 3) ---
@@ -1800,7 +1800,7 @@ const weapons_r1_batch17 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 8, crit: 6, speed: -2, sharpness: 0 },
         value: 2430,
-        desc: "从地脉废墟中挖掘出的古弓残体，弦虽已断，但以气为弦却能射出极具穿透力的灵力矢。"
+        desc: "从地脉废墟中挖掘出的古弓残体，弦虽已断，但以气为弦却能射出极具穿透力的法力矢。"
     }
 ];
 const weapons_r1_batch18 = [
@@ -1835,7 +1835,7 @@ const weapons_r1_batch18 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 5, mag_crit: 2, speed: 2, penetration: 13 },
         value: 1480,
-        desc: "尚未成型的灵竹剑坯，因存放不当而腐朽，但竹质天然的空灵感使其对灵力极为亲和。"
+        desc: "尚未成型的灵竹剑坯，因存放不当而腐朽，但竹质天然的空灵感使其对法力极为亲和。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Pen 15, Spd 3) ---
@@ -2033,7 +2033,7 @@ const weapons_r1_batch20 = [
         rarity: 1,
         effects: { phy_atk: 5, mag_atk: 5, mag_crit: 2, speed: 0, penetration: 14 },
         value: 1400,
-        desc: "酒鬼碎裂的葫芦，仅剩半边，却因为长期受陈年老酒浸润，意外地适合引导灵力。"
+        desc: "酒鬼碎裂的葫芦，仅剩半边，却因为长期受陈年老酒浸润，意外地适合引导法力。"
     },
 
     // --- [中数值] (基准: Atk 12, Crit 3, Pen 15, Spd 3) ---
@@ -2045,7 +2045,7 @@ const weapons_r1_batch20 = [
         rarity: 1,
         effects: { phy_atk: 11, mag_atk: 0, mag_crit: 3, speed: 0, penetration: 21 },
         value: 1740,
-        desc: "石匠用来装磨砂的厚壳葫芦，质地极其坚硬，即使没有灵力加持也是件沉重的钝器。"
+        desc: "石匠用来装磨砂的厚壳葫芦，质地极其坚硬，即使没有法力加持也是件沉重的钝器。"
     },
     {
         id: "weapons_176",
@@ -2097,7 +2097,7 @@ const weapons_r1_batch20 = [
         rarity: 1,
         effects: { phy_atk: 7, mag_atk: 7, mag_crit: 4, speed: 0, penetration: 28 },
         value: 2260,
-        desc: "荒废祭坛里捡到的玉石质葫芦，虽然早已失去神采，但其吸纳灵力的效率远超凡俗。"
+        desc: "荒废祭坛里捡到的玉石质葫芦，虽然早已失去神采，但其吸纳法力的效率远超凡俗。"
     }
 ];
 const weapons_r1_batch21 = [
@@ -2122,7 +2122,7 @@ const weapons_r1_batch21 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 3, mag_crit: 3, speed: -3, penetration: 19 },
         value: 1585,
-        desc: "木质托盘上用劣质朱砂画着乱七八糟的符号，由于材料低廉，灵力波动极不稳定。"
+        desc: "木质托盘上用劣质朱砂画着乱七八糟的符号，由于材料低廉，法力波动极不稳定。"
     },
     {
         id: "weapons_183",
@@ -2164,7 +2164,7 @@ const weapons_r1_batch21 = [
         rarity: 1,
         effects: { phy_atk: 7, mag_atk: 7, mag_crit: 4, speed: -5, penetration: 29 },
         value: 2045,
-        desc: "曾是某个低阶阵法的中枢底座，虽然表面满是划痕，但其构筑灵力场的能力尚未完全消失。"
+        desc: "曾是某个低阶阵法的中枢底座，虽然表面满是划痕，但其构筑法力场的能力尚未完全消失。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Pen 20, Spd 4) ---
@@ -2221,7 +2221,7 @@ const weapons_r1_batch22 = [
         rarity: 1,
         effects: { phy_atk: 9, mag_atk: 3, mag_crit: 4, speed: -1, penetration: 9 },
         value: 1845,
-        desc: "在生锈的铁片上强行涂抹了一层劣质水银，反光效果极差，但自带一丝毒性灵力。"
+        desc: "在生锈的铁片上强行涂抹了一层劣质水银，反光效果极差，但自带一丝毒性法力。"
     },
     {
         id: "weapons_192",
@@ -2320,7 +2320,7 @@ const weapons_r1_batch23 = [
         rarity: 1,
         effects: { phy_atk: 10, mag_atk: 3, mag_crit: 2, speed: -2, penetration: 12 },
         value: 1560,
-        desc: "在长棍上捆了一截受潮的粗麻布，布料里残留着一丝微弱的土系灵力波动。"
+        desc: "在长棍上捆了一截受潮的粗麻布，布料里残留着一丝微弱的土系法力波动。"
     },
     {
         id: "weapons_201",
@@ -2362,7 +2362,7 @@ const weapons_r1_batch23 = [
         rarity: 1,
         effects: { phy_atk: 8, mag_atk: 8, mag_crit: 2, speed: -4, penetration: 18 },
         value: 1800,
-        desc: "表面绘有模糊云纹的旧幡，布料中嵌入了廉价的碎灵矿丝，对周遭灵力的感应非常敏锐。"
+        desc: "表面绘有模糊云纹的旧幡，布料中嵌入了廉价的碎灵矿丝，对周遭法力的感应非常敏锐。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Pen 20, Spd 4) ---
@@ -2384,7 +2384,7 @@ const weapons_r1_batch23 = [
         rarity: 1,
         effects: { phy_atk: 15, mag_atk: 5, mag_crit: 3, speed: -5, penetration: 24 },
         value: 2355,
-        desc: "锻造不精的生铁幡杆，幡面上绣着诡异的蓝色符文，挥动间能带起阵阵阴冷的灵力寒风。"
+        desc: "锻造不精的生铁幡杆，幡面上绣着诡异的蓝色符文，挥动间能带起阵阵阴冷的法力寒风。"
     },
     {
         id: "weapons_207",
@@ -2461,7 +2461,7 @@ const weapons_r1_batch24 = [
         rarity: 1,
         effects: { phy_atk: 4, mag_atk: 4, mag_crit: 7, speed: 8, penetration: 12 },
         value: 2460,
-        desc: "表面纹路已被磨平的青玉佩，虽然法阵几乎全毁，但仍保留了极高的灵力引导频率。"
+        desc: "表面纹路已被磨平的青玉佩，虽然法阵几乎全毁，但仍保留了极高的法力引导频率。"
     },
 
     // --- [高数值] (基准: Atk 15, Crit 4, Pen 20, Spd 4) ---
@@ -2560,7 +2560,7 @@ const weapons_r2_batch1 = [
         rarity: 2,
         effects: { phy_atk: 7, mag_atk: 7, crit: 15, speed: 12, sharpness: 36 },
         value: 9720,
-        desc: "用成年角鹿骨头作为刀柄的灵力短刃，对持有者的精神力反馈非常敏锐。"
+        desc: "用成年角鹿骨头作为刀柄的法力短刃，对持有者的精神力反馈非常敏锐。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -2691,7 +2691,7 @@ const weapons_r2_batch2 = [
         rarity: 2,
         effects: { phy_atk: 11, mag_atk: 10, crit: 13, speed: 10, sharpness: 40 },
         value: 10160,
-        desc: "宗门授艺堂发给入门弟子的制式兵器，完美兼顾了物理打击与灵力流转。"
+        desc: "宗门授艺堂发给入门弟子的制式兵器，完美兼顾了物理打击与法力流转。"
     }
 ];
 const weapons_r2_batch3 = [
@@ -2790,7 +2790,7 @@ const weapons_r2_batch3 = [
         rarity: 2,
         effects: { phy_atk: 11, mag_atk: 12, crit: 11, speed: 6, sharpness: 44 },
         value: 9520,
-        desc: "宗门外门弟子的制式兵器，完美平衡了勾拽的物理力量与灵力的快速渗透。"
+        desc: "宗门外门弟子的制式兵器，完美平衡了勾拽的物理力量与法力的快速渗透。"
     }
 ];
 const weapons_r2_batch4 = [
@@ -2847,7 +2847,7 @@ const weapons_r2_batch4 = [
         rarity: 2,
         effects: { phy_atk: 11, mag_atk: 4, crit: 12, speed: 9, sharpness: 24 },
         value: 8310,
-        desc: "扇面绘有初级困阵的铁骨扇，挥动间能产生干扰感官的灵力气流。"
+        desc: "扇面绘有初级困阵的铁骨扇，挥动间能产生干扰感官的法力气流。"
     },
     {
         id: "weapons_249",
@@ -2889,7 +2889,7 @@ const weapons_r2_batch4 = [
         rarity: 2,
         effects: { phy_atk: 9, mag_atk: 9, crit: 16, speed: 12, sharpness: 32 },
         value: 10720,
-        desc: "精密计算过的星象仪碎片，极度轻便，能通过共振将灵力增幅数倍。"
+        desc: "精密计算过的星象仪碎片，极度轻便，能通过共振将法力增幅数倍。"
     }
 ];
 const weapons_r2_batch5 = [
@@ -2924,7 +2924,7 @@ const weapons_r2_batch5 = [
         rarity: 2,
         effects: { phy_atk: 10, mag_atk: 10, crit: 4, speed: 0, sharpness: 20 },
         value: 5440,
-        desc: "道观中供奉了一段时间的桃木剑，虽然木质已有裂纹，但灵力导性极佳。"
+        desc: "道观中供奉了一段时间的桃木剑，虽然木质已有裂纹，但法力导性极佳。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Sharp 30, Spd 6) ---
@@ -2956,7 +2956,7 @@ const weapons_r2_batch5 = [
         rarity: 2,
         effects: { phy_atk: 13, mag_atk: 12, crit: 7, speed: 0, sharpness: 30 },
         value: 7620,
-        desc: "采用深山老竹的竹芯制作，质地坚韧不逊于凡铁，且对灵力反应极其灵敏。"
+        desc: "采用深山老竹的竹芯制作，质地坚韧不逊于凡铁，且对法力反应极其灵敏。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -3221,7 +3221,7 @@ const weapons_r2_batch8 = [
         rarity: 2,
         effects: { phy_atk: 13, mag_atk: 12, crit: 3, speed: -4, sharpness: 24 },
         value: 5700,
-        desc: "选用带有些许灵性的木材制作的练习矛，虽然存放已久，但灵力传导依然极其平稳。"
+        desc: "选用带有些许灵性的木材制作的练习矛，虽然存放已久，但法力传导依然极其平稳。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Sharp 30, Spd 6) ---
@@ -3253,7 +3253,7 @@ const weapons_r2_batch8 = [
         rarity: 2,
         effects: { phy_atk: 16, mag_atk: 15, crit: 5, speed: -6, sharpness: 36 },
         value: 7560,
-        desc: "矛身上刻有用于聚集灵气的回旋纹路，突刺时能产生极窄且密集的灵力锋芒。"
+        desc: "矛身上刻有用于聚集灵气的回旋纹路，突刺时能产生极窄且密集的法力锋芒。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -3285,7 +3285,7 @@ const weapons_r2_batch8 = [
         rarity: 2,
         effects: { phy_atk: 19, mag_atk: 19, crit: 6, speed: -8, sharpness: 48 },
         value: 9240,
-        desc: "宗门发给入室弟子的制式兵器，矛尖颤动间如流萤乱舞，灵力爆发极强。"
+        desc: "宗门发给入室弟子的制式兵器，矛尖颤动间如流萤乱舞，法力爆发极强。"
     }
 ];
 const weapons_r2_batch9 = [
@@ -3352,7 +3352,7 @@ const weapons_r2_batch9 = [
         rarity: 2,
         effects: { phy_atk: 16, mag_atk: 17, crit: 4, speed: -7, sharpness: 27 },
         value: 7290,
-        desc: "采用灵竹根部的天然曲度制成，极度柔韧且对灵力反应灵敏，是术武双修者的爱物。"
+        desc: "采用灵竹根部的天然曲度制成，极度柔韧且对法力反应灵敏，是术武双修者的爱物。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -3384,7 +3384,7 @@ const weapons_r2_batch9 = [
         rarity: 2,
         effects: { phy_atk: 20, mag_atk: 19, crit: 6, speed: -10, sharpness: 36 },
         value: 9000,
-        desc: "宗门外门弟子的进阶兵器，戈身铭刻了标准的引灵纹路，钩啄间能带起大范围灵力激荡。"
+        desc: "宗门外门弟子的进阶兵器，戈身铭刻了标准的引灵纹路，钩啄间能带起大范围法力激荡。"
     }
 ];
 const weapons_r2_batch10 = [
@@ -3451,7 +3451,7 @@ const weapons_r2_batch10 = [
         rarity: 2,
         effects: { phy_atk: 18, mag_atk: 17, crit: 4, speed: -9, sharpness: 33 },
         value: 7590,
-        desc: "采用灵木核心打制的杆身，戟头轻量化处理，使得灵力爆发时的指向性非常明确。"
+        desc: "采用灵木核心打制的杆身，戟头轻量化处理，使得法力爆发时的指向性非常明确。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -3550,7 +3550,7 @@ const weapons_r2_batch11 = [
         rarity: 2,
         effects: { phy_atk: 18, mag_atk: 18, crit: 3, speed: -11, sharpness: 30 },
         value: 7170,
-        desc: "不知从哪间废弃道观翻出来的练习木铩，表面刻痕斑驳，由于年份久了，灵力反应还算敏感。"
+        desc: "不知从哪间废弃道观翻出来的练习木铩，表面刻痕斑驳，由于年份久了，法力反应还算敏感。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -3706,7 +3706,7 @@ const weapons_r2_batch13 = [
         rarity: 2,
         effects: { phy_atk: 22, mag_atk: 8, crit: 2, speed: -7, sharpness: 18 },
         value: 5850,
-        desc: "在斧刃和斧柄缝隙里粘着一些干枯灵芝的碎屑，偶尔能激发出微弱的生发灵力。"
+        desc: "在斧刃和斧柄缝隙里粘着一些干枯灵芝的碎屑，偶尔能激发出微弱的生发法力。"
     },
     {
         id: "weapons_327",
@@ -3716,7 +3716,7 @@ const weapons_r2_batch13 = [
         rarity: 2,
         effects: { phy_atk: 15, mag_atk: 15, crit: 2, speed: -7, sharpness: 18 },
         value: 5850,
-        desc: "虽然是桃木，但由于年代久远，木质已经半玉化，能勉强引导灵力进行劈砍。"
+        desc: "虽然是桃木，但由于年代久远，木质已经半玉化，能勉强引导法力进行劈砍。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Sharp 30, Spd 6) ---
@@ -3748,7 +3748,7 @@ const weapons_r2_batch13 = [
         rarity: 2,
         effects: { phy_atk: 19, mag_atk: 19, crit: 3, speed: -11, sharpness: 27 },
         value: 7470,
-        desc: "武馆里年久失修的训练斧，斧身刻满了模糊的裂纹，灵力在其中流转并不稳定。"
+        desc: "武馆里年久失修的训练斧，斧身刻满了模糊的裂纹，法力在其中流转并不稳定。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Sharp 40, Spd 8) ---
@@ -4013,7 +4013,7 @@ const weapons_r2_batch16 = [
         rarity: 2,
         effects: { phy_atk: 13, mag_atk: 13, crit: 3, speed: -6, sharpness: 24 },
         value: 5700,
-        desc: "弩身用开裂的竹子拼接而成，虽然竹节处漏风，但对灵力的传导还算凑合。"
+        desc: "弩身用开裂的竹子拼接而成，虽然竹节处漏风，但对法力的传导还算凑合。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Sharp 30, Spd 6) ---
@@ -4176,7 +4176,7 @@ const weapons_r2_batch17 = [
         rarity: 2,
         effects: { phy_atk: 16, mag_atk: 16, crit: 12, speed: -4, sharpness: 0 },
         value: 9720,
-        desc: "从地脉遗迹挖出的半截石制弓架，弓弦已无，勉强配上劣质兽筋，依靠残余灵力勉强攒射。"
+        desc: "从地脉遗迹挖出的半截石制弓架，弓弦已无，勉强配上劣质兽筋，依靠残余法力勉强攒射。"
     }
 ];
 const weapons_r2_batch18 = [
@@ -4310,7 +4310,7 @@ const weapons_r2_batch19 = [
         rarity: 2,
         effects: { phy_atk: 16, mag_atk: 16, mag_crit: 2, speed: -12, penetration: 22 },
         value: 5840,
-        desc: "不知从哪间废弃土地庙搬来的石块，长满了霉斑，灵力流转在裂缝中断断续续。"
+        desc: "不知从哪间废弃土地庙搬来的石块，长满了霉斑，法力流转在裂缝中断断续续。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Pen 30, Spd 6) ---
@@ -4409,7 +4409,7 @@ const weapons_r2_batch20 = [
         rarity: 2,
         effects: { phy_atk: 10, mag_atk: 9, mag_crit: 4, speed: 0, penetration: 28 },
         value: 5420,
-        desc: "酒鬼丢弃在路边的旧物，由于长期被劣酒浸泡，葫芦壁已经有些软化，灵力流转非常散乱。"
+        desc: "酒鬼丢弃在路边的旧物，由于长期被劣酒浸泡，葫芦壁已经有些软化，法力流转非常散乱。"
     },
 
     // --- [中数值] (基准: Atk 25, Crit 6, Pen 30, Spd 6) ---
@@ -4696,7 +4696,7 @@ const weapons_r2_batch23 = [
         rarity: 2,
         effects: { phy_atk: 20, mag_atk: 6, mag_crit: 3, speed: -5, penetration: 24 },
         value: 5790,
-        desc: "在粗麻布上胡乱涂抹的符文，朱砂里掺了太多杂质，挥动时灵力波动断断续续。"
+        desc: "在粗麻布上胡乱涂抹的符文，朱砂里掺了太多杂质，挥动时法力波动断断续续。"
     },
     {
         id: "weapons_417",
@@ -4795,7 +4795,7 @@ const weapons_r2_batch24 = [
         rarity: 2,
         effects: { phy_atk: 10, mag_atk: 4, mag_crit: 8, speed: 2, penetration: 32 },
         value: 6220,
-        desc: "玉片已经碎裂，用劣质金边强行包住，灵力流转在裂缝中断断续续。"
+        desc: "玉片已经碎裂，用劣质金边强行包住，法力流转在裂缝中断断续续。"
     },
     {
         id: "weapons_426",
@@ -4837,7 +4837,7 @@ const weapons_r2_batch24 = [
         rarity: 2,
         effects: { phy_atk: 9, mag_atk: 9, mag_crit: 12, speed: 3, penetration: 48 },
         value: 8790,
-        desc: "武馆学员用来练习感应的旧玉，玉面布满划痕，灵力在其中流转异常迟钝。"
+        desc: "武馆学员用来练习感应的旧玉，玉面布满划痕，法力在其中流转异常迟钝。"
     },
 
     // --- [高数值] (基准: Atk 30, Crit 8, Pen 40, Spd 8) ---
@@ -5050,7 +5050,7 @@ const weapons_r3_batch2 = [
         effects: { phy_atk: 13, mag_atk: 13, crit: 14, speed: 11, sharpness: 45 },
         value: 17415,
         req: { jing: 18, qi: 0, shen: 27 },
-        desc: "走南闯北的游侠惯用的武器，兼顾了物理穿透与灵力响应，应对各类敌人皆得心应手。"
+        desc: "走南闯北的游侠惯用的武器，兼顾了物理穿透与法力响应，应对各类敌人皆得心应手。"
     },
 
     // --- [高数值] (基准: Atk 45, Crit 12, Sharp 60, Spd 12) ---
@@ -5158,7 +5158,7 @@ const weapons_r3_batch3 = [
         effects: { phy_atk: 14, mag_atk: 14, crit: 13, speed: 7, sharpness: 50 },
         value: 17025,
         req: { jing: 22, qi: 0, shen: 23 },
-        desc: "大镖局为旗下镖头定制的精锐武器，材质匀称，在格挡与反击间拥有极佳的灵力平衡感。"
+        desc: "大镖局为旗下镖头定制的精锐武器，材质匀称，在格挡与反击间拥有极佳的法力平衡感。"
     },
 
     // --- [高数值] (基准: Atk 45, Crit 12, Sharp 60, Spd 12) ---
@@ -5663,7 +5663,7 @@ const weapons_r3_batch8 = [
         effects: { phy_atk: 19, mag_atk: 19, crit: 5, speed: -6, sharpness: 36 },
         value: 13230,
         req: { jing: 27, qi: 0, shen: 18 },
-        desc: "武馆中常见的制式长矛，杆身涂有防腐黑漆，对灵力的传导十分稳定，是江湖新人的首选。"
+        desc: "武馆中常见的制式长矛，杆身涂有防腐黑漆，对法力的传导十分稳定，是江湖新人的首选。"
     },
 
     // --- [中数值] (基准: Atk 37, Crit 9, Sharp 45, Spd 9) ---
@@ -5698,7 +5698,7 @@ const weapons_r3_batch8 = [
         effects: { phy_atk: 23, mag_atk: 23, crit: 7, speed: -9, sharpness: 54 },
         value: 16605,
         req: { jing: 27, qi: 0, shen: 18 },
-        desc: "大镖局批量订制的护镖兵刃，用料考究，在物理震荡与灵力震慑间达到了完美的平衡。"
+        desc: "大镖局批量订制的护镖兵刃，用料考究，在物理震荡与法力震慑间达到了完美的平衡。"
     },
 
     // --- [高数值] (基准: Atk 45, Crit 12, Sharp 60, Spd 12) ---
@@ -5806,7 +5806,7 @@ const weapons_r3_batch9 = [
         effects: { phy_atk: 24, mag_atk: 24, crit: 6, speed: -11, sharpness: 41 },
         value: 15945,
         req: { jing: 31, qi: 0, shen: 14 },
-        desc: "走江湖的长兵武者惯用的武器，兼顾了物理啄击力与灵力传导，是行走武林的可靠伙伴。"
+        desc: "走江湖的长兵武者惯用的武器，兼顾了物理啄击力与法力传导，是行走武林的可靠伙伴。"
     },
 
     // --- [高数值] (基准: Atk 45, Crit 12, Sharp 60, Spd 12) ---
@@ -5914,7 +5914,7 @@ const weapons_r3_batch10 = [
         effects: { phy_atk: 26, mag_atk: 26, crit: 5, speed: -14, sharpness: 50 },
         value: 16350,
         req: { jing: 27, qi: 0, shen: 18 },
-        desc: "经验丰富的长兵行家偏爱的重型武器，整体平衡性极佳，兼顾了物理冲击与灵力共鸣。"
+        desc: "经验丰富的长兵行家偏爱的重型武器，整体平衡性极佳，兼顾了物理冲击与法力共鸣。"
     },
 
     // --- [高数值] (基准: Atk 45, Crit 12, Sharp 60, Spd 12) ---
@@ -6154,7 +6154,7 @@ const weapons_r3_batch12 = [
         effects: { phy_atk: 54, mag_atk: 18, crit: 5, speed: -26, sharpness: 48 },
         value: 20070,
         req: { jing: 41, qi: 0, shen: 4 },
-        desc: "钺刃边缘揉入了寒铁砂，挥舞间能产生阵阵沉重的法力压迫，专门对付身负灵力防御的对手。"
+        desc: "钺刃边缘揉入了寒铁砂，挥舞间能产生阵阵沉重的法力压迫，专门对付身负法力防御的对手。"
     },
     {
         id: "weapons_540",

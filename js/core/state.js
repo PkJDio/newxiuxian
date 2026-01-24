@@ -42,6 +42,8 @@ window.performDirectRebirth = function() {
         // 3. 准备新数据
         let template = window.PLAYER_TEMPLATE || {
             name: "新角色", generation: 1, money: 0,
+            // 【新增】灵气资源
+            spiritEnergy: 0,
             attributes: { hp: 100, mp: 0, atk: 10, def: 0, speed: 10 },
             inventory: []
         };
@@ -53,12 +55,18 @@ window.performDirectRebirth = function() {
         newPlayer.skills = window.player.skills ? JSON.parse(JSON.stringify(window.player.skills)) : {};
         newPlayer.fishHistory = window.player.fishHistory ? JSON.parse(JSON.stringify(window.player.fishHistory)) : {};
         newPlayer.lifeSkills = window.player.lifeSkills ? JSON.parse(JSON.stringify(window.player.lifeSkills)) : {};
+        //继承招式
+        newPlayer.zhaoshi_nums=window.player.zhaoshi_nums?JSON.parse(JSON.stringify(window.player.zhaoshi_nums)):3;
+        newPlayer.zhaoshi_list=window.player.zhaoshi_list?JSON.parse(JSON.stringify(window.player.zhaoshi_list)):{};
+        newPlayer.zhaoshi_equipped=window.player.zhaoshi_equipped?JSON.parse(JSON.stringify(window.player.zhaoshi_equipped)):{};
+        newPlayer.account=window.player.account;
+        newPlayer.equipment.gongfa=window.player.equipment.gongfa?JSON.parse(JSON.stringify(window.player.equipment.gongfa)):{};
 
         newPlayer.danger = 0;
         newPlayer.need_kill = 0;
         newPlayer.timeStart = 0;
         newPlayer.generation = nextGen;
-        newPlayer.name = "道友" + nextGen + "世";
+        newPlayer.name = "道友" + newPlayer.account  + nextGen + "世";
         newPlayer.worldSeed = Math.floor(Math.random() * 1000000);
         newPlayer.isNewLife = true;
 

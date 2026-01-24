@@ -1,20 +1,15 @@
 // js/modules/combat/combat_ui.js
 // 职责：战斗界面的实时更新、日志输出、动画效果
-// 修复：适配属性拆分后的 Buff 显示 + 动态刷新行动时间文字
+// 修复：适配属性拆分后的 Buff 显示 + 动态刷新行动时间文字 + 【新增】Buff图标渲染
 
 const CombatUI = {
-    /** 向日志容器添加一行记录 */
+    // ... log 函数保持不变 ...
     log: function(ctx, msg) {
         const container = ctx.uiRefs.logContainer;
         if (!container) return;
-
         const line = document.createElement('div');
-        // 样式已在 ui_combat_modal.js 中定义 (border-bottom, padding等)
         line.innerHTML = msg;
-
         container.appendChild(line);
-
-        // 自动滚动到底部
         if (container.children.length > 60) {
             container.removeChild(container.firstChild);
         }
@@ -26,82 +21,64 @@ const CombatUI = {
     /** 更新 UI 上的数值 (血量、蓝量、属性、Buff) */
     updateStats: function(ctx) {
         const ui = ctx.uiRefs;
-        if (!ui.pHp) return; // 容错
+        if (!ui.pHp) return;
 
-        // 1. 更新血蓝条
+        // 1. 更新血蓝条 (保持不变)
         const pMaxHp = ctx.player.derived.hpMax;
         const pMaxMp = ctx.player.derived.mpMax || 100;
-
         ui.pHp.innerText = Math.floor(ctx.currentPHp);
         ui.pHpBar.style.width = `${Math.min(100, (ctx.currentPHp / pMaxHp) * 100)}%`;
-
         ui.pMp.innerText = Math.floor(ctx.currentPMp);
         ui.pMpBar.style.width = `${Math.min(100, (ctx.currentPMp / pMaxMp) * 100)}%`;
-
         ui.eHp.innerText = Math.floor(ctx.currentEHp);
         ui.eHpBar.style.width = `${Math.min(100, (ctx.currentEHp / ctx.enemy.maxHp) * 100)}%`;
 
-        // 2. 更新属性 Buff 显示 (红/绿字)
+        // 2. 更新属性红绿字 (保持不变)
         this._updateAttrStyle(ctx, 'player', ctx.buffs.player);
         this._updateAttrStyle(ctx, 'enemy', ctx.buffs.enemy);
 
-        // 3. 【新增】动态更新“速度时间”文字 (让减速肉眼可见)
+        // 3. 动态更新“速度时间”文字 (保持不变)
         this._updateActionTimeText(ctx, 'player');
         this._updateActionTimeText(ctx, 'enemy');
+
+        // 4. 【新增】更新 Buff 可视化小方块
+        this._updateBuffIcons(ctx);
     },
 
-    /** 更新行动条 (由 CombatCore 的 _tick 高频调用) */
+    // ... updateGauges, refreshItemCD, refreshSkillCD, updateTox, renderEnd 保持不变 ...
     updateGauges: function(ctx, pPct, ePct) {
         const ui = ctx.uiRefs;
-        // 注意：ui_combat_modal.js 里的 ID 是 combat_p_ap_bar / combat_e_ap_bar
-        // 如果 init 里没有绑定，这里要做安全检查
         if (ui.pApBar) ui.pApBar.style.width = `${pPct}%`;
         if (ui.eApBar) ui.eApBar.style.width = `${ePct}%`;
     },
-
-    /** 刷新物品快捷栏 CD */
     refreshItemCD: function(ctx) {
         for(let i=0; i<3; i++) {
-            // 查找按钮和遮罩 (适配 danyao_cd_overlay)
             const btn = document.getElementById(`danyao_combat_btn_use_${i}`);
             const overlay = document.getElementById(`danyao_combat_cd_overlay_${i}`);
-
             if (!overlay || !btn) continue;
-
             if (ctx.itemCDs[i] > 0) {
                 overlay.style.display = "flex";
                 overlay.innerText = ctx.itemCDs[i];
                 btn.disabled = true;
             } else {
                 overlay.style.display = "none";
-                // 只有非空槽位才启用
-                if (!btn.disabled && btn.innerHTML.includes('空')) {
-                    // 保持禁用 (如果是通过 innerHTML 判断空槽的话，或者由 modal 控制)
-                } else {
-                    btn.disabled = false;
-                }
+                if (!btn.disabled && btn.innerHTML.includes('空')) {} else { btn.disabled = false; }
             }
         }
     },
-
-    /** 刷新功法技能 CD */
     refreshSkillCD: function(ctx) {
         const containers = document.querySelectorAll('#sidebar_skills .gongfa_slot_wrapper');
-
         containers.forEach((wrapper) => {
             const btn = wrapper.querySelector('button[id^="combat_btn_skill_"]');
             if (!btn) return;
-
             const match = btn.getAttribute('onclick').match(/'([^']+)'/);
             if (!match) return;
             const skillId = match[1];
             const cd = ctx.skillCDs[skillId] || 0;
-
             const overlay = wrapper.querySelector('.gongfa_cd_overlay');
             if (overlay) {
                 if (cd > 0) {
-                    // 确保样式应用
-                    overlay.style.display = "flex"; // 这里的样式已经在 CSS 类名中定义了
+                    overlay.style.display = "flex";
                     overlay.innerText = cd;
                     btn.disabled = true;
                 } else {
@@ -111,7 +88,6 @@ const CombatUI = {
             }
         });
     },
-
     updateTox: function(ctx) {
         if (ctx.uiRefs.eToxBar) {
             ctx.uiRefs.eToxBar.style.width = `${ctx.enemy.toxicity}%`;
@@ -122,7 +98,6 @@ const CombatUI = {
             ctx.uiRefs.pToxVal.innerText = `${window.player.status.toxicity}`;
         }
     },
-
     renderEnd: function(ctx, resultType, extraHtml = "") {
         const container = ctx.uiRefs.logContainer;
         if (container && extraHtml) {
@@ -135,59 +110,93 @@ const CombatUI = {
 
     // ================= 内部辅助方法 =================
 
-    /** * 【修复】适配拆分后的属性面板显示Buff
-     * 将 atk/def 等通用属性映射到 phy_atk/mag_atk 等具体格子上
-     */
+    /** 【新增】渲染 Buff 列表图标 */
+    _updateBuffIcons: function(ctx) {
+        // 渲染玩家 Buffs
+        this._renderBuffList(ctx.buffs.player, 'combat_p_buffs');
+        // 渲染敌人 Buffs
+        this._renderBuffList(ctx.buffs.enemy, 'combat_e_buffs');
+    },
+
+    /** 具体的渲染逻辑 */
+    _renderBuffList: function(buffMap, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        let html = '';
+
+        // 遍历所有属性 (hp, mp, atk, def...)
+        for (let attr in buffMap) {
+            const entry = buffMap[attr];
+
+            if (Array.isArray(entry)) {
+                // 1. 数组类型 (DoT/HoT, 多重效果)
+                entry.forEach(buff => {
+                    html += this._createBuffTagHtml(buff, attr);
+                });
+            } else if (entry && entry.turns > 0) {
+                // 2. 对象类型 (普通属性加成)
+                html += this._createBuffTagHtml(entry, attr);
+            }
+        }
+
+        container.innerHTML = html;
+    },
+
+    /** 生成单个 Buff 标签 HTML */
+    _createBuffTagHtml: function(buff, attr) {
+        const typeClass = buff.type === 'debuff' ? 'debuff' : 'buff';
+
+        // 构造悬浮窗数据
+        const tooltipData = {
+            name: buff.name,
+            type: buff.type,
+            attr: attr,
+            val: buff.val,
+            valType: buff.valType,
+            turns: buff.turns,
+            isNew: buff.isNew
+        };
+        const encoded = encodeURIComponent(JSON.stringify(tooltipData));
+
+        return `
+            <div class="buff-tag ${typeClass}" 
+                 onmouseenter="window.showBuffTooltip(event, '${encoded}')" 
+                 onmouseleave="window.hideTooltip()"
+                 onmousemove="window.moveTooltip(event)">
+                ${buff.name} (${buff.turns})
+            </div>
+        `;
+    },
+
+    // ... _updateAttrStyle, _updateActionTimeText 保持不变 ...
     _updateAttrStyle: function(ctx, target, buffs) {
         const prefix = target === 'player' ? 'p_attr_' : 'e_attr_';
-
-        // 1. 清理旧的 buff 显示
         const allBoxes = document.querySelectorAll(`[id^="${prefix}"]`);
         allBoxes.forEach(box => {
             const buffSpan = box.querySelector('.attr-buff-val');
             if (buffSpan) buffSpan.remove();
         });
-
         if (!buffs) return;
+        const map = { 'atk': ['phy_atk', 'mag_atk'], 'def': ['phy_def', 'mag_def'], 'phy_atk': ['phy_atk'], 'mag_atk': ['mag_atk'], 'phy_def': ['phy_def'], 'mag_def': ['mag_def'], 'speed': ['spd'], 'spd': ['spd'] };
 
-        // 2. 定义映射关系
-        const map = {
-            'atk': ['phy_atk', 'mag_atk'],
-            'def': ['phy_def', 'mag_def'],
-            'phy_atk': ['phy_atk'],
-            'mag_atk': ['mag_atk'],
-            'phy_def': ['phy_def'],
-            'mag_def': ['mag_def'],
-            'speed': ['spd'],
-            'spd': ['spd']
-        };
-
-        // 3. 遍历生效的 Buff
         for (let attr in buffs) {
-            const buff = buffs[attr];
-            const targetSuffixes = map[attr];
+            const entry = buffs[attr];
+            // 这里只处理非数组的属性Buff，因为DoT不显示在属性旁
+            if (Array.isArray(entry)) continue;
 
+            const targetSuffixes = map[attr];
             if (targetSuffixes) {
                 targetSuffixes.forEach(suffix => {
                     const elId = prefix + suffix;
                     const el = document.getElementById(elId);
                     if (el) {
-                        const isDebuff = (buff.val < 0);
+                        const isDebuff = (entry.val < 0);
                         const color = isDebuff ? '#d32f2f' : '#388e3c';
-                        const sign = buff.val > 0 ? "+" : "";
-
-                        // --- 【核心修复逻辑】 ---
+                        const sign = entry.val > 0 ? "+" : "";
                         let displayVal = "";
-                        if (buff.valType === 1) {
-                            // 如果是百分比类型 (如 0.4)，显示为 +40%
-                            displayVal = `${sign}${(buff.val * 100).toFixed(0)}%`;
-                        } else {
-                            // 如果是固定数值 (如 20)，显示为 +20
-                            displayVal = `${sign}${buff.val}`;
-                        }
-                        // -----------------------
-
-                        // 插入新的 span
+                        if (entry.valType === 1) displayVal = `${sign}${(entry.val * 100).toFixed(0)}%`;
+                        else displayVal = `${sign}${entry.val}`;
                         const html = `<span class="attr-buff-val" style="color:${color}; margin-left:4px; font-size:12px; font-weight:bold;">${displayVal}</span>`;
                         el.insertAdjacentHTML('beforeend', html);
                     }
@@ -196,38 +205,24 @@ const CombatUI = {
         }
     },
 
-    /** * 【新增】动态更新行动时间文字 (如 "2.4秒")
-     */
     _updateActionTimeText: function(ctx, target) {
-        // 1. 获取当前速度
-        // 这里必须用 CombatCalc 获取实时速度（含Buff），不能只读面板
         const stats = CombatCalc.getDynamicStats(ctx, target);
         const speed = stats.speed;
-
-        // 2. 计算秒数 (使用 Core 的配置，确保一致)
         const config = (window.CombatCore && window.CombatCore.CONFIG) ? window.CombatCore.CONFIG : { BASE_TIME: 3.0, SPD_FACTOR: 0.01 };
         const factor = config.SPD_FACTOR;
         const baseTime = config.BASE_TIME;
-
-        // 公式: Time = Base / (1 + speed * factor)
-        // 保护：最慢 0.1倍速 (防止除以0或负数)
         const multiplier = 1 + (speed * factor);
         const safeMult = Math.max(0.1, multiplier);
         const actTime = (baseTime / safeMult).toFixed(1);
-
-        // 3. 更新 UI
         const prefix = target === 'player' ? 'p_attr_' : 'e_attr_';
         const box = document.getElementById(prefix + 'spd');
         if (box) {
-            // 找到括号里的 .attr-extra 元素
             const extra = box.querySelector('.attr-extra');
             if (extra) {
                 extra.innerText = `(${actTime}秒)`;
-
-                // 可选：如果速度被减了，让时间文字变红提示
-                if (multiplier < 1.0) extra.style.color = '#d32f2f'; // 变慢了，红色警示
-                else if (multiplier > 1.0) extra.style.color = '#388e3c'; // 变快了，绿色
-                else extra.style.color = '#aaa'; // 原色
+                if (multiplier < 1.0) extra.style.color = '#d32f2f';
+                else if (multiplier > 1.0) extra.style.color = '#388e3c';
+                else extra.style.color = '#aaa';
             }
         }
     }

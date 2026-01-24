@@ -12,14 +12,14 @@ const RARITY_CONFIG = {
 };
 
 const TYPE_MAPPING = {
-    'material': '材料', 'foodMaterial': '食材',"fooding":"食材", 'food': '料理','fish':'鱼', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '钓具'
+    'material': '材料', 'foodMaterial': '食材',"herbs":"草药","spiritItem":"灵物","fooding":"食材", 'food': '料理','fish':'鱼', 'weapon': '武器', 'head': '头盔', 'body': '铠甲', 'feet': '靴子', 'book': '书籍', 'pill': '丹药', 'herb': '草药', 'tool': '工具', 'mount': '坐骑', 'fishing_rod': '渔具'
 };
 // 【新增】属性名映射表 (用于悬浮窗显示)
 const ATTR_MAPPING = {
-    "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)",
+    "jing": "精(体质)", "qi": "气(能量)", "shen": "神(悟性)","herbs":"草药",
     "hpMax": "生命上限", "hp_max": "生命上限", "max_hp": "生命上限",
-    "mpMax": "灵力上限", "max_mp": "灵力上限",
-    "hp": "生命", "mp": "灵力",
+    "mpMax": "法力上限", "max_mp": "法力上限",
+    "hp": "生命", "mp": "法力",
     "atk": "攻击力", "def": "防御力",
     "phy_atk": "物理攻击", "mag_atk": "法术攻击",
     "phy_def": "物理防御", "mag_def": "法术防御",
@@ -69,7 +69,10 @@ const SKILL_CONFIG = {
 // 4. 玩家初始模板 (新档使用)
 const PLAYER_TEMPLATE = {
     version: CURRENT_GAME_VERSION, name: "未命名", isAlive: true, generation: 1, money: 10,
+    // 【新增】灵气资源
+    spiritEnergy: 0,
     gongfa_nums: 3,
+    zhaoshi_nums: 3,
     studyProgress: {},
     currentStudyTarget: null,
     age: 16, dayCount: 0, timeHours: 7,

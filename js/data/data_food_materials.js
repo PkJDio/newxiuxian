@@ -42,13 +42,13 @@ const foodMaterial = [
     { id: "foodMaterial_049", name: "鸭子", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "shop", value: 6, effects: { hunger: 2, hp: 0 }, desc: "制作鸭子料理的基础材料。" },
     { id: "foodMaterial_050", name: "狗肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 5, effects: { hunger: 15, hp: 5 }, desc: "香肉，大补。" },
     { id: "foodMaterial_051", name: "野猪肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 8, effects: { hunger: 20, hp: 5 }, desc: "肉质粗糙但很有嚼劲，十分顶饱。" },
-    { id: "foodMaterial_052", name: "蛇肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 10, effects: { hunger: 10, hp: 5, toxicity: -1 }, desc: "肉质洁白细腻，微量解毒。" },
+    { id: "foodMaterial_052", name: "蛇肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 10, effects: { hunger: 10, hp: 5 }, desc: "肉质洁白细腻，微量解毒。" },
     { id: "foodMaterial_053", name: "狼肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 6, effects: { hunger: 15, atk: 1 }, desc: "口感发酸，吃完充满野性。" },
     { id: "foodMaterial_054", name: "熊肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 20, effects: { hunger: 30, hp: 10 }, desc: "含有丰富的油脂，极度耐饿。" },
     { id: "foodMaterial_055", name: "虎肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 3, obtain: "wild", value: 50, effects: { hunger: 25, atk: 1 }, desc: "大补之物，食之气力大增。" },
     { id: "foodMaterial_056", name: "鳄鱼肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 25, effects: { hunger: 20, def: 1 }, desc: "据说能治哮喘，口感像鸡肉。" },
     { id: "foodMaterial_057", name: "生鱼片", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 1, obtain: "wild", value: 5, effects: { hunger: 8, hp: 2 }, desc: "刚捕捞上来的鲜鱼切片。" },
-    { id: "foodMaterial_058", name: "蝎子肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 15, effects: { hunger: 5, toxicity: -2 }, desc: "去毒后酥脆可口，以毒攻毒。" }
+    { id: "foodMaterial_058", name: "蝎子肉", type: "foodMaterial", subType: "fooding", grade: 0, rarity: 2, obtain: "wild", value: 15, effects: { hunger: 5 }, desc: "去毒后酥脆可口，以毒攻毒。" }
 ];
 
 const extraFlavoring = [
@@ -64,7 +64,7 @@ const extraFlavoring = [
     { id: "foodMaterial_060", name: "陈醋", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 2, effects: { hunger: 0, hp: 0 }, desc: "去腻增香，酸味醇厚。" },
     { id: "foodMaterial_061", name: "味精", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 2, effects: { hunger: 0, hp: 0 }, desc: "极少量即可提升料理的鲜美度。" },
     { id: "foodMaterial_062", name: "料酒", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 2, effects: { hunger: 0, hp: 0 }, desc: "去腥解腻，烹饪肉类必备。" },
-    { id: "foodMaterial_063", name: "胡椒粉", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 3, effects: { hunger: 0, hp: 0, cold_resist: 1 }, desc: "带有微辛的香气，能暖胃去腥。" },
+    { id: "foodMaterial_063", name: "胡椒粉", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 3, effects: { hunger: 0, hp: 0 }, desc: "带有微辛的香气，能暖胃去腥。" },
     { id: "foodMaterial_064", name: "花椒", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "wild", value: 2, effects: { hunger: 0, hp: 0 }, desc: "独特的麻味，是川菜的灵魂。" },
     { id: "foodMaterial_065", name: "八角", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "shop", value: 2, effects: { hunger: 0, hp: 0 }, desc: "炖肉时常用的香料，香气浓郁。" },
     { id: "foodMaterial_066", name: "桂皮", type: "foodMaterial", subType: "flavoring", grade: 0, rarity: 1, obtain: "wild", value: 2, effects: { hunger: 0, hp: 0 }, desc: "带有甜香的木质香料，常用于卤制。" },

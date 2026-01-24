@@ -203,7 +203,7 @@ const head_r1_batch2 = [
         durability: 35,
         effects: { phy_def: 1, mag_def: 3, speed: -1, hp_max: 22, phy_atk: 0 },
 
-        desc: "【重甲】用旧皮质护具改制的帽子，为了稳固加了几个铁扣。皮质陈旧，竟有一丝隔绝灵力的效果。"
+        desc: "【重甲】用旧皮质护具改制的帽子，为了稳固加了几个铁扣。皮质陈旧，竟有一丝隔绝法力的效果。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 13 | HP: 30 | 速: -1 | 物攻: 1 | 售价: 855) ---
@@ -457,7 +457,7 @@ const head_r1_batch4 = [
         durability: 30,
         effects: { phy_def: 0, mag_def: 2, speed: 0, hp_max: 16, phy_atk: 1, crit: 1 },
 
-        desc: "【皮甲】由几张干瘪的硕鼠皮拼凑而成，看起来十分猥琐。但也因其异兽属性，对灵力波动有细微抗性。"
+        desc: "【皮甲】由几张干瘪的硕鼠皮拼凑而成，看起来十分猥琐。但也因其异兽属性，对法力波动有细微抗性。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 8 | HP: 22 | 速: 1 | 物攻: 2 | 暴击: 1 | 售价: 873) ---
@@ -815,7 +815,7 @@ const head_r2_batch2 = [
         value: 1512,
         durability: 45,
         effects: { phy_def: 2, mag_def: 6, speed: -1, hp_max: 44, phy_atk: 1 },
-        desc: "【重甲】表面覆盖着一层灰绿色的铜锈，这是一件勉强还能使用的古旧青铜护具，对灵力流动有阻滞感。"
+        desc: "【重甲】表面覆盖着一层灰绿色的铜锈，这是一件勉强还能使用的古旧青铜护具，对法力流动有阻滞感。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 20 | HP: 61 | 速: -2 | 物攻: 1 | 售价: 2808) ---
@@ -933,7 +933,7 @@ const head_r2_batch3 = [
         value: 1260,
         durability: 40,
         effects: { phy_def: 1, mag_def: 5, speed: 0, hp_max: 40 },
-        desc: "【轻甲】这种小兽皮曾因灵力而光鲜，如今已变得灰扑扑的。好在基本的法术阻隔能力还在。"
+        desc: "【轻甲】这种小兽皮曾因法力而光鲜，如今已变得灰扑扑的。好在基本的法术阻隔能力还在。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 16 | HP: 55 | 速: 0 | 售价: 2430) ---
@@ -1051,7 +1051,7 @@ const head_r2_batch4 = [
         value: 2016,
         durability: 35,
         effects: { phy_def: 1, mag_def: 4, speed: 1, hp_max: 32, phy_atk: 2, crit: 2 },
-        desc: "【皮甲】前任主人留下的蛇皮护面，鳞片由于磨损不再光滑，但其特有的韧性仍能化解部分灵力冲击。"
+        desc: "【皮甲】前任主人留下的蛇皮护面，鳞片由于磨损不再光滑，但其特有的韧性仍能化解部分法力冲击。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 12 | HP: 44 | 速: 1 | 物攻: 3 | 暴击: 3 | 售价: 3312) ---
@@ -1169,7 +1169,7 @@ const head_r2_batch5 = [
         value: 1332,
         durability: 25,
         effects: { phy_def: 1, mag_def: 2, speed: 1, hp_max: 24, mag_atk: 2, qi: 1, shen: 1 },
-        desc: "【布甲】洗得有些发白的法冠，虽然其上原本的阵法已经磨损严重，但对灵力的亲和度依然尚可。"
+        desc: "【布甲】洗得有些发白的法冠，虽然其上原本的阵法已经磨损严重，但对法力的亲和度依然尚可。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 8 | HP: 33 | 速: 1 | 法攻: 3 | 属性: 3 | 售价: 2214) ---
@@ -1207,7 +1207,7 @@ const head_r2_batch5 = [
         value: 2214,
         durability: 35,
         effects: { phy_def: 2, mag_def: 6, speed: 1, hp_max: 33, mag_atk: 3, qi: 1, shen: 2 },
-        desc: "【布甲】曾经在某些小型祭祀中使用的布帽，由于色彩褪去而显得陈旧，但表面附着的灵力残余依旧有效。"
+        desc: "【布甲】曾经在某些小型祭祀中使用的布帽，由于色彩褪去而显得陈旧，但表面附着的法力残余依旧有效。"
     },
 
     // --- [High Tier / 高数值] (总防: 13 | HP: 42 | 速: 2 | 法攻: 4 | 属性: 4 | 售价: 3186) ---
@@ -1672,7 +1672,7 @@ const head_r3_batch4 = [
         durability: 65,
         effects: { phy_def: 2, mag_def: 6, speed: 1, hp_max: 48, phy_atk: 3, crit: 3 },
         req: { shen: 10 },
-        desc: "【皮甲】由柔软的熟革缝制，佩戴灵便且能覆盖颈部。皮革内层涂有抗魔油脂，适合在复杂灵力环境下执勤。"
+        desc: "【皮甲】由柔软的熟革缝制，佩戴灵便且能覆盖颈部。皮革内层涂有抗魔油脂，适合在复杂法力环境下执勤。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 16 | HP: 65 | 速: 1 | 物攻: 4 | 暴击: 4 | 售价: 6750) ---
@@ -1799,7 +1799,7 @@ const head_r3_batch5 = [
         durability: 45,
         effects: { phy_def: 1, mag_def: 5, speed: 2, hp_max: 36, mag_atk: 3, qi: 1, shen: 2 },
         req: { shen: 10 },
-        desc: "【布甲】基层法阵看守人员穿戴的简易发带，布料带有微弱的斥水性，能阻挡轻微的灵力侵蚀。"
+        desc: "【布甲】基层法阵看守人员穿戴的简易发带，布料带有微弱的斥水性，能阻挡轻微的法力侵蚀。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 11 | HP: 49 | 速: 2 | 法攻: 5 | 属性: 4 | 售价: 4833) ---
@@ -2388,7 +2388,7 @@ const head_r4_batch4 = [
         durability: 150,
         effects: { phy_def: 10, mag_def: 22, speed: 1, hp_max: 112, phy_atk: 8, crit: 10 },
         req: { shen: 32 },
-        desc: "【皮甲】皮面具有轻微的灵力折射特性，能误导敌人的感知，是应对禁术轰炸的绝佳头部防具。"
+        desc: "【皮甲】皮面具有轻微的法力折射特性，能误导敌人的感知，是应对禁术轰炸的绝佳头部防具。"
     }
 ];
 // Batch 20: Rarity 4 - Head (Cloth / 布甲)
@@ -2433,7 +2433,7 @@ const head_r4_batch5 = [
         durability: 80,
         effects: { phy_def: 2, mag_def: 7, speed: 2, hp_max: 48, mag_atk: 4, qi: 2, shen: 3 },
         req: { shen: 18 },
-        desc: "【布甲】由静心草纤维混编而成，能助穿戴者排除杂念。丝滑的布料对外界灵力冲击有天然的卸力效果。"
+        desc: "【布甲】由静心草纤维混编而成，能助穿戴者排除杂念。丝滑的布料对外界法力冲击有天然的卸力效果。"
     },
 
     // --- [Mid Tier / 中数值] (总防: 15 | HP: 66 | 速: 2 | 法攻: 6 | 属性: 7 | 售价: 9936) ---
@@ -2515,7 +2515,7 @@ const head_r4_batch5 = [
         durability: 140,
         effects: { phy_def: 5, mag_def: 16, speed: 3, hp_max: 84, mag_atk: 8, qi: 5, shen: 5 },
         req: { shen: 32 },
-        desc: "【布甲】不染尘埃。特殊的织法让这件法帽几乎完全免疫低阶法术干扰，是追求灵力纯净修行者的首选。"
+        desc: "【布甲】不染尘埃。特殊的织法让这件法帽几乎完全免疫低阶法术干扰，是追求法力纯净修行者的首选。"
     }
 ];
 // Batch 21: Rarity 5 - Head (Plate / 板甲)
@@ -2601,7 +2601,7 @@ const head_r5_batch1 = [
         durability: 250,
         effects: { phy_def: 17, mag_def: 40, speed: -6, hp_max: 165, phy_atk: 4 },
         req: { jing: 40 },
-        desc: "【板甲】采集极寒之地的玄阴之气淬火，呈现深紫色。能够吸收周遭暴乱的灵力，化作护体罡气。"
+        desc: "【板甲】采集极寒之地的玄阴之气淬火，呈现深紫色。能够吸收周遭暴乱的法力，化作护体罡气。"
     },
 
     // --- [High Tier / 高数值] (总防: 75 | HP: 210 | 速: -7 | 物攻: 6 | 售价: 27720) ---
@@ -2769,7 +2769,7 @@ const head_r5_batch2 = [
         durability: 300,
         effects: { phy_def: 15, mag_def: 47, speed: -3, hp_max: 192, phy_atk: 4 },
         req: { jing: 48 },
-        desc: "【重甲】色泽幽暗，仿佛能吸收所有光线。其材质能完全阻隔天地灵力的波动，是所有法系职业的克星。"
+        desc: "【重甲】色泽幽暗，仿佛能吸收所有光线。其材质能完全阻隔天地法力的波动，是所有法系职业的克星。"
     }
 ];
 // Batch 23: Rarity 5 - Head (Light / 轻甲)
@@ -2855,7 +2855,7 @@ const head_r5_batch3 = [
         durability: 240,
         effects: { phy_def: 10, mag_def: 28, speed: 0, hp_max: 137 },
         req: { shen: 35 },
-        desc: "【轻甲】取瑶光星垂之灵气浸染，不沾尘埃。其神工鬼斧的灵力脉络能轻易弹开高强度的元气轰击。"
+        desc: "【轻甲】取瑶光星垂之灵气浸染，不沾尘埃。其神工鬼斧的法力脉络能轻易弹开高强度的元气轰击。"
     },
 
     // --- [High Tier / 高数值] (总防: 50 | HP: 175 | 速: 0 | 售价: 19125) ---
@@ -3151,7 +3151,7 @@ const head_r5_batch5 = [
         durability: 200,
         effects: { phy_def: 6, mag_def: 19, speed: 3, hp_max: 105, mag_atk: 10, qi: 5, shen: 5 },
         req: { shen: 55 },
-        desc: "【布甲】巾面绣有归墟符文。能将一切针对头部的灵力攻击吸入虚无，乃布甲之终极神器。"
+        desc: "【布甲】巾面绣有归墟符文。能将一切针对头部的法力攻击吸入虚无，乃布甲之终极神器。"
     }
 ];
 // Batch 26: Rarity 6 - Head (Plate / 板甲)
@@ -3392,7 +3392,7 @@ const head_r6_batch2 = [
         durability: 900,
         effects: { phy_def: 36, mag_def: 37, speed: -4, hp_max: 231, phy_atk: 5 },
         req: { jing: 65 },
-        desc: "【重甲】融合了混沌开辟时的混元之气，甲身能自动抵消周遭的灵力波动，其全面的防护性能已臻神话之巅。"
+        desc: "【重甲】融合了混沌开辟时的混元之气，甲身能自动抵消周遭的法力波动，其全面的防护性能已臻神话之巅。"
     },
     {
         id: "head_243",
@@ -3491,7 +3491,7 @@ const head_r6_batch3 = [
         durability: 600,
         effects: { phy_def: 12, mag_def: 36, speed: 0, hp_max: 165 },
         req: { shen: 55 },
-        desc: "【轻甲】采用灵界深渊底层的晶皮制成。其表面具有完美的灵力折射层，能让禁咒级的术法在佩戴者面前偏转消失。"
+        desc: "【轻甲】采用灵界深渊底层的晶皮制成。其表面具有完美的法力折射层，能让禁咒级的术法在佩戴者面前偏转消失。"
     },
 
     // --- [High Tier / 高数值] (总防: 58 | HP: 210 | 速: 0 | 售价: 27000) ---
@@ -3618,7 +3618,7 @@ const head_r6_batch4 = [
         durability: 480,
         effects: { phy_def: 9, mag_def: 27, speed: 2, hp_max: 132, phy_atk: 9, crit: 9 },
         req: { shen: 58 },
-        desc: "【皮甲】采集九幽深处的魔蛟颈皮制成。面具不仅能无视地府罡风，更能将周遭法力波动转化为自身的护体灵力。"
+        desc: "【皮甲】采集九幽深处的魔蛟颈皮制成。面具不仅能无视地府罡风，更能将周遭法力波动转化为自身的护体法力。"
     },
 
     // --- [High Tier / 高数值] (总防: 44 | HP: 168 | 速: 2 | 物攻: 12 | 暴击: 12 | 售价: 40932) ---

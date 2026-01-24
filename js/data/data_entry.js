@@ -50,7 +50,7 @@ const ENTRY_DB = {
     },
     "mp_steal": {
         name: "夺元", type: "buff", trigger: "onHit",
-        desc: "偷取 {val} 点灵力", color: "#7e57c2", icon: "🌑"
+        desc: "偷取 {val} 点法力", color: "#7e57c2", icon: "🌑"
     },
     "combo_master": {
         name: "叠浪", type: "buff", trigger: "onTurnStart",
@@ -136,7 +136,7 @@ const ENTRY_DB = {
     },
     "leaking": {
         name: "散功", type: "debuff", trigger: "turnStart",
-        desc: "回合流失 {val} 点灵力", color: "#4a148c", icon: "💧"
+        desc: "回合流失 {val} 点法力", color: "#4a148c", icon: "💧"
     },
     "blind": {
         name: "迷障", type: "debuff", trigger: "onCalcHit",

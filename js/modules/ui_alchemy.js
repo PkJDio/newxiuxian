@@ -176,7 +176,7 @@ const UIAlchemy = {
         listEl.innerHTML = available.map(p => {
             let effectText = [];
             if(p.effects.hp) effectText.push(`生命+${p.effects.hp}`);
-            if(p.effects.mp) effectText.push(`灵力+${p.effects.mp}`);
+            if(p.effects.mp) effectText.push(`法力+${p.effects.mp}`);
             if(p.effects.buff) effectText.push(`${this._getPropName(p.effects.buff.attr)}+${p.effects.buff.val}`);
 
             let reqText = [];

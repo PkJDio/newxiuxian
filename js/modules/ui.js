@@ -74,8 +74,33 @@ function updateUI() {
     updateVal('val_jing', 'jing', '精(体质)');
     updateVal('val_qi',   'qi',   '气(能量)');
     updateVal('val_shen', 'shen', '神(悟性)');
-    if(document.getElementById('val_money')) document.getElementById('val_money').innerText = player.money;
+    // ----------------------------------------------------
+    // 1. 找到更新金钱的代码 (通常在函数前部)
+    // ----------------------------------------------------
+    if (document.getElementById('ui_money')) {
+        document.getElementById('ui_money').innerText = `💰钱财 ${player.money || 0}`;
+    }
 
+    // ----------------------------------------------------
+    // 【新增】灵气值显示逻辑
+    // ----------------------------------------------------
+    const spiritEl = document.getElementById('ui_spirit');
+    if (spiritEl) {
+        // 1. 检查背包里是否有 ID 为 "spiritItem_001" 的灵气袋
+        // 使用 try-catch 或可选链防止 player.inventory 未定义报错
+        const hasSpiritBag = player.inventory && player.inventory.some(item => item.id === 'spiritItem_001');
+
+        if (hasSpiritBag) {
+            // 有灵气袋：显示灵气值
+            spiritEl.style.display = 'inline';
+            // 确保 player.spiritEnergy 存在，没有就显示 0
+            spiritEl.innerText = `🌌灵气 ${player.spiritEnergy || 0}`;
+        } else {
+            // 没有灵气袋：隐藏
+            spiritEl.style.display = 'none';
+        }
+    }
+    // ----------------------------------------------------
     // --- 5. 【核心修改】更新 战斗综述 (折叠栏头部 - 显示总和) ---
     // 计算总攻击 (物理 + 法术)
     const totalAtk = (player.derived.phy_atk || 0) + (player.derived.mag_atk || 0);
@@ -124,6 +149,7 @@ function updateUI() {
     // --- 8. 其他组件渲染 ---
     renderBuffs();
     updateMarketButtonState();
+    twemoji.parse(document.body);
 }
 
 /**

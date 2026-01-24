@@ -15,7 +15,6 @@ const UICombatModal = {
             .fighter-card.enemy { flex-direction: row; }
             .fighter-card.player { flex-direction: row; }
 
-            /* 身份信息区域 */
             .fighter-identity { 
                 flex: 0 0 200px;
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -25,11 +24,8 @@ const UICombatModal = {
             .fighter-name { font-size: 18px; font-weight: bold; line-height: 1.2; word-break: break-all; }
             .fighter-rank { font-size: 12px; font-weight: bold; padding: 1px 4px; border-radius: 4px; margin-top: 4px; display:inline-block;}
 
-            /* 数值面板区域 */
             .fighter-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-            
             .vs-divider { font-size: 32px; font-weight: 900; color: #a94442; align-self: center; width: 40px; text-align: center; font-style: italic; text-shadow: 1px 1px 0 #fff, 2px 2px 0 rgba(0,0,0,0.1); }
-
             .stats-panel { background: #fff; padding: 6px; border-radius: 6px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
             
             /* 条形图 */
@@ -45,68 +41,62 @@ const UICombatModal = {
             
             .ap-row { margin-top: 2px; height: 6px; display: flex; align-items: center; gap: 5px; }
             .ap-bg { flex: 1; height: 100%; background: #555; border-radius: 3px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
-            .ap-fill { height: 100%; width: 0%; 
-             background: #ef6c00;
-             box-shadow: 0 0 8px #e65100; transition: width 0.05s linear; will-change: width; } 
+            .ap-fill { height: 100%; width: 0%; background: #ef6c00; box-shadow: 0 0 8px #e65100; transition: width 0.05s linear; will-change: width; } 
             .ap-icon { font-size: 10px; color: #795548; font-weight: bold; width: 16px; text-align: center; }
 
-            /* 属性数值区 */
             .attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-top: 5px; }
             .attr-box { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 3px; font-size: 12px; text-align: center; padding: 2px 0; color: #555; white-space: nowrap; overflow: hidden; display: flex; align-items: center; justify-content: center; }
             .attr-label { color: #433e3e; font-size: 15px; margin-right: 4px; transform: scale(0.95); }
             .attr-val { font-weight: bold; color: #333; font-family: Arial, sans-serif; }
             .attr-extra { color: #aaa; font-size: 14px; margin-left: 3px; transform: scale(0.9); }
 
+            /* 【新增】Buff 容器与标签样式 */
+            .buff-container { 
+                display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; 
+                min-height: 20px; align-content: flex-start;
+            }
+            .buff-tag {
+                font-size: 10px; padding: 1px 5px; border-radius: 3px; 
+                display: flex; align-items: center; justify-content: center;
+                cursor: help; white-space: nowrap; 
+                border: 1px solid transparent; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+                transition: all 0.2s;
+            }
+            .buff-tag:hover { filter: brightness(0.95); transform: translateY(-1px); }
+            /* 增益样式 (绿色系) */
+            .buff-tag.buff { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+            /* 减益/DoT样式 (红色系) */
+            .buff-tag.debuff { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
+
             /* 日志与侧边栏 */
             .combat-body { flex: 1; display: flex; overflow: hidden; border-top: 1px solid #d4a76a; }
-            
             #combat_log_container_embed { 
-                flex: 1; 
-                background: #fffbf0; 
-                padding: 15px 20px; 
-                overflow-y: auto; 
-                border-right: 2px solid #e0d0b0; 
-                will-change: scroll-position; 
-                scrollbar-width: thin;
-                scrollbar-color: #d7ccc8 #fffbf0;
+                flex: 1; background: #fffbf0; padding: 15px 20px; overflow-y: auto; 
+                border-right: 2px solid #e0d0b0; will-change: scroll-position; scrollbar-width: thin; scrollbar-color: #d7ccc8 #fffbf0;
             }
-            
             #combat_log_container_embed > div {
-                font-family: 'Courier New', monospace; 
-                font-size: 16px; 
-                line-height: 1.6; 
-                color: #333;
-                border-bottom: 1px dashed rgba(161, 136, 127, 0.3);
-                padding: 6px 0;
-                margin-bottom: 2px;
-                position: relative;
+                font-family: 'Courier New', monospace; font-size: 16px; line-height: 1.6; color: #333;
+                border-bottom: 1px dashed rgba(161, 136, 127, 0.3); padding: 6px 0; margin-bottom: 2px; position: relative;
             }
-
             #combat_log_container_embed > div:last-child { border-bottom: none; }
-
             .turn-divider {
                 text-align: center; color: #8d6e63; font-weight: bold;
                 background: rgba(141, 110, 99, 0.1); border-radius: 4px;
                 padding: 4px 0 !important; border-bottom: none !important; margin: 10px 0 !important;
             }
-
             .combat-sidebar-split { width: 180px; background: #f8f1e0; display: flex; box-shadow: -4px 0 10px rgba(0,0,0,0.05); z-index: 10; }
             .sidebar-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px; }
             .sidebar-title { font-size: 16px; font-weight: bold; color: #5d4037; border-bottom: 2px solid #a1887f; width: 100%; text-align: center; margin-bottom: 5px; padding-bottom: 2px; }
             .sidebar-items-container { display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; overflow-y: auto; }
-            
-            /* 【核心修改】通用盒子样式 (c-slot-box保持不变，用于内部布局) */
             .c-slot-box { flex: 1; background: #fafafa; border: 1px dashed #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
             .c-icon { font-size: 24px; }
             .c-name { font-size: 10px; white-space: nowrap; overflow: hidden; width: 100%; text-align: center; margin-top: 2px; }
-
-            /* 【核心修改】丹药专用样式 (Danyao) */
+            
             .danyao_slot_wrapper { width: 70px; height: 80px; background: #fff; border: 1px solid #d7ccc8; border-radius: 4px; padding: 2px; display: flex; flex-direction: column; position: relative; cursor: help; }
             .danyao_btn { width: 100%; font-size: 12px; padding: 1px 0; margin-top: 2px; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; }
             .danyao_btn:disabled { opacity: 0.6; cursor: not-allowed; }
             .danyao_cd_overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; color:#333; z-index:5; }
-
-            /* 【核心修改】功法专用样式 (Gongfa) */
+            
             .gongfa_slot_wrapper { width: 70px; height: 80px; background: #fff; border: 1px solid #a1887f; border-radius: 4px; padding: 2px; display: flex; flex-direction: column; position: relative; cursor: help; }
             .gongfa_btn { width: 100%; font-size: 12px; padding: 1px 0; margin-top: 2px; border: 1px solid #a1887f; background: #efebe9; color:#5d4037; cursor: pointer; }
             .gongfa_btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -152,8 +142,6 @@ const UICombatModal = {
         const eMaxHp = (enemy.stats && enemy.stats.maxHp !== undefined) ? enemy.stats.maxHp : (enemy.maxHp || enemy.hp || 100);
         const eHpPct = Math.max(0, Math.min(100, (enemy.hp / eMaxHp) * 100));
         const eToxPct = Math.min(100, enemy.toxicity || 0);
-
-
         const eSpd =  enemy.speed || 0;
         const eActTime = this._calcActionTime(eSpd);
 
@@ -195,17 +183,18 @@ const UICombatModal = {
                                     <div id="combat_e_ap_bar" class="ap-fill"></div>
                                 </div>
                             </div>
+
                             <div class="attr-grid">
                                 <div class="attr-box" id="e_attr_phy_atk"><span class="attr-label">物攻</span><span class="attr-val">${enemy.phy_atk || enemy.atk}</span></div>
                                 <div class="attr-box" id="e_attr_mag_atk"><span class="attr-label">法攻</span><span class="attr-val">${enemy.mag_atk || enemy.atk}</span></div>
                                 <div class="attr-box" id="e_attr_phy_def"><span class="attr-label">物防</span><span class="attr-val">${enemy.phy_def || enemy.def}</span></div>
                                 <div class="attr-box" id="e_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${enemy.mag_def || enemy.def}</span></div>
                                 <div class="attr-box" id="e_attr_spd" style="grid-column: span 2;">
-                                    <span class="attr-label">速度</span>
-                                    <span class="attr-val">${eSpd}</span>
-                                    <span class="attr-extra">(${eActTime}秒)</span>
+                                    <span class="attr-label">速度</span><span class="attr-val">${eSpd}</span><span class="attr-extra">(${eActTime}秒)</span>
                                 </div>
                             </div>
+
+                            <div id="combat_e_buffs" class="buff-container"></div>
                         </div>
                     </div>
                     <div class="fighter-identity">
@@ -263,20 +252,18 @@ const UICombatModal = {
                                 <div class="attr-box" id="p_attr_mag_def"><span class="attr-label">法防</span><span class="attr-val">${pDerived.mag_def || pDerived.def}</span></div>
                                 <div class="attr-box" id="p_attr_crit"><span class="attr-label">物暴</span><span class="attr-val">${pDerived.crit || 0}%</span></div>
                                 <div class="attr-box" id="p_attr_mag_crit"><span class="attr-label">法暴</span><span class="attr-val">${pDerived.mag_crit || 0}%</span></div>
-                                <div class="attr-box" id="p_attr_sharp"><span class="attr-label">锋利</span><span class="attr-val">${pDerived.sharpness || 0}</span></div>
-                                <div class="attr-box" id="p_attr_pen"><span class="attr-label">灵透</span><span class="attr-val">${pDerived.penetration || 0}</span></div>
                                 <div class="attr-box" id="p_attr_spd" style="grid-column: span 2;">
-                                    <span class="attr-label">速度</span>
-                                    <span class="attr-val">${pSpd}</span>
-                                    <span class="attr-extra">(${pActTime}秒)</span>
+                                    <span class="attr-label">速度</span><span class="attr-val">${pSpd}</span><span class="attr-extra">(${pActTime}秒)</span>
                                 </div>
                             </div>
+
+                            <div id="combat_p_buffs" class="buff-container"></div>
                         </div>
                     </div>
                 </div>
 
             </div>
-
+            
             <div class="combat-body">
                 <div id="combat_log_container_embed">
                     <div id="combat_desc_initial" style="text-align:center; padding-top: 60px;">
@@ -317,31 +304,24 @@ const UICombatModal = {
         window[startCB] = () => {
             const descEl = document.getElementById('combat_desc_initial');
             if(descEl) descEl.style.display = 'none';
-
             const footerDiv = document.getElementById('map_combat_footer');
             if (footerDiv) {
-                // 【新增】获取当前已保存的倍率，默认为 1.0
                 const currentScale = (window.CombatCore && window.CombatCore.CONFIG && window.CombatCore.CONFIG.TIME_SCALE) ? window.CombatCore.CONFIG.TIME_SCALE : 1.0;
-
                 footerDiv.innerHTML = `
                     <div class="speed-control-footer" style="display:flex; align-items:center; gap:5px; margin-right:10px; background:#f5f5f5; padding:2px 5px; border-radius:4px; border:1px solid #ddd;">
                         <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](-1)">⏬</button>
-                        
                         <span id="combat_speed_display" style="font-size:14px; min-width:35px; text-align:center;">${currentScale.toFixed(1)}x</span>
-                        
                         <button class="ink_btn_small" style="width:24px; height:24px; padding:0;" onclick="window['${spdCB}'](1)">⏫</button>
                     </div>
                     <button id="combat_btn_pause" class="ink_btn_normal" style="flex:1; font-size:16px;" onclick="window['${pauseCB}']()">⏸ 暂停</button>
                     ${options.canEscape ? `<button class="ink_btn_normal" style="flex:1; border-color:#d32f2f; color:#d32f2f; font-size:16px;" onclick="window['${stopCB}']()">🏃 撤退</button>` : ''}
                 `;
             }
-
             Combat.start(enemy, () => {
                 if (window.BountyBoard) window.BountyBoard.onEnemyKilled(enemy.id);
                 if (window.GlobalEnemies) window.GlobalEnemies = window.GlobalEnemies.filter(e => e.instanceId !== enemy.instanceId);
                 if (window.MapCamera) window.MapCamera.renderMap();
                 if (externalOnWin) externalOnWin();
-
                 if (!options.isMultiWave && footerDiv) {
                     footerDiv.innerHTML = `<button class="ink_btn_normal" style="width:100%; height:40px; font-size:18px;" onclick="window.closeModal()">🏆 战斗结束</button>`;
                 }
@@ -367,7 +347,6 @@ const UICombatModal = {
                 onClose: () => cleanCallbacks()
             }
         );
-
         this.updateSidebar();
     },
 
@@ -403,40 +382,47 @@ const UICombatModal = {
             consContainer.innerHTML = html;
         }
 
-        // 2. 功法栏 (Gongfa)
+        // 2. 功法栏 (Gongfa) - 现已修改为从存档读取已装配招式
+        // 2. 功法栏 (修改为：从存档 zhaoshi_equipped 读取最新招式)
         const skillContainer = document.getElementById('sidebar_skills');
         if (skillContainer) {
             let html = '';
-            const activeSkills = [];
-            if (window.player.equipment && window.player.equipment.gongfa) {
-                window.player.equipment.gongfa.forEach(id => {
-                    const book = window.GAME_DB.items.find(i => i.id === id);
-                    if (book && book.action) activeSkills.push({ id, data: book });
-                });
-            }
 
-            if (activeSkills.length === 0) {
-                html = `<div style="color:#999; font-size:12px; margin-top:10px;">(无主动功法)</div>`;
+            // 【核心改动】直接读取存档中已装备的招式 ID 列表
+            const equippedIds = window.player.zhaoshi_equipped || [];
+
+            if (equippedIds.length === 0) {
+                html = `<div style="color:#999; font-size:12px; margin-top:10px;">(未装备招式)</div>`;
             } else {
-                activeSkills.forEach((entry, idx) => {
-                    const tooltipAttr = `onmouseenter="if(window.TooltipManager)TooltipManager.showSkill(event, '${entry.id}')" onmouseleave="if(window.TooltipManager)TooltipManager.hide()" onmousemove="if(window.TooltipManager)TooltipManager._move(event)"`;
-                    const onclick = `if(window.TooltipManager)window.TooltipManager.hide();Combat.useSkill('${entry.id}', '${idx}')`;
+                equippedIds.forEach((skillId) => {
+                    // 从存档存档的 zhaoshi_list 中获取具体招式数据
+                    const skillData = window.player.zhaoshi_list ? window.player.zhaoshi_list[skillId] : null;
 
-                    // 【核心修改】Wrapper使用 gongfa_slot_wrapper
-                    html += `
-                    <div class="gongfa_slot_wrapper" ${tooltipAttr}>
-                        <div class="c-slot-box" style="border-color:#a1887f;">
-                            <div class="c-icon">${entry.data.icon || '📘'}</div>
-                            <div class="c-name">${entry.data.action.name.substring(0,4)}</div>
-                        </div>
-                        <button id="combat_btn_skill_${entry.id}" class="gongfa_btn" onclick="${onclick}">释放</button>
-                        <div id="combat_skill_cd_overlay_${entry.id}" class="gongfa_cd_overlay" style="display:none;"></div>
-                    </div>`;
+                    if (skillData) {
+                        // 【核心改动】使用你 utils_tip.js 里暴露的 showZhaoshiTooltip
+                        const tooltipAttr = `onmouseenter="showZhaoshiTooltip(event, '${skillId}')" onmouseleave="hideTooltip()" onmousemove="moveTooltip(event)"`;
+
+                        // 点击释放招式，依然调用 Combat 模块
+                        const onclick = `
+                        hideTooltip();Combat.useSkill('${skillId}')
+                        `;
+
+                        html += `
+                        <div class="gongfa_slot_wrapper" ${tooltipAttr}>
+                            <div class="c-slot-box" style="border-color:#a1887f;">
+                                <div class="c-icon">${skillData.icon || '⚔️'}</div>
+                                <div class="c-name" style="font-size:11px;">${skillData.name.substring(0,5)}</div>
+                            </div>
+                            <button id="combat_btn_skill_${skillId}" class="gongfa_btn" onclick="${onclick}">释放</button>
+                            <div id="combat_skill_cd_overlay_${skillId}" class="gongfa_cd_overlay" style="display:none;"></div>
+                        </div>`;
+                    }
                 });
             }
             skillContainer.innerHTML = html;
         }
     },
+
 
     // ... (nextWave 逻辑保持与之前一致，仅需确保 updateSidebar 被调用) ...
     nextWave: function(enemy, nextOnWin = null, options = { canEscape: false, isMultiWave: false }) {

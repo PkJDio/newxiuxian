@@ -138,7 +138,7 @@ function startNewGame() {
   const newPlayer = JSON.parse(JSON.stringify(PLAYER_TEMPLATE));
 
   // 2. 覆盖动态属性
-  newPlayer.name = "无名道友";
+  newPlayer.name = "道友" + newPlayer.account ;
   newPlayer.generation = 1;
   newPlayer.money = 100;
   newPlayer.worldSeed = Math.floor(Math.random() * 1000000);

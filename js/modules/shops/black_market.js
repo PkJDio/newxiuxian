@@ -32,7 +32,8 @@ const BlackMarket = {
             const r = item.rarity || 1;
             //如果type是book的话，name里不能包含_full
             if (item.type === 'book' && item.id.includes('_full')) return false;
-
+            //如果是book的话subType只能是body
+            if (item.type === 'book' && item.subType != "body") return false;
             //type不可以是material,foodMaterial,food,fish,herb,tool,mount
             if (item.type === 'material' || item.type === 'foodMaterial' || item.type === 'food' || item.type === 'fish' || item.type === 'herb' || item.type === 'tool' || item.type === 'mount') return false;
 
@@ -57,7 +58,7 @@ const BlackMarket = {
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;
-            const weight = rarityWeights[r] || 10;
+            const weight = rarityWeights[r] || 0;
             const randVal = window.getSeededRandom(shopKey, item.id, "rank");
             const w = weight > 0 ? weight : 1;
             const rSafe = randVal > 0 ? randVal : 0.0001;

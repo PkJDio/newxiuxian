@@ -770,7 +770,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
     {id: "fishes_bs_02", name: "江团", type: "fish", rarity: 3, obtain: "fish", seasons: [1], region: "r_se", effects: {hunger: 90, hp: 10}, desc: "【巴蜀夏】肥美无刺。", value: 40,},
     {id: "fishes_bs_03", name: "岩鲤", type: "fish", rarity: 2, obtain: "fish", seasons: [2], region: "r_se", effects: {hunger: 75}, desc: "【巴蜀秋】藏于岩石激流。", value: 25,},
     {id: "fishes_bs_04", name: "细甲鱼", type: "fish", rarity: 2, obtain: "fish", seasons: [3], region: "r_se", effects: {hunger: 45}, desc: "【巴蜀冬】鳞片细密。", value: 15,},
-    {id: "fishes_bs_05", name: "岷江红", type: "fish", rarity: 3, obtain: "fish", seasons: [0, 1, 2, 3], region: "r_se", effects: {hunger: 60, hp: 20}, desc: "【巴蜀】通体赤红，灵力盎然。", value: 40,},
+    {id: "fishes_bs_05", name: "岷江红", type: "fish", rarity: 3, obtain: "fish", seasons: [0, 1, 2, 3], region: "r_se", effects: {hunger: 60, hp: 20}, desc: "【巴蜀】通体赤红，法力盎然。", value: 40,},
 
     /* 荆楚: 银鱼(春), 武昌鱼(夏), 大闸蟹(秋), 青背(冬), 中华鲟(全) */
     {id: "fishes_jc_01", name: "云梦银鱼", type: "fish", rarity: 2, obtain: "fish", seasons: [0], region: "r_se", effects: {hunger: 30, mp: 10}, desc: "【荆楚春】如玉簪。", value: 20,},
@@ -801,7 +801,7 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
     {id: "fishes_xn_05", name: "巨型哲罗", type: "fish", rarity: 4, obtain: "fish", seasons: [0, 1, 2, 3], region: "r_nw", effects: {hunger: 180}, desc: "【匈奴】传说能吞食牛羊。", value: 60,},
 
     /* 陇西: 湟鱼(春), 黄河鲤(夏), 祁连雪鲤(秋), 裸鲤(冬), 大鲵(全) */
-    {id: "fishes_lx_01", name: "青海湟鱼", type: "fish", rarity: 3, obtain: "fish", seasons: [0], region: "r_sw", effects: {hunger: 45, buff: {attr: 'shen', val: 3, days: 7}}, desc: "【陇西春】生长期极慢，蕴含灵力。", value: 45,},
+    {id: "fishes_lx_01", name: "青海湟鱼", type: "fish", rarity: 3, obtain: "fish", seasons: [0], region: "r_sw", effects: {hunger: 45, buff: {attr: 'shen', val: 3, days: 7}}, desc: "【陇西春】生长期极慢，蕴含法力。", value: 45,},
     {id: "fishes_lx_02", name: "黄河铜鲤", type: "fish", rarity: 2, obtain: "fish", seasons: [1], region: "r_sw", effects: {hunger: 60}, desc: "【陇西夏】鳞片如铜。", value: 20,},
     {id: "fishes_lx_03", name: "祁连雪鲤", type: "fish", rarity: 3, obtain: "fish", seasons: [2], region: "r_sw", effects: {hunger: 60, hp: 20, mp: 5}, desc: "【陇西秋】冰雪融水所养。", value: 45,},
     {id: "fishes_lx_04", name: "高原裸鲤", type: "fish", rarity: 2, obtain: "fish", seasons: [3], region: "r_sw", effects: {hunger: 30, hp: 5}, desc: "【陇西冬】无鳞之鱼。", value: 15,},

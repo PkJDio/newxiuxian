@@ -33,7 +33,7 @@ const UtilFish = {
                 { id: 'fish_god', name: '水神庇护', prob: 0.001, type: 'good', desc: '金鳞岂是池中物，本池接下来的下三次起竿必定中鱼！', effect: { buffCount: 3, forceFish: true } },
                 { id: 'old_man',  name: '仙人指路', prob: 0.01,  type: 'good', desc: '偶遇神秘老者传授秘诀，本池的钓鱼次数恢复了3次。', effect: { addAttempts: 3 } },
                 { id: 'tide',     name: '灵气潮汐', prob: 0.002, type: 'good', desc: '池中灵气暴涨，尚未翻开的鱼儿似乎发生了蜕变...未翻开的格子稀有度群体+1', effect: { upgradeRarity: true } },
-                { id: 'net',      name: '一网打尽', prob: 0.002, type: 'good', desc: '灵力激荡，瞬间震落了周围的水纹，随机翻开4格。', effect: { revealArea: true, revealCount: 4 } },
+                { id: 'net',      name: '一网打尽', prob: 0.002, type: 'good', desc: '法力激荡，瞬间震落了周围的水纹，随机翻开4格。', effect: { revealArea: true, revealCount: 4 } },
                 { id: 'koi',      name: '锦鲤附体', prob: 0.008, type: 'good', desc: '鸿运当头，本池接下来的接下来五次探查将看破迷雾，必定得到信息。', effect: { buffCount: 5, forceHint: true } },
                 { id: 'time',     name: '时光溯游', prob: 0.004, type: 'good', desc: '神思游历太虚，疲惫与饥饿感竟消散了大半。', effect: { refundStats: 0.5 } }
             ],

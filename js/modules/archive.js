@@ -99,6 +99,8 @@ const ArchiveSystem = {
             //console.log("读取存档成功", window.player);
 
             UtilsItem.checkBagData();
+            initZhaoshiSystem();
+
 
             // 3. 恢复后的刷新
             if (window.recalcStats) window.recalcStats();
@@ -110,6 +112,7 @@ const ArchiveSystem = {
             return false;
         }
     },
+
 
     /**
      * 【新增】属性迁移逻辑
@@ -196,7 +199,36 @@ const ArchiveSystem = {
         }
     }
 };
+function initZhaoshiSystem() {
+    // 1. 确保 player 对象存在
+    if (!window.player) return;
 
+    // 2. 初始化 招式槽位数量
+    if (typeof player.zhaoshi_nums === 'undefined') {
+        player.zhaoshi_nums = 3;
+    }
+
+    // 3. 【修正】初始化 已学会的招式列表 (改为对象结构以支持 Key-Value)
+    if (!player.zhaoshi_list || Array.isArray(player.zhaoshi_list)) {
+        player.zhaoshi_list = {};
+    }
+
+    // 4. 初始化 当前装备的招式
+    if (!Array.isArray(player.zhaoshi_equipped)) {
+        player.zhaoshi_equipped = [null, null, null];
+    }
+
+    // =========== 【新增逻辑】调用领悟检查 ===========
+    if (window.UtilsSkill && typeof window.UtilsSkill.checkSkillComprehension === 'function') {
+        const isUpdated = window.UtilsSkill.checkSkillComprehension();
+
+        // 如果有新领悟的招式，立即执行存档
+        if (isUpdated && window.saveGame) {
+            window.saveGame();
+            console.log("[存档] 发现新领悟招式，已自动更新存档。");
+        }
+    }
+}
 // 暴露全局接口，覆盖旧的方法
 window.saveGame = function() { ArchiveSystem.saveGame(); };
 window.loadGame = function() { return ArchiveSystem.loadGame(); };

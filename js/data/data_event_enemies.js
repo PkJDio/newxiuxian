@@ -1,7 +1,7 @@
 /**
  * ============================================================
- * [大事件专属] 灵力复苏·沙丘剧变 (第一天) 袭击者数据
- * 背景：始皇驾崩于沙丘行宫，禁制消散，狂暴灵力瞬间撕裂了凡人的理智。
+ * [大事件专属] 法力复苏·沙丘剧变 (第一天) 袭击者数据
+ * 背景：始皇驾崩于沙丘行宫，禁制消散，狂暴法力瞬间撕裂了凡人的理智。
  * 强度：高攻击、高速度、低防御（肉体崩溃边缘）。
  * ============================================================
  */
@@ -39,7 +39,7 @@ let EVENT_RAID_ENEMIES = {
                 // 功能 (20%)
                 { id: "凶光", rate: 0.2, type: 2, debuffAttr: "phy_atk", debuffValue: 0.1, debuffValType: 1, debuffTimes: 3 }
             ],
-            desc: "守卫在行宫外的士兵，因灵力入体导致血管暴裂，只剩下杀戮本能。"
+            desc: "守卫在行宫外的士兵，因法力入体导致血管暴裂，只剩下杀戮本能。"
         },
         {
             id: "raid_panicked_attendant",
@@ -99,7 +99,7 @@ let EVENT_RAID_ENEMIES = {
                 // 功能 (20%)
                 { id: "暴走", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 10, buffTimes: 3 }
             ],
-            desc: "原本温顺的御马受灵力惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
+            desc: "原本温顺的御马受法力惊扰，挣脱了缰绳，在行宫走廊内横冲直撞。"
         },
         {
             id: "raid_exhausted_courier",
@@ -129,7 +129,7 @@ let EVENT_RAID_ENEMIES = {
                 // 功能 (20%)
                 { id: "喘息", rate: 0.2, type: 3, buffAttr: "phy_def", buffValue: 5, buffTimes: 2 }
             ],
-            desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴灵力占据了身体。"
+            desc: "身负重要密令的驿骑，在翻下马背的一刻被狂暴法力占据了身体。"
         },
         {
             id: "raid_wild_wolf",
@@ -230,7 +230,7 @@ let EVENT_RAID_ENEMIES = {
                 // Buff (20%)
                 { id: "服药", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 15, buffTimes: 3 }
             ],
-            desc: "曾为始皇炼丹的方士，在灵力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
+            desc: "曾为始皇炼丹的方士，在法力倒灌时贪婪汲取，导致神智崩溃，周身散发着刺鼻的药石味。"
         },
         {
             id: "raid_elite_guard_captain",
@@ -326,7 +326,7 @@ let EVENT_RAID_ENEMIES = {
                 // Buff (20%)
                 { id: "暗涌", rate: 0.2, type: 3, buffAttr: "speed", buffValue: 20, buffTimes: 3 }
             ],
-            desc: "潜伏在行宫暗影处的保镖，灵力倒灌让他们与阴影的融合失去了控制。"
+            desc: "潜伏在行宫暗影处的保镖，法力倒灌让他们与阴影的融合失去了控制。"
         }
     ],
 
@@ -356,7 +356,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "materials_129", rate: 0.5 }
             ],
             skills: [
-                { id: "灵力坍缩", rate: 0.05, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
+                { id: "法力坍缩", rate: 0.05, type: 1, damage: 3.5, damageType: "mag", dmgValType: 1 },
                 { id: "行宫绝响", rate: 0.1, type: 1, damage: 2.5, damageType: "mag", dmgValType: 1 },
                 { id: "内劲掌掴", rate: 0.2, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 },
                 { id: "拂尘乱舞", rate: 0.45, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
@@ -393,7 +393,7 @@ let EVENT_RAID_ENEMIES = {
                 { id: "战阵杀气", rate: 0.1, type: 3, buffAttr: "phy_atk", buffValue: 0.25, buffValType: 1, buffTimes: 5 },
                 { id: "沉重威压", rate: 0.1, type: 2, debuffAttr: "speed", debuffValue: 10, debuffTimes: 5 }
             ],
-            desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的灵力撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
+            desc: "【头目】驻扎沙丘的最高统帅，他的战甲已被狂暴的法力撑开，每一寸皮肤都充满了爆发性的毁灭力量。"
         },
         {
             id: "raid_boss_chief_fangshi",

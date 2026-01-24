@@ -66,7 +66,7 @@
                     <span class="s_val" id="val_hp">100/100</span>
                 </div>
                 <div class="status_row">
-                    <span class="s_label c_mp">💧 灵力</span>
+                    <span class="s_label c_mp">💧 法力</span>
                     <span class="s_val" id="val_mp">50/50</span>
                 </div>
                 <div class="status_row">
@@ -95,8 +95,9 @@
                     </div>
                 </div>
                 <div class="money_row">
-                    <span>💰 钱财</span>
-                    <span id="val_money" class="text_gold">100</span>
+                    <span id="ui_money" class="text_gold">💰 0</span>
+
+                    <span id="ui_spirit" style="display:none; color: #29b6f6; font-weight: bold; font-size: 16px;">🌌 0</span>
                 </div>
             </div>
 
@@ -275,7 +276,7 @@
             </div>
         </div>
     </div>
-
+    <script src="js/twemoji.min.js"></script>
     <script src="js/modules/ui_tutorial.js"></script>
 
 
@@ -301,6 +302,10 @@
     <script src="js/data/data_books.js"></script>
     <script src="js/data/data_fish.js"></script>
     <script src="js/data/data_entry.js"></script>
+    <script src="js/data/data_zhaoshi.js"></script>
+
+
+    <script src="js/data/spirit/data_spiritItem.js"></script>
 
 <!--    敌人-->
     <script src="js/data/data_enemies_config.js"></script>
@@ -341,6 +346,7 @@
     <script src="js/core/utils_modal.js"></script>
     <script src="js/core/utils_add.js"></script>
     <script src="js/core/utils_item.js"></script>
+    <script src="js/core/utils_spiritPrice.js"></script>
     <script src="js/core/utils_tip.js"></script>
     <script src="js/core/utils_skill.js"></script>
     <script src="js/core/utils_buff.js"></script>
@@ -350,6 +356,7 @@
     <script src="js/core/utils_life_skills.js"></script>
     <script src="js/core/utils_gamble.js"></script>
     <script src="js/core/utils_player.js"></script>
+
 
 
     <script src="js/modules/ink_generator.js"></script>
@@ -369,7 +376,7 @@
     <script src="js/modules/shops/grocery.js"></script>
     <script src="js/modules/shops/game/game_chupu.js"></script>
     <script src="js/modules/shops/game/game_liubo.js"></script>
-    <script src="js/modules/shops/game/game_shengguantu.js"></script>
+
 
     <script src="js/modules/shops/game/game_qingyun_ai.js"></script>
     <script src="js/modules/shops/game/game_qingyun_model.js"></script>

@@ -236,12 +236,15 @@ let UICook = {
             return `
                 <div class="ink_grid_item ${isSelected ? 'selected' : ''}" onclick="UICook.handleToggle('${item.sid}')">
                     ${isSelected ? '<div class="ink_corner_mark"></div>' : ''}
-                    <div class="ink_mat_icon">${item.icon || '📦'}</div>
+                    <div class="ink_mat_icon">${item.icon || '🌾'}</div>
                     <div class="ink_mat_name">${item.name}</div>
                     <div class="ink_mat_stock">存:${item.count}</div>
                 </div>
             `;
         }).join('');
+        if (window.twemoji) {
+            window.twemoji.parse(grid);
+        }
     },
 
     renderPotList: function() {
@@ -251,12 +254,15 @@ let UICook = {
         pot.innerHTML = this.selectedMaterials.map(m => `
             <div class="ink_pot_wrapper">
                 <div class="ink_pot_circle" onclick="UICook.handleToggle('${m.sid}')">
-                    ${m.icon || '🍙'}
+                    ${m.icon || '🌾'}
                     <div class="ink_pot_del">×</div>
                 </div>
                 <div class="ink_pot_text">${m.name}</div>
             </div>
         `).join('');
+        if (window.twemoji) {
+            window.twemoji.parse(pot);
+        }
     },
 
     // --- 【关键修改】更新预览逻辑：增加“背包有货”样式 ---
@@ -287,7 +293,7 @@ let UICook = {
                 </div>`;
         } else {
             const hasLearned = player.cooking_info.includes(res.id);
-            const iconHtml = hasLearned ? `<div style="${knownBoxStyle}">${res.icon || '🍖'}</div>` : `<div style="${unknownBoxStyle}">?</div>`;
+            const iconHtml = hasLearned ? `<div style="${knownBoxStyle}">${res.icon || '🍲'}</div>` : `<div style="${unknownBoxStyle}">?</div>`;
             const nameHtml = hasLearned ? res.name : '未知料理';
             const descHtml = hasLearned ? '<span style="color:#4caf50;">✔ 已领悟</span>' : '<span style="color:#ff9800;">? 似曾相识</span>';
 
@@ -310,7 +316,7 @@ let UICook = {
             const materialsHtml = recIds.map(id => {
                 const it = window.GAME_DB.items.find(i => i.id === id);
                 const name = it ? it.name : '未知';
-                const icon = it ? (it.icon || '📦') : '📦';
+                const icon = it ? (it.icon || '🌾') : '🌾';
 
                 // 状态检查
                 const isSelected = this.selectedMaterials.some(m => m.id === id);
@@ -376,6 +382,10 @@ let UICook = {
             `;
         }
         frame.innerHTML = `<div style="display:flex;width:100%;height:100%;padding:5px;">${leftHtml}${rightHtml}</div>`;
+
+        if (window.twemoji) {
+            window.twemoji.parse(frame);
+        }
     },
 
     checkAndToggleOneKeyBtn: function(hint) {

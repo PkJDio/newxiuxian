@@ -582,13 +582,14 @@
     font-weight: bold;
     color: #333;
 }
+/* 确保父容器使用 Flex 布局并居中 */
 .money_row {
-    border-top: 1px solid #eee;
-    padding-top: 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 16px;
-    font-weight: bold;
+    display: flex;             /* 启用弹性布局 */
+    justify-content: center;   /* 水平居中 */
+    align-items: center;       /* 垂直居中 */
+    gap: 40px;                 /* 两个元素共存时的间距 */
+    width: 100%;               /* 占满宽度以确保居中效果 */
+    padding: 5px 0;            /* 可选：增加一点上下内边距 */
 }
 .text_gold { color: #d4af37; }
 

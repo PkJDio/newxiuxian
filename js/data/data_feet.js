@@ -360,7 +360,7 @@ const feet_r1_batch3 = [
         value: 810,
         durability: 40,
         effects: { phy_def: 2, mag_def: 7, speed: 9 },
-        desc: "【轻甲】原本可能染着鲜艳的祭祀颜色，如今只剩下斑驳的灵力残留。"
+        desc: "【轻甲】原本可能染着鲜艳的祭祀颜色，如今只剩下斑驳的法力残留。"
     }
 ];
 // Batch 4: Rarity 1 - Leather (皮甲)
@@ -889,7 +889,7 @@ const feet_r2_batch3 = [
         value: 3240,
         durability: 45,
         effects: { phy_def: 9, mag_def: 9, speed: 18 },
-        desc: "【轻甲】从当铺淘来的旧式疾风靴，虽然灵力流失了不少，但其轻便程度依然惊人。"
+        desc: "【轻甲】从当铺淘来的旧式疾风靴，虽然法力流失了不少，但其轻便程度依然惊人。"
     },
     {
         id: "feet_072",
@@ -973,7 +973,7 @@ const feet_r2_batch4 = [
         value: 3600,
         durability: 30,
         effects: { phy_def: 2, mag_def: 7, speed: 15, phy_atk: 4, crit: 3 },
-        desc: "【皮甲】曾经流转着灵光的手工皮履，如今灵力几近干涸，只剩下若有若无的纹路在鞋面上。"
+        desc: "【皮甲】曾经流转着灵光的手工皮履，如今法力几近干涸，只剩下若有若无的纹路在鞋面上。"
     },
 
     // --- [High Tier] R2 皮甲 (总防: 15 | 速: 25 | 攻: 5 | 暴: 4 | 售价: 5490) ---
@@ -1892,7 +1892,7 @@ const feet_r4_batch2 = [
         durability: 130,
         effects: { phy_def: 18, mag_def: 18, speed: -28, hp_max: 75, phy_atk: 7 },
         req: { jing: 22 },
-        desc: "【重甲】靴面刻有玄武鳞纹，寓意绝对的防御。其结构考究，无论是物理对抗还是灵力抵御都非常平衡。"
+        desc: "【重甲】靴面刻有玄武鳞纹，寓意绝对的防御。其结构考究，无论是物理对抗还是法力抵御都非常平衡。"
     },
     {
         id: "feet_150",
@@ -2296,7 +2296,7 @@ const feet_r4_batch5 = [
         durability: 120,
         effects: { phy_def: 8, mag_def: 22, speed: 90, mag_atk: 30, qi: 10, shen: 10 },
         req: { shen: 32 },
-        desc: "【布甲】不染尘埃，不坠凡俗。特殊的织法让这双锦鞋几乎完全免疫低阶法术，是追求灵力纯净者的梦幻装备。"
+        desc: "【布甲】不染尘埃，不坠凡俗。特殊的织法让这双锦鞋几乎完全免疫低阶法术，是追求法力纯净者的梦幻装备。"
     }
 ];
 // Batch 21: Rarity 5 - 板甲 (Plate)
@@ -2376,7 +2376,7 @@ const feet_r5_batch1 = [
         durability: 250,
         effects: { phy_def: 17, mag_def: 50, speed: -74, hp_max: 187, phy_atk: 17 },
         req: { jing: 38 },
-        desc: "【板甲】采集玄阴之气淬火，呈现深紫色。能够吸收周遭灵力，化作自身的护体气墙。"
+        desc: "【板甲】采集玄阴之气淬火，呈现深紫色。能够吸收周遭法力，化作自身的护体气墙。"
     },
 
     // --- [High Tier] R5 板甲 (总防: 90 | HP: 250 | 速: -100 | 攻: 25 | 售价: 14625) ---
@@ -2456,7 +2456,7 @@ const feet_r5_batch2 = [
         durability: 180,
         effects: { phy_def: 8, mag_def: 25, speed: -25, hp_max: 63, phy_atk: 5 },
         req: { jing: 25 },
-        desc: "【重甲】采用罕见的乌金打造，其材质天生对灵力具有排斥性，是对抗法术轰炸的重装利器。"
+        desc: "【重甲】采用罕见的乌金打造，其材质天生对法力具有排斥性，是对抗法术轰炸的重装利器。"
     },
 
     // --- [Mid Tier] R5 重甲 (总防: 48 | HP: 94 | 速: -37 | 攻: 9 | 售价: 8730) ---
@@ -2886,7 +2886,7 @@ const feet_r5_batch5 = [
         durability: 200,
         effects: { phy_def: 11, mag_def: 34, speed: 135, mag_atk: 45, qi: 15, shen: 15 },
         req: { shen: 55 },
-        desc: "【布甲】鞋面绣有归墟深渊的符文，能将一切攻向足部的灵力攻击吸入寂灭虚无，乃布甲之终极神器。"
+        desc: "【布甲】鞋面绣有归墟深渊的符文，能将一切攻向足部的法力攻击吸入寂灭虚无，乃布甲之终极神器。"
     }
 ];
 // Batch 26: Rarity 6 - 神话板甲 (Mythic Plate)
@@ -3202,7 +3202,7 @@ const feet_r6_batch3 = [
         durability: 550,
         effects: { phy_def: 12, mag_def: 38, speed: 50 },
         req: { shen: 55 },
-        desc: "【轻甲】采集灵界深渊底层的晶皮缝制，表面具有完美的灵力折射层，乃是应对禁咒级法术的唯一生机。"
+        desc: "【轻甲】采集灵界深渊底层的晶皮缝制，表面具有完美的法力折射层，乃是应对禁咒级法术的唯一生机。"
     },
 
     // --- [High Tier] R6 轻甲 (总防: 60 | 速: 60 | 售价: 32400) ---

@@ -59,13 +59,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, def: 1 },
-        action: {
-            name: "太祖长拳·诀",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 1,
-            desc: "【效率型】连绵不断的拳法，消耗极低。",
-        },
         desc: "招式朴实无华，但根基扎实。",
     },
     {
@@ -80,13 +73,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, speed: 1 },
-        action: {
-            name: "谭腿·诀",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 1,
-            desc: "【效率型】出腿极快，虚实结合。",
-        },
         desc: "南拳北腿，出腿如风，攻守兼备。",
     },
     {
@@ -101,13 +87,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 2 },
-        action: {
-            name: "开山掌·诀",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 2,
-            desc: "【效率型】掌力厚实，连绵不绝。",
-        },
         desc: "放弃防守，全力一击，掌力刚猛。",
     },
     {
@@ -122,13 +101,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, speed: 1 },
-        action: {
-            name: "柴刀法·诀",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】进退有据的砍杀，稳扎稳打。",
-        },
         desc: "樵夫砍柴悟出的刀法，胜在实用。",
     },
     {
@@ -143,13 +115,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 2 },
-        action: {
-            name: "碎石掌·诀",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】势大力沉的一掌，威力适中。",
-        },
         desc: "苦练掌缘，可开碑裂石。",
     },
     {
@@ -164,13 +129,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 2, speed: 1 },
-        action: {
-            name: "黑虎掏心·诀",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】招式狠辣，直取要害。",
-        },
         desc: "招式狠辣，直取要害。",
     },
     {
@@ -185,13 +143,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, speed: 1 },
-        action: {
-            name: "锁喉手·诀",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】以巧劲锁拿咽喉。",
-        },
         desc: "以快制胜，专攻咽喉。",
     },
     {
@@ -206,13 +157,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, speed: 1 },
-        action: {
-            name: "劈挂掌·诀",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 6,
-            desc: "【爆发型】大开大合，冷抽一记重击。",
-        },
         desc: "大开大合，长击冷抽。",
     },
     {
@@ -227,13 +171,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, def: 1, speed: 1 },
-        action: {
-            name: "通背拳·诀",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 6,
-            desc: "【爆发型】放长击远，劲力透背而出。",
-        },
         desc: "放长击远，发力通透。",
     },
     {
@@ -248,13 +185,6 @@ const booksBody_R1 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 1, def: 1, speed: 1 },
-        action: {
-            name: "基础剑招·诀",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 6,
-            desc: "【爆发型】基础剑式合一，蓄力突刺。",
-        },
         desc: "刺、挑、劈、砍，剑法基础。",
     },
 
@@ -415,13 +345,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 3, def: 1, speed: 2 },
-        action: {
-            name: "分筋错骨手·诀",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】专攻关节，消耗极低。",
-        },
         desc: "专攻关节要害，阴狠毒辣。",
     },
     {
@@ -436,13 +359,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 3, speed: 3 },
-        action: {
-            name: "狂风刀法·诀",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】快如闪电，连绵不绝。",
-        },
         desc: "刀出如狂风，快如闪电，以攻代守。",
     },
     {
@@ -457,13 +373,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 3, def: 1, speed: 3 },
-        action: {
-            name: "越女剑法·诀",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】身法轻盈，剑影随心。",
-        },
         desc: "姿态优美，招招致命，轻灵迅捷。",
     },
     {
@@ -478,13 +387,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 4, def: 1 },
-        action: {
-            name: "大力金刚掌·诀",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 3,
-            desc: "【平衡型】至刚至阳的一掌，威力不俗。",
-        },
         desc: "少林绝技，至刚至阳，力大砖飞。",
     },
     {
@@ -499,13 +401,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 2, def: 1, speed: 4 },
-        action: {
-            name: "无影脚·诀",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 3,
-            desc: "【平衡型】出脚无影，虚实结合。",
-        },
         desc: "出脚无影，快到让人看不清。",
     },
     {
@@ -520,13 +415,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 4, def: 1, speed: 1 },
-        action: {
-            name: "摧心掌·诀",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 4,
-            desc: "【平衡型】掌力阴毒，震伤脏腑。",
-        },
         desc: "掌力阴毒，震碎内脏。",
     },
     {
@@ -541,13 +429,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 2, def: 2, speed: 2 },
-        action: {
-            name: "化骨绵掌·诀",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 4,
-            desc: "【平衡型】外柔内刚，劲力悠长。",
-        },
         desc: "外柔内刚，劲力连绵不绝。",
     },
     {
@@ -562,13 +443,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 4, speed: 1 },
-        action: {
-            name: "流星锤·诀",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 6,
-            desc: "【爆发型】如流星坠地，势不可挡。",
-        },
         desc: "软兵器技巧，威力极大但难以控制。",
     },
     {
@@ -583,13 +457,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 3, def: 1, speed: 2 },
-        action: {
-            name: "鹰爪功·诀",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 7,
-            desc: "【爆发型】五指成钩，断石碎金。",
-        },
         desc: "指力惊人，专破硬功。",
     },
     {
@@ -604,13 +471,6 @@ const booksBody_R2 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 5 },
-        action: {
-            name: "七伤拳·诀",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 8,
-            desc: "【爆发型】自损八百，伤敌一千。",
-        },
         desc: "未伤人先伤己，威力巨大，放弃防御。",
     },
 
@@ -771,13 +631,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 10, def: 3, speed: 1 },
-        action: {
-            name: "降龙十八掌·真意",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 3,
-            desc: "【平衡型】掌力至刚至阳，稳健强悍。",
-        },
         desc: "天下第一阳刚掌法，无坚不摧。",
     },
     {
@@ -792,13 +645,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 12, speed: 3 },
-        action: {
-            name: "独孤九剑·真意",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 1,
-            desc: "【效率型】料敌先机，出招极快且连绵不绝。",
-        },
         desc: "只攻不守，破尽天下武学。",
     },
     {
@@ -813,13 +659,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 13, def: 1, speed: 3 },
-        action: {
-            name: "六脉神剑·真意",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 1,
-            desc: "【效率型】指尖剑气纵横，消耗极低。",
-        },
         desc: "以气御剑，无形剑气，凌厉无匹。",
     },
     {
@@ -834,13 +673,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 14, def: 3 },
-        action: {
-            name: "如来神掌·真意",
-            dmgMult: 4.9,
-            mpCost: 160,
-            cd: 6,
-            desc: "【爆发型】万佛朝宗，毁灭性的终极一击。",
-        },
         desc: "从天而降的掌法，威力绝伦。",
     },
     {
@@ -855,13 +687,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 8, def: 3, speed: 5 },
-        action: {
-            name: "打狗棒法·真意",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 3,
-            desc: "【平衡型】变化精微，攻守兼备。",
-        },
         desc: "丐帮镇帮绝技，变化精微。",
     },
     {
@@ -876,13 +701,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 9, def: 1, speed: 6 },
-        action: {
-            name: "弹指神通·真意",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 2,
-            desc: "【效率型】指力通神，连发伤敌。",
-        },
         desc: "指力通神，隔空伤人于无形。",
     },
     {
@@ -897,13 +715,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 11, def: 2, speed: 1 },
-        action: {
-            name: "玄冥神掌·真意",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 4,
-            desc: "【平衡型】阴寒掌力中带有透骨寒毒。",
-        },
         desc: "阴寒无比的掌力，中者寒毒入骨。",
     },
     {
@@ -918,13 +729,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 15 },
-        action: {
-            name: "七伤拳·真意",
-            dmgMult: 4.9,
-            mpCost: 160,
-            cd: 7,
-            desc: "【爆发型】损心伤肺，换取霸道的破坏力。",
-        },
         desc: "伤人先伤己，威力极大，霸道无匹。",
     },
     {
@@ -939,13 +743,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 9, def: 5, speed: 4 },
-        action: {
-            name: "玉女素心剑·真意",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 2,
-            desc: "【效率型】剑法轻灵迅捷，难以捉摸。",
-        },
         desc: "古墓派绝学，剑法轻灵且防守严密。",
     },
     {
@@ -960,13 +757,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 12, def: 4 },
-        action: {
-            name: "伏魔杖法·真意",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 4,
-            desc: "【平衡型】大开大合，威震妖邪。",
-        },
         desc: "佛门护法杖法，刚猛威严。",
     },
     {
@@ -981,13 +771,6 @@ const booksBody_R3 = [
         studyTarget: "jing",
         difficultyScale: 1.0,
         effects: { atk: 8, def: 4, speed: 4 },
-        action: {
-            name: "兵法·诡道",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 3,
-            desc: "【平衡型】兵者诡道也，虚实结合，攻其不备。",
-        },
         desc: "记载了古代名将行军布阵的残篇，虽非正统武功，但将兵法之理融入招式之中，变化万千，威力无穷。",
     },
 
@@ -2697,7 +2480,7 @@ const booksBody_R5 = [
         studyTarget: "jing",
         difficultyScale: 1.9,
         effects: { atk: 8, def: 3 },
-        desc: "【残卷】记载了剑谱的中坚招式，强调灵力的吞吐与剑刃的破坏力。",
+        desc: "【残卷】记载了剑谱的中坚招式，强调法力的吞吐与剑刃的破坏力。",
     },
     {
         id: "book_body_r5_20_lower",
@@ -3614,14 +3397,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 2, shen: 1 },
-        action: {
-            name: "灵弹术",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 1,
-            desc: "【效率型】凝气为弹，消耗极低。",
-        },
-        desc: "入门练气口诀，能感应天地灵力。",
+        desc: "入门练气口诀，能感应天地法力。",
     },
     {
         id: "book_cultivation_r1_01_full",
@@ -3635,14 +3411,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 3 },
-        action: {
-            name: "灼烧",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 1,
-            desc: "【效率型】引燃灵力，高频灼烧。",
-        },
-        desc: "残简上带着一丝火气，修炼后灵力燥热。",
+        desc: "残简上带着一丝火气，修炼后法力燥热。",
     },
     {
         id: "book_cultivation_r1_02_full",
@@ -3656,14 +3425,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 2, qi: 1 },
-        action: {
-            name: "血祭",
-            dmgMult: 0.68,
-            mpCost: 10,
-            cd: 2,
-            desc: "【效率型】以血引气，连绵不断。",
-        },
-        desc: "以自身气血引动灵力，偏重炼体。",
+        desc: "以自身气血引动法力，偏重炼体。",
     },
     {
         id: "book_cultivation_r1_03_full",
@@ -3677,14 +3439,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 2, shen: 2 },
-        action: {
-            name: "冰凝",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】寒气逼人，威力适中。",
-        },
-        desc: "水属性变种功法，灵力带有寒意。",
+        desc: "水属性变种功法，法力带有寒意。",
     },
     {
         id: "book_cultivation_r1_04_full",
@@ -3698,14 +3453,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 3 },
-        action: {
-            name: "金刃",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 3,
-            desc: "【平衡型】庚金之气，无坚不摧。",
-        },
-        desc: "汇聚金灵力，化为锋利刃气。",
+        desc: "汇聚金法力，化为锋利刃气。",
     },
     {
         id: "book_cultivation_r1_05_full",
@@ -3719,14 +3467,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 3 },
-        action: {
-            name: "震荡",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 4,
-            desc: "【平衡型】大地之力，震慑敌人。",
-        },
-        desc: "感悟土灵力，掌控地面起伏。",
+        desc: "感悟土法力，掌控地面起伏。",
     },
     {
         id: "book_cultivation_r1_06_full",
@@ -3740,14 +3481,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 2, shen: 1 },
-        action: {
-            name: "藤蔓",
-            dmgMult: 1.35,
-            mpCost: 20,
-            cd: 4,
-            desc: "【平衡型】青木化藤，困敌伤身。",
-        },
-        desc: "青木灵力转化，兼具困敌效果。",
+        desc: "青木法力转化，兼具困敌效果。",
     },
     {
         id: "book_cultivation_r1_07_full",
@@ -3761,13 +3495,6 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 3 },
-        action: {
-            name: "雷殛",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 6,
-            desc: "【爆发型】雷霆一击，威力巨大。",
-        },
         desc: "罕见的雷属入门法，威力惊人。",
     },
     {
@@ -3782,13 +3509,6 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 1, shen: 2 },
-        action: {
-            name: "刺魂",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 7,
-            desc: "【爆发型】直击神魂，防不胜防。",
-        },
         desc: "鬼道入门功法，阴冷诡异。",
     },
     {
@@ -3803,13 +3523,6 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 2, shen: 1 },
-        action: {
-            name: "风旋",
-            dmgMult: 2.7,
-            mpCost: 40,
-            cd: 8,
-            desc: "【爆发型】狂风肆虐，瞬杀敌人。",
-        },
         desc: "风属性功法，出招速度极快。",
     },
 
@@ -3924,7 +3637,7 @@ const booksCultivation_R1 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4 },
-        desc: "灵力显著增长。",
+        desc: "法力显著增长。",
     },
     {
         id: "book_cultivation_r1_18_full",
@@ -3969,13 +3682,6 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, shen: 2 },
-        action: {
-            name: "紫霞漫天",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 1,
-            desc: "【效率型】灵力绵如云霞，连绵不断。",
-        },
         desc: "华山气宗镇山之宝，初发时若有若无。",
     },
     {
@@ -3990,14 +3696,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, jing: 2 },
-        action: {
-            name: "寒冰刺",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】寒气侵袭，频率极高。",
-        },
-        desc: "至阴至寒的灵力，可将自身冻结成冰。",
+        desc: "至阴至寒的法力，可将自身冻结成冰。",
     },
     {
         id: "book_cultivation_r2_02_full",
@@ -4011,13 +3710,6 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5 },
-        action: {
-            name: "纯阳指",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】纯阳一指，消耗极低。",
-        },
         desc: "道家基础内功进阶，纯阳之气更为精纯。",
     },
     {
@@ -4032,14 +3724,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 3, qi: 2 },
-        action: {
-            name: "毒龙钻",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 3,
-            desc: "【平衡型】毒气攻心，威力适中。",
-        },
-        desc: "五毒教秘传，灵力蕴含剧毒。",
+        desc: "五毒教秘传，法力蕴含剧毒。",
     },
     {
         id: "book_cultivation_r2_04_full",
@@ -4053,14 +3738,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 6 },
-        action: {
-            name: "烈火掌",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 6,
-            desc: "【爆发型】焚尽一切的高热掌力。",
-        },
-        desc: "西域昆仑派内功，灵力如火。",
+        desc: "西域昆仑派内功，法力如火。",
     },
     {
         id: "book_cultivation_r2_05_full",
@@ -4074,14 +3752,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, shen: 2 },
-        action: {
-            name: "惊雷闪",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 3,
-            desc: "【平衡型】爆发力极强的雷鸣之击。",
-        },
-        desc: "运转灵力时隐有雷鸣之声。",
+        desc: "运转法力时隐有雷鸣之声。",
     },
     {
         id: "book_cultivation_r2_06_full",
@@ -4095,13 +3766,6 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5, jing: 2 },
-        action: {
-            name: "破玉劲",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 7,
-            desc: "【爆发型】宁为玉碎，重创对手。",
-        },
         desc: "华山派刚猛内功，宁为玉碎。",
     },
     {
@@ -4116,13 +3780,6 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 3, shen: 3 },
-        action: {
-            name: "阴煞掌",
-            dmgMult: 1.8,
-            mpCost: 40,
-            cd: 4,
-            desc: "【平衡型】阴风侵蚀，伤人无形。",
-        },
         desc: "黑道成名绝技，阴煞之气伤人无形。",
     },
     {
@@ -4137,13 +3794,6 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, speed: 2 },
-        action: {
-            name: "摧心劲",
-            dmgMult: 0.9,
-            mpCost: 20,
-            cd: 2,
-            desc: "【效率型】阴柔绵长的连续内劲。",
-        },
         desc: "青城派内功，以阴柔见长。",
     },
     {
@@ -4158,14 +3808,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 4, qi: 2 },
-        action: {
-            name: "血海滔天",
-            dmgMult: 3.6,
-            mpCost: 80,
-            cd: 8,
-            desc: "【爆发型】魔威盖世的血气打击。",
-        },
-        desc: "魔道嗜血功法，以气血催动灵力。",
+        desc: "魔道嗜血功法，以气血催动法力。",
     },
 
     /* ================= [10-19] 防御型内功 (属性全额) ================= */
@@ -4209,7 +3852,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 4, speed: 4 },
-        desc: "峨眉祖师所创，灵力轻灵。",
+        desc: "峨眉祖师所创，法力轻灵。",
     },
     {
         id: "book_cultivation_r2_13_full",
@@ -4265,7 +3908,7 @@ const booksCultivation_R2 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5, shen: 5 },
-        desc: "虽然粗浅，但能模拟各家灵力。",
+        desc: "虽然粗浅，但能模拟各家法力。",
     },
     {
         id: "book_cultivation_r2_17_full",
@@ -4324,14 +3967,7 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 8 },
-        action: {
-            name: "吸星吞元",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 1,
-            desc: "【效率型】吸收敌方精元，高频转化。",
-        },
-        desc: "可以吸取他人灵力为己用，霸道异常。",
+        desc: "可以吸取他人法力为己用，霸道异常。",
     },
     {
         id: "book_cultivation_r3_01_full",
@@ -4345,14 +3981,7 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5, shen: 3 },
-        action: {
-            name: "化骨柔劲",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 2,
-            desc: "【效率型】连绵阴劲，消融敌方灵力。",
-        },
-        desc: "消融敌方灵力，歹毒无比。",
+        desc: "消融敌方法力，歹毒无比。",
     },
     {
         id: "book_cultivation_r3_02_full",
@@ -4366,13 +3995,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 3, qi: 5 },
-        action: {
-            name: "玄冥寒毒",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 2,
-            desc: "【效率型】透骨冰凉，持续封锁经脉。",
-        },
         desc: "至阴至寒，百邪不侵。",
     },
     {
@@ -4387,13 +4009,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 7, shen: 2 },
-        action: {
-            name: "冰火九重",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 3,
-            desc: "【平衡型】两极气劲炸裂，威力均衡。",
-        },
         desc: "同修寒冰烈火二气，刚柔并济。",
     },
     {
@@ -4408,13 +4023,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 4, qi: 4 },
-        action: {
-            name: "七杀燃魂",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 3,
-            desc: "【平衡型】杀气冲天，爆发杀伐之气。",
-        },
         desc: "以杀止杀，杀气越重威力越大。",
     },
     {
@@ -4429,13 +4037,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 5, shen: 4 },
-        action: {
-            name: "天魔力场",
-            dmgMult: 4.9,
-            mpCost: 160,
-            cd: 6,
-            desc: "【爆发型】扭曲空间，给予敌人毁灭打击。",
-        },
         desc: "变幻莫测，如魔似幻。",
     },
     {
@@ -4450,13 +4051,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 7, qi: 2 },
-        action: {
-            name: "血海狂涛",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 4,
-            desc: "【平衡型】气血吞没对手，攻守兼备。",
-        },
         desc: "炼血化气，生命力极其顽强。",
     },
     {
@@ -4471,13 +4065,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 3, qi: 3, shen: 3 },
-        action: {
-            name: "万毒噬心",
-            dmgMult: 4.9,
-            mpCost: 160,
-            cd: 7,
-            desc: "【爆发型】绝户之毒，瞬间穿透心脉。",
-        },
         desc: "集天下毒物之精华，触之即死。",
     },
     {
@@ -4492,13 +4079,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { qi: 8, speed: 2 },
-        action: {
-            name: "紫电狂雷",
-            dmgMult: 1.23,
-            mpCost: 40,
-            cd: 2,
-            desc: "【效率型】电光火石，瞬息而至。",
-        },
         desc: "驾驭雷电之力，势不可挡。",
     },
     {
@@ -4513,13 +4093,6 @@ const booksCultivation_R3 = [
         studyTarget: "shen",
         difficultyScale: 1.0,
         effects: { jing: 4, qi: 4, shen: 2 },
-        action: {
-            name: "修罗炼狱",
-            dmgMult: 2.45,
-            mpCost: 80,
-            cd: 4,
-            desc: "【平衡型】修罗降世，战意无穷。",
-        },
         desc: "战意滔天，不死不休。",
     },
 
@@ -6952,13 +6525,6 @@ const fullBooks = [
         studyTarget: "shen",
         difficultyScale: 3.5,
         effects: { atk: 34, speed: 10, def: 10 }, // 总计 54 点属性 (0.5修正)
-        action: {
-            name: "九歌·礼魂",
-            dmgMult: 5.5,
-            mpCost: 200,
-            cd: 8,
-            desc: "【爆发型】众神降临，礼魂归位。以燃烧真气为代价，唤起毁天灭地的远古神力冲击。",
-        },
         desc: "【神话】屈原所传之绝世祭祀心法。歌颂天地诸神，习之可借神灵之威，纵横于虚实之间，超凡脱俗。",
     },
     {
@@ -6973,13 +6539,6 @@ const fullBooks = [
         studyTarget: "shen",
         difficultyScale: 3.5,
         effects: { atk: 32, speed: 12, def: 10 }, // 总计 54 点属性 (0.5修正)
-        action: {
-            name: "阴符·神化万物",
-            dmgMult: 5.5, // R6 特有的超模倍率 (高于 R5 的 4.9)
-            mpCost: 200,
-            cd: 8,
-            desc: "【爆发型】以神御气，物我两忘。瞬间爆发出摧枯拉朽的真气冲击，无视常规防御。",
-        },
         desc: "【神话】鬼谷子传世奇书。内修神、志、意、德、神、驱、威七术，通晓者可夺天地造化，御龙而行。",
     },
     {
@@ -7009,13 +6568,6 @@ const fullBooks = [
         difficultyScale: 2.5,
         effects: { atk: 22, speed: 10 }, // 总计 32 点属性
         isCombined: true,
-        action: {
-            name: "绝世·剑斩乾坤",
-            dmgMult: 3.45,
-            mpCost: 120,
-            cd: 5,
-            desc: "【爆发型】凝聚全身精气神于一剑，对敌方造成毁灭性打击。",
-        },
         desc: "【全篇精义】剑法之集大成者，练至圆满可人剑合一，纵横天下。",
     },
     {
@@ -7030,13 +6582,6 @@ const fullBooks = [
         studyTarget: "jing",
         difficultyScale: 1.5,
         effects: { atk: 16, speed: 16 },
-        action: {
-            name: "图穷匕见",
-            dmgMult: 4.9,
-            mpCost: 160,
-            cd: 7,
-            desc: "【爆发型】孤注一掷的终极刺杀，若不成功，便成仁。",
-        },
         desc: "汇集天下刺客之大成，十步杀一人，千里不留行。",
     },
     {
@@ -7052,13 +6597,6 @@ const fullBooks = [
         difficultyScale: 1.5,
         effects: { atk: 25, def: 5, speed: 5 },
         isCombined: true,
-        action: {
-            name: "黯然销魂",
-            dmgMult: 7.0,
-            mpCost: 240,
-            cd: 8,
-            desc: "【爆发型】掌力如排山倒海。",
-        },
         desc: "相思无用，唯别而已。",
     },
     {
@@ -7074,13 +6612,6 @@ const fullBooks = [
         difficultyScale: 1.5,
         effects: { atk: 30, speed: 15 },
         isCombined: true,
-        action: {
-            name: "群邪辟易",
-            dmgMult: 1.75,
-            mpCost: 60,
-            cd: 2,
-            desc: "【效率型】天下武功能唯林不破。",
-        },
         desc: "迅捷诡异，匪夷所思。",
     },
     {
@@ -7096,13 +6627,6 @@ const fullBooks = [
         difficultyScale: 1.5,
         effects: { atk: 35, def: 15 },
         isCombined: true,
-        action: {
-            name: "金蟾推月",
-            dmgMult: 7.0,
-            mpCost: 240,
-            cd: 8,
-            desc: "【爆发型】蓄力爆发，威力无穷。",
-        },
         desc: "静若处子动若脱兔。",
     },
     {
@@ -7118,13 +6642,6 @@ const fullBooks = [
         difficultyScale: 1.5,
         effects: { atk: 40, def: 5 },
         isCombined: true,
-        action: {
-            name: "铁掌水上漂",
-            dmgMult: 3.5,
-            mpCost: 120,
-            cd: 4,
-            desc: "【平衡型】刚猛厚重，劲力如铁。",
-        },
         desc: "掌力刚猛第一。",
     },
     {
@@ -7140,7 +6657,6 @@ const fullBooks = [
         difficultyScale: 1.5,
         effects: { atk: 30, speed: 10 },
         isCombined: true,
-        action: { name: "圣火焚世", dmgMult: 1.75, mpCost: 60, cd: 2 },
         desc: "武功奇诡。",
     },
     {
@@ -7154,7 +6670,6 @@ const fullBooks = [
         studyCost: 1531,
         isCombined: true,
         effects: { atk: 54 },
-        action: { name: "烈火燎原", dmgMult: 7.0, mpCost: 240, cd: 8 },
         desc: "刀气纯阳。",
     },
     {
@@ -7168,7 +6683,6 @@ const fullBooks = [
         studyCost: 1544,
         isCombined: true,
         effects: { atk: 36, speed: 18 },
-        action: { name: "幻阴破脉", dmgMult: 3.5, mpCost: 120, cd: 4 },
         desc: "阴寒无比。",
     },
     {
@@ -7182,7 +6696,6 @@ const fullBooks = [
         studyCost: 1556,
         isCombined: true,
         effects: { atk: 42, def: 6 },
-        action: { name: "血凝心停", dmgMult: 1.75, mpCost: 60, cd: 2 },
         desc: "陈近南绝学。",
     },
     {
@@ -7196,7 +6709,6 @@ const fullBooks = [
         studyCost: 1568,
         isCombined: true,
         effects: { atk: 48, def: 12 },
-        action: { name: "伏魔金刚", dmgMult: 7.0, mpCost: 240, cd: 8 },
         desc: "刚猛无俦。",
     },
     {
@@ -7210,7 +6722,6 @@ const fullBooks = [
         studyCost: 1580,
         isCombined: true,
         effects: { atk: 43, speed: 18 },
-        action: { name: "灵蛇出洞", dmgMult: 3.5, mpCost: 120, cd: 4 },
         desc: "诡异莫测。",
     },
 
@@ -7357,13 +6868,6 @@ const fullBooks = [
         difficultyScale: 2.0,
         effects: { atk: 40, def: 10, speed: 10 },
         isCombined: true,
-        action: {
-            name: "六阳开泰",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】连绵不绝的轻灵掌力。",
-        },
         desc: "逍遥派绝学，掌力轻灵飘逸。【全篇精义】",
     },
     {
@@ -7379,13 +6883,6 @@ const fullBooks = [
         difficultyScale: 2.0,
         effects: { atk: 35, def: 15, speed: 15 },
         isCombined: true,
-        action: {
-            name: "折梅式",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】变化繁复，攻守平衡。",
-        },
         desc: "包含天下任何剑法刀法。【全篇精义】",
     },
     {
@@ -7401,13 +6898,6 @@ const fullBooks = [
         difficultyScale: 2.0,
         effects: { atk: 60, speed: 20 },
         isCombined: true,
-        action: {
-            name: "飞刀问情",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】一刀封喉，无法躲避。",
-        },
         desc: "小李探花绝技。【全篇精义】",
     },
     {
@@ -7421,13 +6911,6 @@ const fullBooks = [
         studyCost: 3154,
         effects: { atk: 50, speed: 25 },
         isCombined: true,
-        action: {
-            name: "飞仙式",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】剑如惊鸿，迅捷无比。",
-        },
         desc: "白云城主剑法。【全篇精义】",
     },
     {
@@ -7441,13 +6924,6 @@ const fullBooks = [
         studyCost: 3168,
         effects: { atk: 55, speed: 15 },
         isCombined: true,
-        action: {
-            name: "绝剑式",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】剑意肃杀，威力无穷。",
-        },
         desc: "燕十三绝学。【全篇精义】",
     },
     {
@@ -7461,13 +6937,6 @@ const fullBooks = [
         studyCost: 3182,
         effects: { atk: 65, speed: 5 },
         isCombined: true,
-        action: {
-            name: "神刀一式",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】刀光一闪，万物寂灭。",
-        },
         desc: "魔教镇教刀法。【全篇精义】",
     },
     {
@@ -7481,13 +6950,6 @@ const fullBooks = [
         studyCost: 3197,
         effects: { atk: 75 },
         isCombined: true,
-        action: {
-            name: "野球真意",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】化境一击，毁天灭地。",
-        },
         desc: "看似平凡，实则通神。【全篇精义】",
     },
     {
@@ -7501,13 +6963,6 @@ const fullBooks = [
         studyCost: 3211,
         effects: { atk: 50, def: 5, speed: 20 },
         isCombined: true,
-        action: {
-            name: "剑廿三",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】剑气凝滞时空。",
-        },
         desc: "剑圣绝学。【全篇精义】",
     },
     {
@@ -7521,13 +6976,6 @@ const fullBooks = [
         studyCost: 3225,
         effects: { atk: 45, def: 20, speed: 10 },
         isCombined: true,
-        action: {
-            name: "剑心通明",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】剑意圆润，无瑕无垢。",
-        },
         desc: "慈航静斋宝典。【全篇精义】",
     },
     {
@@ -7541,13 +6989,6 @@ const fullBooks = [
         studyCost: 3239,
         effects: { atk: 45, def: 15, speed: 15 },
         isCombined: true,
-        action: {
-            name: "覆雨翻云",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】剑气滔滔，无孔不入。",
-        },
         desc: "浪翻云所创绝学。【全篇精义】",
     },
     {
@@ -7561,7 +7002,7 @@ const fullBooks = [
         studyCost: 3253,
         effects: { atk: 20, def: 80, qi: 50 },
         isCombined: true,
-        desc: "灵力自生，防御反震。【全篇精义】",
+        desc: "法力自生，防御反震。【全篇精义】",
     },
 
     {
@@ -7694,13 +7135,6 @@ const fullBooks = [
         difficultyScale: 3.0,
         effects: { atk: 150, def: 25, speed: 25 },
         isCombined: true,
-        action: {
-            name: "六道轮回·诀",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】六道齐出，轮回不绝，消耗极低。",
-        },
         desc: "磨灭世间一切敌。【全篇精义】",
     },
     {
@@ -7716,13 +7150,6 @@ const fullBooks = [
         difficultyScale: 3.0,
         effects: { atk: 175, speed: 50 },
         isCombined: true,
-        action: {
-            name: "草木为剑·诀",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】剑气横断万古，威力与消耗均衡。",
-        },
         desc: "剑气横断万古。【全篇精义】",
     },
     {
@@ -7738,13 +7165,6 @@ const fullBooks = [
         difficultyScale: 3.0,
         effects: { atk: 140, def: 40 },
         isCombined: true,
-        action: {
-            name: "囚天神罚",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】五指齐出，万物寂灭，威力绝伦。",
-        },
         desc: "五指动乾坤。【全篇精义】",
     },
     {
@@ -7758,13 +7178,6 @@ const fullBooks = [
         studyCost: 7898,
         effects: { atk: 125, speed: 75 },
         isCombined: true,
-        action: {
-            name: "万剑神罚",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】御剑成阵，消耗极低。",
-        },
         desc: "无数利剑如仆见主。【全篇精义】",
     },
     {
@@ -7778,13 +7191,6 @@ const fullBooks = [
         studyCost: 7933,
         effects: { atk: 160, speed: 30 },
         isCombined: true,
-        action: {
-            name: "天刀神罚",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】天刀挥出，顺应天理。",
-        },
         desc: "无可抵挡。【全篇精义】",
     },
     {
@@ -7798,13 +7204,6 @@ const fullBooks = [
         studyCost: 7968,
         effects: { atk: 150, def: 50 },
         isCombined: true,
-        action: {
-            name: "如来神掌·神罚",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】普渡众生，威力绝伦。",
-        },
         desc: "净化世间妖邪。【全篇精义】",
     },
     {
@@ -7818,13 +7217,6 @@ const fullBooks = [
         studyCost: 8002,
         effects: { atk: 155, speed: 40 },
         isCombined: true,
-        action: {
-            name: "逆乱神罚",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】招式极度混乱，令人防不胜防。",
-        },
         desc: "招式极度混乱狂暴。【全篇精义】",
     },
     {
@@ -7838,13 +7230,6 @@ const fullBooks = [
         studyCost: 8037,
         effects: { atk: 165, speed: 45 },
         isCombined: true,
-        action: {
-            name: "一剑平乱",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】元神化剑，物理防御无效。",
-        },
         desc: "物理防御无效。【全篇精义】",
     },
     {
@@ -7858,13 +7243,6 @@ const fullBooks = [
         studyCost: 8072,
         effects: { atk: 145, def: 45, speed: 35 },
         isCombined: true,
-        action: {
-            name: "真龙神罚",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】太古真龙之怒，不可阻挡。",
-        },
         desc: "攻防速完美无缺。【全篇精义】",
     },
     {
@@ -7878,13 +7256,6 @@ const fullBooks = [
         studyCost: 8106,
         effects: { atk: 130, speed: 100 },
         isCombined: true,
-        action: {
-            name: "扶摇神罚",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】掌控极速与极力，瞬间爆发。",
-        },
         desc: "拥有世间极速与极力。【全篇精义】",
     },
     {
@@ -8049,13 +7420,6 @@ const fullBooks = [
         studyCost: 1470,
         effects: { qi: 20, speed: 20 },
         isCombined: true,
-        action: {
-            name: "针渡众生",
-            dmgMult: 1.75,
-            mpCost: 60,
-            cd: 2,
-            desc: "【效率型】身法如鬼魅，绣花针高频取命。",
-        },
         desc: "欲练此功，必先自宫。【全篇精义】",
     },
     {
@@ -8069,13 +7433,6 @@ const fullBooks = [
         studyCost: 1483,
         effects: { qi: 25, jing: 10 },
         isCombined: true,
-        action: {
-            name: "血海魔刀",
-            dmgMult: 3.5,
-            mpCost: 120,
-            cd: 4,
-            desc: "【平衡型】血气化刀，威力稳健。",
-        },
         desc: "血刀门镇派绝学，邪恶无比。【全篇精义】",
     },
     {
@@ -8089,13 +7446,6 @@ const fullBooks = [
         studyCost: 1495,
         effects: { qi: 35 },
         isCombined: true,
-        action: {
-            name: "佛门狮吼",
-            dmgMult: 7.0,
-            mpCost: 240,
-            cd: 8,
-            desc: "【爆发型】声如雷霆，万魔寂灭。",
-        },
         desc: "佛门音波功，肝胆俱裂。【全篇精义】",
     },
     {
@@ -8109,13 +7459,6 @@ const fullBooks = [
         studyCost: 1507,
         effects: { qi: 20, jing: 15 },
         isCombined: true,
-        action: {
-            name: "冰蚕寒毒",
-            dmgMult: 3.5,
-            mpCost: 120,
-            cd: 4,
-            desc: "【平衡型】寒毒入体，封锁经脉。",
-        },
         desc: "吸收冰蚕寒毒修炼。【全篇精义】",
     },
     {
@@ -8129,13 +7472,6 @@ const fullBooks = [
         studyCost: 1519,
         effects: { qi: 15, speed: 15 },
         isCombined: true,
-        action: {
-            name: "金蛇狂舞",
-            dmgMult: 1.75,
-            mpCost: 60,
-            cd: 2,
-            desc: "【效率型】诡异内功，钻营随心。",
-        },
         desc: "金蛇郎君所留。【全篇精义】",
     },
     {
@@ -8149,13 +7485,6 @@ const fullBooks = [
         studyCost: 1531,
         effects: { qi: 25, shen: 15 },
         isCombined: true,
-        action: {
-            name: "白虹贯日",
-            dmgMult: 3.5,
-            mpCost: 120,
-            cd: 4,
-            desc: "【平衡型】掌力曲直如意，防不胜防。",
-        },
         desc: "李秋水绝学。【全篇精义】",
     },
     {
@@ -8169,14 +7498,7 @@ const fullBooks = [
         studyCost: 1544,
         effects: { qi: 20, speed: 15 },
         isCombined: true,
-        action: {
-            name: "流云飞袖",
-            dmgMult: 1.75,
-            mpCost: 60,
-            cd: 2,
-            desc: "【效率型】袖风如刀，点人穴道。",
-        },
-        desc: "极寒灵力拂动衣袖。【全篇精义】",
+        desc: "极寒法力拂动衣袖。【全篇精义】",
     },
     {
         id: "book_cultivation_r4_07_full",
@@ -8189,13 +7511,6 @@ const fullBooks = [
         studyCost: 1556,
         effects: { qi: 45 },
         isCombined: true,
-        action: {
-            name: "七伤魂断",
-            dmgMult: 7.0,
-            mpCost: 240,
-            cd: 8,
-            desc: "【爆发型】五行之气混乱，毁天灭地。",
-        },
         desc: "七伤拳内功总纲。【全篇精义】",
     },
     {
@@ -8209,14 +7524,7 @@ const fullBooks = [
         studyCost: 1568,
         effects: { qi: 20, jing: 20 },
         isCombined: true,
-        action: {
-            name: "地煞吸元",
-            dmgMult: 1.75,
-            mpCost: 60,
-            cd: 2,
-            desc: "【效率型】化解敌方灵力，高频反震。",
-        },
-        desc: "将灵力吸入大地。【全篇精义】",
+        desc: "将法力吸入大地。【全篇精义】",
     },
     {
         id: "book_cultivation_r4_09_full",
@@ -8229,13 +7537,6 @@ const fullBooks = [
         studyCost: 1580,
         effects: { qi: 20, speed: 20 },
         isCombined: true,
-        action: {
-            name: "圣火焚心",
-            dmgMult: 3.5,
-            mpCost: 120,
-            cd: 4,
-            desc: "【平衡型】明教神功，心神俱焚。",
-        },
         desc: "圣火令上记载的神功。【全篇精义】",
     },
     {
@@ -8383,13 +7684,6 @@ const fullBooks = [
         studyCost: 3112,
         effects: { shen: 40, qi: 20 },
         isCombined: true,
-        action: {
-            name: "种魔大法",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】魔种入心，毁天灭地。",
-        },
         desc: "魔门最高心法。【全篇精义】",
     },
     {
@@ -8403,13 +7697,6 @@ const fullBooks = [
         studyCost: 3126,
         effects: { qi: 30, shen: 30 },
         isCombined: true,
-        action: {
-            name: "天魔式",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】爆发潜能，连绵攻势。",
-        },
         desc: "魔道至高宝典。【全篇精义】",
     },
     {
@@ -8423,13 +7710,6 @@ const fullBooks = [
         studyCost: 3140,
         effects: { qi: 50, jing: 10 },
         isCombined: true,
-        action: {
-            name: "紫雷九击",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】九天紫雷，万劫不复。",
-        },
         desc: "引动九天紫雷。【全篇精义】",
     },
     {
@@ -8443,13 +7723,6 @@ const fullBooks = [
         studyCost: 3154,
         effects: { jing: 25, qi: 25, shen: 10 },
         isCombined: true,
-        action: {
-            name: "血苍穹",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】补天之气，吞噬苍穹。",
-        },
         desc: "女娲所留神功。【全篇精义】",
     },
     {
@@ -8463,13 +7736,6 @@ const fullBooks = [
         studyCost: 3168,
         effects: { qi: 45, jing: 15 },
         isCombined: true,
-        action: {
-            name: "赤火焚天",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】烈火焚身，万物化灰。",
-        },
         desc: "至高火系功法。【全篇精义】",
     },
     {
@@ -8483,13 +7749,6 @@ const fullBooks = [
         studyCost: 3182,
         effects: { shen: 25, qi: 35 },
         isCombined: true,
-        action: {
-            name: "玄阴式",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】阴毒剑气，连绵不绝。",
-        },
         desc: "天地至阴之气。【全篇精义】",
     },
     {
@@ -8503,13 +7762,6 @@ const fullBooks = [
         studyCost: 3197,
         effects: { shen: 45, qi: 15 },
         isCombined: true,
-        action: {
-            name: "森罗万象",
-            dmgMult: 2.63,
-            mpCost: 100,
-            cd: 2,
-            desc: "【效率型】幻化万千，困敌无形。",
-        },
         desc: "模拟天地万物。【全篇精义】",
     },
     {
@@ -8523,13 +7775,6 @@ const fullBooks = [
         studyCost: 3211,
         effects: { jing: 30, qi: 20, shen: 10 },
         isCombined: true,
-        action: {
-            name: "圣心劫",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】操控生死，极度冰寒。",
-        },
         desc: "长生不死绝学。【全篇精义】",
     },
 
@@ -8544,13 +7789,6 @@ const fullBooks = [
         studyCost: 3225,
         effects: { qi: 40, shen: 20 },
         isCombined: true,
-        action: {
-            name: "五雷轰顶",
-            dmgMult: 10.5,
-            mpCost: 400,
-            cd: 8,
-            desc: "【爆发型】神雷降世，邪魔尽灭。",
-        },
         desc: "驾驭五行神雷。【全篇精义】",
     },
     {
@@ -8564,13 +7802,6 @@ const fullBooks = [
         studyCost: 3239,
         effects: { jing: 20, qi: 40 },
         isCombined: true,
-        action: {
-            name: "七大限",
-            dmgMult: 5.25,
-            mpCost: 200,
-            cd: 4,
-            desc: "【平衡型】吞噬灵力，灭绝生机。",
-        },
         desc: "上古魔神所创。【全篇精义】",
     },
     {
@@ -8662,7 +7893,7 @@ const fullBooks = [
         studyCost: 3338,
         effects: { qi: 130, jing: 20 },
         isCombined: true,
-        desc: "内结金丹，灵力无边，源源不绝。【全篇精义】",
+        desc: "内结金丹，法力无边，源源不绝。【全篇精义】",
     },
     {
         id: "book_cultivation_r5_17_full",
@@ -8714,13 +7945,6 @@ const fullBooks = [
         studyCost: 7794,
         effects: { qi: 75, shen: 50 },
         isCombined: true,
-        action: {
-            name: "吞天噬地",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】高频吞噬周围生机，反哺己身。",
-        },
         desc: "吞噬万物本源。【全篇精义】",
     },
     {
@@ -8734,13 +7958,6 @@ const fullBooks = [
         studyCost: 7829,
         effects: { qi: 100, jing: 25 },
         isCombined: true,
-        action: {
-            name: "佛怒火莲",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】异火相融，爆发均衡且强大的威能。",
-        },
         desc: "炼化天下万火。【全篇精义】",
     },
     {
@@ -8754,13 +7971,6 @@ const fullBooks = [
         studyCost: 7864,
         effects: { qi: 90, speed: 50 },
         isCombined: true,
-        action: {
-            name: "雷罚灭世",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】九天神雷降世，彻底净化万物。",
-        },
         desc: "代天刑罚。【全篇精义】",
     },
     {
@@ -8774,13 +7984,6 @@ const fullBooks = [
         studyCost: 7899,
         effects: { shen: 125 },
         isCombined: true,
-        action: {
-            name: "大梦千秋",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】一梦万古，梦中高频斩杀。",
-        },
         desc: "梦中证道。【全篇精义】",
     },
     {
@@ -8794,13 +7997,6 @@ const fullBooks = [
         studyCost: 7933,
         effects: { qi: 75, shen: 50 },
         isCombined: true,
-        action: {
-            name: "斩道见我",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】截取生机，剑气破灭万法。",
-        },
         desc: "截取天道生机。【全篇精义】",
     },
     {
@@ -8814,13 +8010,6 @@ const fullBooks = [
         studyCost: 7968,
         effects: { jing: 25, qi: 50, shen: 50 },
         isCombined: true,
-        action: {
-            name: "死亡凋零",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】剥夺一切生机，回归虚无死寂。",
-        },
         desc: "终结生机。【全篇精义】",
     },
     {
@@ -8834,13 +8023,6 @@ const fullBooks = [
         studyCost: 8003,
         effects: { qi: 80, shen: 45 },
         isCombined: true,
-        action: {
-            name: "太上斩情",
-            dmgMult: 4.25,
-            mpCost: 150,
-            cd: 2,
-            desc: "【效率型】以气御剑，高频斩断因果。",
-        },
         desc: "斩断因果羁绊。【全篇精义】",
     },
     {
@@ -8854,13 +8036,6 @@ const fullBooks = [
         studyCost: 8037,
         effects: { qi: 70, speed: 60 },
         isCombined: true,
-        action: {
-            name: "虚空大裂斩",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】撕裂虚空，放逐敌人于乱流。",
-        },
         desc: "掌控虚空之力。【全篇精义】",
     },
     {
@@ -8874,13 +8049,6 @@ const fullBooks = [
         studyCost: 8072,
         effects: { qi: 65, shen: 60 },
         isCombined: true,
-        action: {
-            name: "万化归凡",
-            dmgMult: 17.0,
-            mpCost: 600,
-            cd: 8,
-            desc: "【爆发型】消融一切攻势，化神奇为腐朽。",
-        },
         desc: "消融一切攻势。【全篇精义】",
     },
     {
@@ -8894,13 +8062,6 @@ const fullBooks = [
         studyCost: 8106,
         effects: { qi: 100, jing: 25 },
         isCombined: true,
-        action: {
-            name: "戮仙一指",
-            dmgMult: 8.5,
-            mpCost: 300,
-            cd: 4,
-            desc: "【平衡型】凝聚无上杀意，屠戮仙神。",
-        },
         desc: "杀气滔天。【全篇精义】",
     },
     {

@@ -1,13 +1,13 @@
 // js/modules/combat/combat_core.js
 // 职责：时间轴管控、自动攻击逻辑 (Auto-Battler Core)
-// 适配：V3.0 精确跑条 + 自动普攻
+// 适配：V4.8 全局3秒心跳机制 (Buff/CD 与 攻速解耦)
 
 const CombatCore = {
     CONFIG: {
         MAX_GAUGE: 10000,
-        TICK_RATE: 50, // 50ms 刷新一次 (1秒20帧)
-        BASE_TIME: 3.0, // 0速度时 5秒一动
-        SPD_FACTOR: 0.01 // 速度系数
+        TICK_RATE: 50,    // 50ms 刷新一次 (物理帧)
+        BASE_TIME: 3.0,   // 3.0秒 = 1个标准回合周期 (用于Buff/CD结算)
+        SPD_FACTOR: 0.01  // 速度系数
     },
 
     /** 初始化战斗数据 */
@@ -15,7 +15,11 @@ const CombatCore = {
         ctx.gauges = { player: 0, enemy: 0 };
         ctx.state = 'running';
         ctx.globalTimer = 0;
-        ctx.turnCount = 1; // 内部轮次计数
+
+        // 【新增】3秒周期累积器
+        ctx.roundAccumulator = 0;
+        // 显示用的回合数计数
+        ctx.displayTurn = 1;
     },
 
     /** 启动时间循环 */
@@ -27,38 +31,57 @@ const CombatCore = {
 
     /** 单帧心跳逻辑 */
     _tick: function(ctx) {
-        // 1. 状态检查：暂停或结束后停止心跳
+        // 1. 状态检查
         if (ctx.isStopped || ctx.isEnded || ctx.isPaused) return;
 
+        // 获取时间倍率 (默认为 1.0)
+        const scale = this.CONFIG.TIME_SCALE || 1.0;
+        // 计算本帧流逝的“逻辑时间” (ms)
+        const delta = this.CONFIG.TICK_RATE * scale;
 
+        // ---------------------------------------------------------
+        // 【模块 A】全局 3秒 心跳 (Buff / DoT / CD 结算)
+        // ---------------------------------------------------------
+        ctx.roundAccumulator += delta;
+        const ROUND_INTERVAL = this.CONFIG.BASE_TIME * 1000; // 3000ms
 
-        // 2. 获取动态属性 (实时速度)
+        // 可能因为高倍速一次跳过多个周期，用 while 处理
+        while (ctx.roundAccumulator >= ROUND_INTERVAL) {
+            ctx.roundAccumulator -= ROUND_INTERVAL;
+            this._processGlobalRound(ctx);
+
+            // 如果结算由于DoT导致战斗结束，立即中止
+            if (ctx.currentEHp <= 0 || ctx.currentPHp <= 0) {
+                this._checkVictoryCondition(ctx);
+                return;
+            }
+        }
+
+        // ---------------------------------------------------------
+        // 【模块 B】行动条跑条 (Action Gauge)
+        // ---------------------------------------------------------
+
+        // 获取动态速度
         const pStats = CombatCalc.getDynamicStats(ctx, 'player');
         const eStats = CombatCalc.getDynamicStats(ctx, 'enemy');
 
-        // 3. 精确计算增量 (修复速度感觉一样的问题)
-        // 逻辑：计算跑满所需的总时间(秒) -> 换算成帧数 -> 算出每帧加多少
-        // 帧率 = 1000 / TICK_RATE (默认20)
+        // 计算跑条增量 (基于 3.0s 基准时间)
         const fps = 1000 / this.CONFIG.TICK_RATE;
 
-        // 玩家目标时间 (秒) = 基准 / (1 + 速度加成)
+        // 玩家增量
         const pTargetTime = this.CONFIG.BASE_TIME / (1 + pStats.speed * this.CONFIG.SPD_FACTOR);
-        // 玩家每帧增量
         const pInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, pTargetTime) * fps);
-        // 敌人目标时间 (秒)
+
+        // 敌人增量
         const eTargetTime = this.CONFIG.BASE_TIME / (1 + eStats.speed * this.CONFIG.SPD_FACTOR);
         const eInc = this.CONFIG.MAX_GAUGE / (Math.max(0.1, eTargetTime) * fps);
 
-        // 【核心修改】应用时间倍率
-        // 获取当前倍率，默认为 1.0
-        const scale = this.CONFIG.TIME_SCALE || 1.0;
-
-        // 增量乘以倍率
+        // 应用增量 (受倍速影响)
         ctx.gauges.player += pInc * scale;
         ctx.gauges.enemy += eInc * scale;
-        ctx.globalTimer += this.CONFIG.TICK_RATE * scale; // 逻辑时间也加速
+        ctx.globalTimer += delta;
 
-        // 4. 更新 UI 进度条
+        // 更新 UI 进度条
         const pPct = Math.min(100, (ctx.gauges.player / this.CONFIG.MAX_GAUGE) * 100);
         const ePct = Math.min(100, (ctx.gauges.enemy / this.CONFIG.MAX_GAUGE) * 100);
 
@@ -66,21 +89,20 @@ const CombatCore = {
             CombatUI.updateGauges(ctx, pPct, ePct);
         }
 
-        // 5. 检查满条 (自动攻击逻辑)
+        // ---------------------------------------------------------
+        // 【模块 C】满条行动触发 (Action Trigger)
+        // ---------------------------------------------------------
         let actionHappened = false;
 
         // --- 玩家满条 ---
         if (ctx.gauges.player >= this.CONFIG.MAX_GAUGE) {
-            // 保留溢出值 (模拟 CTB 机制，速度极快时不会亏损进度)
             ctx.gauges.player -= this.CONFIG.MAX_GAUGE;
 
             // 执行自动普攻
-            // 注意：这里不再暂停等待 UI 输入，而是直接打出去
             const dmg = CombatCalc.performAttack(ctx, "你", pStats, eStats, true);
             ctx.currentEHp = Math.max(0, ctx.currentEHp - dmg);
 
-            // 触发行动后结算 (Buff/毒) - 谁动谁结算
-            this._onTurnEnd(ctx, 'player');
+            // 【注意】这里不再调用 _onTurnEnd 结算Buff/CD，只负责行动
             actionHappened = true;
         }
 
@@ -91,53 +113,76 @@ const CombatCore = {
             // 执行敌人 AI
             CombatAction.enemyAction(ctx, eStats, pStats);
 
-            this._onTurnEnd(ctx, 'enemy');
             actionHappened = true;
         }
 
-        // 6. 状态同步与胜负判定
+        // ---------------------------------------------------------
+        // 【模块 D】状态同步与胜负判定
+        // ---------------------------------------------------------
         if (actionHappened) {
             ctx._syncPlayerStatus();
             ctx._updateUIStats();
-
-            // 每次有人行动，检查一次死活
-            if (ctx.currentEHp <= 0) {
-                this.handleVictory(ctx);
-                return; // 结束循环
-            }
-            if (ctx.currentPHp <= 0) {
-                this.handleDefeat(ctx);
-                return; // 结束循环
-            }
+            this._checkVictoryCondition(ctx);
+            if (ctx.isEnded) return;
         }
 
-        // 7. 继续下一帧
+        // 继续下一帧
         ctx.timer = setTimeout(() => this._tick(ctx), this.CONFIG.TICK_RATE);
     },
 
-    /** 单个实体行动后的结算 (原回合结束逻辑) */
-    _onTurnEnd: function(ctx, targetKey) {
-        // 结算 Buff 持续时间 (回合数 -1)
-        CombatAction.processBuffs(ctx, targetKey);
+    /** * 【核心新增】全局回合结算 (每3秒触发一次)
+     * 职责：刷新CD、结算DoT/HoT、更新Buff回合数
+     */
+    _processGlobalRound: function(ctx) {
+        // 1. 日志分割线
+        if (window.CombatUI) {
+            CombatUI.log(ctx, `<div class="turn-divider">--- 第 ${ctx.displayTurn} 回合 (3秒) ---</div>`);
+        }
+        ctx.displayTurn++;
 
-        // 结算毒伤
-        if (targetKey === 'player') CombatAction.processPoisonOnPlayer(ctx);
-        else CombatAction.processPoisonOnEnemy(ctx);
-// --- 核心修复：添加以下代码 ---
-        if (ctx._updateToxUI) {
-            ctx._updateToxUI();
+        // 2. 结算 玩家 身上的 Buff/DoT
+        if (CombatAction.processBuffs) {
+            CombatAction.processBuffs(ctx, 'player');
+            CombatAction.processPoisonOnPlayer(ctx); // 毒素结算
         }
-        // 刷新技能/物品 CD (按行动次数减少)
-        // 只有玩家行动时才刷新玩家 CD，或者你可以设定为全场时间刷新，这里按行动次数更符合回合制直觉
-        if (targetKey === 'player') {
-            for(let i=0; i<3; i++) if (ctx.itemCDs[i] > 0) ctx.itemCDs[i]--;
-            for(let k in ctx.skillCDs) if (ctx.skillCDs[k] > 0) ctx.skillCDs[k]--;
-            ctx._refreshItemCDUI();
-            ctx._refreshSkillCDUI();
+
+        // 3. 结算 敌人 身上的 Buff/DoT
+        if (CombatAction.processBuffs) {
+            CombatAction.processBuffs(ctx, 'enemy');
+            CombatAction.processPoisonOnEnemy(ctx); // 毒素结算
         }
+
+        // 4. 刷新 玩家 冷却时间 (CD)
+        // 技能 CD
+        for (let k in ctx.skillCDs) {
+            if (ctx.skillCDs[k] > 0) ctx.skillCDs[k]--;
+        }
+        // 物品 CD
+        for (let i = 0; i < 3; i++) {
+            if (ctx.itemCDs[i] > 0) ctx.itemCDs[i]--;
+        }
+
+        // 5. 统一刷新 UI (CD遮罩、状态栏)
+        if (ctx._refreshSkillCDUI) ctx._refreshSkillCDUI();
+        if (ctx._refreshItemCDUI) ctx._refreshItemCDUI();
+        if (ctx._updateToxUI) ctx._updateToxUI();
+        if (ctx._updateUIStats) ctx._updateUIStats();
     },
 
-    // ================== 结算相关 (保持原有逻辑框架) ==================
+    /** 胜负检查辅助方法 */
+    _checkVictoryCondition: function(ctx) {
+        if (ctx.currentEHp <= 0) {
+            this.handleVictory(ctx);
+            return true;
+        }
+        if (ctx.currentPHp <= 0) {
+            this.handleDefeat(ctx);
+            return true;
+        }
+        return false;
+    },
+
+    // ================== 结算与控制 (保持原有逻辑) ==================
 
     syncStatus: function(ctx) {
         if(ctx.player.status) {
@@ -169,7 +214,10 @@ const CombatCore = {
 
     /** 胜利 */
     handleVictory: function(ctx) {
+        if (ctx.isEnded) return; // 防止重复结算
         ctx.isEnded = true;
+        if (ctx.timer) clearTimeout(ctx.timer);
+
         if (window.player) {
             const rank = ctx.enemy.template || "minion";
             const gain = { "minion": 5, "elite": 10, "boss": 50, "lord": 100 }[rank] || 0;
@@ -182,23 +230,16 @@ const CombatCore = {
         if (money > 0) { if (window.UtilsAdd) UtilsAdd.addMoney(money); else ctx.player.money += money; }
 
         const drops = this._calculateFinalDrops(ctx);
-
-        console.log("原始掉落物:", drops);
         const realDrops = [];
         drops.forEach(d => {
             if (window.addItem) {
-                // 执行添加，并捕获返回值 (假设 addItem 返回添加成功的对象，失败返回 null)
                 const added = window.addItem(d.id, 1);
                 if (added) {
-                    // 标记是否为悬赏物品以便 UI 渲染
                     added.isBounty = d.isBounty;
                     realDrops.push(added);
-                } else {
-                    console.warn(`[CombatCore] 掉落物 ${d.id} 添加失败 (背包满或ID无效)`);
                 }
             }
         });
-        // ---【核心修复】结束 ---
 
         let rewardHtml = this._buildRewardHtml(ctx, money, drops);
 
@@ -216,7 +257,10 @@ const CombatCore = {
 
     /** 失败 */
     handleDefeat: function(ctx) {
+        if (ctx.isEnded) return;
         ctx.isEnded = true;
+        if (ctx.timer) clearTimeout(ctx.timer);
+
         ctx._log(`<div style="color:red; font-weight:bold; margin-top:10px;">💀 战斗失败...</div>`);
         CombatUI.renderEnd(ctx, "失败");
 
@@ -260,28 +304,16 @@ const CombatCore = {
 
     /** 变速 */
     changeSpeed: function(ctx, delta) {
-        // 获取当前倍率
         let current = this.CONFIG.TIME_SCALE || 1.0;
-
-        // delta > 0 代表加速，delta < 0 代表减速 (配合下面 ui_combat_modal.js 的修改)
-        if (delta > 0) {
-            current += 0.5; // 每次 +0.5x
-        } else {
-            current -= 0.5; // 每次 -0.5x
-        }
-
-        // 限制范围 (0.5x ~ 5.0x)
+        if (delta > 0) current += 0.5;
+        else current -= 0.5;
         current = Math.max(0.5, Math.min(5.0, current));
-
-        // 应用设置
         this.CONFIG.TIME_SCALE = current;
 
-        // 更新 UI 显示文本
         const spdEl = document.getElementById('combat_speed_display');
         if(spdEl) spdEl.innerText = current.toFixed(1) + "x";
     },
 
-    // --- 内部辅助 (保持不变) ---
     _randomInt: function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
 
     _calculateFinalDrops: function(ctx) {

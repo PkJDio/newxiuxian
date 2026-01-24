@@ -109,73 +109,68 @@ const CombatCalc = {
         return totalDamage;
     },
 
-    /** 核心伤害公式 */
-    calcDamage: function(ctx, atkStats, defStats, isPlayerAttacking, type="普攻", attackerName=null) {
+    /** 核心伤害公式 (修改版：支持静默计算与数据返回)
+     * @param {boolean} isSilent - 如果为 true，则不打印日志，只返回计算结果
+     */
+    calcDamage: function(ctx, atkStats, defStats, isPlayerAttacking, type="普攻", attackerName=null, isSilent=false) {
         const name = attackerName || (isPlayerAttacking ? "你" : ctx.enemy.name);
         const attackerKey = isPlayerAttacking ? 'player' : 'enemy';
         const defenderKey = isPlayerAttacking ? 'enemy' : 'player';
 
-        // 1. 确定类型 (物理/法术)
+        // 1. 确定类型
         let dmgType = 'phy';
-        if (type === "技能") dmgType = atkStats.damageType || 'phy';
+        if (type === "技能" || type.includes("周期")) dmgType = atkStats.damageType || 'phy';
 
         // 2. 提取面板
         let panelAtk = (dmgType === 'phy') ? atkStats.phy_atk : atkStats.mag_atk;
         let panelDef = (dmgType === 'phy') ? defStats.phy_def : defStats.mag_def;
 
-        // 获取穿透属性原值 (锋利度 / 灵透)
         let penValue = (dmgType === 'phy') ? (atkStats.sharpness || 0) : (atkStats.penetration || 0);
         if (atkStats.basePen) penValue += atkStats.basePen;
 
         // 3. 计算面板攻击力
         let finalAtkVal = panelAtk;
-        if (atkStats.skillMult) finalAtkVal = Math.floor(finalAtkVal * atkStats.skillMult);
-        if (atkStats.skillFlat) finalAtkVal = finalAtkVal + atkStats.skillFlat;
-
-        // 4. 闪避判定
-        const spdAtk = atkStats.speed;
-        const spdDef = defStats.speed;
-        let accMod = (atkStats.accuracy || 0);
-
-        const blindEntry = this._findEntry(ctx, attackerKey, 'blind');
-        if (blindEntry) accMod -= blindEntry.val;
-        let firstDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 );
-        let rawDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 - (accMod/100));
-        let finalDodgeRate = Math.min(0.5, rawDodgeRate);
-
-        if (Math.random() < finalDodgeRate) {
-            this._triggerOnDodge(ctx, defenderKey);
-            const dodgeData = {
-                type: 'evasion',
-                source: isPlayerAttacking ? 'enemy' : 'player',
-                firstDR: (firstDodgeRate * 100).toFixed(1),
-                base: (rawDodgeRate * 100).toFixed(1),
-                acc: accMod,
-                final: (finalDodgeRate * 100).toFixed(1)
-            };
-            this._logDodge(ctx, name, type, dodgeData);
-            return 0;
+        // 【修复】检查是否未定义，而不是直接检查真假。
+        // 因为固定伤害时 skillMult 为 0，if(0) 会被跳过，导致基础攻击力未被清零。
+        if (atkStats.skillMult !== undefined) {
+            finalAtkVal = Math.floor(finalAtkVal * atkStats.skillMult);
         }
 
-        // 5. 【核心修改】防御穿透计算
+        if (atkStats.skillFlat) {
+            finalAtkVal = finalAtkVal + atkStats.skillFlat;
+        }
+
+        // 4. 闪避判定 (DoT 通常不可闪避，或者由外部控制，这里如果是静默计算DoT，通常假设必中)
+        if (!isSilent) {
+            const spdAtk = atkStats.speed;
+            const spdDef = defStats.speed;
+            let accMod = (atkStats.accuracy || 0);
+            let rawDodgeRate = Math.max(0, 0.05 + (spdDef - spdAtk) / 200 - (accMod/100));
+            let finalDodgeRate = Math.min(0.5, rawDodgeRate);
+
+            if (Math.random() < finalDodgeRate) {
+                this._triggerOnDodge(ctx, defenderKey);
+                const dodgeData = { type: 'evasion', source: isPlayerAttacking ? 'enemy' : 'player', final: (finalDodgeRate * 100).toFixed(1) };
+                this._logDodge(ctx, name, type, dodgeData);
+                return 0;
+            }
+        }
+
+        // 5. 防御穿透计算 (同原逻辑)
         const originDef = panelDef;
         let effectiveDef = panelDef;
         let ignoreDefPct = 0;
 
         if (isPlayerAttacking) {
-            // --- 玩家攻击：使用百分比衰减公式 ---
-            // 公式: 忽视防御比例 = 1 - (100 / (100 + 穿透值))
-            const ignoreDefFactor = 100 / (100 + penValue); // 剩余防御比例因子
-            ignoreDefPct = Math.floor((1 - ignoreDefFactor) * 100); // 忽视防御百分比 (用于日志显示)
+            const ignoreDefFactor = 100 / (100 + penValue);
+            ignoreDefPct = Math.floor((1 - ignoreDefFactor) * 100);
             effectiveDef = panelDef * ignoreDefFactor;
         } else {
-            // --- 敌人攻击：使用固定数值减法公式 ---
             effectiveDef = panelDef - penValue;
-            // 计算名义上的忽视比例用于 Tooltip 显示
             ignoreDefPct = originDef > 0 ? Math.floor((Math.min(originDef, penValue) / originDef) * 100) : (penValue > 0 ? 100 : 0);
         }
 
-        // 处理额外词条: Sunder (破甲) / Penetrate (穿透) —— 这些是额外叠加的百分比削减
+        // 额外穿透词条
         let extraDefModPct = 0;
         if (dmgType === 'phy') {
             const sunder = this._findEntry(ctx, attackerKey, 'sunder');
@@ -184,55 +179,43 @@ const CombatCalc = {
             const pen = this._findEntry(ctx, attackerKey, 'penetrate');
             if (pen) extraDefModPct += pen.val;
         }
-
-        if (extraDefModPct > 0) {
-            effectiveDef = effectiveDef * (1 - extraDefModPct / 100);
-        }
-
-        // 确保防御力不小于0
+        if (extraDefModPct > 0) effectiveDef = effectiveDef * (1 - extraDefModPct / 100);
         effectiveDef = Math.max(0, Math.floor(effectiveDef));
 
-        // 6. 减伤公式 (通用版)
+        // 6. 减伤公式
         const ARMOR_CONST = 100;
         const mitigation = ARMOR_CONST / (ARMOR_CONST + effectiveDef);
         const mitigationPct = ((1 - mitigation) * 100).toFixed(1);
 
         let rawDamage = finalAtkVal * mitigation;
 
-        // 7. 伤害增幅修正 (斩杀等)
+        // 7. 词条修正 (斩杀/虚弱等)
         const execute = this._findEntry(ctx, attackerKey, 'execute');
         if (execute && (defStats.hp / defStats.hpMax) < 0.3) rawDamage *= (1 + execute.val / 100);
-
         const soft = this._findEntry(ctx, attackerKey, 'soft');
         if (soft) rawDamage *= (1 - soft.val / 100);
 
-        // 8. 暴击判定
+        // 8. 暴击 (DoT通常不暴击，除非特殊设计，这里暂时保留逻辑)
         let critRate = (dmgType === 'phy') ? atkStats.crit : atkStats.mag_crit;
         critRate = critRate * 0.01;
         if (isPlayerAttacking) critRate += (atkStats.shen || 0) * 0.05;
-        critRate = Math.min(1.0, critRate); // 暴击率限制在100%
+        critRate = Math.min(1.0, critRate);
 
+        let isCrit = false;
         let critDmgMult = 1.5;
-        const critUp = this._findEntry(ctx, attackerKey, 'crit_dmg_up');
-        if (critUp) critDmgMult += (critUp.val / 100);
 
-        const isCrit = Math.random() < critRate;
-        if (isCrit) rawDamage *= critDmgMult;
-
-        // 9. 最终浮动 & 受击减免
-        const variance = 0.95 + Math.random() * 0.1;
-        let dmgTakenMod = 1.0;
-        if (dmgType === 'phy') {
-            const iron = this._findEntry(ctx, defenderKey, 'iron_skin');
-            if (iron) dmgTakenMod -= (iron.val / 100);
-        } else {
-            const shell = this._findEntry(ctx, defenderKey, 'magic_shell');
-            if (shell) dmgTakenMod -= (shell.val / 100);
+        // 只有非静默或者是瞬发伤害才判定暴击，DoT一般取期望值或不暴击
+        // 这里设定：静默模式(DoT预计算)默认不暴击，以保持数值稳定
+        if (!isSilent && Math.random() < critRate) {
+            const critUp = this._findEntry(ctx, attackerKey, 'crit_dmg_up');
+            if (critUp) critDmgMult += (critUp.val / 100);
+            isCrit = true;
+            rawDamage *= critDmgMult;
         }
-        const frail = this._findEntry(ctx, defenderKey, 'frail');
-        if (frail) dmgTakenMod += (frail.val / 100);
 
-        let finalDamage = Math.floor(rawDamage * variance * Math.max(0.1, dmgTakenMod));
+        // 9. 浮动
+        const variance = 0.95 + Math.random() * 0.1;
+        let finalDamage = Math.floor(rawDamage * variance);
         finalDamage = Math.max(1, finalDamage);
 
         // 10. 构造 Tooltip 数据
@@ -243,35 +226,34 @@ const CombatCalc = {
             originDef: originDef,
             effectiveDef: effectiveDef,
             mitigationPct: mitigationPct,
-            penVal: penValue,            // 穿透属性值
-            penPct: ignoreDefPct,        // 由属性换算出的忽视比例
-            extraPenPct: extraDefModPct, // 额外词条带来的比例
+            penVal: penValue,
+            penPct: ignoreDefPct,
+            extraPenPct: extraDefModPct,
             finalAtkVal: finalAtkVal,
-            dmgAfterMitigation: Math.floor(rawDamage / (isCrit ? critDmgMult : 1) / variance),
+            dmgAfterMitigation: Math.floor(rawDamage / (isCrit ? critDmgMult : 1) / variance), // 还原折后基数
             critRate: critRate,
             isCrit: isCrit,
             critDmg: critDmgMult,
             variance: (variance * 100).toFixed(0) + '%',
             finalDamage: finalDamage,
-            atkStats: atkStats
+            atkStats: atkStats // 传递原始攻击数据方便调试
         };
 
-        console.log(`[CombatCalc] 最终伤害计算结果:`, tooltipData);
+        // 11. 如果不是静默模式，打印日志并触发特效
+        if (!isSilent) {
+            this._logDamage(ctx, name, type, isPlayerAttacking, finalDamage, isCrit, tooltipData);
+            this._handlePostAttack(ctx, attackerKey, defenderKey, finalDamage, dmgType, isCrit);
 
-        // 11. 输出伤害日志
-        this._logDamage(ctx, name, type, isPlayerAttacking, finalDamage, isCrit, tooltipData);
-
-        // 12. 触发特效
-        this._handlePostAttack(ctx, attackerKey, defenderKey, finalDamage, dmgType, isCrit);
-
-        // 13. 毒素判定
-        if (!isPlayerAttacking && type === "普攻" && atkStats.toxAtk > 0) {
-            window.player.status.toxicity = Math.min(100, (window.player.status.toxicity || 0) + Number(atkStats.toxAtk));
-            CombatUI.updateTox(ctx);
-            CombatUI.log(ctx, `> ⚠️ ${name} 附带剧毒！中毒 +${atkStats.toxAtk}`);
+            if (!isPlayerAttacking && type === "普攻" && atkStats.toxAtk > 0) {
+                window.player.status.toxicity = Math.min(100, (window.player.status.toxicity || 0) + Number(atkStats.toxAtk));
+                CombatUI.updateTox(ctx);
+                CombatUI.log(ctx, `> ⚠️ ${name} 附带剧毒！中毒 +${atkStats.toxAtk}`);
+            }
+            return finalDamage;
+        } else {
+            // 静默模式：返回对象包含数值和数据
+            return { damage: finalDamage, data: tooltipData };
         }
-
-        return finalDamage;
     },
     // --- 词条处理核心 ---
 

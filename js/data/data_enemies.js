@@ -3987,7 +3987,7 @@ const enemies_r_n = [
             // [Type 3] 万物感应 (加法攻)
             { id: "万物感应", rate: 0.1, type: 3, buffValue: 0.25, buffValType: 1, buffAttr: "mag_atk", buffTimes: 6 }
         ],
-        desc: "【领主】能召唤雷霆与风暴的萨满教教主，灵力无边。"
+        desc: "【领主】能召唤雷霆与风暴的萨满教教主，法力无边。"
     },
     {
         id: "rn_lord_03", template: "lord", name: "瀚海沙虫王", region: "r_n", spawnType: "desert", timeStart: 2,
@@ -4608,7 +4608,7 @@ const enemies_1=[
             { id: "无意识抓挠", rate: 0.2, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
             { id: "碎骨重击", rate: 0.1, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 }
         ],
-        desc: "承受不住倒灌的灵力而当场爆体身亡的士卒，残破的躯体在灵流的裹挟下行尸走肉般移动。"
+        desc: "承受不住倒灌的法力而当场爆体身亡的士卒，残破的躯体在灵流的裹挟下行尸走肉般移动。"
     },
 
     // 3. 狂乱荆棘 (元素/均衡) -> 修正为元素(Elemental) + 均衡(Balance)
@@ -4626,7 +4626,7 @@ const enemies_1=[
             { id: "荆刺抽打", rate: 0.2, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
             { id: "死亡绞杀", rate: 0.1, type: 1, damage: 1.8, damageType: "phy", dmgValType: 1 }
         ],
-        desc: "受到狂暴灵力滋养的植物，在一夜之间长出了锯齿般的倒刺，会主动攻击靠近的活物。"
+        desc: "受到狂暴法力滋养的植物，在一夜之间长出了锯齿般的倒刺，会主动攻击靠近的活物。"
     },
 
     // 4. 红眼野狗 (野兽/狂暴)
@@ -4660,7 +4660,7 @@ const enemies_1=[
         ],
         skills: [
             { id: "紊乱火球", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
-            { id: "灵力自爆", rate: 0.1, type: 1, damage: 1.8, damageType: "mag", dmgValType: 1 }
+            { id: "法力自爆", rate: 0.1, type: 1, damage: 1.8, damageType: "mag", dmgValType: 1 }
         ],
         desc: "看着罗盘指针疯狂旋转而道心崩溃的小方士，口中喃喃自语，胡乱释放着不成型的法术。"
     },
@@ -4714,11 +4714,11 @@ const enemies_1=[
             { id: "materials_100", rate: 0.1 }
         ],
         skills: [
-            { id: "灵力火花", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
+            { id: "法力火花", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
             { id: "能量超载", rate: 0.1, type: 1, damage: 1.9, damageType: "mag", dmgValType: 1 },
             { id: "磁场紊乱", rate: 0.1, type: 2, debuffValue: 0.3, debuffValType: 1, debuffAttr: "speed", debuffTimes: 3 }
         ],
-        desc: "一团不稳定的光球，由浑浊的倒灌灵力凝聚而成，对周围的一切进行无差别的能量轰击。"
+        desc: "一团不稳定的光球，由浑浊的倒灌法力凝聚而成，对周围的一切进行无差别的能量轰击。"
     },
 
     // 4. 暴走木甲兽 (机关/肉盾)
@@ -6251,7 +6251,7 @@ const enemies_4= [
             { id: "手指重压", rate: 0.1, type: 1, damage: 1.9, damageType: "phy", dmgValType: 1 },
             { id: "金属共振", rate: 0.1, type: 2, debuffValue: 0.3, debuffValType: 1, debuffAttr: "mag_def", debuffTimes: 3 }
         ],
-        desc: "十二金人锁魂阵被破后，一只断裂的巨大金属手臂，依靠残留的灵力仍在战场上盲目地攻击。"
+        desc: "十二金人锁魂阵被破后，一只断裂的巨大金属手臂，依靠残留的法力仍在战场上盲目地攻击。"
     },
     // 1. 长城军团督军 (亡灵/肉盾) - 巨鹿之战中死战不退的秦军指挥官
     // Calc:
@@ -6374,13 +6374,13 @@ const enemies_4= [
             { id: "阵法书残卷", rate: 0.2 }
         ],
         skills: [
-            { id: "灵力逆流", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
+            { id: "法力逆流", rate: 0.2, type: 1, damage: 1.2, damageType: "mag", dmgValType: 1 },
             { id: "锁魂链", rate: 0.1, type: 1, damage: 2.0, damageType: "mag", dmgValType: 1 },
             { id: "阵毁人亡", rate: 0.05, type: 1, damage: 3.2, damageType: "mag", dmgValType: 1 },
             { id: "神识错乱", rate: 0.1, type: 2, debuffValue: 0.4, debuffValType: 1, debuffAttr: "mag_def", debuffTimes: 3 },
             { id: "献祭增幅", rate: 0.1, type: 3, buffValue: 0.4, buffValType: 1, buffAttr: "mag_atk", buffTimes: 4 }
         ],
-        desc: "负责维持‘十二金人锁魂阵’的秦国大方士，在阵法被暴力破除的瞬间，承受了数倍的灵力反噬，变成了疯魔。"
+        desc: "负责维持‘十二金人锁魂阵’的秦国大方士，在阵法被暴力破除的瞬间，承受了数倍的法力反噬，变成了疯魔。"
     },
     // 1. 西楚霸王·项羽(鬼神之姿) - 人类/狂暴 (Human Assassin/Berserker)
     // 设定：巨鹿之战中，项羽以凡人之躯证道，其实力已超越凡俗，宛如鬼神降世。

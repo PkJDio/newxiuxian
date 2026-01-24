@@ -9,13 +9,13 @@ const herbs_primary_r1 = [
         properties: { heal: 25 },
         desc: "叶片边缘有微小锯齿，揉碎后有股清香，是疗伤药最基础的主材。"
     },
-    // 2. MP(灵力)类 - 对应丹药：甘草片、凝露饮
+    // 2. MP(法力)类 - 对应丹药：甘草片、凝露饮
     {
         id: "herbs_002", name: "清心芽", type: "material", subType: "herbs", grade: 0, rarity: 1, value: 6,
         isPrimary: true,
         effects: { mp: 6 },
         properties: { qi: 25 },
-        desc: "生长在溪边阴凉处的嫩芽，能牵引微弱的五行灵力。"
+        desc: "生长在溪边阴凉处的嫩芽，能牵引微弱的五行法力。"
     },
     // 3. ATK(攻击)类 - 对应丹药：大力丸
     {
@@ -55,7 +55,7 @@ const herbs_primary_r1 = [
         isPrimary: true,
         effects: { mp: 7 },
         properties: { qiMax: 25 },
-        desc: "花瓣呈半透明状，能像吸铁石一样吸引周围飘散的游离灵力。"
+        desc: "花瓣呈半透明状，能像吸铁石一样吸引周围飘散的游离法力。"
     },
     // 8. Shen(悟性)类 - 对应丹药：安神丸
     {
@@ -75,13 +75,13 @@ const herbs_primary_r2 = [
         properties: { heal: 50 },
         desc: "花瓣深红如鲜血凝固，蕴含旺盛的生机，是精品疗伤药的核心。"
     },
-    // 2. MP(灵力)类 - 对应丹药：玉竹饮、麦冬颗粒
+    // 2. MP(法力)类 - 对应丹药：玉竹饮、麦冬颗粒
     {
         id: "herbs_010", name: "玉玲珑", type: "material", subType: "herbs", grade: 0, rarity: 2, value: 16,
         isPrimary: true,
         effects: { mp: 16 },
         properties: { qi: 50 },
-        desc: "生长在灵力汇聚之地的晶莹草药，能有效平复真气波动。"
+        desc: "生长在法力汇聚之地的晶莹草药，能有效平复真气波动。"
     },
     // 3. ATK(攻击)类 - 对应丹药：龙葵丹、剑气散
     {
@@ -121,7 +121,7 @@ const herbs_primary_r2 = [
         isPrimary: true,
         effects: { mp: 14 },
         properties: { qiMax: 50 },
-        desc: "果实内部中空且蕴含高浓度灵力，炼制后可有效拓宽修士经脉。"
+        desc: "果实内部中空且蕴含高浓度法力，炼制后可有效拓宽修士经脉。"
     },
     // 8. Shen(悟性)类 - 对应丹药：忘忧丹、慧心丸
     {
@@ -141,13 +141,13 @@ const herbs_primary_r3 = [
         properties: { heal: 110 },
         desc: "已初具人形的灵参，蕴含极强的土木生机，是高级疗伤药的不二之选。"
     },
-    // 2. MP(灵力)类 - 对应丹药：高级灵液、滋养丹田类
+    // 2. MP(法力)类 - 对应丹药：高级灵液、滋养丹田类
     {
         id: "herbs_018", name: "幻灵蓝草", type: "material", subType: "herbs", grade: 1, rarity: 3, value: 28,
         isPrimary: true,
         effects: { mp: 28 },
         properties: { qi: 110 },
-        desc: "叶片散发着淡淡的幽蓝光芒，能极大加速体内灵力的汇聚与转化。"
+        desc: "叶片散发着淡淡的幽蓝光芒，能极大加速体内法力的汇聚与转化。"
     },
     // 3. ATK(攻击)类 - 对应丹药：剑气散、雷元丹
     {
@@ -187,7 +187,7 @@ const herbs_primary_r3 = [
         isPrimary: true,
         effects: { mp: 26 },
         properties: { qiMax: 110 },
-        desc: "通体紫红，能扩充气海容量，让修士体内的灵力储备更上一层楼。"
+        desc: "通体紫红，能扩充气海容量，让修士体内的法力储备更上一层楼。"
     },
     // 8. Shen(悟性)类 - 对应丹药：紫烟丹、灵犀露
     {
@@ -207,13 +207,13 @@ const herbs_primary_r4 = [
         properties: { heal: 220 },
         desc: "参身如红玉，生有九叶，每一片叶子都蕴含着极其浓郁的生机，能重塑受损严重的肉身。"
     },
-    // 2. MP(灵力)类 - 对应丹药：化灵丹、归元灵液
+    // 2. MP(法力)类 - 对应丹药：化灵丹、归元灵液
     {
         id: "herbs_026", name: "幻心灵根", type: "material", subType: "herbs", grade: 1, rarity: 4, value: 52,
         isPrimary: true,
         effects: { mp: 52 },
         properties: { qi: 220 },
-        desc: "生于灵力浓郁的幻境之中，根茎半透明且闪烁紫芒，是炼制高阶灵力回复药的最佳主材。"
+        desc: "生于法力浓郁的幻境之中，根茎半透明且闪烁紫芒，是炼制高阶法力回复药的最佳主材。"
     },
     // 3. ATK(攻击)类 - 对应丹药：烈阳丹、破军散
     {
@@ -252,7 +252,7 @@ const herbs_primary_r4 = [
         isPrimary: true,
         effects: { mp: 55 },
         properties: { qiMax: 220 },
-        desc: "紫色的巨型灵芝，拥有极强的吞噬和转化灵力的能力，是扩充丹田灵力上限的稀有良药。"
+        desc: "紫色的巨型灵芝，拥有极强的吞噬和转化法力的能力，是扩充丹田法力上限的稀有良药。"
     },
     // 8. Shen(悟性)类 - 对应丹药：大衍神丹、通窍散
     {
@@ -272,13 +272,13 @@ const herbs_primary_r5 = [
         properties: { heal: 480 },
         desc: "传闻生于凤巢边缘，其叶如火，蕴含不灭之意，是炼制生死肉骨神药的核心。"
     },
-    // 2. MP(灵力)类 - 对应丹药：太虚归元丹、天仙玉露
+    // 2. MP(法力)类 - 对应丹药：太虚归元丹、天仙玉露
     {
         id: "herbs_034", name: "太虚幻灵花", type: "material", subType: "herbs", grade: 2, rarity: 5, value: 70,
         isPrimary: true,
         effects: { mp: 70 },
         properties: { qi: 480 },
-        desc: "绽放于时空缝隙间的奇花，花瓣呈半透明状，能瞬间引动方圆万里的灵力汇聚。"
+        desc: "绽放于时空缝隙间的奇花，花瓣呈半透明状，能瞬间引动方圆万里的法力汇聚。"
     },
     // 3. ATK(攻击)类 - 对应丹药：天崩地裂散、弑神丸
     {
@@ -318,7 +318,7 @@ const herbs_primary_r5 = [
         isPrimary: true,
         effects: { mp: 75 },
         properties: { qiMax: 480 },
-        desc: "蕴含混沌初开时的本源气息，能强行扩充修士的丹田界限，灵力如海，取之不尽。"
+        desc: "蕴含混沌初开时的本源气息，能强行扩充修士的丹田界限，法力如海，取之不尽。"
     },
     // 8. Shen(悟性)类 - 对应丹药：大道感悟丹、一眼万年散
     {
@@ -338,13 +338,13 @@ const herbs_primary_r6 = [
         properties: { heal: 950 },
         desc: "产自天地未开时的鸿蒙深处，其根须所化的汁液能让凋零的星辰重焕生机。"
     },
-    // 2. MP(灵力)类 - 对应丹药：诸天归元液、至尊化灵丹
+    // 2. MP(法力)类 - 对应丹药：诸天归元液、至尊化灵丹
     {
         id: "herbs_042", name: "诸天虚空华", type: "material", subType: "herbs", grade: 2, rarity: 6, value: 95,
         isPrimary: true,
         effects: { mp: 95 },
         properties: { qi: 950 },
-        desc: "扎根于无尽虚空之中，每一片花瓣都对应一个位面的灵力本源，能瞬间充盈仙元。"
+        desc: "扎根于无尽虚空之中，每一片花瓣都对应一个位面的法力本源，能瞬间充盈仙元。"
     },
     // 3. ATK(攻击)类 - 对应丹药：弑神崩天散、寂灭道丸
     {
@@ -384,7 +384,7 @@ const herbs_primary_r6 = [
         isPrimary: true,
         effects: { mp: 96 },
         properties: { qiMax: 950 },
-        desc: "蕴含混沌之力的种子，服之可在体内强行开辟出如同无极星空般浩瀚的灵力气海。"
+        desc: "蕴含混沌之力的种子，服之可在体内强行开辟出如同无极星空般浩瀚的法力气海。"
     },
     // 8. Shen(悟性)类 - 对应丹药：一眼万年感悟丹、大道本源丹
     {
@@ -411,7 +411,7 @@ const herbs_aux_r1_value = [
         isPrimary: false,
         effects: { mp: 5 },
         properties: { qi: 8 },
-        desc: "刚冒头的灵芝幼芽，蕴含的灵力虽不足以支撑成丹，但能有效补充行气药性。"
+        desc: "刚冒头的灵芝幼芽，蕴含的法力虽不足以支撑成丹，但能有效补充行气药性。"
     },
     // 3. 锋锐加成 - 补充 atk 药性
     {
@@ -479,13 +479,13 @@ const herbs_aux_r1_stable = [
         properties: { stabilizer: 8 },
         desc: "汁液粘稠的杂草，有助于将散乱的药粉凝结成丹。"
     },
-    // 11. 灵性稳定 - 对应高灵力配方
+    // 11. 灵性稳定 - 对应高法力配方
     {
         id: "herbs_059", name: "引灵皮", type: "material", subType: "herbs", grade: 0, rarity: 1, value: 4,
         isPrimary: false,
         effects: { mp: 4 },
         properties: { stabilizer: 5, qiMax: 5 },
-        desc: "某种灵木的内皮，能引导灵力均匀分布，防止药性局部过载。"
+        desc: "某种灵木的内皮，能引导法力均匀分布，防止药性局部过载。"
     },
     // 12. 纯净中和 - 减少杂质
     {
@@ -513,13 +513,13 @@ const herbs_aux_r1_guide = [
         properties: { catalyst: 5, heal: 5 },
         desc: "细如发丝的红色小草，能像引线一样将愈合药力导入血液。"
     },
-    // 15. 灵力引导 - 增强 qi 吸收
+    // 15. 法力引导 - 增强 qi 吸收
     {
         id: "herbs_063", name: "导灵须", type: "material", subType: "herbs", grade: 0, rarity: 1, value: 4,
         isPrimary: false,
         effects: { mp: 4 },
         properties: { catalyst: 5, qi: 5 },
-        desc: "水生植物的须根，擅长捕捉水中的灵力，辅助真气丹药的药效转化。"
+        desc: "水生植物的须根，擅长捕捉水中的法力，辅助真气丹药的药效转化。"
     },
     // 16. 强力引导 - 针对 Buff 类药性
     {
@@ -561,7 +561,7 @@ const herbs_aux_r2_value = [
         isPrimary: false,
         effects: { mp: 16 },
         properties: { qi: 22 },
-        desc: "绽放在灵力稀薄处的小花，天生擅长吸纳游离灵力并压缩。"
+        desc: "绽放在法力稀薄处的小花，天生擅长吸纳游离法力并压缩。"
     },
     // 3. 锋锐加成 - 补充 atk 药性
     {
@@ -603,7 +603,7 @@ const herbs_aux_r2_stable = [
         isPrimary: false,
         effects: { hp: 12 },
         properties: { stabilizer: 25 },
-        desc: "带有淡淡幽香的木片，能镇定炉内翻涌的灵力，是炼制精品丹药的常用稳定剂。"
+        desc: "带有淡淡幽香的木片，能镇定炉内翻涌的法力，是炼制精品丹药的常用稳定剂。"
     },
     // 8. 属性中和 - 兼顾稳定与真气调和
     {
@@ -653,7 +653,7 @@ const herbs_aux_r2_guide = [
         isPrimary: false,
         effects: { hp: 15 },
         properties: { catalyst: 25 },
-        desc: "经过灵力淬炼的树皮，能极大地引导药效向丹核凝聚，是精品药引。"
+        desc: "经过法力淬炼的树皮，能极大地引导药效向丹核凝聚，是精品药引。"
     },
     // 14. 强效血引 - 针对 heal 药性大幅增强转化
     {
@@ -711,7 +711,7 @@ const herbs_aux_r3_value = [
         isPrimary: false,
         effects: { mp: 26 },
         properties: { qi: 40 },
-        desc: "只有在灵力极度浓郁之地才会结出的花蕊，能大幅度提升丹药的灵力浓度。"
+        desc: "只有在法力极度浓郁之地才会结出的花蕊，能大幅度提升丹药的法力浓度。"
     },
     // 3. 锋锐加成 - 补充 atk 药性
     {
@@ -771,13 +771,13 @@ const herbs_aux_r3_stable = [
         properties: { stabilizer: 38 },
         desc: "生长在万年冰湖下的白藕，质地如玉，其冰冷的灵性是压制烈焰类药草的圣品。"
     },
-    // 10. 灵力锁固 - 防止药性在炼制中流失
+    // 10. 法力锁固 - 防止药性在炼制中流失
     {
         id: "herbs_094", name: "固灵苔", type: "material", subType: "herbs", grade: 1, rarity: 3, value: 24,
         isPrimary: false,
         effects: { mp: 24 },
         properties: { stabilizer: 40, qiMax: 10 },
-        desc: "一种能产生微型磁场的青苔，能将散溢的灵力药性强行束缚在丹胎之内。"
+        desc: "一种能产生微型磁场的青苔，能将散溢的法力药性强行束缚在丹胎之内。"
     },
     // 11. 神识固化 - 针对高级神识类丹药
     {
@@ -803,7 +803,7 @@ const herbs_aux_r3_guide = [
         isPrimary: false,
         effects: { mp: 25 },
         properties: { catalyst: 45 },
-        desc: "在灵力极度浓郁之地凝结的液体，能将普通草药的药性强行提升至灵级水平。"
+        desc: "在法力极度浓郁之地凝结的液体，能将普通草药的药性强行提升至灵级水平。"
     },
     // 14. 归元引导 - 针对 heal/mp 复合回复类丹药的药力归仓
     {
@@ -921,13 +921,13 @@ const herbs_aux_r4_stable = [
         properties: { stabilizer: 80 },
         desc: "在万年冰川下艰难生出的嫩芽，极寒的属性是中和如焚天果等烈性药材的最佳方案。"
     },
-    // 10. 灵力流转稳定 - 针对高灵力上限配方
+    // 10. 法力流转稳定 - 针对高法力上限配方
     {
         id: "herbs_106", name: "玉露导灵浆", type: "material", subType: "herbs", grade: 1, rarity: 4, value: 52,
         isPrimary: false,
         effects: { mp: 52 },
         properties: { stabilizer: 88, qiMax: 25 },
-        desc: "质地如凝脂的液体，能将狂暴的灵力梳理通顺，使炼制的丹药药力更平和。"
+        desc: "质地如凝脂的液体，能将狂暴的法力梳理通顺，使炼制的丹药药力更平和。"
     },
     // 11. 识海中和稳定 - 针对极品悟性丹药
     {
@@ -953,7 +953,7 @@ const herbs_aux_r4_guide = [
         isPrimary: false,
         effects: { hp: 20, mp: 30 },
         properties: { catalyst: 95 },
-        desc: "取自生长在灵力充裕之地千年的灵木外皮，是炼制极品丹药的万能药引。"
+        desc: "取自生长在法力充裕之地千年的灵木外皮，是炼制极品丹药的万能药引。"
     },
     // 14. 涅槃生机引 - 针对 heal 药性，实现“枯木逢春”般的转化
     {
@@ -963,13 +963,13 @@ const herbs_aux_r4_guide = [
         properties: { catalyst: 75, heal: 30 },
         desc: "如同跳动的心脏血管般的红色花蕊，能将一切愈合药力瞬间导入受损根基。"
     },
-    // 15. 太虚聚灵引 - 针对 qi 药性，极致提升灵力恢复速度
+    // 15. 太虚聚灵引 - 针对 qi 药性，极致提升法力恢复速度
     {
         id: "herbs_111", name: "虚空捕灵蔓", type: "material", subType: "herbs", grade: 1, rarity: 4, value: 52,
         isPrimary: false,
         effects: { mp: 52 },
         properties: { catalyst: 75, qi: 30 },
-        desc: "长在空间裂缝边缘的藤蔓，能强行抓取四周灵力注入丹中，大幅增强回灵效果。"
+        desc: "长在空间裂缝边缘的藤蔓，能强行抓取四周法力注入丹中，大幅增强回灵效果。"
     },
     // 16. 伐毛洗髓引 - 针对 ATK/DEF 强化属性的深度引导
     {
@@ -1011,7 +1011,7 @@ const herbs_aux_r5_value = [
         isPrimary: false,
         effects: { mp: 72 },
         properties: { qi: 160 },
-        desc: "芝伞呈现五彩光晕，天生具有强行提纯天地灵力的能力，是仙级灵药的极佳配角。"
+        desc: "芝伞呈现五彩光晕，天生具有强行提纯天地法力的能力，是仙级灵药的极佳配角。"
     },
     // 3. 锋锐加成 - 补充 atk 药性
     {
@@ -1071,13 +1071,13 @@ const herbs_aux_r5_stable = [
         properties: { stabilizer: 180 },
         desc: "虽名为丝，实为一种极寒植物的纤维，能瞬间冷却任何暴乱的仙火药性。"
     },
-    // 10. 灵力界限稳定 - 针对开天、造化类大容量丹药
+    // 10. 法力界限稳定 - 针对开天、造化类大容量丹药
     {
         id: "herbs_124", name: "天河引路砂", type: "material", subType: "herbs", grade: 2, rarity: 5, value: 72,
         isPrimary: false,
         effects: { mp: 72 },
         properties: { stabilizer: 175, qiMax: 60 },
-        desc: "闪烁着星光的砂质草药，能引导浩瀚灵力按特定轨迹流转，防止灵压炸炉。"
+        desc: "闪烁着星光的砂质草药，能引导浩瀚法力按特定轨迹流转，防止灵压炸炉。"
     },
     // 11. 神识领域压制 - 针对顶级悟性/神识丹药
     {
@@ -1119,7 +1119,7 @@ const herbs_aux_r5_guide = [
         isPrimary: false,
         effects: { mp: 72 },
         properties: { catalyst: 160, qi: 80 },
-        desc: "生长在天脉交汇处的怪异弯钩，擅长钩织散乱的灵力法则，使其归于丹元。"
+        desc: "生长在天脉交汇处的怪异弯钩，擅长钩织散乱的法力法则，使其归于丹元。"
     },
     // 16. 圣体拓宽引 - 针对 ATK/DEF/JING 等肉身法则的深度引导
     {
@@ -1156,7 +1156,7 @@ const herbs_aux_r6 = [
     {
         id: "herbs_134", name: "天道灵韵芯", type: "material", subType: "herbs", grade: 2, rarity: 6, value: 95,
         isPrimary: false, effects: { mp: 95 }, properties: { qi: 400 },
-        desc: "在大道交汇处孕育的晶体，能为丹药注入源源不断的诸天灵力。"
+        desc: "在大道交汇处孕育的晶体，能为丹药注入源源不断的诸天法力。"
     },
     {
         id: "herbs_135", name: "灭世劫雷灰", type: "material", subType: "herbs", grade: 2, rarity: 6, value: 85,
@@ -1225,7 +1225,7 @@ const herbs_aux_r6 = [
     {
         id: "herbs_147", name: "诸天牵引蔓", type: "material", subType: "herbs", grade: 2, rarity: 6, value: 92,
         isPrimary: false, effects: { mp: 92 }, properties: { catalyst: 380, qi: 200 },
-        desc: "伸入诸天万界的藤蔓，能够跨位面牵引仙元灵力入丹。"
+        desc: "伸入诸天万界的藤蔓，能够跨位面牵引仙元法力入丹。"
     },
     {
         id: "herbs_148", name: "圣道穿透刺", type: "material", subType: "herbs", grade: 2, rarity: 6, value: 85,

@@ -1,5 +1,6 @@
 // js/data/data_icon.js
 //console.log("加载 图标配置");
+// 辅助函数：生成图标 HTML
 
 const ITEM_ICONS = {
     // 默认类型图标 (兜底用)
@@ -173,14 +174,21 @@ function getItemIcon(item) {
     }
 
     // 2. 根据中文名字匹配 (遍历映射表)
-    if (item.name) {
-        for (let i = 0; i < NAME_KEYWORD_MAP.length; i++) {
-            const entry = NAME_KEYWORD_MAP[i];
-            // 只要名字里包含这个字，就返回对应图标
-            if (item.name.includes(entry.key)) {
-                return entry.icon;
-            }
-        }
+    // if (item.name) {
+    //     for (let i = 0; i < NAME_KEYWORD_MAP.length; i++) {
+    //         const entry = NAME_KEYWORD_MAP[i];
+    //         // 只要名字里包含这个字，就返回对应图标
+    //         if (item.name.includes(entry.key)) {
+    //             return entry.icon;
+    //         }
+    //     }
+    // }
+    if (item.id=="spiritItem_001"){
+        return "👝";
+    }
+
+    if(item.subType=="herbs" || item.subType=="草药"){
+        return "🌿";
     }
     if(item.subType=="fish"){
         return "🐟️";

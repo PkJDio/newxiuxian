@@ -228,9 +228,9 @@ const UtilsItem = {
                 player.status.mp = Math.min(maxMp, (player.status.mp || 0) + eff.mp);
 
                 if(eff.mp > 0){
-                    msg += `灵力回复${eff.mp} `;
+                    msg += `法力回复${eff.mp} `;
                 } else {
-                    msg += `灵力减少${Math.abs(eff.mp)} `;
+                    msg += `法力减少${Math.abs(eff.mp)} `;
                 }
                 applied = true;
             }

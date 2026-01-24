@@ -34,7 +34,7 @@ const pills_r1_batch_1 = [
         id: "pills_r1_005", name: "回气散",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 1, value: 75,
         effects: { mp: 75 },
         formula: { primary: "herbs_002", requirements: { qi: 30, stabilizer: 8 } },
-        desc: "针对灵力枯竭设计的药散，回复速度较快。"
+        desc: "针对法力枯竭设计的药散，回复速度较快。"
     },
     {
         id: "pills_r1_006", name: "纳灵丸",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 1, value: 100,
@@ -155,7 +155,7 @@ const pills_r1_batch_3 = [
         id: "pills_r1_022", name: "聚气散",canDo: true   , subType: "buff", type: "pill", grade: 0, rarity: 1, value: 40,
         effects: { buff: { attr: 'qi', val: 1, days: 2 } },
         formula: { primary: "herbs_007", requirements: { qiMax: 20, stabilizer: 6 } },
-        desc: "引导外界灵力在丹田汇聚，略微扩充灵力容量。"
+        desc: "引导外界法力在丹田汇聚，略微扩充法力容量。"
     },
     {
         id: "pills_r1_023", name: "汇能丸",canDo: true   , subType: "buff", type: "pill", grade: 0, rarity: 1, value: 120,
@@ -238,7 +238,7 @@ const pills_r2_batch_1 = [
         id: "pills_r2_004", name: "玉竹饮",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 2, value: 150,
         effects: { mp: 150 },
         formula: { primary: "herbs_010", requirements: { qi: 40, stabilizer: 15 } },
-        desc: "口感清甜，入腹后能感觉到一丝丝灵力回流至丹田。"
+        desc: "口感清甜，入腹后能感觉到一丝丝法力回流至丹田。"
     },
     {
         id: "pills_r2_005", name: "麦冬含露",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 2, value: 175,
@@ -250,7 +250,7 @@ const pills_r2_batch_1 = [
         id: "pills_r2_006", name: "滋养丹田丸",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 2, value: 200,
         effects: { mp: 200 },
         formula: { primary: "herbs_010", requirements: { qi: 80, stabilizer: 25 } },
-        desc: "精品回气丹药，能稳固丹田，提升灵力的回复速率。"
+        desc: "精品回气丹药，能稳固丹田，提升法力的回复速率。"
     },
 
     // === Reply: HP & MP 复合 (3条) ===
@@ -264,7 +264,7 @@ const pills_r2_batch_1 = [
         id: "pills_r2_008", name: "当归养血丸",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 2, value: 220,
         effects: { hp: 110, mp: 110 },
         formula: { primary: "herbs_009", requirements: { heal: 45, qi: 45, stabilizer: 25 } },
-        desc: "活血养髓，兼顾肉身治愈与灵力运行的精品平衡丹药。"
+        desc: "活血养髓，兼顾肉身治愈与法力运行的精品平衡丹药。"
     },
     {
         id: "pills_r2_009", name: "六味地黄丸",canDo: true   , subType: "reply", type: "pill", grade: 0, rarity: 2, value: 280,
@@ -370,7 +370,7 @@ const pills_r2_batch_3 = [
         id: "pills_r2_023", name: "地脉丹",canDo: true   , subType: "buff", type: "pill", grade: 0, rarity: 2, value: 800,
         effects: { buff: { attr: 'qi', val: 8, days: 5 } },
         formula: { primary: "herbs_015", requirements: { qiMax: 60, stabilizer: 25 } },
-        desc: "采集地脉灵力浓缩而成，厚德载物，气海大增。临时能量+8(5天)。"
+        desc: "采集地脉法力浓缩而成，厚德载物，气海大增。临时能量+8(5天)。"
     },
     {
         id: "pills_r2_024", name: "浩瀚丹",canDo: true   , subType: "buff", type: "pill", grade: 0, rarity: 2, value: 1680,
@@ -446,7 +446,7 @@ const pills_r3_batch_1 = [
         id: "pills_r3_004", name: "聚灵液",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 3, value: 250,
         effects: { mp: 250 },
         formula: { primary: "herbs_018", requirements: { qi: 100, stabilizer: 35 } },
-        desc: "灵力极度浓缩的液体，服用后瞬间填补丹田空虚。"
+        desc: "法力极度浓缩的液体，服用后瞬间填补丹田空虚。"
     },
     {
         id: "pills_r3_005", name: "清心归元散",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 3, value: 275,
@@ -458,7 +458,7 @@ const pills_r3_batch_1 = [
         id: "pills_r3_006", name: "太玄化灵丹",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 3, value: 300,
         effects: { mp: 300 },
         formula: { primary: "herbs_018", requirements: { qi: 180, stabilizer: 55 } },
-        desc: "珍品级回气丹，其蕴含的灵力纯度极高，无损根基。"
+        desc: "珍品级回气丹，其蕴含的法力纯度极高，无损根基。"
     },
 
     // === Reply: HP & MP 复合 (3条) ===
@@ -478,7 +478,7 @@ const pills_r3_batch_1 = [
         id: "pills_r3_009", name: "回春归命丹",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 3, value: 500,
         effects: { hp: 250, mp: 250 },
         formula: { primary: "herbs_017", requirements: { heal: 150, qi: 150, stabilizer: 80 } },
-        desc: "R3复合之巅，枯木逢春之效，气血灵力共振再生。"
+        desc: "R3复合之巅，枯木逢春之效，气血法力共振再生。"
     },
 
     // === Buff: ATK 攻击 (第1条) ===
@@ -578,13 +578,13 @@ const pills_r3_batch_3 = [
         id: "pills_r3_023", name: "地脉归元丹",canDo: true   , subType: "buff", type: "pill", grade: 1, rarity: 3, value: 1200,
         effects: { buff: { attr: 'qi', val: 12, days: 5 } },
         formula: { primary: "herbs_023", requirements: { qiMax: 140, stabilizer: 60 } },
-        desc: "沟通地脉灵力，极大提升修士的真气储备上限。临时能量+12(5天)。"
+        desc: "沟通地脉法力，极大提升修士的真气储备上限。临时能量+12(5天)。"
     },
     {
         id: "pills_r3_024", name: "天河灌顶丹",canDo: true   , subType: "buff", type: "pill", grade: 1, rarity: 3, value: 2100,
         effects: { buff: { attr: 'qi', val: 15, days: 7 } },
         formula: { primary: "herbs_023", requirements: { qiMax: 180, stabilizer: 75 } },
-        desc: "R3能量巅峰，气海如天河倒灌，灵力澎湃。临时能量+15(7天)。"
+        desc: "R3能量巅峰，气海如天河倒灌，法力澎湃。临时能量+15(7天)。"
     },
 
     // === Buff: Shen 悟性 (3条) ===
@@ -657,16 +657,16 @@ const pills_r4_batch_1 = [
         desc: "针对高阶法术消耗设计，药力如灵泉喷涌。"
     },
     {
-        id: "pills_r4_005", name: "归元灵力丹",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 4, value: 525,
+        id: "pills_r4_005", name: "归元法力丹",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 4, value: 525,
         effects: { mp: 525 },
         formula: { primary: "herbs_026", requirements: { qi: 300, stabilizer: 100 } },
-        desc: "极大增强丹田对外界灵力的亲和力，迅速回补真元。"
+        desc: "极大增强丹田对外界法力的亲和力，迅速回补真元。"
     },
     {
         id: "pills_r4_006", name: "太虚归元丹",canDo: true   , subType: "reply", type: "pill", grade: 1, rarity: 4, value: 600,
         effects: { mp: 600 },
         formula: { primary: "herbs_026", requirements: { qi: 400, stabilizer: 120 } },
-        desc: "极品回气丹药，服用后灵力如江河入海，无穷无尽。"
+        desc: "极品回气丹药，服用后法力如江河入海，无穷无尽。"
     },
 
     // === Reply: HP & MP 复合 (3条) ===
@@ -1076,13 +1076,13 @@ const pills_r6_batch_1 = [
         id: "pills_r6_005", name: "诸天归元饮",canDo: true   , subType: "reply", type: "pill", grade: 2, rarity: 6, value: 928,
         effects: { mp: 925 },
         formula: { primary: "herbs_042", requirements: { qi: 1400, stabilizer: 400 } },
-        desc: "灵力跨越位面归仓，不仅回补真气，更能扩充临时灵力上限。"
+        desc: "法力跨越位面归仓，不仅回补真气，更能扩充临时法力上限。"
     },
     {
         id: "pills_r6_006", name: "至尊化灵神丹",canDo: true   , subType: "reply", type: "pill", grade: 2, rarity: 6, value: 1000,
         effects: { mp: 1000 },
         formula: { primary: "herbs_042", requirements: { qi: 1800, stabilizer: 500 } },
-        desc: "回气类的究极存在，灵力充盈至溢出，形成护体灵域。"
+        desc: "回气类的究极存在，法力充盈至溢出，形成护体灵域。"
     },
 
     // === Reply: HP & MP 复合 (3条) ===
@@ -1202,7 +1202,7 @@ const pills_r6_batch_3 = [
         id: "pills_r6_023", name: "万象造化归一丹",canDo: true   , subType: "buff", type: "pill", grade: 2, rarity: 6, value: 22500,
         effects: { buff: { attr: 'qi', val: 45, days: 25 } },
         formula: { primary: "herbs_047", requirements: { qiMax: 1500, stabilizer: 550 } },
-        desc: "世间万象灵力皆可在此丹引导下归于本源气海。临时能量+45(25天)。"
+        desc: "世间万象法力皆可在此丹引导下归于本源气海。临时能量+45(25天)。"
     },
     {
         id: "pills_r6_024", name: "太虚本源神丹",canDo: true   , subType: "buff", type: "pill", grade: 2, rarity: 6, value: 450000,

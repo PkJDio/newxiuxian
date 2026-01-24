@@ -12,6 +12,7 @@ function initGameDB() {
         typeof materials !== "undefined" ? materials : [], typeof foodMaterial !== "undefined" ? foodMaterial : [], typeof foods !== "undefined" ? foods : [], typeof fishes !== "undefined" ? fishes : [],
         typeof weapons !== "undefined" ? weapons : [], typeof head !== "undefined" ? head : [], typeof body !== "undefined" ? body : [], typeof feet !== "undefined" ? feet : [],
         typeof books !== "undefined" ? books : [], typeof pills !== "undefined" ? pills : [], typeof herbs !== "undefined" ? herbs : [], typeof mounts !== "undefined" ? mounts : [], typeof fishingRods !== "undefined" ? fishingRods : [],
+        typeof spiritItems !== "undefined" ? spiritItems : []
     ];
     GAME_DB.items = []; itemSources.forEach(arr => GAME_DB.items = GAME_DB.items.concat(arr));
     const equipItemSources = [ typeof weapons !== "undefined" ? weapons : [], typeof head !== "undefined" ? head : [], typeof body !== "undefined" ? body : [], typeof feet !== "undefined" ? feet : [], typeof fishingRods !== "undefined" ? fishingRods : [] ];
@@ -201,7 +202,7 @@ function recalcStats() {
     // 1. 生命上限: 精 * 10
     add('hpMax', totalJing * 10, "转化(精x10)");
 
-    // 2. 灵力上限: 气 * 5
+    // 2. 法力上限: 气 * 5
     add('mpMax', totalQi * 5, "转化(气x5)");
 
     // 3. 基础防御拆分
@@ -221,7 +222,7 @@ function recalcStats() {
     add('phy_atk', baseAtk, "转化(神x1)");
     add('mag_atk', baseAtk, "转化(神x1)");
 
-    // 【修改】法术攻击额外加成：气 * 1.0 (灵力总量加持)
+    // 【修改】法术攻击额外加成：气 * 1.0 (法力总量加持)
     // 之前是0.2，现在改为1.0以匹配大后期数值体验
     const qiMagAtk = totalQi * 1;
     if (qiMagAtk > 0) {

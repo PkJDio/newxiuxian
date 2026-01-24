@@ -238,14 +238,14 @@ const InnShop = {
             // 添加 3 天的高级 Buff
             const buffData = {
                 name: "神光焕发", attr: "全属性", val: "+20%", days: 3, source: "上等客房",
-                desc: "在天字号房美美睡了一觉，只觉神清气爽，灵力充沛。",
+                desc: "在天字号房美美睡了一觉，只觉神清气爽，法力充沛。",
                 effects: { atkPct: 0.20, defPct: 0.20, spdPct: 0.20 }
             };
             if (window.addBuff) window.addBuff('buff_inn_rest', buffData);
         } else {
             // --- 普通客房待遇 ---
             player.status.hunger = Math.min(player.derived.hungerMax, player.status.hunger + 200); // 回复200点，不超过上限
-            // 普通客房仅回复少量生命/灵力（可选，这里设置为回满或按比例，通常普通房间也能睡饱）
+            // 普通客房仅回复少量生命/法力（可选，这里设置为回满或按比例，通常普通房间也能睡饱）
             player.status.hp = player.derived.hpMax;
         }
 
@@ -305,11 +305,11 @@ const InnShop = {
         let targetTotalQty = Math.round(randForTotal * (config.maxTotal - config.minTotal + 1)) + config.minTotal;
         targetTotalQty = Math.max(targetTotalQty, targetTypeCount);
 
-        const rarityWeights = { 1: 100, 2: 60, 3: 30, 4: 10, 5: 2, 6: 0.5 };
+        const rarityWeights = { 1: 1000, 2: 600, 3: 300, 4: 100, 5: 0, 6: 0 };
 
         const scoredItems = validItems.map(item => {
             const r = item.rarity || 1;
-            const weight = rarityWeights[r] || 10;
+            const weight = rarityWeights[r] || 0;
             const randVal = window.getSeededRandom(shopKey, item.id, "rank");
             const w = weight > 0 ? weight : 1;
             const rSafe = randVal > 0 ? randVal : 0.0001;
@@ -362,7 +362,7 @@ const InnShop = {
 
             let effectTags = '';
             if (item.effects) {
-                const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "灵力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
+                const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神" };
                 const tags = [];
 
                 Object.entries(item.effects).forEach(([key, val]) => {
@@ -565,7 +565,7 @@ const InnShop = {
         if (sellableItems.length === 0) {
             listHtml = `<div style="padding:40px; text-align:center; color:#999; font-size: 18px;">你的包袱里空空如也，没什么可卖的。</div>`;
         } else {
-            const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "灵力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
+            const ATTR_MAPPING = { hunger: "饱食", hp: "生命", mp: "法力", hp_max: "生命上限", atk: "攻击", def: "防御", speed: "速度", jing: "精", qi: "气", shen: "神", toxicity: "毒性", catchRate: "钓鱼" };
             const makeTag = (label, val, isBuff = false) => {
                 let valStr = val > 0 ? `+${val}` : `${val}`;
                 let style = isBuff ? "background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb;" : "background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;";

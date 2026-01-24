@@ -662,7 +662,7 @@ const body_r1_batch5 = [
         durability: 25,
         effects: { phy_def: 4, mag_def: 11, speed: 1, hp_max: 32, mag_atk: 6, qi: 1, shen: 1 },
 
-        desc: "【布甲】内部的灵力丝线多处断裂，无法再发挥法宝的威力，但这层破灵布依然比普通麻布更能抗咒。"
+        desc: "【布甲】内部的法力丝线多处断裂，无法再发挥法宝的威力，但这层破灵布依然比普通麻布更能抗咒。"
     }
 ];
 // Batch 6: Rarity 2 - Body Armor (Plate / 板甲)
@@ -832,7 +832,7 @@ const body_r2_batch2 = [
         durability: 45,
         effects: { phy_def: 3, mag_def: 9, speed: -2, hp_max: 100, phy_atk: 1 },
 
-        desc: "【重甲】表面覆盖着一层灰绿色的铜锈，这是一件勉强还能使用的古旧青铜器，对灵力流动有阻滞感。"
+        desc: "【重甲】表面覆盖着一层灰绿色的铜锈，这是一件勉强还能使用的古旧青铜器，对法力流动有阻滞感。"
     },
 
     // --- [Mid Tier] R2 重甲 (总防: 31 | HP: 131 | 速: -4 | 攻: 2 | 售价: 5121) ---
@@ -958,7 +958,7 @@ const body_r2_batch3 = [
         durability: 40,
         effects: { phy_def: 2, mag_def: 7, speed: 0, hp_max: 80 },
 
-        desc: "【轻甲】这种小兽皮曾因灵力而光鲜，如今已变得灰扑扑的，好在基本的法术阻隔能力还在。"
+        desc: "【轻甲】这种小兽皮曾因法力而光鲜，如今已变得灰扑扑的，好在基本的法术阻隔能力还在。"
     },
 
     // --- [Mid Tier] R2 轻甲 (总防: 24 | HP: 105 | 速: 0 | 售价: 4050) ---
@@ -1084,7 +1084,7 @@ const body_r2_batch4 = [
         durability: 35,
         effects: { phy_def: 2, mag_def: 5, speed: 1, hp_max: 60, phy_atk: 6, crit: 2 },
 
-        desc: "【皮甲】前任主人留下的蛇皮猎衣，鳞片由于磨损不再光滑，但其特有的韧性仍能化解部分灵力冲击。"
+        desc: "【皮甲】前任主人留下的蛇皮猎衣，鳞片由于磨损不再光滑，但其特有的韧性仍能化解部分法力冲击。"
     },
 
     // --- [Mid Tier] R2 皮甲 (总防: 18 | HP: 79 | 速: 1 | 攻: 9 | 暴: 3 | 售价: 5022) ---
@@ -1210,7 +1210,7 @@ const body_r2_batch5 = [
         durability: 25,
         effects: { phy_def: 1, mag_def: 4, speed: 1, hp_max: 40, mag_atk: 6, qi: 1, shen: 1 },
 
-        desc: "【布甲】洗得有些发白的法衣，虽然其上原本的阵法已经磨损严重，但对灵力的亲和度依然尚可。"
+        desc: "【布甲】洗得有些发白的法衣，虽然其上原本的阵法已经磨损严重，但对法力的亲和度依然尚可。"
     },
 
     // --- [Mid Tier] R2 布甲 (总防: 12 | HP: 53 | 速: 2 | 攻: 9 | 属性: 3 | 售价: 3564) ---
@@ -1251,7 +1251,7 @@ const body_r2_batch5 = [
         durability: 35,
         effects: { phy_def: 3, mag_def: 9, speed: 2, hp_max: 53, mag_atk: 9, qi: 1, shen: 2 },
 
-        desc: "【布甲】曾经在某些小型祭祀中使用的布甲，由于色彩褪去而显得陈旧，但表面附着的灵力残余依旧有效。"
+        desc: "【布甲】曾经在某些小型祭祀中使用的布甲，由于色彩褪去而显得陈旧，但表面附着的法力残余依旧有效。"
     },
 
     // --- [High Tier] R2 布甲 (总防: 20 | HP: 65 | 速: 2 | 攻: 12 | 属性: 4 | 售价: 4950) ---
@@ -1714,7 +1714,7 @@ const body_r3_batch4 = [
         durability: 65,
         effects: { phy_def: 3, mag_def: 7, speed: 1, hp_max: 90, phy_atk: 9, crit: 3 },
         req: { shen: 10 },
-        desc: "【皮甲】由柔软的熟革缝制而成，活动极其灵便，内层涂有抗魔油脂，适合在复杂灵力环境下巡哨。"
+        desc: "【皮甲】由柔软的熟革缝制而成，活动极其灵便，内层涂有抗魔油脂，适合在复杂法力环境下巡哨。"
     },
 
     // --- [Mid Tier] R3 皮甲 (总防: 24 | HP: 118 | 速: 1 | 攻: 13 | 暴: 4 | 售价: 10476) ---
@@ -1840,7 +1840,7 @@ const body_r3_batch5 = [
         durability: 45,
         effects: { phy_def: 2, mag_def: 5, speed: 2, hp_max: 60, mag_atk: 9, qi: 2, shen: 2 },
         req: { shen: 10 },
-        desc: "【布甲】基层法阵看守人员穿戴的简易法衣，布料带有微弱的斥水性，能阻挡轻微的灵力侵蚀。"
+        desc: "【布甲】基层法阵看守人员穿戴的简易法衣，布料带有微弱的斥水性，能阻挡轻微的法力侵蚀。"
     },
 
     // --- [Mid Tier] R3 布甲 (总防: 16 | HP: 79 | 速: 2 | 攻: 14 | 属性: 4 | 售价: 7533) ---
@@ -2470,7 +2470,7 @@ const body_r4_batch5 = [
         durability: 60,
         effects: { phy_def: 3, mag_def: 8, speed: 2, hp_max: 80, mag_atk: 12, qi: 2, shen: 2 },
         req: { shen: 18 },
-        desc: "【布甲】由静心草纤维混编而成，能助穿戴者排除杂念，丝滑的布料对外界灵力冲击有天然的卸力效果。"
+        desc: "【布甲】由静心草纤维混编而成，能助穿戴者排除杂念，丝滑的布料对外界法力冲击有天然的卸力效果。"
     },
 
     // --- [Mid Tier] R4 布甲 (总防: 23 | HP: 105 | 速: 3 | 攻: 18 | 属性: 6 | 售价: 15480) ---
@@ -2552,7 +2552,7 @@ const body_r4_batch5 = [
         durability: 120,
         effects: { phy_def: 9, mag_def: 21, speed: 4, hp_max: 130, mag_atk: 24, qi: 4, shen: 4 },
         req: { shen: 32 },
-        desc: "【布甲】不染尘埃。特殊的织法让这件锦袍几乎完全免疫低阶法术，是追求灵力纯净的高阶修行者梦幻装备。"
+        desc: "【布甲】不染尘埃。特殊的织法让这件锦袍几乎完全免疫低阶法术，是追求法力纯净的高阶修行者梦幻装备。"
     }
 ];
 // Batch 21: Rarity 5 - Body Armor (Plate / 板甲)
@@ -2637,7 +2637,7 @@ const body_r5_batch1 = [
         durability: 250,
         effects: { phy_def: 26, mag_def: 60, speed: -15, hp_max: 391, phy_atk: 11 },
         req: { jing: 40 },
-        desc: "【板甲】采集极寒之地的玄阴之气淬火，呈现深紫色。能够吸收周遭暴乱的灵力，化作自身的护体罡气。"
+        desc: "【板甲】采集极寒之地的玄阴之气淬火，呈现深紫色。能够吸收周遭暴乱的法力，化作自身的护体罡气。"
     },
 
     // --- [High Tier] R5 板甲 (总防: 126 | HP: 488 | 速: -20 | 攻: 15 | 售价: 27945) ---
@@ -2722,7 +2722,7 @@ const body_r5_batch2 = [
         durability: 180,
         effects: { phy_def: 12, mag_def: 27, speed: -5, hp_max: 250, phy_atk: 4 },
         req: { jing: 25 },
-        desc: "【重甲】以稀有乌金打造，这种材质天生对灵力具有极强的排斥性，是宗门护法抵御外道术法的神兵。"
+        desc: "【重甲】以稀有乌金打造，这种材质天生对法力具有极强的排斥性，是宗门护法抵御外道术法的神兵。"
     },
 
     // --- [Mid Tier] R5 重甲 (总防: 65 | HP: 328 | 速: -7 | 攻: 6 | 售价: 29160) ---
@@ -2791,7 +2791,7 @@ const body_r5_batch2 = [
         durability: 280,
         effects: { phy_def: 46, mag_def: 45, speed: -10, hp_max: 406, phy_atk: 8 },
         req: { jing: 40 },
-        desc: "【重甲】传闻融合了天地混元之气，甲身能自行抵消周遭的灵力波动，其全面的防护性能已臻化境。"
+        desc: "【重甲】传闻融合了天地混元之气，甲身能自行抵消周遭的法力波动，其全面的防护性能已臻化境。"
     },
     {
         id: "body_198",
@@ -2804,7 +2804,7 @@ const body_r5_batch2 = [
         durability: 280,
         effects: { phy_def: 27, mag_def: 64, speed: -10, hp_max: 406, phy_atk: 8 },
         req: { jing: 40 },
-        desc: "【重甲】甲面布满了极其细微的自然裂纹，那是材料由于极高的灵力亲和性而产生的异变，能将一切攻来的法术吸入虚无。"
+        desc: "【重甲】甲面布满了极其细微的自然裂纹，那是材料由于极高的法力亲和性而产生的异变，能将一切攻来的法术吸入虚无。"
     }
 ];
 // Batch 23: Rarity 5 - Body Armor (Light / 轻甲)
@@ -2889,7 +2889,7 @@ const body_r5_batch3 = [
         durability: 240,
         effects: { phy_def: 12, mag_def: 38, speed: 0, hp_max: 263 },
         req: { shen: 35 },
-        desc: "【轻甲】取瑶光星垂之灵气浸染，衣衫不沾尘埃。其神工鬼斧的灵力脉络能轻易弹开复杂的元气轰击。"
+        desc: "【轻甲】取瑶光星垂之灵气浸染，衣衫不沾尘埃。其神工鬼斧的法力脉络能轻易弹开复杂的元气轰击。"
     },
 
     // --- [High Tier] R5 轻甲 (总防: 70 | HP: 325 | 速: 0 | 售价: 30375) ---
@@ -3182,7 +3182,7 @@ const body_r5_batch5 = [
         durability: 200,
         effects: { phy_def: 13, mag_def: 32, speed: 5, hp_max: 163, mag_atk: 30, qi: 5, shen: 5 },
         req: { shen: 55 },
-        desc: "【布甲】袍面绣有归墟深渊的符文，能将一切攻向身躯的灵力攻击吸入寂灭虚无。作为布甲之终极神器，被世人所向往。"
+        desc: "【布甲】袍面绣有归墟深渊的符文，能将一切攻向身躯的法力攻击吸入寂灭虚无。作为布甲之终极神器，被世人所向往。"
     }
 ];
 // Batch 26: Rarity 6 - Body Armor (Mythic / 神话)
@@ -3419,7 +3419,7 @@ const body_r6_batch2 = [
         durability: 999,
         effects: { phy_def: 26, mag_def: 78, speed: -12, hp_max: 488, phy_atk: 9 },
         req: { jing: 65 },
-        desc: "【重甲】从荒古战场遗迹中挖掘出的孤品。此甲残留着上古英魂的不甘意志，能自动吞噬袭来的灵力波动，化为自身防御。"
+        desc: "【重甲】从荒古战场遗迹中挖掘出的孤品。此甲残留着上古英魂的不甘意志，能自动吞噬袭来的法力波动，化为自身防御。"
     },
     {
         id: "body_243",
@@ -3517,7 +3517,7 @@ const body_r6_batch3 = [
         durability: 550,
         effects: { phy_def: 15, mag_def: 46, speed: 0, hp_max: 315 },
         req: { shen: 55 },
-        desc: "【轻甲】采集灵界深渊底层的晶皮混纺灵羽制成。其表面具有完美的灵力折射层，能让禁咒级的术法在此羽衣面前失去准头。"
+        desc: "【轻甲】采集灵界深渊底层的晶皮混纺灵羽制成。其表面具有完美的法力折射层，能让禁咒级的术法在此羽衣面前失去准头。"
     },
     {
         id: "body_250",
@@ -3767,7 +3767,7 @@ const body_r6_batch5 = [
         durability: 500,
         effects: { phy_def: 7, mag_def: 23, speed: 5, hp_max: 158, mag_atk: 27, qi: 4, shen: 5 },
         req: { shen: 75 },
-        desc: "【布甲】末世寂灭教的最后神迹。锦面刻满了崩坏的因果符文，能将一切攻向身躯的灵力强行拖入寂灭。"
+        desc: "【布甲】末世寂灭教的最后神迹。锦面刻满了崩坏的因果符文，能将一切攻向身躯的法力强行拖入寂灭。"
     },
 
     // --- [High Tier] (总防: 40 | HP: 195 | 速: 6 | 攻: 36 | 属性: 12 | 售价: 37800) ---

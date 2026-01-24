@@ -1924,7 +1924,7 @@ const foods = [
         rarity: 4,
         obtain: "shop",
         effects: { buff: { attr: "qi", val: 3, days: 9 }, hunger: 25, hp: 15 },
-        desc: "御膳房特制濡豚，肉质软糯，汤汁浓郁，食用后真气充盈，灵力大增。",
+        desc: "御膳房特制濡豚，肉质软糯，汤汁浓郁，食用后真气充盈，法力大增。",
         value: 262,
     },
     {
@@ -2111,7 +2111,7 @@ const foods = [
         rarity: 4,
         obtain: "shop",
         effects: { buff: { attr: "qi", val: 4, days: 7 }, hunger: 24, hp: 16 },
-        desc: "宫廷御用驼峰，富含油脂，口感丰腴，食用后真气澎湃，灵力大增。",
+        desc: "宫廷御用驼峰，富含油脂，口感丰腴，食用后真气澎湃，法力大增。",
         value: 256,
     },
     {
@@ -2320,7 +2320,7 @@ const foods = [
         rarity: 4,
         obtain: "shop",
         effects: { buff: { attr: "qi", val: 4, days: 8 }, hunger: 27, hp: 19 },
-        desc: "百草与龙井茶烹虾，虾肉鲜嫩，茶香四溢，食用后真气充盈，灵力深厚。",
+        desc: "百草与龙井茶烹虾，虾肉鲜嫩，茶香四溢，食用后真气充盈，法力深厚。",
         value: 270,
     },
     {
@@ -2353,7 +2353,7 @@ const foods = [
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "atk", val: 3, days: 8 }, hunger: 29, hp: 23 },
-        desc: "仙家麒麟肉，肉质细嫩，蕴含灵力，食用后攻击力大增，仿佛有神助。",
+        desc: "仙家麒麟肉，肉质细嫩，蕴含法力，食用后攻击力大增，仿佛有神助。",
         value: 296,
     },
     {
@@ -2364,7 +2364,7 @@ const foods = [
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "def", val: 5, days: 11 }, hunger: 29, hp: 20 },
-        desc: "乾坤琼浆玉液，晶莹剔透，灵力逼人，饮用后防御大增，金刚不坏。",
+        desc: "乾坤琼浆玉液，晶莹剔透，法力逼人，饮用后防御大增，金刚不坏。",
         value: 337,
     },
     {
@@ -2397,7 +2397,7 @@ const foods = [
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "jing", val: 3, days: 10 }, hunger: 34, hp: 22 },
-        desc: "天山采集的玉露琼浆，清甜可口，灵力四溢，饮用后精力充沛，修为精进。",
+        desc: "天山采集的玉露琼浆，清甜可口，法力四溢，饮用后精力充沛，修为精进。",
         value: 316,
     },
     {
@@ -2434,7 +2434,7 @@ const foods = [
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "qi", val: 3, days: 10 }, hunger: 32, hp: 15 },
-        desc: "万年一度的瑶池盛宴，汇聚天地灵力，食用后真气澎湃，功力大增。",
+        desc: "万年一度的瑶池盛宴，汇聚天地法力，食用后真气澎湃，功力大增。",
         value: 307,
     },
     {
@@ -2445,23 +2445,23 @@ const foods = [
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "def", val: 5, days: 8 }, hunger: 30, hp: 24 },
-        desc: "天山琼浆玉液，口感醇厚，灵力逼人，饮用后防御力大幅提升，坚不可摧。",
+        desc: "天山琼浆玉液，口感醇厚，法力逼人，饮用后防御力大幅提升，坚不可摧。",
         value: 318,
     },
     {
         id: "foods_199",
-        name: "灵力雪蛤",
+        name: "法力雪蛤",
         type: "food",
         grade: 0,
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "qi", val: 5, days: 11 }, hunger: 32, hp: 17 },
-        desc: "极寒之地灵力雪蛤，滋补效果极佳，食用后真气如潮，绵延不绝。",
+        desc: "极寒之地法力雪蛤，滋补效果极佳，食用后真气如潮，绵延不绝。",
         value: 337,
     },
     {
         id: "foods_200",
-        name: "灵力龙肝",
+        name: "法力龙肝",
         type: "food",
         grade: 0,
         rarity: 5,
@@ -2471,7 +2471,7 @@ const foods = [
             hunger: 28,
             hp: 22,
         },
-        desc: "蕴含灵力的龙肝，同时提升攻击与真气，效果霸道，食用后实力大增。",
+        desc: "蕴含法力的龙肝，同时提升攻击与真气，效果霸道，食用后实力大增。",
         value: 386,
     },
     {
@@ -2572,13 +2572,13 @@ const foods = [
     },
     {
         id: "foods_209",
-        name: "灵力仙桃",
+        name: "法力仙桃",
         type: "food",
         grade: 0,
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "jing", val: 4, days: 11 }, hunger: 28, hp: 22 },
-        desc: "灵力仙桃，果肉多汁，甜入心扉，食用后精力充沛，修为大进。",
+        desc: "法力仙桃，果肉多汁，甜入心扉，食用后精力充沛，修为大进。",
         value: 328,
     },
     {
@@ -2679,13 +2679,13 @@ const foods = [
     },
     {
         id: "foods_218",
-        name: "灵力蛟龙筋",
+        name: "法力蛟龙筋",
         type: "food",
         grade: 0,
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "speed", val: 4, days: 10 }, hunger: 31, hp: 16 },
-        desc: "灵力蛟龙筋，富含灵力，口感劲道，食用后速度提升，身轻如燕。",
+        desc: "法力蛟龙筋，富含法力，口感劲道，食用后速度提升，身轻如燕。",
         value: 317,
     },
     {
@@ -2701,7 +2701,7 @@ const foods = [
     },
     {
         id: "foods_220",
-        name: "万年灵力雪蛤",
+        name: "万年法力雪蛤",
         type: "food",
         grade: 0,
         rarity: 5,
@@ -2711,7 +2711,7 @@ const foods = [
             hunger: 28,
             hp: 20,
         },
-        desc: "万年灵力雪蛤，集天地精华，食用后精神与神力同时暴涨，修仙至宝。",
+        desc: "万年法力雪蛤，集天地精华，食用后精神与神力同时暴涨，修仙至宝。",
         value: 394,
     },
     {
@@ -2756,18 +2756,18 @@ const foods = [
             hunger: 35,
             hp: 15,
         },
-        desc: "万年蓬莱仙桃，果大味美，灵力逼人，食用后精神与神力大幅提升。",
+        desc: "万年蓬莱仙桃，果大味美，法力逼人，食用后精神与神力大幅提升。",
         value: 360,
     },
     {
         id: "foods_224",
-        name: "九转灵力龙肝",
+        name: "九转法力龙肝",
         type: "food",
         grade: 0,
         rarity: 5,
         obtain: "shop",
         effects: { buff: { attr: "atk", val: 5, days: 12 }, hunger: 30, hp: 25 },
-        desc: "九转灵力龙肝，经过特殊炮制，口感鲜嫩，食用后攻击力持久强劲。",
+        desc: "九转法力龙肝，经过特殊炮制，口感鲜嫩，食用后攻击力持久强劲。",
         value: 351,
     },
     {
@@ -3115,7 +3115,7 @@ const foods = [
             hunger: 20,
             hp: 20,
         },
-        desc: "长生洪荒天露，汇聚天地灵力，饮用后真气与精神达到圆满，举手投足皆含天地之威。",
+        desc: "长生洪荒天露，汇聚天地法力，饮用后真气与精神达到圆满，举手投足皆含天地之威。",
         value: 452,
     },
     {
@@ -3142,7 +3142,7 @@ const foods = [
         obtain: "wild",
         value: 94,
         effects: { hunger: 10, mp: 80},
-        desc: "【奇遇】山中灵猴采集百果在树洞中自然发酵而成的绝世佳酿，千金难求。酒液粘稠如琥珀，异香扑鼻，饮之虽不解饱，但能大幅滋养灵力，令人神清气爽。",
+        desc: "【奇遇】山中灵猴采集百果在树洞中自然发酵而成的绝世佳酿，千金难求。酒液粘稠如琥珀，异香扑鼻，饮之虽不解饱，但能大幅滋养法力，令人神清气爽。",
     }
 
 ];

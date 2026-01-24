@@ -147,6 +147,8 @@ const UtilsSkill = {
         const skillData = player.skills[skillId];
         skillData.exp += expGain;
 
+        this._tryComprehendZhaoshi(skillId);
+
         // 获取全篇物品名称及颜色 (用于日志)
         let fullItemName = item.name;
         let rarityColor = "#333";
@@ -332,6 +334,92 @@ const UtilsSkill = {
                 }
             }, 500);
         }
+    },
+
+    /**
+     * 【新增】内部方法：尝试从功法中领悟招式
+     * 触发条件：功法 ID 以 _full 结尾
+     * 概率公式：当前熟练度 / 1000
+     */
+    _tryComprehendZhaoshi: function(skillId) {
+        // 1. 校验是否为全篇功法
+        if (!skillId.endsWith("_full")) return;
+
+        const skillData = player.skills[skillId];
+        if (!skillData) return;
+
+        // 2. 计算领悟概率 (exp / 1000)
+        const probability = (skillData.exp || 0) / 1000;
+
+        // 3. 随机判定
+        if (Math.random() < probability) {
+            // 4. 从招式库中查找匹配该功法的招式
+            // 注意：这里使用 data_zhaoshi.js 中的 all_zhaoshi 全量表
+            if (typeof all_zhaoshi === 'undefined') {
+                console.warn("[UtilsSkill] 招式库 all_zhaoshi 未加载");
+                return;
+            }
+
+            const targetMove = all_zhaoshi.find(m => m.link_book_id === skillId);
+            if (!targetMove) return;
+
+            // 5. 检查并写入存档
+            if (!player.zhaoshi_list) player.zhaoshi_list = {};
+
+            // 如果还没领悟过这个招式
+            if (!player.zhaoshi_list[targetMove.id]) {
+                // 将整个招式对象克隆并存入
+                player.zhaoshi_list[targetMove.id] = JSON.parse(JSON.stringify(targetMove));
+
+                // 6. UI 提示与日志
+                const msg = `✨ 灵光一闪！你在修炼中领悟了招式：【${targetMove.name}】！`;
+
+                if (window.showToast) window.showToast(msg, 5000);
+                if (window.LogManager) {
+                    window.LogManager.add(`[领悟] ${msg}`);
+                } else {
+                    console.log(`[领悟] ${msg}`);
+                }
+
+                // 领悟新招式后强制存档一次
+                if (window.saveGame) window.saveGame();
+            }
+        }
+    },
+    /**
+     * 【新增】存档补偿检查：自动领悟熟练度达标的招式
+     * 规则：熟练度 >= 600 且 拥有对应 link_book_id
+     * 返回值：是否有新领悟（用于判断是否需要保存存档）
+     */
+    checkSkillComprehension: function() {
+        if (!player.skills || typeof all_zhaoshi === 'undefined') return false;
+
+        let hasNewChange = false;
+        // 确保 zhaoshi_list 是对象结构以支持 ID 作为 Key
+        if (!player.zhaoshi_list || Array.isArray(player.zhaoshi_list)) {
+            player.zhaoshi_list = {};
+        }
+
+        for (let skillId in player.skills) {
+            const skillData = player.skills[skillId];
+
+            // 检查熟练度是否达标 (>= 600)
+            if (skillData.exp >= 600) {
+                // 在招式库中寻找对应功法的招式
+                const move = all_zhaoshi.find(m => m.link_book_id === skillId);
+
+                // 如果存在对应招式，且玩家尚未领悟
+                if (move && !player.zhaoshi_list[move.id]) {
+                    // 以招式 ID 为 Key，保存整个招式对象
+                    player.zhaoshi_list[move.id] = JSON.parse(JSON.stringify(move));
+                    hasNewChange = true;
+
+                    console.log(`[系统补丁] 检测到功法 ${skillId} 熟练度达标，补发招式：${move.name}`);
+                    LogManager.add(`再入世，你突然顿悟了招式：${move.name}`);
+                }
+            }
+        }
+        return hasNewChange;
     },
 
     forgetSkill: function(skillId) {

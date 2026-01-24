@@ -87,3 +87,11 @@
 #tutorial_box::after {
     /* 这里可以加一个小三角指向高亮区域，稍微复杂点，先略过 */
 }
+
+
+img.emoji {
+    height: 1.2em;
+    width: 1.2em;
+    margin: 0 .05em 0 .1em;
+    vertical-align: -0.1em;
+}
