@@ -7,6 +7,7 @@ const spiritItems = [
         id: "spiritItem_001",
         name: "灵气袋",
         type: "spiritItem",
+        subType: "container",
         rarity: 1,
         spiritValue: 10, // 物品本身的灵气价值（非使用效果）
         price: 1000,      // 商店售价建议值

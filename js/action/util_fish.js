@@ -223,7 +223,7 @@ const UtilFish = {
         if (curSat < this.CONFIG.COST_SATIETY) return { error: true, msg: "饱食度不足" };
         if (curFat + this.CONFIG.COST_FATIGUE > maxFat) return { error: true, msg: "精神困顿" };
 
-        p.status.hunger = Math.max(0, curSat - this.CONFIG.COST_SATIETY);
+        UtilsAttribute.consumeHunger(this.CONFIG.COST_SATIETY);
         p.status.fatigue = Math.min(maxFat, curFat + this.CONFIG.COST_FATIGUE);
         if (window.TimeSystem) window.TimeSystem.passTime(this.CONFIG.COST_TIME);
 

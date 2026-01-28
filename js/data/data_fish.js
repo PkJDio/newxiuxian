@@ -813,3 +813,6 @@ const fishes = [{id: "fishes_base_01", name: "草鱼", type: "fish", rarity: 1, 
     {id: "fishes_bd_03", name: "北地狗鱼", type: "fish", rarity: 2, obtain: "fish", seasons: [2], region: "r_n", effects: {hunger: 60}, desc: "【北地秋】十分贪食。", value: 20,},
     {id: "fishes_bd_04", name: "史氏鲟", type: "fish", rarity: 4, obtain: "fish", seasons: [3], region: "r_n", effects: {hunger: 90, buff: {attr: 'atk', val: 5, days: 7}}, desc: "【北地冬】身披骨板。", value: 120,},
     {id: "fishes_bd_05", name: "冷水甜虾", type: "fish", rarity: 2, obtain: "fish", seasons: [0, 1, 2, 3], region: "r_n", effects: {hunger: 15, hp: 5}, desc: "【北地】甘甜可口。", value: 10,}];
+
+
+window.fishes=fishes;

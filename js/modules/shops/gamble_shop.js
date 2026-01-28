@@ -454,8 +454,7 @@ const GambleShop = {
         }
 
         if (this.currentGame) {
-            window.player.money -= betAmount;
-
+            UtilsMoney.removeMoney(betAmount);
             this.addMoneyLog('player', '本局押注', -betAmount);
             this.addMoneyLog('opponent', '本局对赌', -betAmount);
 

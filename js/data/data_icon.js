@@ -21,7 +21,7 @@ const ITEM_ICONS = {
     mount: "🐎",         // 坐骑
     fishing_rod: "🎣",   // 钓具
     fish: "🐟",
-
+    spiritItem: "💎",
     herbs:"🌿",
     // 属性图标 (供 UI 使用)
     money: "💰",

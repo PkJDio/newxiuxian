@@ -236,7 +236,7 @@ const AlchemyShop = {
     handleBuy: function(index) {
         const entry = this.currentStock[index];
         if (!entry || entry.qty <= 0 || player.money < entry.price) return;
-        player.money -= entry.price; entry.qty--;
+        UtilsMoney.removeMoney(entry.price); entry.qty--;
         if (window.UtilsAdd?.addItem) window.UtilsAdd.addItem(entry.id, 1);
         if (entry.shopKey) {
             if (!player.shopLogs) player.shopLogs = {};
@@ -260,7 +260,7 @@ const AlchemyShop = {
         }
 
         const totalCost = buyQty * entry.price;
-        player.money -= totalCost;
+        UtilsMoney.removeMoney(totalCost);
         entry.qty -= buyQty;
 
         if (window.UtilsAdd && window.UtilsAdd.addItem) {
@@ -369,7 +369,7 @@ const AlchemyShop = {
             return;
         }
 
-        player.money += price;
+        UtilsMoney.addMoney(price);
 
         if (window.UtilsItem) {
             window.UtilsItem.removeItem(sid, 1);
@@ -387,7 +387,7 @@ const AlchemyShop = {
 
         const count = item.count || 1;
         const totalPrice = unitPrice * count;
-        player.money += totalPrice;
+        UtilsMoney.addMoney(totalPrice);
 
         if (window.UtilsItem) {
             window.UtilsItem.discardMultipleItems([sid]);

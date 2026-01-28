@@ -217,7 +217,7 @@ const InnShop = {
         }
 
         // 3. 执行扣费
-        player.money -= cost;
+        UtilsMoney.removeMoney(cost);
 
 
         //  调用时间系统
@@ -487,7 +487,7 @@ const InnShop = {
         if (!entry || entry.qty <= 0) return;
 
         if (player.money >= entry.price) {
-            player.money -= entry.price;
+            UtilsMoney.removeMoney(entry.price);
             entry.qty--;
 
             if (window.UtilsAdd && window.UtilsAdd.addItem) {
@@ -523,7 +523,7 @@ const InnShop = {
 
         if (buyQty <= 0) { window.showToast("银两不足！"); return; }
 
-        player.money -= (buyQty * entry.price);
+        UtilsMoney.removeMoney(buyQty * entry.price);
         entry.qty -= buyQty;
 
         if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
@@ -671,7 +671,7 @@ const InnShop = {
             return;
         }
 
-        player.money += price;
+        UtilsMoney.addMoney(price);
         // 调用 UtilsItem 移除 1 个
         if (window.UtilsItem) {
             window.UtilsItem.removeItem(sid, 1);
@@ -692,7 +692,7 @@ const InnShop = {
 
         const count = item.count || 1;
         const totalPrice = unitPrice * count;
-        player.money += totalPrice;
+        UtilsMoney.addMoney(totalPrice);
 
         // 调用 UtilsItem 移除整个堆叠
         if (window.UtilsItem) {

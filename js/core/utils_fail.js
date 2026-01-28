@@ -8,7 +8,7 @@ const UtilsFail = {
 
             // 1. 扣钱逻辑 (立即执行，不用等弹窗)
             const lostMoney = Math.floor((window.player.money || 0) / 2);
-            window.player.money -= lostMoney;
+            UtilsMoney.removeMoney(lostMoney);
             console.log(`[UtilsFail] 玩家钱财变动：损失 ${lostMoney}, 剩余 ${window.player.money}`);
 
             if (window.LogManager) {

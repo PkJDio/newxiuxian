@@ -51,7 +51,7 @@ function doRest() {
         const actualHeal = actualHungerCost / 2;
 
         // 执行变更
-        status.hunger -= actualHungerCost;
+        UtilsAttribute.consumeHunger(actualHungerCost);
         status.hp += actualHeal;
 
         // 浮点数安全与溢出处理

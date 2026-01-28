@@ -531,7 +531,7 @@ class ShengGuanTuGame {
         let title="", msg="";
 
         if (isDraw) {
-            window.player.money += B;
+            UtilsMoney.addMoney(B);
             if (window.UtilsGamble) UtilsGamble.updateMoney(townId, 'shengguantu', this.opponent.id, 0, B, 3);
             title = "🤝 同 朝 为 官 🤝";
             msg = `官阶相当 (${pObj.name})，平局退款`;
@@ -539,7 +539,8 @@ class ShengGuanTuGame {
             let theoryProfit = Math.floor(B * multi);
             realProfit = Math.min(theoryProfit, npcCurrentBank);
             resultMoneyChange = realProfit;
-            window.player.money += (B + realProfit);
+
+            UtilsMoney.addMoney(B + realProfit)
             if (window.UtilsGamble) UtilsGamble.updateMoney(townId, 'shengguantu', this.opponent.id, realProfit, 0, 2);
             title = "✨ 平 步 青 云 ✨";
             msg = `官居【${pObj.name}】，力压【${eObj.name}】 (倍率 x${multi})`;
@@ -572,7 +573,8 @@ class ShengGuanTuGame {
 
     startNewRound(bet) {
         if (window.player.money < bet) return;
-        window.player.money -= bet;
+
+        UtilsMoney.removeMoney(bet)
         if (window.UtilsGamble) UtilsGamble.updateMoney(this.ui.currentTown.id, 'shengguantu', this.opponent.id, 0, bet, 0);
         this.ui.addMoneyLog('player', '本局押注', -bet);
 

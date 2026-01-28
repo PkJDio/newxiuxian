@@ -169,6 +169,7 @@ const TooltipManager = {
     },
 
     /* ================= 2. 普通物品详情 (支持拆分属性与装备需求 + 词条显示) ================= */
+    /* ================= 2. 普通物品详情 (支持拆分属性与装备需求 + 词条显示) ================= */
     showItem: function(e, sid, instance = null, mode = 'normal') {
         if (mode === 'gallery') { this.showGalleryItem(e, sid); return; }
         this._init();
@@ -182,7 +183,13 @@ const TooltipManager = {
         const color = rarityConf.color || '#ccc';
         const typeName = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING[item.type] : item.type;
 
-        let html = `<div class="tt_header" style="color:${color}">${item.name}</div>`;
+        // 【修改点1】标题增加强化等级 (+X)
+        let levelStr = "";
+        if (item.level && item.level > 0) {
+            levelStr = ` <span style="color:#ffd740; font-weight:bold; margin-left:4px;">+${item.level}</span>`;
+        }
+
+        let html = `<div class="tt_header" style="color:${color}">${item.name}${levelStr}</div>`;
         html += `<div class="tt_sub">${typeName || '未知'} · ${item.rarity}品</div>`;
 
         // --- 1. 属性效果显示 (只要不为0都显示) ---
@@ -194,7 +201,7 @@ const TooltipManager = {
                 if (typeof val === 'number' && val !== 0) {
                     if (k === 'max_skill_level') continue;
 
-                    let label = ATTR_MAPPING[k] || k;
+                    let label = (typeof ATTR_MAPPING !== 'undefined' ? ATTR_MAPPING[k] : k) || k;
                     let c = '#fff';
 
                     if (k === 'phy_atk') { label = '⚔️ 物理攻击'; c = '#ffa726'; }
@@ -223,7 +230,7 @@ const TooltipManager = {
                     const bAttrs = String(val.attr).split('_');
                     const bVals = String(val.val).split('_');
                     bAttrs.forEach((attrKey, idx) => {
-                        const label = ATTR_MAPPING[attrKey] || attrKey;
+                        const label = (typeof ATTR_MAPPING !== 'undefined' ? ATTR_MAPPING[attrKey] : attrKey) || attrKey;
                         const currentVal = bVals[idx] !== undefined ? bVals[idx] : bVals[0];
                         const dVal = parseInt(currentVal) > 0 ? `+${currentVal}` : currentVal;
                         statsHtml += `<div class="tt_row"><span style="color:#ba68c8;">💫 临时${label}</span><span style="color:#ba68c8; font-weight:bold;">${dVal}</span></div>`;
@@ -231,20 +238,32 @@ const TooltipManager = {
                 }
             }
         }
+
+        // 【修改点2】追加强化属性 (Ex Stats)
+        // 使用高亮色 #ffd740 (金) 以适应黑色背景
+        if (item.level > 0) {
+            const exColor = "#ffd740";
+
+            // 武器强化
+            if (item.exPhyAtk) statsHtml += `<div class="tt_row"><span style="color:#bbb;">🔨 强化攻击</span><span style="color:${exColor}; font-weight:bold;">+${item.exPhyAtk}</span></div>`;
+            if (item.exMagAtk) statsHtml += `<div class="tt_row"><span style="color:#bbb;">⚡ 强化法攻</span><span style="color:${exColor}; font-weight:bold;">+${item.exMagAtk}</span></div>`;
+
+            // 防具强化
+            if (item.exPhyDef) statsHtml += `<div class="tt_row"><span style="color:#bbb;">🛡️ 强化防御</span><span style="color:${exColor}; font-weight:bold;">+${item.exPhyDef}</span></div>`;
+            if (item.exMagDef) statsHtml += `<div class="tt_row"><span style="color:#bbb;">✨ 强化法防</span><span style="color:${exColor}; font-weight:bold;">+${item.exMagDef}</span></div>`;
+        }
+
         if (statsHtml) html += `<div style="margin:8px 0; padding-bottom:8px; border-bottom:1px dashed #444;">${statsHtml}</div>`;
 
-        // --- 1.5. 【新增】装备词条显示 (仅对装备有效) ---
-        // 确保 ENTRY_DB 已加载
+        // --- 1.5. 装备词条显示 (仅对装备有效) ---
         const equipTypes = ['weapon', 'head', 'body', 'feet', 'fishing_rod'];
         if (equipTypes.includes(item.type) && item.entries && item.entries.length > 0 && window.ENTRY_DB) {
             let entriesHtml = '';
             item.entries.forEach(entry => {
                 const def = window.ENTRY_DB[entry.id];
-                if (!def) return; // 数据库中找不到则跳过
+                if (!def) return;
 
                 let valStr = "";
-                // 如果词条有数值（如吸血15%），且描述里有 {0} 占位符，可以替换
-                // 这里简单处理：如果有 val，就显示在名字后面
                 if (entry.val !== undefined) {
                     valStr = `<span style="color:#ffeb3b; font-weight:bold; margin-left:4px;">${entry.val > 0 ? '+' : ''}${entry.val}${def.unit || ''}</span>`;
                 }
@@ -272,7 +291,7 @@ const TooltipManager = {
                 const targetVal = item.req[rK];
                 const myVal = curStats[rK] || 0;
                 const isMet = myVal >= targetVal;
-                const label = ATTR_MAPPING[rK] || rK;
+                const label = (typeof ATTR_MAPPING !== 'undefined' ? ATTR_MAPPING[rK] : rK) || rK;
                 const dotColor = isMet ? '#4caf50' : '#f44336';
                 reqHtml += `<div class="tt_row" style="padding-left:10px; font-size:15px;">
                 <span><i style="display:inline-block; width:6px; height:6px; border-radius:50%; background:${dotColor}; margin-right:6px;"></i>${label}</span>
@@ -757,9 +776,84 @@ const TooltipManager = {
         // --- 修复核心：使用 setProperty 配合 important 确保宽度生效 ---
         this.el.style.setProperty('width', '350px', 'important');
         this.el.style.setProperty('max-width', '400px', 'important');
-
+        console.log("content",content)
         this.el.innerHTML = content;
         this._show();
+    },
+    // -------------------------------------------------------
+    // 【新增】商店招式悬浮窗 (深色背景优化版)
+    // -------------------------------------------------------
+    showShopZhaoShi: function(e, skillId) {
+        if (!skillId) return;
+        this._init();
+
+        // 1. 从全局招式库查找
+        let skill = null;
+        if (window.all_zhaoshi) {
+            skill = window.all_zhaoshi.find(s => s.id === skillId);
+        }
+
+        if (!skill) return;
+
+        // 2. 渲染逻辑 (配色优化：适配黑色背景)
+        const rarityColor = (window.RARITY_CONFIG && window.RARITY_CONFIG[skill.rarity]) ? window.RARITY_CONFIG[skill.rarity].color : '#e0e0e0';
+        const typeName = skill.subType || "未知";
+
+        let html = `
+            <div style="padding:5px;">
+                <div style="font-size:16px; font-weight:bold; color:${rarityColor}; margin-bottom:5px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:5px;">
+                    ${skill.name} <span style="font-size:12px; color:#aaa; font-weight:normal; float:right;">R${skill.rarity}</span>
+                </div>
+                
+                <div style="font-size:13px; color:#ccc; margin-bottom:8px; line-height:1.4;">${skill.desc || "暂无描述"}</div>
+                
+                <div style="background:rgba(255,255,255,0.08); padding:6px; border-radius:4px; margin-bottom:5px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+                        <span style="color:#999;">类型</span> <span style="color:#fff;">${typeName}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
+                        <span style="color:#999;">消耗</span> <span style="color:#64b5f6;">${skill.mpCost||0} 内力</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px;">
+                        <span style="color:#999;">冷却</span> <span style="color:#ef5350;">${skill.cd||0} 回合</span>
+                    </div>
+                </div>
+        `;
+
+        // 伤害预览
+        if (skill.dmgVal > 0) {
+            const dmgType = skill.damageType === 'phy' ? '物理' : '法术';
+            const formulaStr = skill.formulaType === '百分比' ? `${(skill.dmgVal*100).toFixed(0)}%` : `${skill.dmgVal}`;
+            // 浅橙色
+            html += `
+                <div style="font-size:12px; color:#ffb74d; margin-top:5px; border-top:1px dashed rgba(255,255,255,0.2); padding-top:4px;">
+                    ⚡ 效果: ${formulaStr} ${dmgType}伤害
+                </div>
+            `;
+        }
+
+        // 持续时间
+        if (skill.duration) {
+            html += `
+                <div style="font-size:12px; color:#bbb; margin-top:2px;">
+                    ⏳ 持续: ${skill.duration} 回合
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+
+        // 样式应用
+        this.el.className = 'ink_tooltip';
+        this.el.style.width = '240px';
+        // 确保背景是深色 (如果CSS没写死的话，这里强制一下更稳)
+        this.el.style.background = 'rgba(0, 0, 0, 0.9)';
+        this.el.style.border = '1px solid #444';
+        this.el.style.color = '#e0e0e0';
+
+        this.el.innerHTML = html;
+        this._show();
+        this._move(e);
     },
     /* ================= 8. 【新增】战斗Buff详情悬浮窗 ================= */
     showBuffDetail: function(e, encodedData) {
@@ -810,6 +904,34 @@ const TooltipManager = {
         this.el.innerHTML = html;
         this._show();
     },
+    /* ================= 9. 【新增】凡尘道途选项悬浮窗 ================= */
+    showMortalPath: function(e, name, desc, rewardText, isSelected) {
+        this._init();
+        this._mouseX = e.clientX;
+        this._mouseY = e.clientY;
+
+        const color = isSelected ? '#ffd700' : '#aaa';
+        const stateText = isSelected ? '【已选道途】' : '【未选分支】';
+        const bgStyle = isSelected ? 'background:rgba(255, 215, 0, 0.1); border:1px solid #ffd700;' : 'background:rgba(0,0,0,0.3); border:1px dashed #666;';
+
+        let html = `
+            <div class="tt_header" style="color:${color}; border-bottom:1px solid ${isSelected?'#ffd700':'#555'}; padding-bottom:4px; margin-bottom:8px;">
+                ${name} <span style="font-size:12px; margin-left:8px; color:${isSelected?'#ffb74d':'#777'}">${stateText}</span>
+            </div>
+            
+            <div style="font-size:14px; color:#ccc; margin-bottom:10px; line-height:1.5;">${desc}</div>
+            
+            <div style="padding:8px; border-radius:4px; ${bgStyle}">
+                <div style="font-size:12px; color:#bbb; margin-bottom:4px;">道途奖励:</div>
+                <div style="color:${isSelected?'#4caf50':'#888'}; font-weight:bold;">${rewardText}</div>
+            </div>
+        `;
+
+        this.el.className = 'ink_tooltip';
+        this.el.style.width = '280px';
+        this.el.innerHTML = html;
+        this._show();
+    },
 };
 
 window.TooltipManager = TooltipManager;
@@ -826,8 +948,11 @@ window.showEntryTooltip = TooltipManager.showEntry.bind(TooltipManager);
 // 【新增】料理配方悬浮窗
 window.showRecipeTooltip = TooltipManager.showRecipe.bind(TooltipManager);
 
+window.showMortalPathTooltip = TooltipManager.showMortalPath.bind(TooltipManager);
+
 window.showZhaoshiTooltip = TooltipManager.showZhaoshi.bind(TooltipManager);
 window.showBuffTooltip = TooltipManager.showBuffDetail.bind(TooltipManager);
+window.showShopZhaoShi = TooltipManager.showShopZhaoShi.bind(TooltipManager);
 document.addEventListener('mousemove', (e) => {
     TooltipManager._move(e);
 }, { passive: true });

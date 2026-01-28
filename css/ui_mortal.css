@@ -1,0 +1,633 @@
+/* 水墨风容器主题 */
+.modal_mortal_theme {
+    /* 核心背景与边框 */
+    background:
+            radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95), rgba(240,240,230,1)),
+            repeating-linear-gradient(45deg, #fdfbf7 0, #fdfbf7 2px, #f4f1ea 2px, #f4f1ea 4px);
+    border: 5px double #4a4a4a !important;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    color: #2c2c2c;
+    font-family: "KaiTi", "SimKai", serif;
+    padding: 0 !important;
+    overflow: hidden;
+
+    /* --- 修改点：主窗口尺寸加大 --- */
+    width: 900px !important;    /* 宽度加大 */
+    max-width: 95vw !important; /* 自适应最大宽度 */
+    min-height: 650px !important; /* 高度加大 */
+}
+
+/* 布局结构适配 */
+.mortal-layout {
+    padding: 30px; /* 内边距加大 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+    box-sizing: border-box; /* 确保padding不撑破容器 */
+}
+
+/* 1. 顶部境界 */
+.mortal-header-section {
+    text-align: center;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 15px;
+}
+
+.mortal-rank-badge {
+    display: inline-block;
+    width: 150px;  /* 加大 */
+    height: 150px; /* 加大 */
+    margin-bottom: 15px;
+    border-radius: 50%;
+    /* 水墨晕染圆圈 */
+    background: radial-gradient(circle at 30% 30%, #444, #000);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+}
+
+.mortal-rank-badge::after {
+    content: "";
+    position: absolute;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border: 2px dashed rgba(0,0,0,0.2);
+    border-radius: 50%;
+    animation: spin 20s linear infinite;
+}
+
+.mortal-rank-name {
+    font-size: 36px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px #000;
+}
+
+.bottleneck-tag {
+    color: #ff5252;
+    font-size: 14px;
+    vertical-align: super;
+}
+
+.mortal-rank-desc {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+/* 2. 进度条 */
+.mortal-progress-wrap {
+    padding: 0 10px;
+}
+
+.mortal-bar-bg {
+    height: 24px;
+    background: #e0e0e0;
+    border-radius: 12px;
+    border: 1px solid #999;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.mortal-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #607d8b, #263238);
+    width: 0%;
+    transition: width 0.5s ease-out;
+    border-right: 1px solid #fff;
+}
+
+.mortal-bar-text {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    line-height: 22px;
+    text-align: center;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    font-size: 12px;
+}
+
+/* 3. Buff 列表 */
+.mortal-buff-section {
+    flex: 1;
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    border-left: 4px solid #333;
+    padding-left: 8px;
+}
+
+.mortal-buff-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.buff-tag {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+}
+
+.no-buff {
+    color: #999;
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+    padding: 20px 0;
+}
+
+/* 4. 按钮区 */
+.mortal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.ink-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    font-family: "KaiTi";
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #d7ccc8;
+    color: #3e2723;
+    box-shadow: 0 4px 0 #a1887f;
+    border-radius: 4px;
+}
+
+.ink-btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.ink-btn.btn-breakthrough {
+    background: #333;
+    color: #ffd700;
+    box-shadow: 0 4px 0 #000;
+}
+
+.ink-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 5. 游戏层 */
+.mortal-game-area {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    cursor: none; /* 隐藏鼠标 */
+}
+
+.game-hud {
+    position: absolute;
+    top: 10px; left: 0; right: 0;
+    display: flex;
+    justify-content: space-around;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    z-index: 12;
+}
+
+.game-bubbles-container {
+    flex: 1;
+    position: relative;
+}
+
+.g-bubble {
+    position: absolute;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2);
+}
+
+.b-blue { background: #81d4fa; border: 1px solid #0288d1; }
+.b-red { background: #ef5350; border: 1px solid #c62828; }
+
+.game-player-shadow {
+    position: absolute;
+    bottom: 20px;
+    width: 40px; height: 10px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    filter: blur(2px);
+    transition: left 0.1s linear;
+}
+
+/* --- 新增：食物选择专用弹窗 --- */
+.modal_food_select {
+    width: 380px !important;
+    height: 550px !important; /* 调整高度以适应布局 */
+    padding: 0 !important;
+    background: #fdfbf7; /* 纸张白 */
+    border: 3px double #5d4037;
+    border-radius: 6px;
+    font-family: 'KaiTi', "SimKai", serif;
+    overflow: hidden;
+    color: #3e2723;
+}
+
+.mortal-food-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 比例 1:5:1 */
+.food-progress-section {
+    flex: 1; /* 1/7 */
+    background: #efebe9;
+    border-bottom: 1px solid #d7ccc8;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.food-grid-section {
+    flex: 5; /* 5/7 */
+    background: #fff;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 8px;
+}
+
+.food-action-section {
+    flex: 1; /* 1/7 */
+    background: #efebe9;
+    border-top: 1px solid #d7ccc8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 进度条样式 */
+.food-bar-bg {
+    height: 24px;
+    background: #d7ccc8;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #a1887f;
+}
+
+.food-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #ffb74d, #ff9800);
+    width: 0%;
+    transition: width 0.3s ease-out;
+}
+
+.food-bar-inner.full {
+    background: linear-gradient(90deg, #a5d6a7, #4caf50); /* 绿色表示满足 */
+}
+
+.food-bar-text {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
+    font-size: 13px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+.food-tip-text {
+    text-align: center;
+    font-size: 12px;
+    color: #8d6e63;
+    margin-top: 8px;
+}
+
+/* 物品格子样式 */
+.food-item-card {
+    width: 64px;
+    height: 84px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    background: #fafafa;
+}
+
+.food-item-card:hover {
+    border-color: #8d6e63;
+    background: #efebe9;
+}
+
+.food-item-card.selected {
+    border: 2px solid #ff9800;
+    background: #fff3e0;
+}
+
+.item-icon { font-size: 26px; }
+.item-name { font-size: 12px; margin: 2px 0; overflow: hidden; white-space: nowrap; width: 90%; text-align: center; text-overflow: ellipsis; }
+.item-count { font-size: 10px; color: #666; }
+.item-hunger { font-size: 10px; color: #ff9800; margin-top: 2px; }
+
+/* 按钮样式复用 ink-btn */
+.ink-btn.disabled {
+    background: #cfd8dc;
+    color: #90a4ae;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* ================== 闭关食物选择窗口 (加大+Flex 4列) ================== */
+.modal_food_select {
+    /* --- 修改点：选择窗口尺寸加大 --- */
+    width: 800px !important;
+    height: 700px !important;
+
+    padding: 0 !important;
+    background: #fdfbf7;
+    border: 4px double #5d4037;
+    border-radius: 8px;
+    font-family: 'KaiTi', "SimKai", serif;
+    overflow: hidden;
+    color: #3e2723;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 中部物品网格 (Flex 自适应 4列) */
+.food-grid-section {
+    flex: 5;
+    background: #fff;
+    padding: 15px;
+    overflow-y: auto;
+
+    /* --- 修改点：Flex 布局 --- */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px; /* 格子间距 */
+    align-content: flex-start; /* 内容靠上对齐 */
+}
+
+/* 单个物品卡片 */
+.food-item-card {
+    /* --- 修改点：计算宽度实现每行4个 --- */
+    /* 公式：(100% - (列数-1) * 间距) / 列数 */
+    /* 这里简化计算：25% 减去 间距调整值 */
+    flex: 0 0 calc(25% - 9px);
+    width: calc(25% - 9px);
+
+    height: 140px; /* 卡片高度加大 */
+    border: 2px solid #e0e0e0; /* 边框加粗 */
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    background: #fafafa;
+    box-sizing: border-box;
+}
+
+/* 选中状态 */
+.food-item-card.selected {
+    border: 3px solid #ff9800;
+    background: #fff3e0;
+}
+
+/* --- 修改点：字体与图标加大 (最小18px) --- */
+.item-icon {
+    font-size: 48px; /* 图标加大 */
+    margin-bottom: 8px;
+}
+
+.item-name {
+    font-size: 18px; /* 名称字体加大 */
+    font-weight: bold;
+    margin: 4px 0;
+    width: 95%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.item-count {
+    font-size: 16px; /* 数量字体 */
+    color: #666;
+}
+
+.item-hunger {
+    font-size: 16px; /* 饱食度字体 */
+    color: #ff9800;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+/* 进度条区域文字加大 */
+.food-bar-text {
+    font-size: 18px; /* 进度文字 */
+    line-height: 24px;
+}
+.food-tip-text {
+    font-size: 16px;
+}
+
+/* 按钮文字加大 */
+.ink-btn {
+    font-size: 20px;
+    padding: 15px;
+}
+
+/* --- 闭关小游戏新球样式 --- */
+
+/* 基础气泡样式修正 */
+.g-bubble {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.3);
+    text-align: center;
+    line-height: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+}
+
+/* 蓝球：浅色 (+1) */
+.bubble-blue-1 {
+    background: radial-gradient(circle, #e3f2fd, #90caf9);
+    border: 1px solid #42a5f5;
+    color: #333; /* 浅色背景用深色字 */
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+/* 蓝球：中色 (+2) */
+.bubble-blue-2 {
+    background: radial-gradient(circle, #64b5f6, #1976d2);
+    border: 1px solid #0d47a1;
+}
+
+/* 蓝球：深色 (+3) */
+.bubble-blue-3 {
+    background: radial-gradient(circle, #1565c0, #0d47a1);
+    border: 2px solid #002171;
+    box-shadow: 0 0 10px #2196f3; /* 发光效果 */
+}
+
+/* 红球 (-1) */
+.bubble-red {
+    background: radial-gradient(circle, #ef9a9a, #c62828);
+    border: 1px solid #b71c1c;
+}
+
+/* 绿球 (+6s) */
+.bubble-green {
+    background: radial-gradient(circle, #a5d6a7, #2e7d32);
+    border: 2px solid #1b5e20;
+    box-shadow: 0 0 15px #4caf50; /* 绿色强发光 */
+    animation: spin 2s linear infinite; /* 旋转特效 */
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* 规则遮罩层 */
+.game-rules-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fdfbf7;
+}
+
+.rules-content {
+    background: #2c2c2c;
+    border: 2px solid #a1887f;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    width: 60%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+}
+
+.rules-content h3 {
+    margin-bottom: 20px;
+    color: #ffb74d;
+    font-size: 24px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+}
+
+.rules-content p {
+    margin: 10px 0;
+    font-size: 18px;
+    text-align: left;
+    padding-left: 20px;
+}
+
+.rules-divider {
+    margin: 20px 0;
+    border-bottom: 1px dashed #555;
+}
+
+.rules-tip {
+    font-size: 14px !important;
+    color: #999;
+    text-align: center !important;
+    padding: 0 !important;
+}
+
+.rules-start-btn {
+    margin-top: 20px;
+    background: #ff9800;
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
+
+/* 紫色球 (+4) */
+.bubble-purple {
+    background: radial-gradient(circle, #e1bee7, #8e24aa);
+    border: 2px solid #4a148c;
+    box-shadow: 0 0 8px #ab47bc;
+    font-size: 14px;
+}
+
+/* 金色球 (+5) */
+.bubble-gold {
+    background: radial-gradient(circle, #fff9c4, #fbc02d);
+    border: 2px solid #f57f17;
+    color: #3e2723; /* 深色字 */
+    box-shadow: 0 0 10px #ffeb3b;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* 稀有金球 (+10) */
+.bubble-gold-rare {
+    width: 36px; /* 稍微大一点 */
+    height: 36px;
+    line-height: 36px;
+    background: radial-gradient(circle, #fffde7, #ff6f00);
+    border: 2px solid #bf360c;
+    color: #fff;
+    box-shadow: 0 0 20px #ff6f00, inset 0 0 10px #ffff00;
+    font-size: 16px;
+    font-weight: 900;
+    animation: pulse-gold 0.5s infinite alternate; /* 闪烁特效 */
+}
+
+@keyframes pulse-gold {
+    from { transform: scale(1); box-shadow: 0 0 10px #ff6f00; }
+    to { transform: scale(1.1); box-shadow: 0 0 25px #ffca28; }
+}

@@ -1,6 +1,6 @@
 // js/core/utils_item.js
-// 物品核心逻辑工具箱 v5.2 (Deterministic SID / Log Optimized)
-console.log("加载 物品工具箱 (Log Optimized v5.2)");
+// 物品核心逻辑工具箱 v5.3 (适配凡尘任务监听)
+console.log("加载 物品工具箱 (Log Optimized v5.3)");
 
 const UtilsItem = {
     // ============================================================
@@ -39,8 +39,8 @@ const UtilsItem = {
     },
 
     // ============================================================
-// 1. 添加物品 (核心逻辑：增加背包上限 space 检查)
-// ============================================================
+    // 1. 添加物品 (核心逻辑：增加背包上限 space 检查)
+    // ============================================================
     addItem: function(itemInput, amount = 1) {
         if (!window.player) return;
         if (!player.inventory) player.inventory = [];
@@ -99,10 +99,7 @@ const UtilsItem = {
 
         if (remainingSpace <= 3 && remainingSpace > 0) {
             if (window.showWarningModal) {
-
-                    window.showWarningModal("警告",`背包空间仅剩 ${remainingSpace} 格！背包格子满了之后，多余物品将直接无法获得`);
-
-
+                window.showWarningModal("警告",`背包空间仅剩 ${remainingSpace} 格！背包格子满了之后，多余物品将直接无法获得`);
             }
         }
 
@@ -113,7 +110,7 @@ const UtilsItem = {
     },
 
     // ============================================================
-    // 2. 使用物品 (基于 SID)
+    // 2. 使用物品 (基于 SID) - 【核心修改区域】
     // ============================================================
     useItem: function(sid, amount = 1) {
         if (!player.inventory) return;
@@ -146,12 +143,26 @@ const UtilsItem = {
             return;
         }
 
+        // 【新增】保存一份 item 数据副本用于任务检查
+        // 因为后面调用 removeItem 后，inventory 里的引用可能会消失或 count 归零，导致任务无法获取准确信息
+        const itemDataForTask = JSON.parse(JSON.stringify(itemSlot));
+
         // 应用效果
         const consumed = this._applyItemEffect(itemSlot);
 
         // 消耗逻辑
         if (consumed) {
             this.removeItem(sid, amount);
+
+            // ============================================================
+            // 【核心修改】物品使用任务触发 (防御丹/吃鱼)
+            // ============================================================
+            if (window.UtilsMortalTask) {
+                // 传入物品数据供任务系统检查类型(type)和稀有度(rarity)和属性(effects.def)
+                // 对应 data_mortal.js 中的 params 配置
+                window.UtilsMortalTask.updateProgress('use_specific_item', amount, { item: itemDataForTask });
+            }
+            // ============================================================
 
             // 【日志优化部分】
             if (window.LogManager && window.LogManager.add) {
@@ -162,7 +173,7 @@ const UtilsItem = {
                 switch (itemSlot.type) {
                     case 'food':
                     case 'foodMaterial':
-                    case 'fish': // 【新增】在这里添加 fish 类型
+                    case 'fish':
                         verb = "享用了";
                         break;
                     case 'pill':
@@ -193,21 +204,15 @@ const UtilsItem = {
             const eff = item.effects;
             //如果是得到钱
             if(eff.money){
-                player.money+=eff.money;
+                UtilsMoney.addMoney(eff.money)
                 msg += `获得了 ${eff.money} 文 `;
                 applied = true;
             }
 
-
             // A. 基础恢复
             if (eff.hp) {
-                // 【修复】确保操作的是 player.status.hp 而不是 derived
                 if (!player.status) player.status = {};
-
-                // 获取最大生命值 (从 derived 读取上限)
                 const maxHp = (player.derived && player.derived.hpMax) ? player.derived.hpMax : 100;
-
-                // 修改当前生命值
                 player.status.hp = Math.min(maxHp, (player.status.hp || 0) + eff.hp);
 
                 if( eff.hp > 0){
@@ -215,16 +220,12 @@ const UtilsItem = {
                 } else if( eff.hp < 0){
                     msg += `生命减少${Math.abs(eff.hp)} `;
                 }
-
                 applied = true;
             }
 
             if (eff.mp) {
-                // 【修复】同理修复 MP，操作 player.status.mp
                 if (!player.status) player.status = {};
-
                 const maxMp = (player.derived && player.derived.mpMax) ? player.derived.mpMax : 100;
-
                 player.status.mp = Math.min(maxMp, (player.status.mp || 0) + eff.mp);
 
                 if(eff.mp > 0){
@@ -236,19 +237,14 @@ const UtilsItem = {
             }
             if (eff.hunger) {
                 if (!player.status) player.status = {};
-
-                // 获取饱食度上限，如果 derived 中不存在则默认为 100
                 const maxHunger = (player.derived && player.derived.hungerMax) ? player.derived.hungerMax : 100;
 
-                // 使用动态上限进行截断
-                player.status.hunger = Math.min(maxHunger, (player.status.hunger || 0) + eff.hunger);
-
+                UtilsAttribute.addHunger(eff.hunger);
                 if (eff.hunger > 0) {
                     msg += `饱食度增加 ${eff.hunger} 点 `;
                 } else if (eff.hunger < 0) {
                     msg += `饱食度减少 ${Math.abs(eff.hunger)} 点 `;
                 }
-
                 applied = true;
             }
 
@@ -263,27 +259,22 @@ const UtilsItem = {
             const permAttrs = ['jing', 'qi', 'shen', 'atk', 'def', 'speed', 'hpMax', 'mpMax'];
             let attrChanged = false;
 
-            // ---【修改开始】---
             // 处理 atk -> phy_atk + mag_atk
             if (eff.atk) {
                 if (!player.exAttr) player.exAttr = {};
-                // 分别加到物攻和法攻
                 player.exAttr.phy_atk = (player.exAttr.phy_atk || 0) + eff.atk;
                 player.exAttr.mag_atk = (player.exAttr.mag_atk || 0) + eff.atk;
-                // 原 atk 字段不再累加，或仅作为兼容保留（建议直接拆分）
-                // player.exAttr.atk = (player.exAttr.atk || 0) + eff.atk;
                 attrChanged = true;
             }
             // 处理 def -> phy_def + mag_def
             if (eff.def) {
                 if (!player.exAttr) player.exAttr = {};
-                // 分别加到物防和法防
                 player.exAttr.phy_def = (player.exAttr.phy_def || 0) + eff.def;
                 player.exAttr.mag_def = (player.exAttr.mag_def || 0) + eff.def;
                 attrChanged = true;
             }
 
-            // 处理其余常规属性 (过滤掉 atk 和 def，因为上面已经处理了)
+            // 处理其余常规属性
             permAttrs.forEach(key => {
                 if (key !== 'atk' && key !== 'def' && eff[key]) {
                     if (!player.exAttr) player.exAttr = {};
@@ -293,40 +284,31 @@ const UtilsItem = {
                     applied = true;
                 }
             });
-            // ---【修改结束】---
             if (attrChanged) msg += "属性提升 ";
 
             // D. 临时 Buff (buff)
-            // 【核心修改】支持复合属性分割，并针对 atk/def 进行物法拆分
             if (eff.buff) {
                 const b = eff.buff;
                 if (b.attr && b.val && b.days) {
                     if (!player.buffs) player.buffs = {};
 
-                    // 1. 将 attr 和 val 转为字符串并用 '_' 分割
                     const attrs = String(b.attr).split('_');
                     const vals = String(b.val).split('_');
                     const days = b.days;
 
-                    // 2. 遍历所有配置的属性
                     attrs.forEach((subAttr, index) => {
                         const subVal = vals[index] !== undefined ? vals[index] : vals[0];
 
-                        // --- 【核心修改开始】判断是否需要拆分属性 ---
                         let realTargets = [];
                         if (subAttr === 'atk') {
                             realTargets = ['phy_atk', 'mag_atk'];
                         } else if (subAttr === 'def') {
                             realTargets = ['phy_def', 'mag_def'];
                         } else {
-                            realTargets = [subAttr]; // 其他属性保持原样
+                            realTargets = [subAttr];
                         }
 
-                        // 3. 为每个实际生效的属性创建 Buff
                         realTargets.forEach(realAttr => {
-                            // 生成唯一 Key：
-                            // 如果属性发生了拆分 (如 atk -> phy_atk)，或者原本就是多属性配置，必须加后缀以防覆盖
-                            // 只有当 原本是单属性 且 不需要拆分 时，才保留 item.id 以兼容旧存档
                             let buffKey;
                             if (attrs.length === 1 && realTargets.length === 1) {
                                 buffKey = item.id;
@@ -337,7 +319,7 @@ const UtilsItem = {
                             const newBuff = {
                                 name: item.name,
                                 days: days,
-                                attr: realAttr, // 使用拆分后的真实属性
+                                attr: realAttr,
                                 val: Number(subVal),
                                 isDebuff: false,
                                 desc: item.desc || ""
@@ -345,7 +327,6 @@ const UtilsItem = {
 
                             player.buffs[buffKey] = newBuff;
                         });
-                        // --- 【核心修改结束】 ---
                     });
 
                     applied = true;
@@ -358,7 +339,7 @@ const UtilsItem = {
             return true;
         }
 
-        // 【修改】允许 food 和 fish 类型即便没有 effects 也能被消耗并提示味道不错
+        // 允许 food 和 fish 类型即便没有 effects 也能被消耗
         if (item.type === 'food' || item.type === 'fish') {
             if (window.showToast) window.showToast("味道不错");
             return true;
@@ -378,7 +359,6 @@ const UtilsItem = {
      */
     equipItem: function(sid) {
         console.log("装备物品: " + sid)
-        // 1. 通过 SID 查找背包
         const inventoryIndex = player.inventory.findIndex(slot => slot.sid === sid);
 
         if (inventoryIndex === -1) {
@@ -387,15 +367,12 @@ const UtilsItem = {
         }
 
         const itemSlot = player.inventory[inventoryIndex];
-
-        // 2. 检查槽位
         const slot = this.getEquipSlot(itemSlot.type);
         if (!slot) {
             if (window.showToast) window.showToast("此物品无法装备");
             return;
         }
 
-        // 3. 检查属性要求
         if (itemSlot.req) {
             const currentStats = player.derived || player.attr || {};
             for (let key in itemSlot.req) {
@@ -408,20 +385,14 @@ const UtilsItem = {
             }
         }
 
-        // 4. 执行装备
         if (!player.equipment) player.equipment = {};
 
-        // 卸下旧装备 (回包)
         const oldEquip = player.equipment[slot];
         if (oldEquip) {
-            // 旧装备直接 addItem，系统会重新计算它的 SID 并尝试堆叠
             this.addItem(oldEquip, 1);
         }
 
-        // 装备新物品 (深拷贝)
         player.equipment[slot] = JSON.parse(JSON.stringify(itemSlot));
-
-        // 5. 从背包移除 1 个
         this.removeItem(sid, 1);
 
         if (window.showToast) window.showToast(`装备了 ${itemSlot.name}`);
@@ -436,11 +407,8 @@ const UtilsItem = {
     unequipItem: function(slotKey) {
         if (!player.equipment || !player.equipment[slotKey]) return;
 
-        const item = player.equipment[slotKey]; // 完整对象
-
-        // 回包 (addItem 会处理 SID 和堆叠)
+        const item = player.equipment[slotKey];
         this.addItem(item, 1);
-
         player.equipment[slotKey] = null;
 
         if (window.showToast) window.showToast("已卸下");
@@ -476,7 +444,6 @@ const UtilsItem = {
 
     /**
      * 批量丢弃
-     * @param {Array<string>} sids - SID 数组 [sid1, sid2, ...]
      */
     discardMultipleItems: function(sids) {
         console.log("批量丢弃: ", sids)
@@ -485,13 +452,9 @@ const UtilsItem = {
         let deletedCount = 0;
         const sidSet = new Set(sids);
 
-        // 遍历背包移除
-        // 使用 filter 方式一次性移除更高效
         const initialLen = player.inventory.length;
         player.inventory = player.inventory.filter(item => {
             if (sidSet.has(item.sid)) {
-                // 如果在删除列表中，直接移除 (视为全部丢弃)
-                // 如果需要支持部分丢弃，逻辑会更复杂，目前批量丢弃通常是全丢
                 return false;
             }
             return true;
@@ -542,9 +505,7 @@ const UtilsItem = {
         }
     },
 
-    // 兼容旧接口
     useItemById: function(itemId) {
-        // 尝试在背包中找一个匹配ID的物品SID来使用
         if (player.inventory) {
             const item = player.inventory.find(i => i.id === itemId);
             if (item) {
@@ -570,8 +531,6 @@ const UtilsItem = {
             if (rA !== rB) return rB - rA;
 
             if (a.id !== b.id) return a.id.localeCompare(b.id);
-
-            // 属性相同的物品 SID 相同，自然排在一起
             return (a.sid || "").localeCompare(b.sid || "");
         });
 
@@ -579,39 +538,29 @@ const UtilsItem = {
         this._refreshAllUI();
         if (window.saveGame) window.saveGame();
     },
+
     // ============================================================
-    // 【新增】背包数据校对 (存档加载后调用)
+    // 【新增】背包数据校对
     // ============================================================
     checkBagData: function() {
         if (!player.inventory || player.inventory.length === 0) return;
 
-        // console.log("[UtilsItem] 开始校对背包数据...");
         let needFix = false;
         let needSave=false;
 
-        // 检查是否有数据需要修复 (没有 sid 或者 sid 格式不对)
         for (let item of player.inventory) {
             if (!item.sid || !item.sid.startsWith('sid_')) {
                 needFix = true;
                 break;
             }
-            //总物品库里根据id获取物品，如果获取不到的话，则移除该物品
             const itemData = GAME_DB.items.find(i => i.id === item.id);
             if (!itemData || itemData===undefined || itemData===null) {
                 needSave=true;
                 continue;
-            }else {
-                if (itemData.type === 'fish' && item.type !== 'fish') {
-                    needUpdateFish=true;
-                }
             }
-
-
-            //检查鱼的问题，把鱼的数据从type=food改成type=fish
         }
 
         if (needSave) {
-            // 1. 深拷贝备份旧数据，防止引用问题
             const oldItems = JSON.parse(JSON.stringify(player.inventory));
             player.inventory = [];
             oldItems.forEach(item => {
@@ -624,34 +573,20 @@ const UtilsItem = {
                         this.addItem(item.id, count);
                     }
                 }
-
             });
             this._refreshAllUI();
             if (window.saveGame) window.saveGame();
         }
 
         if (needFix) {
-            // console.log("[UtilsItem] 发现旧格式数据，正在重组背包...");
-            // 1. 深拷贝备份旧数据，防止引用问题
             const oldItems = JSON.parse(JSON.stringify(player.inventory));
-
-            // 2. 清空当前背包，准备重新填充
             player.inventory = [];
-
-            // 3. 重新添加
             oldItems.forEach(item => {
                 const count = item.count || 1;
                 if (item.id) {
-                    // 【核心修改】这里只传入 item.id (字符串)
-                    // addItem 内部检测到字符串后，会自动从 GAME_DB 获取最新的完整物品数据
-                    // 然后自动生成 Deterministic SID 并执行堆叠逻辑
                     this.addItem(item.id, count);
                 }
             });
-
-            // console.log("[UtilsItem] 背包数据重组完成。");
-
-            // 4. 修复完成后立即保存并刷新
             this._refreshAllUI();
             if (window.saveGame) window.saveGame();
         } else {
@@ -659,11 +594,9 @@ const UtilsItem = {
         }
     },
     _refreshAllUI: function() {
-
         if (window.recalcStats) window.recalcStats();
         if (window.refreshBagUI) window.refreshBagUI();
         if (window.updateUI) window.updateUI();
-
     }
 };
 

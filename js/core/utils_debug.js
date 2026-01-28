@@ -58,7 +58,7 @@ const DebugSystem = {
     // === 基础逻辑 ===
     addMoney: function(val) {
         if (!player) return;
-        player.money = (player.money || 0) + val;
+        UtilsMoney.addMoney(val);
         if (window.updateUI) window.updateUI();
         if (window.showToast) window.showToast(`获得 ${val} 金钱`);
         if (window.saveGame) window.saveGame();

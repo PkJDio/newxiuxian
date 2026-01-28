@@ -19,7 +19,7 @@ let EVENT_RAID_ENEMIES = {
             subType: "human",
             defType: "light",
             atkType: "Agile", // 逻辑：乱剑挥砍、快速抽打，典型的高频物理输出
-            stats: { hp: 90, phy_atk: 18, mag_atk: 2, phy_def: 4, mag_def: 2, speed: 11 },
+            stats: { hp: 190, phy_atk: 18, mag_atk: 2, phy_def: 4, mag_def: 2, speed: 11 },
             money: [5, 10],
             drops: [{ id: "materials_088", rate: 0.4 }, { id: "materials_089", rate: 0.5 }],
             skills: [
@@ -38,7 +38,7 @@ let EVENT_RAID_ENEMIES = {
             subType: "human",
             defType: "cloth",
             atkType: "Agile", // 逻辑：胡乱投掷与拍打，虽然身板弱，但攻击频率高且无规律
-            stats: { hp: 80, phy_atk: 12, mag_atk: 6, phy_def: 2, mag_def: 5, speed: 12 },
+            stats: { hp: 180, phy_atk: 12, mag_atk: 6, phy_def: 2, mag_def: 5, speed: 12 },
             money: [2, 8],
             drops: [{ id: "materials_089", rate: 0.6 }, { id: "materials_094", rate: 0.2 }],
             skills: [
@@ -76,7 +76,7 @@ let EVENT_RAID_ENEMIES = {
             subType: "human",
             defType: "light",
             atkType: "Range", // 逻辑：传令兵强调“透甲”和“突刺”，类似于侦查兵的精准打击模组
-            stats: { hp: 90, phy_atk: 20, mag_atk: 0, phy_def: 8, mag_def: 5, speed: 18 },
+            stats: { hp: 190, phy_atk: 20, mag_atk: 0, phy_def: 8, mag_def: 5, speed: 18 },
             money: [10, 20],
             drops: [{ id: "materials_089", rate: 0.4 }, { id: "materials_092", rate: 0.3 }],
             skills: [

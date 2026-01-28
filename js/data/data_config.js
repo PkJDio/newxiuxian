@@ -20,17 +20,17 @@ const ATTR_MAPPING = {
     "hpMax": "生命上限", "hp_max": "生命上限", "max_hp": "生命上限",
     "mpMax": "法力上限", "max_mp": "法力上限",
     "hp": "生命", "mp": "法力",
-    "atk": "攻击力", "def": "防御力",
+    "atk": "攻击力", "def": "防御力","atkPct": "攻击力", "defPct": "防御力", "spdPct": "速度",
     "phy_atk": "物理攻击", "mag_atk": "法术攻击",
     "phy_def": "物理防御", "mag_def": "法术防御",
-    "crit": "物理暴击率", "mag_crit": "法术暴击率",
+    "crit": "物理暴击率", "mag_crit": "法术暴击率","all2":"攻击防御速度",
     "plate": "板甲", "heavy": "重甲", "light": "轻甲", "leather": "皮甲", "cloth": "布甲",
     "speed": "速度", "critRate": "暴击率", "critDmg": "暴击伤害", "dodge": "闪避",
     "toxicity": "毒性", "space": "背包空间", "catchRate": "钓鱼成功机率",
     "sharpness": "锋利度", "penetration": "法术穿透",
     "mining": "采矿效率", "gathering": "采集效率", "alchemy": "炼丹成功率", "luck": "气运",
     "storage": "背包空间", "hunger": "饱食度",
-    "max_skill_level": "修行上限", "studyEff": "研读效率",
+    "max_skill_level": "修行上限", "studyEff": "研读效率","gongfa_nums":"功法槽位","zhaoshi_nums":"招式槽位",
     "money": "金钱", "stabilizer": '稳定', "catalyst": '药引', "heal": "愈合","fooding":"食材"
 };
 

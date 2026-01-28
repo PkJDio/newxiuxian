@@ -64,6 +64,10 @@ const TimeSystem = {
         let t = player.time;
         const hoursToAdd = Number(hours) || 0;
 
+        // 1. 凡尘挂机经验结算 (新增)
+        // 放在时间更新前或后都可以，这里放在最前面确保逻辑独立
+        this._processMortalCultivation(hours);
+
         // 确定消耗速率 (优先使用自定义，否则使用默认配置)
         const hungerRate = (customRates && customRates.hunger !== undefined) ? customRates.hunger : TIME_CONFIG.HUNGER_PER_HOUR;
         const fatigueRate = (customRates && customRates.fatigue !== undefined) ? customRates.fatigue : TIME_CONFIG.FATIGUE_PER_HOUR;
@@ -72,9 +76,9 @@ const TimeSystem = {
         const hungerLoss = hoursToAdd * hungerRate + extraHungerCost;
         const fatigueGain = hoursToAdd * fatigueRate + extraFatigueCost;
 
-        player.status.hunger = Math.max(0, (player.status.hunger || 0) - hungerLoss);
+        UtilsAttribute.consumeHunger(hungerLoss);
         player.status.fatigue = Math.min(200, (player.status.fatigue || 0) + fatigueGain);
-        console.log("时间流逝了")
+
 
         TimeEvents.checkStatusDebuffs();
 
@@ -91,6 +95,8 @@ const TimeSystem = {
                 t.minute -= 60;
                 t.hour += 1;
 
+
+
                 // --- 【核心修改】每小时检查是否有未处理的袭击 ---
                 if (player.startDanger === 1) {
                     this.forceTriggerRaid(); // 发现待处理袭击，终止时间流转，强制进入战斗
@@ -100,6 +106,11 @@ const TimeSystem = {
 
             while (t.hour >= 24) {
                 t.hour -= 24;
+
+                // 1. 【新增】记录旧的周数 (用于检测跨周)
+                // 假设每月30天，以7天为一周期 (0, 1, 2, 3, 4)
+                const oldWeek = Math.floor(t.day / 7);
+
                 t.day += 1;
 
                 if (t.day > 30) {
@@ -115,6 +126,16 @@ const TimeSystem = {
                         if(TimeEvents.onNewYear) TimeEvents.onNewYear();
                     }
                     if(TimeEvents.onNewMonth) TimeEvents.onNewMonth();
+                }
+
+                // 2. 【新增】检测周数变化 (并在变化时刷新NPC)
+                const newWeek = Math.floor(t.day / 7);
+                if (newWeek !== oldWeek) {
+                    console.log(`[TimeSystem] 周数变更 (${oldWeek} -> ${newWeek})，触发NPC刷新`);
+                    if (window.UtilsNPC && window.UtilsNPC.refreshAll) {
+                        window.UtilsNPC.refreshAll();
+                        if (window.showToast) window.showToast("新的一周开始了，江湖风云变幻...");
+                    }
                 }
 
                 console.log(`%c[TimeSystem] 🌞 新的一天开始: ${t.year}年${t.month}月${t.day}日`, "color: #2196f3");
@@ -137,7 +158,66 @@ const TimeSystem = {
         console.log("%c[TimeSystem] 监测到待处理袭击，强制中断时间流转！", "color:red");
         if (TimeRaid) TimeRaid.forceReconnectRaid();
         if (window.updateUI) window.updateUI();
-    }
+    },
+    /**
+     * 【新增】处理凡尘修行挂机经验
+     * 算法：1 * 装备功法稀有度之和 * 小时
+     */
+    _processMortalCultivation: function(hours) {
+        // 1. 基础检查：如果已经瓶颈，或者没有凡尘等级数据，则跳过
+        if (typeof player.mortal_rank === 'undefined' || player.is_bottleneck) return;
+
+        // 2. 获取装备的功法
+        // 假设结构为 player.equipment.gongfa = {0: "id", 1: "id"} 或 Array
+        const equipGongfa = (player.equipment && player.equipment.gongfa) ? player.equipment.gongfa : null;
+        if (!equipGongfa) return;
+
+        let raritySum = 0;
+
+        // 3. 遍历计算稀有度之和
+        // Object.values 兼容数组和以数字为key的对象
+        Object.values(equipGongfa).forEach(skillId => {
+            if (!skillId) return; // 空槽位跳过
+
+            // 在玩家技能列表中查找详情
+            if (books) {
+                const book = books.find(book => book.id === skillId);
+                // 累加稀有度 (如果数据缺失默认为1)
+                raritySum += (book.rarity || 1);
+            }
+        });
+
+        // 如果稀有度之和 <= 0，不加经验
+        if (raritySum <= 0) return;
+
+        // 4. 计算应得经验
+        // 公式：1 * 稀有度之和 * 小时
+        const expGain = 1 * raritySum * hours / 3;
+        
+        // 5. 增加经验并检测瓶颈
+        if (window.DATA_MORTAL && window.DATA_MORTAL.RANKS) {
+            const rank = player.mortal_rank || 0; // 默认为0(凡人)或当前等级
+            const rankConfig = window.DATA_MORTAL.RANKS[rank];
+
+            if (rankConfig) {
+                // 增加经验
+                player.mortal_exp = (player.mortal_exp || 0) + expGain;
+
+                // 检查是否超过上限
+                if (player.mortal_exp >= rankConfig.maxExp) {
+                    player.mortal_exp = rankConfig.maxExp;
+                    player.is_bottleneck = true;
+
+                    if (window.showToast) {
+                        window.showToast(`【凡尘修行】修为已至瓶颈，请寻找突破契机！`);
+                    }
+                } else {
+                    // (可选) 调试日志
+                    // console.log(`[凡尘挂机] 经过${hours}小时，稀有度和${raritySum}，获得经验${expGain}`);
+                }
+            }
+        }
+    },
 };
 
 window.TimeSystem = TimeSystem;

@@ -242,7 +242,7 @@ const PostStation = {
         if (!targetTown) return;
 
         // 2. 数据更新 (扣钱/时间/坐标)
-        player.money -= cost;
+        UtilsMoney.removeMoney(cost);
         if (window.TimeSystem && typeof TimeSystem.passTime === 'function') {
             TimeSystem.passTime(timeHours);
         } else {

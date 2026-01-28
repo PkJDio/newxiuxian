@@ -229,14 +229,17 @@ const CombatCore = {
 
         ctx._log(`<div style="color:green; font-weight:bold; margin-top:10px; font-size:16px;">🏆 战斗胜利！</div>`);
 
-        // 1. 金钱结算
-        let baseMoney = this._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
+        // 1. 金钱结算 (增加安全检查，防止怪物没有money字段导致报错)
+        let baseMoney = 0;
+        if (ctx.enemy.money && Array.isArray(ctx.enemy.money)) {
+            baseMoney = this._randomInt(ctx.enemy.money[0], ctx.enemy.money[1]);
+        }
         let ExMoney = 0;
         let finalMoney = baseMoney + ExMoney;
 
         if (finalMoney > 0) {
             if (window.UtilsAdd) UtilsAdd.addMoney(finalMoney);
-            else ctx.player.money += finalMoney;
+            else UtilsMoney.addMoney(finalMoney);
         }
 
         // 2. 物品掉落结算
@@ -251,20 +254,38 @@ const CombatCore = {
 
                 if (finalCount > 0) {
                     const added = window.addItem(d.id, finalCount);
-                    if (added) {
-                        added.isBounty = d.isBounty;
-                        added.count = finalCount;
-                        realDrops.push(added);
+
+                    // 【核心修复】放宽判断条件
+                    // 只要返回值不是显式的 false，都视为成功
+                    // 这样兼容了那些 执行成功但返回undefined 的 addItem 方法
+                    if (added !== false) {
+                        realDrops.push({
+                            id: d.id,
+                            count: finalCount,
+                            isBounty: d.isBounty
+                        });
                     }
                 }
             }
         });
 
-        // 3. 构建奖励 UI
+        // 3. 构建奖励 UI (现在 realDrops 列表应该正常了)
         let rewardHtml = this._buildRewardHtml(ctx, finalMoney, realDrops);
 
         if (window.UtilsEnemy) UtilsEnemy.markDefeated(ctx.enemy.x, ctx.enemy.y);
         this.syncStatus(ctx);
+
+        // ============================================================
+        // 凡尘任务埋点
+        // ============================================================
+        if (window.UtilsMortalTask) {
+            window.UtilsMortalTask.updateProgress('kill_any', 1);
+            const rank = ctx.enemy.template || "minion";
+            if (rank === 'elite') window.UtilsMortalTask.updateProgress('kill_elite', 1);
+            if (rank === 'boss') window.UtilsMortalTask.updateProgress('kill_boss', 1);
+            if (rank === 'lord') window.UtilsMortalTask.updateProgress('kill_boss', 1);
+        }
+        // ============================================================
 
         if (ctx.onWinCallback) {
             ctx.onWinCallback();
@@ -399,7 +420,7 @@ const CombatCore = {
     },
 
     _calculateTimeDrops: function(ctx) {
-        const t = window.timeStart;
+        const t = player.timeStart;
         if (!t || t <= 0) return [];
         const ITEM_IDS = {
             frag: "spirit_stone_0", low: "spirit_stone_1", mid: "spirit_stone_2", high: "spirit_stone_3", top: "spirit_stone_4"
@@ -409,7 +430,7 @@ const CombatCore = {
         const checkProb = (multiplier) => Math.random() < (multiplier * t);
         const randRange = (min, max) => this._randomInt(min, max);
         const halfT = Math.ceil((t + 1) / 2);
-
+        console.log("randRange",randRange)
         switch (rank) {
             case 'minion':
                 if (checkProb(0.5)) { const count = randRange(0, t + 1); if (count > 0) drops.push({ id: ITEM_IDS.frag, count: count }); }

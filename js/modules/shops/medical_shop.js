@@ -265,7 +265,7 @@ const MedicalShop = {
     handleBuy: function(index) {
         const entry = this.currentStock[index];
         if (!entry || entry.qty <= 0 || player.money < entry.price) return;
-        player.money -= entry.price; entry.qty--;
+        UtilsMoney.removeMoney(entry.price); entry.qty--;
         if (window.UtilsAdd?.addItem) window.UtilsAdd.addItem(entry.id, 1);
         if (entry.shopKey) {
             if (!player.shopLogs) player.shopLogs = {};
@@ -284,7 +284,7 @@ const MedicalShop = {
 
         if (buyQty <= 0) { window.showToast("没钱啦！"); return; }
 
-        player.money -= (buyQty * entry.price);
+        UtilsMoney.removeMoney(buyQty * entry.price);
         entry.qty -= buyQty;
 
         if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
@@ -429,7 +429,7 @@ const MedicalShop = {
         else if (type === 'basic') cost = 500;
 
         if (player.money < cost) return;
-        player.money -= cost;
+        UtilsMoney.removeMoney(cost);
 
         // 移除濒死
         if (player.buffs) {

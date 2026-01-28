@@ -609,7 +609,8 @@ class LiuboGame {
             if (isWin) {
                 // 逻辑 3.2: 获胜，玩家获得 B*2 (本金+利润)
                 realProfit = Math.min(B, targetOpponent.currentMoney);
-                window.player.money += (B + realProfit);
+                UtilsMoney.addMoney(B + realProfit);
+
                 if (window.UtilsGamble) {
                     UtilsGamble.updateMoney(townId, 'liubo', targetOpponent.id, realProfit, B, 2);
                 }
@@ -660,7 +661,7 @@ class LiuboGame {
         }
 
         // 1. 正式扣费与记账 (逻辑 3.1)
-        window.player.money -= B;
+        UtilsMoney.removeMoney(B);
         this.opponent.bet = B; // 更新本局实际押注金额
 
         // 调用 v4.0 工具类 Type 0 (收取赌注)

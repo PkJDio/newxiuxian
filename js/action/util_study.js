@@ -161,7 +161,7 @@ const UtilStudy = {
         } else if (window.Time) {
             window.Time.passTime(this.COST_HOUR);
             // 兼容旧版手动扣除
-            p.status.hunger = Math.max(0, p.status.hunger - 10);
+            UtilsAttribute.consumeHunger(this.HUNGER_COST_EXTRA);
             p.status.fatigue = Math.min(maxFatigue, p.status.fatigue + 10);
         }
 

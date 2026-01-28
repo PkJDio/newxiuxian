@@ -162,7 +162,7 @@ const UtilTrain = {
         }
 
         // 消耗逻辑
-        p.status.hunger = Math.max(0, p.status.hunger - this.HUNGER_COST);
+        UtilsAttribute.consumeHunger(this.HUNGER_COST);
         p.status.fatigue = Math.min(maxFatigue, p.status.fatigue + this.FATIGUE_ADD);
 
         // 4. 获取收益

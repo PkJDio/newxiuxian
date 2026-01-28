@@ -23,7 +23,7 @@ const enemies_all = [
         subType: "beast",
         defType: "none",
         atkType: "Agile", // 逻辑：低伤高频技能组合，速度适中，典型的敏捷物理单位
-        stats: { hp: 30, phy_atk: 6, mag_atk: 0, phy_def: 1, mag_def: 0, speed: 6 },
+        stats: { hp: 130, phy_atk: 6, mag_atk: 0, phy_def: 1, mag_def: 0, speed: 6 },
         money: [0, 0],
         drops: [
             { id: "materials_001", rate: 0.4 },
@@ -40,7 +40,7 @@ const enemies_all = [
         subType: "beast",
         defType: "none",
         atkType: "Agile", // 逻辑：极高速度(15)，小体积单位，符合低伤高频定位
-        stats: { hp: 20, phy_atk: 4, mag_atk: 0, phy_def: 0, mag_def: 0, speed: 15 },
+        stats: { hp: 120, phy_atk: 4, mag_atk: 0, phy_def: 0, mag_def: 0, speed: 15 },
         money: [0, 0],
         drops: [
             { id: "materials_028", rate: 0.1 }
@@ -56,7 +56,7 @@ const enemies_all = [
         subType: "insect",
         defType: "leather",
         atkType: "Relic", // 逻辑：自带法术伤害(mag_atk: 5)且技能包含法术加成，符合“专克凡铁”定位
-        stats: { hp: 25, phy_atk: 15, mag_atk: 5, phy_def: 2, mag_def: 1, speed: 12, toxicity: 40 },
+        stats: { hp: 125, phy_atk: 15, mag_atk: 5, phy_def: 2, mag_def: 1, speed: 12, toxicity: 40 },
         money: [0, 0],
         drops: [
             { id: "materials_005", rate: 0.4 },
@@ -73,7 +73,7 @@ const enemies_all = [
         subType: "beast",
         defType: "leather",
         atkType: "Balanced", // 逻辑：数值较平均，防御速度均衡，适合作为标准物理怪
-        stats: { hp: 60, phy_atk: 14, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 10 },
+        stats: { hp: 160, phy_atk: 14, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 10 },
         money: [0, 0],
         drops: [
             { id: "materials_007", rate: 0.5 },
@@ -90,7 +90,7 @@ const enemies_all = [
         subType: "beast",
         defType: "heavy",
         atkType: "Heavy", // 逻辑：牺牲速度(8)，高物理攻击与高防御，技能“蛮力冲撞”追求破甲感
-        stats: { hp: 80, phy_atk: 18, mag_atk: 0, phy_def: 10, mag_def: 3, speed: 8 },
+        stats: { hp: 180, phy_atk: 18, mag_atk: 0, phy_def: 10, mag_def: 3, speed: 8 },
         money: [0, 0],
         drops: [
             { id: "materials_030", rate: 0.5 },
@@ -113,7 +113,7 @@ const enemies_all = [
         id: "global_006", template: "minion", name: "饥饿流民", region: "all", spawnType: "road", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Agile", // 乱抓、死缠烂打，典型低伤高频敏捷逻辑
-        stats: { hp: 40, phy_atk: 5, mag_atk: 0, phy_def: 1, mag_def: 1, speed: 4 },
+        stats: { hp: 140, phy_atk: 5, mag_atk: 0, phy_def: 1, mag_def: 1, speed: 4 },
         money: [0, 5],
         drops: [{ id: "weapons_003", rate: 0.2 }],
         skills: [
@@ -127,7 +127,7 @@ const enemies_all = [
         id: "global_007", template: "minion", name: "疯癫乞丐", region: "all", spawnType: "road", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 携带大量修行书，且有mag_atk和干扰精神技能
-        stats: { hp: 50, phy_atk: 9, mag_atk: 5, phy_def: 2, mag_def: 4, speed: 6 },
+        stats: { hp: 150, phy_atk: 9, mag_atk: 5, phy_def: 2, mag_def: 4, speed: 6 },
         money: [0, 10],
         drops: [
             { id: "weapons_069", rate: 0.4 },
@@ -144,7 +144,7 @@ const enemies_all = [
         id: "global_008", template: "minion", name: "拦路蟊贼", region: "all", spawnType: "road", timeStart: 0,
         subType: "human", defType: "leather",
         atkType: "Balanced", // 基础人类怪，各属性中规中矩
-        stats: { hp: 70, phy_atk: 13, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
+        stats: { hp: 170, phy_atk: 13, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
         money: [5, 20],
         drops: [{ id: "weapons_013", rate: 0.3 }],
         skills: [
@@ -158,7 +158,7 @@ const enemies_all = [
         id: "global_009", template: "minion", name: "秦军逃兵", region: "all", spawnType: "road", timeStart: 1,
         subType: "human", defType: "light",
         atkType: "Heavy", // 军旅背景，高防且有“致命突刺”，适合作为物理压制者
-        stats: { hp: 90, phy_atk: 18, mag_atk: 0, phy_def: 10, mag_def: 3, speed: 5 },
+        stats: { hp: 190, phy_atk: 18, mag_atk: 0, phy_def: 10, mag_def: 3, speed: 5 },
         money: [10, 40],
         drops: [{ id: "weapons_037", rate: 0.2 }, { id: "weapons_220", rate: 0.1 }],
         skills: [
@@ -186,7 +186,7 @@ const enemies_all = [
         id: "global_011", template: "minion", name: "采药竞争者", region: "all", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Balanced", // 虽然速度稍快，但整体属性分布平滑
-        stats: { hp: 60, phy_atk: 8, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 9 },
+        stats: { hp: 160, phy_atk: 8, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 9 },
         money: [20, 50],
         drops: [{ id: "herbs_001", rate: 0.3 }, { id: "weapons_010", rate: 0.2 }],
         skills: [
@@ -261,7 +261,7 @@ const enemies_all = [
         id: "global_016", template: "minion", name: "食腐秃鹫", region: "all", spawnType: "desert", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：14点高速度，快速啄击，符合低伤高频敏捷定位
-        stats: { hp: 40, phy_atk: 18, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 14 },
+        stats: { hp: 140, phy_atk: 18, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 14 },
         money: [0, 0],
         drops: [{ id: "materials_031", rate: 0.5 }, { id: "foodMaterial_050", rate: 0.2 }],
         skills: [
@@ -274,7 +274,7 @@ const enemies_all = [
         id: "global_017", template: "minion", name: "河中水鬼", region: "all", spawnType: "river", timeStart: 0,
         subType: "undead", defType: "none",
         atkType: "Relic", // 逻辑：法术伤害(mag_atk: 12)且属于灵体，专克物理防御
-        stats: { hp: 70, phy_atk: 18, mag_atk: 12, phy_def: 5, mag_def: 8, speed: 8 },
+        stats: { hp: 170, phy_atk: 18, mag_atk: 12, phy_def: 5, mag_def: 8, speed: 8 },
         money: [0, 5],
         drops: [{ id: "materials_032", rate: 0.1 }, { id: "weapons_015", rate: 0.2 }],
         skills: [
@@ -341,7 +341,7 @@ const enemies_all = [
         id: "global_022", template: "minion", name: "野狗", region: "all", spawnType: "all", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：低防御高机动，群体攻击，符合敏捷逻辑
-        stats: { hp: 80, phy_atk: 12, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 8 },
+        stats: { hp: 180, phy_atk: 12, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 8 },
         money: [0, 0],
         drops: [{ id: "materials_010", rate: 0.4 }],
         skills: [
@@ -393,7 +393,7 @@ const enemies_all = [
         id: "global_026", template: "minion", name: "竹叶青", region: "all", spawnType: "all", timeStart: 0,
         subType: "beast", defType: "leather",
         atkType: "Agile", // 逻辑：高速(12)，高面板伤害，符合物理暴击风格
-        stats: { hp: 60, phy_atk: 22, mag_atk: 5, phy_def: 2, mag_def: 2, speed: 12, toxicity: 40 },
+        stats: { hp: 160, phy_atk: 22, mag_atk: 5, phy_def: 2, mag_def: 2, speed: 12, toxicity: 40 },
         money: [0, 0],
         drops: [{ id: "materials_010", rate: 0.4 }, { id: "materials_029", rate: 0.3 }],
         skills: [
@@ -432,7 +432,7 @@ const enemies_all = [
         id: "global_029", template: "minion", name: "孤魂野鬼", region: "all", spawnType: "all", timeStart: 1,
         subType: "undead", defType: "none",
         atkType: "Relic", // 逻辑：纯法术输出，吸取阳气，无视物理防具
-        stats: { hp: 90, phy_atk: 5, mag_atk: 15, phy_def: 5, mag_def: 15, speed: 7 },
+        stats: { hp: 190, phy_atk: 5, mag_atk: 15, phy_def: 5, mag_def: 15, speed: 7 },
         money: [0, 0],
         drops: [{ id: "materials_036", rate: 0.3 }, { id: "materials_037", rate: 0.1 }],
         skills: [
@@ -1141,7 +1141,7 @@ const enemies_r_c_1_1 = [
         id: "rc11_004", template: "minion", name: "骊山刑徒", region: "r_c_1_1", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Agile", // 逻辑：虽然伤害低，但属于工具乱舞的低伤高频逻辑
-        stats: { hp: 60, phy_atk: 12, mag_atk: 0, phy_def: 2, mag_def: 0, speed: 5 },
+        stats: { hp: 160, phy_atk: 12, mag_atk: 0, phy_def: 2, mag_def: 0, speed: 5 },
         money: [0, 5],
         drops: [{ id: "weapons_020", rate: 0.3 }, { id: "weapons_010", rate: 0.3 }],
         skills: [
@@ -1202,7 +1202,7 @@ const enemies_r_c_1_1 = [
         id: "rc11_008", template: "minion", name: "渭河水鬼", region: "r_c_1_1", spawnType: "river", timeStart: 0,
         subType: "undead", defType: "none",
         atkType: "Relic", // 逻辑：灵体类攻击，窒息之拥无视物理防具逻辑
-        stats: { hp: 80, phy_atk: 18, mag_atk: 5, phy_def: 5, mag_def: 5, speed: 12 },
+        stats: { hp: 180, phy_atk: 18, mag_atk: 5, phy_def: 5, mag_def: 5, speed: 12 },
         money: [0, 10],
         drops: [{ id: "materials_032", rate: 0.1 }, { id: "weapons_015", rate: 0.2 }],
         skills: [
@@ -1215,7 +1215,7 @@ const enemies_r_c_1_1 = [
         id: "rc11_009", template: "minion", name: "发疯的采玉人", region: "r_c_1_1", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Balanced", // 逻辑：普通人的乱舞，属性平均，没有突出倾向
-        stats: { hp: 70, phy_atk: 10, mag_atk: 0, phy_def: 3, mag_def: 0, speed: 7 },
+        stats: { hp: 170, phy_atk: 10, mag_atk: 0, phy_def: 3, mag_def: 0, speed: 7 },
         money: [10, 50],
         drops: [{ id: "weapons_011", rate: 0.3 }, { id: "materials_045", rate: 0.2 }],
         skills: [
@@ -1246,7 +1246,7 @@ const enemies_r_c_1_1 = [
         id: "rc11_011", template: "minion", name: "炼丹方士", region: "r_c_1_1", spawnType: "city", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 逻辑：法术伤害倾向，火丹与爆裂，专克凡铁护甲
-        stats: { hp: 80, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 5, speed: 6 },
+        stats: { hp: 180, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 5, speed: 6 },
         money: [20, 100],
         drops: [{ id: "materials_010", rate: 0.2 }, { id: "book_cultivation_r2_02_full", rate: 0.05 }],
         skills: [
@@ -1343,7 +1343,7 @@ const enemies_r_c_2_1 = [
         subType: "human",
         defType: "light",
         atkType: "Agile", // 逻辑：速度12，轻剑快刺，典型的高频物理暴击风格
-        stats: { hp: 90, phy_atk: 20, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 12 },
+        stats: { hp: 190, phy_atk: 20, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 12 },
         money: [10, 40],
         drops: [{ id: "weapons_021", rate: 0.3 }],
         skills: [
@@ -1391,7 +1391,7 @@ const enemies_r_c_2_1 = [
         subType: "human",
         defType: "leather",
         atkType: "Range", // 逻辑：韩国强弩闻名天下，纯粹的远程打击
-        stats: { hp: 80, phy_atk: 35, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 9 },
+        stats: { hp: 180, phy_atk: 35, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 9 },
         money: [5, 20],
         drops: [{ id: "weapons_025", rate: 0.3 }, { id: "weapons_060", rate: 0.01 }],
         skills: [
@@ -1409,7 +1409,7 @@ const enemies_r_c_2_1 = [
         subType: "human",
         defType: "leather",
         atkType: "Balanced", // 逻辑：属性均衡，利用洛阳铲重击，战斗逻辑平滑
-        stats: { hp: 80, phy_atk: 12, mag_atk: 0, phy_def: 4, mag_def: 3, speed: 8 },
+        stats: { hp: 180, phy_atk: 12, mag_atk: 0, phy_def: 4, mag_def: 3, speed: 8 },
         money: [20, 80],
         drops: [{ id: "weapons_020", rate: 0.4 }, { id: "materials_019", rate: 0.1 }],
         skills: [
@@ -1438,7 +1438,7 @@ const enemies_r_c_2_1 = [
         subType: "human",
         defType: "cloth",
         atkType: "Agile", // 逻辑：闷棍打法，属性低但动作相对较快，典型市井打手
-        stats: { hp: 90, phy_atk: 15, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
+        stats: { hp: 190, phy_atk: 15, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
         money: [10, 50],
         drops: [{ id: "weapons_003", rate: 0.4 }, { id: "book_body_r1_03_full", rate: 0.03 }],
         skills: [
@@ -1553,7 +1553,7 @@ const enemies_r_e_0_1 = [
         id: "re01_002", template: "minion", name: "临淄斗鸡", region: "r_e_0_1", spawnType: "city", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：速度18极快，高频啄击和飞爪，典型敏捷怪
-        stats: { hp: 50, phy_atk: 25, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 18 },
+        stats: { hp: 150, phy_atk: 25, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 18 },
         money: [0, 0],
         drops: [{ id: "materials_040", rate: 0.5 }, { id: "foodMaterial_050", rate: 0.5 }],
         skills: [
@@ -1580,7 +1580,7 @@ const enemies_r_e_0_1 = [
         id: "re01_004", template: "minion", name: "落魄方士", region: "r_e_0_1", spawnType: "city", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 逻辑：法术属性攻击，炸炉属于魔法伤害，专克重装
-        stats: { hp: 70, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 8, speed: 10 },
+        stats: { hp: 170, phy_atk: 5, mag_atk: 15, phy_def: 2, mag_def: 8, speed: 10 },
         money: [10, 50],
         drops: [{ id: "book_cultivation_r1_01_full", rate: 0.05 }],
         skills: [
@@ -1644,7 +1644,7 @@ const enemies_r_e_0_1 = [
         id: "re01_008", template: "minion", name: "东夷射手", region: "r_e_0_1", spawnType: "road", timeStart: 0,
         subType: "human", defType: "leather",
         atkType: "Range", // 逻辑：东夷长弓射击，纯粹的远程物理压制
-        stats: { hp: 80, phy_atk: 30, mag_atk: 0, phy_def: 3, mag_def: 5, speed: 12 },
+        stats: { hp: 180, phy_atk: 30, mag_atk: 0, phy_def: 3, mag_def: 5, speed: 12 },
         money: [5, 20],
         drops: [{ id: "weapons_048", rate: 0.15 }, { id: "book_body_r1_07_full", rate: 0.03 }],
         skills: [
@@ -1671,7 +1671,7 @@ const enemies_r_e_0_1 = [
         id: "re01_010", template: "minion", name: "海边巨蟹", region: "r_e_0_1", spawnType: "ocean", timeStart: 0,
         subType: "beast", defType: "plate",
         atkType: "Heavy", // 逻辑：巨螯夹击，牺牲频率追求强力的物理防御和重击
-        stats: { hp: 60, phy_atk: 20, mag_atk: 0, phy_def: 25, mag_def: 5, speed: 4 },
+        stats: { hp: 160, phy_atk: 20, mag_atk: 0, phy_def: 25, mag_def: 5, speed: 4 },
         money: [0, 0],
         drops: [{ id: "foodMaterial_005", rate: 0.6 }, { id: "materials_048", rate: 0.2 }],
         skills: [
@@ -1753,7 +1753,7 @@ const enemies_r_c_1_2 = [
         id: "rc12_001", template: "minion", name: "云梦水匪", region: "r_c_1_2", spawnType: "river", timeStart: 0,
         subType: "human", defType: "leather",
         atkType: "Balanced", // 逻辑：属性平均，使用船桨等杂项兵器，战斗风格稳健
-        stats: { hp: 70, phy_atk: 14, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 9 },
+        stats: { hp: 170, phy_atk: 14, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 9 },
         money: [10, 30],
         drops: [{ id: "weapons_012", rate: 0.3 }, { id: "foods_048", rate: 0.2 }],
         skills: [
@@ -1793,7 +1793,7 @@ const enemies_r_c_1_2 = [
         id: "rc12_004", template: "minion", name: "楚地巫祝", region: "r_c_1_2", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 逻辑：高法伤(25)，巫毒咒怨，无视物理防具的灵魂打击
-        stats: { hp: 60, phy_atk: 5, mag_atk: 25, phy_def: 0, mag_def: 15, speed: 8, toxicity: 30 },
+        stats: { hp: 160, phy_atk: 5, mag_atk: 25, phy_def: 0, mag_def: 15, speed: 8, toxicity: 30 },
         money: [10, 40],
         drops: [{ id: "foodMaterial_002", rate: 0.3 }, { id: "materials_006", rate: 0.3 }],
         skills: [
@@ -1820,7 +1820,7 @@ const enemies_r_c_1_2 = [
         id: "rc12_006", template: "minion", name: "湘西赶尸人", region: "r_c_1_2", spawnType: "road", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 逻辑：摄魂铃音与尸气符爆，属于典型的非物理法系压制
-        stats: { hp: 80, phy_atk: 10, mag_atk: 25, phy_def: 5, mag_def: 15, speed: 5 },
+        stats: { hp: 180, phy_atk: 10, mag_atk: 25, phy_def: 5, mag_def: 15, speed: 5 },
         money: [30, 80],
         drops: [{ id: "weapons_002", rate: 0.3 }],
         skills: [
@@ -1850,7 +1850,7 @@ const enemies_r_c_1_2 = [
         subType: "beast", defType: "leather",
         atkType: "Relic", // 逻辑：毒液喷射(mag)，无视防具的中毒逻辑
         money: [100, 200],
-        stats: { hp: 40, phy_atk: 15, mag_atk: 20, phy_def: 10, mag_def: 10, speed: 4, toxicity: 30 },
+        stats: { hp: 140, phy_atk: 15, mag_atk: 20, phy_def: 10, mag_def: 10, speed: 4, toxicity: 30 },
         drops: [],
         skills: [
             { id: "长舌鞭击", rate: 0.2, type: 1, damage: 1.2, damageType: "phy", dmgValType: 1 },
@@ -1953,7 +1953,7 @@ const enemies_r_c_0_2 = [
         id: "rc02_001", template: "minion", name: "剑阁剪径贼", region: "r_c_0_2", spawnType: "road", timeStart: 0,
         subType: "human", defType: "leather",
         atkType: "Heavy", // 逻辑：利用地势进行重劈攻击，追求破甲伤害
-        stats: { hp: 90, phy_atk: 18, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
+        stats: { hp: 190, phy_atk: 18, mag_atk: 0, phy_def: 5, mag_def: 2, speed: 6 },
         money: [10, 40],
         drops: [{ id: "weapons_029", rate: 0.2 }, { id: "foods_001", rate: 0.2 }],
         skills: [
@@ -1993,7 +1993,7 @@ const enemies_r_c_0_2 = [
         id: "rc02_004", template: "minion", name: "竹林花斑蛇", region: "r_c_0_2", spawnType: "grass", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：高机动(12)，毒牙突袭，典型的敏捷系生物
-        stats: { hp: 40, phy_atk: 25, mag_atk: 0, phy_def: 1, mag_def: 5, speed: 12, toxicity: 40 },
+        stats: { hp: 140, phy_atk: 25, mag_atk: 0, phy_def: 1, mag_def: 5, speed: 12, toxicity: 40 },
         money: [0, 0],
         drops: [{ id: "materials_010", rate: 0.3 }],
         skills: [
@@ -2020,7 +2020,7 @@ const enemies_r_c_0_2 = [
         id: "rc02_006", template: "minion", name: "巴山夜猿", region: "r_c_0_2", spawnType: "mountain", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：高机动(15)，投掷与抓挠，典型高频干扰型敏捷怪
-        stats: { hp: 60, phy_atk: 12, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 15 },
+        stats: { hp: 160, phy_atk: 12, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 15 },
         money: [0, 0],
         drops: [{ id: "materials_002", rate: 0.3 }, { id: "foods_021", rate: 0.4 }],
         skills: [
@@ -2033,7 +2033,7 @@ const enemies_r_c_0_2 = [
         id: "rc02_007", template: "minion", name: "古蜀遗民", region: "r_c_0_2", spawnType: "city", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Relic", // 逻辑：崇拜神鸟，带有法术祭礼伤害，专克物理铁甲
-        stats: { hp: 80, phy_atk: 15, mag_atk: 10, phy_def: 5, mag_def: 10, speed: 8 },
+        stats: { hp: 180, phy_atk: 15, mag_atk: 10, phy_def: 5, mag_def: 10, speed: 8 },
         money: [10, 50],
         drops: [{ id: "weapons_023", rate: 0.2 }, { id: "materials_019", rate: 0.1 }],
         skills: [
@@ -2076,7 +2076,7 @@ const enemies_r_c_0_2 = [
         id: "rc02_010", template: "minion", name: "入蜀流民", region: "r_c_0_2", spawnType: "road", timeStart: 1,
         subType: "human", defType: "none",
         atkType: "Balanced", // 逻辑：绝望挣扎的乱棍，无明显属性倾向
-        stats: { hp: 50, phy_atk: 5, mag_atk: 0, phy_def: 0, mag_def: 0, speed: 4 },
+        stats: { hp: 150, phy_atk: 5, mag_atk: 0, phy_def: 0, mag_def: 0, speed: 4 },
         money: [0, 5],
         drops: [{ id: "weapons_001", rate: 0.2 }],
         skills: [
@@ -2183,7 +2183,7 @@ const enemies_r_ne = [
         id: "rne_003", template: "minion", name: "雪原狼群", region: "r_ne", spawnType: "grass", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：雪狼围猎，冷血突袭，利用速度和频率造成伤害
-        stats: { hp: 70, phy_atk: 18, mag_atk: 0, phy_def: 3, mag_def: 3, speed: 12 },
+        stats: { hp: 170, phy_atk: 18, mag_atk: 0, phy_def: 3, mag_def: 3, speed: 12 },
         money: [0, 0],
         drops: [{ id: "materials_050", rate: 0.6 }, { id: "materials_008", rate: 0.5 }],
         skills: [
@@ -2196,7 +2196,7 @@ const enemies_r_ne = [
         id: "rne_004", template: "minion", name: "采参客", region: "r_ne", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Balanced", // 逻辑：属性均衡，使用铁锄挥击，无明显克制逻辑
-        stats: { hp: 80, phy_atk: 12, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 7 },
+        stats: { hp: 180, phy_atk: 12, mag_atk: 0, phy_def: 4, mag_def: 2, speed: 7 },
         money: [20, 100],
         drops: [{ id: "herbs_030", rate: 0.3 }, { id: "weapons_010", rate: 0.3 }],
         skills: [
@@ -2223,7 +2223,7 @@ const enemies_r_ne = [
         id: "rne_006", template: "minion", name: "苦寒流放犯", region: "r_ne", spawnType: "road", timeStart: 0,
         subType: "human", defType: "none",
         atkType: "Agile", // 逻辑：绝望偷袭，临死反扑，属于低伤高频的生存反抗
-        stats: { hp: 60, phy_atk: 8, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 4 },
+        stats: { hp: 160, phy_atk: 8, mag_atk: 0, phy_def: 2, mag_def: 2, speed: 4 },
         money: [0, 5],
         drops: [{ id: "weapons_008", rate: 0.3 }],
         skills: [
@@ -2236,7 +2236,7 @@ const enemies_r_ne = [
         id: "rne_007", template: "minion", name: "肃慎猎手", region: "r_ne", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "leather",
         atkType: "Range", // 逻辑：石砮射击，林海狙击，典型的远程物理单位
-        stats: { hp: 90, phy_atk: 22, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 9 },
+        stats: { hp: 190, phy_atk: 22, mag_atk: 0, phy_def: 5, mag_def: 5, speed: 9 },
         money: [5, 20],
         drops: [{ id: "weapons_048", rate: 0.1 }, { id: "materials_003", rate: 0.3 }],
         skills: [
@@ -2370,7 +2370,7 @@ const enemies_r_n = [
         id: "rn_002", template: "minion", name: "草原巨狼", region: "r_n", spawnType: "grass", timeStart: 0,
         subType: "beast", defType: "none",
         atkType: "Agile", // 逻辑：高速度(12)，扑咬与突袭，符合低伤高频敏捷逻辑
-        stats: { hp: 80, phy_atk: 18, mag_atk: 0, phy_def: 3, mag_def: 5, speed: 12 },
+        stats: { hp: 180, phy_atk: 18, mag_atk: 0, phy_def: 3, mag_def: 5, speed: 12 },
         money: [0, 0],
         drops: [{ id: "materials_008", rate: 0.5 }, { id: "materials_050", rate: 0.5 }],
         skills: [
@@ -2427,7 +2427,7 @@ const enemies_r_n = [
         id: "rn_006", template: "minion", name: "北海牧羊人", region: "r_n", spawnType: "river", timeStart: 0,
         subType: "human", defType: "cloth",
         atkType: "Balanced",
-        stats: { hp: 60, phy_atk: 10, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 6 },
+        stats: { hp: 160, phy_atk: 10, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 6 },
         money: [5, 20],
         drops: [{ id: "weapons_002", rate: 0.3 }, { id: "foodMaterial_053", rate: 0.5 }],
         skills: [
@@ -2509,7 +2509,7 @@ const enemies_r_w = [
         id: "rw_001", template: "minion", name: "沙暴巨蝎", region: "r_w", spawnType: "desert", timeStart: 0,
         subType: "insect", defType: "plate",
         atkType: "Agile", // 逻辑：高频毒螯剪切与摆尾，虽然防御高，但攻击逻辑符合低伤高频敏捷类
-        stats: { hp: 90, phy_atk: 25, mag_atk: 0, phy_def: 12, mag_def: 10, speed: 8, toxicity: 40 },
+        stats: { hp: 190, phy_atk: 25, mag_atk: 0, phy_def: 12, mag_def: 10, speed: 8, toxicity: 40 },
         money: [0, 0],
         drops: [{ id: "materials_048", rate: 0.5 }, { id: "materials_018", rate: 0.4 }],
         skills: [
@@ -2671,7 +2671,7 @@ const enemies_r_s = [
         id: "rs_001", template: "minion", name: "越人战士", region: "r_s", spawnType: "mountain", timeStart: 0,
         subType: "human", defType: "none",
         atkType: "Agile", // 逻辑：丛林伏击、断发突袭，典型的低伤高频敏捷逻辑
-        stats: { hp: 90, phy_atk: 18, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 12 },
+        stats: { hp: 190, phy_atk: 18, mag_atk: 0, phy_def: 2, mag_def: 5, speed: 12 },
         money: [5, 20],
         drops: [{ id: "weapons_023", rate: 0.1 }, { id: "materials_005", rate: 0.3 }],
         skills: [
@@ -2684,7 +2684,7 @@ const enemies_r_s = [
         id: "rs_002", template: "minion", name: "五彩瘴气蛛", region: "r_s", spawnType: "grass", timeStart: 0,
         subType: "insect", defType: "leather",
         atkType: "Relic", // 逻辑：利用法术属性(mag)造成瘴气伤害，专克物理铁甲
-        stats: { hp: 50, phy_atk: 30, mag_atk: 10, phy_def: 5, mag_def: 10, speed: 10, toxicity: 40 },
+        stats: { hp: 150, phy_atk: 30, mag_atk: 10, phy_def: 5, mag_def: 10, speed: 10, toxicity: 40 },
         money: [0, 0],
         drops: [{ id: "materials_006", rate: 0.3 }],
         skills: [
@@ -2725,7 +2725,7 @@ const enemies_r_s = [
         id: "rs_005", template: "minion", name: "采珠人(溺亡)", region: "r_se", spawnType: "ocean", timeStart: 0,
         subType: "undead", defType: "none",
         atkType: "Relic", // 逻辑：亡灵生物，深海怨念，法系属性攻击
-        stats: { hp: 70, phy_atk: 15, mag_atk: 5, phy_def: 5, mag_def: 10, speed: 8 },
+        stats: { hp: 170, phy_atk: 15, mag_atk: 5, phy_def: 5, mag_def: 10, speed: 8 },
         money: [10, 50],
         drops: [{ id: "materials_039", rate: 0.2 }, { id: "weapons_015", rate: 0.3 }],
         skills: [

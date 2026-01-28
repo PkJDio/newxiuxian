@@ -49,7 +49,7 @@ const UITrain = {
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
             // 将尺寸设为较大值，以适应放大的字体
-            this.modalBody = window.UtilsModal.showInteractiveModal("闭关修炼", contentHtml, null, "modal_train", 60, 70);
+            this.modalBody = window.UtilsModal.showInteractiveModal("修炼功法", contentHtml, null, "modal_train", 60, 70);
         }
 
         this._injectStyles();

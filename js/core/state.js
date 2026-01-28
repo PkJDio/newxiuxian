@@ -170,7 +170,7 @@ function setStartItem() {
     UtilsAdd.addItem("body_001", 1);
     UtilsAdd.addItem("head_001", 1);
     UtilsAdd.addItem("feet_002", 1);
-    UtilsAdd.addMoney(100);
+    UtilsMoney.addMoney(100, "游戏开始");
     UtilsAdd.addItem("foods_005", 2);
     UtilsAdd.addItem("foods_053", 1);
     UtilsAdd.addItem("book_cultivation_r1_00_full", 1);

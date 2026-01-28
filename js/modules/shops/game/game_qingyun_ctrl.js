@@ -74,7 +74,7 @@ class QingyunGame {
     handleStartGame() {
         const config = this.model.config;
         if (window.player.money < config.entry) { UtilsModal.showQingyunToast("资金不足！"); return; }
-        window.player.money -= config.entry;
+        UtilsMoney.removeMoney(config.entry);
         this.model.startGame();
         this.view.addLog(`🏁 比赛开始！固定奖池 ${this.model.jackpot} 文。`, true);
         UtilsModal.showQingyunToast("比赛开始！");

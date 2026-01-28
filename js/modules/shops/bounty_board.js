@@ -366,7 +366,7 @@ const BountyBoard = {
         if (module.onSubmit) module.onSubmit(task);
 
         // 1. 发放奖励
-        window.player.money += task.rewardMoney;
+        UtilsMoney.addMoney(task.rewardMoney);
 
         // 2. 【核心修改】：双城繁荣度奖励 (跑腿任务同时给起点和终点加)
         if (task.type === 2) {

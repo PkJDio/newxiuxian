@@ -1,18 +1,19 @@
-// js/modules/ui.js - 核心界面交互 (性能优化版)
-// 优化内容：
-// 1. renderBuffs 改用 HTML 字符串拼接，消除高频 DOM 创建
-// 2. 使用事件委托处理 Tooltip，消除闭包内存泄漏
-// 3. 修复 Buff 小数位显示问题
-// 4. 修复 studyEff 百分比显示
-// 5. 【修复】确保 HTML 字符串中包含 data-tooltip 属性
+// js/modules/ui.js - 核心界面交互 (DOM Cache + RAF 优化版)
 
-//console.log("加载 界面交互 (Performance Optimized)")
+// 简单的 DOM 缓存池，避免高频 getElementById
+const _domCache = {};
+function getEl(id) {
+    if (!_domCache[id]) {
+        _domCache[id] = document.getElementById(id);
+    }
+    return _domCache[id];
+}
 
 /* ================= 界面交互逻辑 ================= */
 
 function enterGameScene() {
-    const menu = document.getElementById('scene_menu');
-    const game = document.getElementById('scene_game');
+    const menu = getEl('scene_menu');
+    const game = getEl('scene_game');
 
     if (menu && game) {
         menu.classList.remove('active');
@@ -26,10 +27,23 @@ function enterGameScene() {
     if (window.initMap) window.initMap();
 }
 
+// 使用 requestAnimationFrame 防抖，防止同一帧多次调用
+let _pendingUpdate = false;
+
 function updateUI() {
+    if (_pendingUpdate) return;
+    _pendingUpdate = true;
+
+    requestAnimationFrame(() => {
+        _doUpdateUI();
+        _pendingUpdate = false;
+    });
+}
+
+function _doUpdateUI() {
     if (!player) return;
 
-    // 1. 数据源清洗
+    // 1. 数据源清洗 (保持原有逻辑)
     if (player.buffs) {
         for (let id in player.buffs) {
             let b = player.buffs[id];
@@ -39,85 +53,84 @@ function updateUI() {
         }
     }
 
-    // 2. 重新计算属性
+    // 2. 重新计算属性 (保持原有逻辑)
     if (typeof recalcStats === 'function') {
         recalcStats();
     }
 
-    // --- 内部更新工具 ---
+    // --- 内部更新工具 (使用缓存) ---
     const updateVal = (id, key, label) => {
-        const el = document.getElementById(id);
+        const el = getEl(id);
         if (!el) return;
         const val = player.derived[key] || 0;
-        el.innerText = Math.floor(val);
-        el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, key, label); };
-        el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
+        // 只有数值变化时才更新 DOM，进一步减少重绘
+        const newVal = Math.floor(val).toString();
+        if (el._lastVal !== newVal) {
+            el.innerText = newVal;
+            el._lastVal = newVal;
+        }
+        // 绑定事件只需一次，检查标记
+        if (!el._hasTooltipEvent) {
+            el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, key, label); };
+            el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
+            el._hasTooltipEvent = true;
+        }
     };
 
     const updatePct = (id, key, label) => {
-        const el = document.getElementById(id);
+        const el = getEl(id);
         if (!el) return;
         const val = player.derived[key] || 0;
-        el.innerText = Math.floor(val) + '%';
+        const newVal = Math.floor(val) + '%';
+        if (el._lastVal !== newVal) {
+            el.innerText = newVal;
+            el._lastVal = newVal;
+        }
     };
 
     // --- 3. 更新 角色名片 ---
-    if(document.getElementById('profile_name')) document.getElementById('profile_name').innerText = player.name;
-    if(document.getElementById('profile_age')) document.getElementById('profile_age').innerText = player.age + "岁";
-    if(document.getElementById('profile_generation')) document.getElementById('profile_generation').innerText = `第 ${player.generation || 1} 世`;
-    const elDate = document.getElementById('profile_date');
+    const elName = getEl('profile_name'); if(elName) elName.innerText = player.name;
+    const elAge = getEl('profile_age'); if(elAge) elAge.innerText = player.age + "岁";
+    const elGen = getEl('profile_generation'); if(elGen) elGen.innerText = `第 ${player.generation || 1} 世`;
+
+    const elDate = getEl('profile_date');
     if (elDate && window.TimeSystem) {
         elDate.innerText = TimeSystem.getTimeString();
     }
 
-    // --- 4. 更新 基础属性 (精气神 & 钱) ---
+    // --- 4. 更新 基础属性 ---
     updateVal('val_jing', 'jing', '精(体质)');
     updateVal('val_qi',   'qi',   '气(能量)');
     updateVal('val_shen', 'shen', '神(悟性)');
-    // ----------------------------------------------------
-    // 1. 找到更新金钱的代码 (通常在函数前部)
-    // ----------------------------------------------------
-    if (document.getElementById('ui_money')) {
-        document.getElementById('ui_money').innerText = `💰钱财 ${player.money || 0}`;
-    }
 
-    // ----------------------------------------------------
-    // 【新增】灵气值显示逻辑
-    // ----------------------------------------------------
-    const spiritEl = document.getElementById('ui_spirit');
+    const elMoney = getEl('ui_money');
+    if (elMoney) elMoney.innerText = `💰钱财 ${player.money || 0}`;
+
+    // 灵气值
+    const spiritEl = getEl('ui_spirit');
     if (spiritEl) {
-        // 1. 检查背包里是否有 ID 为 "spiritItem_001" 的灵气袋
-        // 使用 try-catch 或可选链防止 player.inventory 未定义报错
         const hasSpiritBag = player.inventory && player.inventory.some(item => item.id === 'spiritItem_001');
-
         if (hasSpiritBag) {
-            // 有灵气袋：显示灵气值
             spiritEl.style.display = 'inline';
-            // 确保 player.spiritEnergy 存在，没有就显示 0
             spiritEl.innerText = `🌌灵气 ${player.spiritEnergy || 0}`;
         } else {
-            // 没有灵气袋：隐藏
             spiritEl.style.display = 'none';
         }
     }
-    // ----------------------------------------------------
-    // --- 5. 【核心修改】更新 战斗综述 (折叠栏头部 - 显示总和) ---
-    // 计算总攻击 (物理 + 法术)
+
+    // --- 5. 更新 战斗综述 ---
     const totalAtk = (player.derived.phy_atk || 0) + (player.derived.mag_atk || 0);
-    // 计算总防御 (物理 + 法术)
     const totalDef = (player.derived.phy_def || 0) + (player.derived.mag_def || 0);
 
-    // 手动更新 DOM，而不是用 updateVal
-    const elSumAtk = document.getElementById('val_atk');
+    const elSumAtk = getEl('val_atk');
     if (elSumAtk) elSumAtk.innerText = Math.floor(totalAtk);
 
-    const elSumDef = document.getElementById('val_def');
+    const elSumDef = getEl('val_def');
     if (elSumDef) elSumDef.innerText = Math.floor(totalDef);
 
-    // 速度保持原样 (recalcStats 会保证它不为负)
-    updateVal('val_speed', 'speed',   '速度');
+    updateVal('val_speed', 'speed', '速度');
 
-    // --- 6. 更新 战斗详情 (折叠栏内部 - 详细拆分) ---
+    // --- 6. 更新 战斗详情 ---
     updateVal('val_phy_atk', 'phy_atk', '物理攻击');
     updateVal('val_mag_atk', 'mag_atk', '法术攻击');
     updateVal('val_phy_def', 'phy_def', '物理防御');
@@ -131,11 +144,18 @@ function updateUI() {
 
     // --- 7. 更新 生存状态条 ---
     const setBar = (idVal, current, max, label) => {
-        const el = document.getElementById(idVal);
+        const el = getEl(idVal);
         if(el) {
-            el.innerText = `${Math.floor(current)}/${Math.floor(max)}`;
-            el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, label, '上限详情'); };
-            el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
+            const newVal = `${Math.floor(current)}/${Math.floor(max)}`;
+            if (el._lastVal !== newVal) {
+                el.innerText = newVal;
+                el._lastVal = newVal;
+            }
+            if (!el._hasTooltipEvent) {
+                el.onmouseenter = (e) => { if(window.showStatusTooltip) window.showStatusTooltip(e, label, '上限详情'); };
+                el.onmouseleave = () => { if(window.hideTooltip) window.hideTooltip(); };
+                el._hasTooltipEvent = true;
+            }
         }
     };
     setBar('val_hp', player.status.hp, player.derived.hpMax, 'hpMax');
@@ -149,46 +169,34 @@ function updateUI() {
     // --- 8. 其他组件渲染 ---
     renderBuffs();
     updateMarketButtonState();
-    twemoji.parse(document.body);
+    if(window.twemoji) twemoji.parse(document.body);
 }
 
 /**
- * 【优化】初始化 Buff 列表的事件委托
- * 只需调用一次，无需在每次 renderBuffs 时重复绑定
+ * 初始化 Buff 列表的事件委托
  */
 function initBuffListEvents() {
-    const container = document.getElementById('buff_list');
+    const container = getEl('buff_list');
     if (!container || container.dataset.hasDelegatedEvent) return;
 
     container.dataset.hasDelegatedEvent = "true";
 
-    // 绑定移入事件 (Tooltip)
     container.addEventListener('mouseover', (e) => {
-        // 使用 closest 查找最近的带有 data-tooltip-type 的父元素（也就是我们生成的 div.buff_row）
         const target = e.target.closest('[data-tooltip-type]');
         if (!target) return;
 
         const type = target.dataset.tooltipType;
         const id = target.dataset.tooltipId;
 
-        //console.log(`Tooltip Hover: type=${type}, id=${id}`); // 调试用
-
         if (type === 'item') {
             if (window.showItemTooltip) window.showItemTooltip(e, id);
         } else if (type === 'skill') {
-            // 注意：showSkillTooltip 参数通常是 (e, id) 或者 (id, e)，根据你的 utils_tip.js 这里的调用方式
-            // 如果 utils_tip.js 是 showSkill: function(e, skillId)，则此处正确
-            // 如果是 showSkill: function(skillId, e)，则需要交换
-            // 为了保险，大多数 tooltip 库第一个参数是 event
             if (window.showSkillTooltip) window.showSkillTooltip(e, id);
         } else if (type === 'buff') {
-            // 处理本地 buff (如疲惫、受伤)
-            // 调用下面定义的 helper 函数
             showLocalBuffTooltip(e, id);
         }
     });
 
-    // 绑定移出和移动事件
     container.addEventListener('mouseout', () => {
         if (window.TooltipManager) window.TooltipManager.hide();
     });
@@ -200,9 +208,6 @@ function initBuffListEvents() {
 function showLocalBuffTooltip(e, buffId) {
     if (!buffId) return;
     if (window.showStatusTooltip) {
-        // 这里的参数顺序很重要，utils_tip.js 通常定义为 (id, e) 或 (e, id)
-        // 根据通常习惯，showStatusTooltip(e, id, label) 或者 showStatusTooltip(id, e)
-        // 假设 utils_tip.js 的签名是 showStatus(arg1, arg2)，支持 (id, e)
         window.showStatusTooltip(buffId, e);
     } else if (window.TooltipManager && window.player.buffs[buffId]) {
         window.TooltipManager.showStatus(buffId, e);
@@ -210,22 +215,20 @@ function showLocalBuffTooltip(e, buffId) {
 }
 
 /**
- * 渲染状态栏的所有加成项 (优化版)
+ * 渲染状态栏的所有加成项
  */
 function renderBuffs() {
-    const containerId = 'buff_list';
-    const container = document.getElementById(containerId);
+    const container = getEl('buff_list');
     if (!container) return;
 
-    // 确保事件委托已初始化 (防止直接刷新页面未经过 enterGameScene)
     initBuffListEvents();
 
     const entries = [];
+    const ATTR_MAP = window.ATTR_MAPPING || {}; // 缓存引用
 
-    // 辅助函数：收集数据但不创建 DOM
     const collectEntry = (sourceName, attrKey, val, colorHex, type, id) => {
         if (!val || val === 0) return;
-        const attrName = (window.ATTR_MAPPING && window.ATTR_MAPPING[attrKey]) ? window.ATTR_MAPPING[attrKey] : attrKey;
+        const attrName = ATTR_MAP[attrKey] || attrKey;
 
         let valStr = "";
         if (attrKey === 'studyEff') {
@@ -240,16 +243,19 @@ function renderBuffs() {
             attr: attrName,
             val: valStr,
             color: colorHex,
-            type: type, // 'item', 'skill', 'buff'
+            type: type,
             id: id
         });
     };
 
     // 1. 装备
     if (player.equipment) {
-        ['weapon', 'head', 'body', 'feet', 'mount', 'tool', 'fishing_rod'].forEach(slot => {
+        const slots = ['weapon', 'head', 'body', 'feet', 'mount', 'tool', 'fishing_rod'];
+        for (let i = 0; i < slots.length; i++) {
+            const slot = slots[i];
             const itemId = player.equipment[slot];
             if (itemId) {
+                // 这里如果 GAME_DB 很大会慢，可以考虑用 Map 优化查找，但这里暂保持原样
                 const item = GAME_DB.items.find(i => i.id === itemId);
                 if (item) {
                     const stats = item.stats || item.effects || {};
@@ -259,13 +265,14 @@ function renderBuffs() {
                     }
                 }
             }
-        });
+        }
     }
 
     // 2. 功法
     if (player.equipment && player.equipment['gongfa'] && Array.isArray(player.equipment['gongfa'])) {
-        player.equipment['gongfa'].forEach(skillId => {
-            if (!skillId) return;
+        for (let i = 0; i < player.equipment['gongfa'].length; i++) {
+            const skillId = player.equipment['gongfa'][i];
+            if (!skillId) continue;
             const info = window.UtilsSkill ? UtilsSkill.getSkillInfo(skillId) : null;
             if (info && info.finalEffects) {
                 for (let key in info.finalEffects) {
@@ -273,7 +280,7 @@ function renderBuffs() {
                         collectEntry(info.name, key, info.finalEffects[key], '#d4af37', 'skill', skillId);
                 }
             }
-        });
+        }
     }
 
     // 3. 临时 Buff
@@ -287,14 +294,16 @@ function renderBuffs() {
         }
     }
 
-    // 生成 HTML
     if (entries.length === 0) {
         container.innerHTML = '<div style="color:#ccc; font-size:12px; padding:5px;">暂无加成</div>';
         return;
     }
 
-    // 【核心修复】添加 data-tooltip-type 和 data-tooltip-id 属性
-    container.innerHTML = entries.map(item => `
+    // 使用数组 join 一次性生成 HTML
+    const htmlParts = new Array(entries.length);
+    for (let i = 0; i < entries.length; i++) {
+        const item = entries[i];
+        htmlParts[i] = `
         <div class="buff_row" 
              data-tooltip-type="${item.type}" 
              data-tooltip-id="${item.id}"
@@ -302,8 +311,9 @@ function renderBuffs() {
             <span style="font-weight:bold; color:${item.color}; margin-right:6px; min-width:60px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.source}</span>
             <span style="color:#666; white-space:nowrap;">${item.attr}</span>
             <span style="font-weight:bold; color:${item.color}; margin-left: auto;">${item.val}</span>
-        </div>
-    `).join('');
+        </div>`;
+    }
+    container.innerHTML = htmlParts.join('');
 }
 
 function showChangelogModal() {
@@ -318,11 +328,12 @@ function showGalleryModal() {
     if (!GAME_DB.items || GAME_DB.items.length === 0) {
         html += `<div class="pictorial_empty">暂无收录物品数据...</div>`;
     } else {
-        GAME_DB.items.forEach(item => {
+        // 使用 map + join 优化循环拼接
+        html += GAME_DB.items.map(item => {
             const color = (RARITY_CONFIG[item.rarity] || {}).color || '#333';
             const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
             const typeName = (typeof TYPE_MAPPING !== 'undefined' ? TYPE_MAPPING[item.type] : item.type) || '未知';
-            html += `
+            return `
             <div class="pictorial_card"
                  onmouseenter="showGalleryTooltip(event, '${item.id}', null, 'gallery')"
                  onmouseleave="hideTooltip()"
@@ -331,26 +342,22 @@ function showGalleryModal() {
                 <div class="pictorial_name" style="color:${color};">${item.name}</div>
                 <div class="pictorial_type">${typeName}</div>
             </div>`;
-        });
+        }).join('');
     }
     html += `</div>`;
     if (window.showGeneralModal) window.showGeneralModal(title, html, null, "modal_gallery_box");
 }
-// 【新增】独立的状态更新函数
+
 function updateMarketButtonState() {
-    const btn = document.getElementById('btn_action_market');
+    const btn = getEl('btn_action_market');
     if (!btn) return;
 
     let inTown = false;
-
-    // 检查当前位置是否在 WORLD_TOWNS 列表中
     if (player.location && window.WORLD_TOWNS) {
         const locationId = player.location;
-        // 只要是在列表里的，都算城镇/村落
+        // 查找操作如果 towns 很多，可以考虑 Map 优化
         const town = WORLD_TOWNS.find(t => t.id === locationId);
-        if (town) {
-            inTown = true;
-        }
+        if (town) inTown = true;
     }
 
     if (inTown) {
@@ -360,16 +367,27 @@ function updateMarketButtonState() {
         btn.style.cursor = 'pointer';
     } else {
         btn.disabled = true;
-        btn.classList.add('btn_disabled'); // 配合 CSS 变灰
+        btn.classList.add('btn_disabled');
         btn.style.opacity = '0.5';
         btn.style.cursor = 'not-allowed';
     }
 }
 
-// 别忘了把新函数挂载出去，或者直接写在 updateUI 里
+
+window.parseEmoji = function(element) {
+    if (window.twemoji) {
+        window.twemoji.parse(element, {
+            base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/'
+        });
+    }
+};
+
+// 挂载
 window.updateMarketButtonState = updateMarketButtonState;
 window.updateUI = updateUI;
 window.renderBuffs = renderBuffs;
 window.enterGameScene = enterGameScene;
 window.showChangelogModal = showChangelogModal;
 window.showGalleryModal = showGalleryModal;
+
+

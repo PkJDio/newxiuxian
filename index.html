@@ -2,430 +2,392 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="水墨风格的修仙模拟器游戏，体验凡人修仙之旅。">
+    <meta name="theme-color" content="#f5f5f5">
     <title>水墨修仙 - 重构版</title>
+
     <link rel="stylesheet" href="css/style.css">
 
+    <noscript>
+        <div style="padding: 20px; text-align: center;">请开启 JavaScript 以体验修仙之旅。</div>
+    </noscript>
 </head>
 <body>
 
-    <div id="scene_menu" class="scene active">
-        <div class="ink_bg_decoration"></div>
+<div id="scene_menu" class="scene active">
+    <div class="ink_bg_decoration"></div>
 
-        <h1 class="menu_title">修仙模拟器</h1>
+    <h1 class="menu_title">修仙模拟器</h1>
 
-        <div id="menu_save_slot" class="menu_save_info" onclick="CloudArchive.uiOpenSwitchModal()">
-            <div class="save_avatar">道</div>
-            <div class="save_details">
-                <div id="menu_save_account" class="save_acc">未读取</div>
-                <div class="save_meta">
-                    <span id="menu_save_gen">第 - 世</span>
-                    <span class="save_divider">|</span>
-                    <span id="menu_save_date">--年--月</span>
+    <div id="menu_save_slot" class="menu_save_info" onclick="CloudArchive.uiOpenSwitchModal()">
+        <div class="save_avatar">道</div>
+        <div class="save_details">
+            <div id="menu_save_account" class="save_acc">未读取</div>
+            <div class="save_meta">
+                <span id="menu_save_gen">第 - 世</span>
+                <span class="save_divider">|</span>
+                <span id="menu_save_date">--年--月</span>
+            </div>
+        </div>
+        <div class="save_action_icon">🔄</div>
+    </div>
+
+    <div class="menu_btn_group">
+        <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
+        <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
+        <button id="menu_btn_changelog" class="ink_btn_large">更新日志</button>
+    </div>
+
+    <div class="menu_version">当前版本：HTML重构版 v2.0</div>
+
+    <div id="menu_changelog_panel" class="ink_panel hidden">
+        <h3>更新日志</h3>
+        <p>1. 架构重构完成</p>
+        <p>2. 全新水墨UI上线</p>
+    </div>
+</div>
+
+<div id="scene_game" class="scene">
+
+    <div id="left_status_panel">
+        <div id="left_profile_box" class="ink_card profile_card">
+            <div class="profile_main">
+                <span id="profile_name" class="p_name">道友未命名</span>
+                <span id="profile_generation" class="ink_tag">第 1 世</span>
+            </div>
+            <div class="profile_sub">
+                <span id="profile_level">凡人 (0/100)</span>
+                <span class="p_divider">|</span>
+                <span id="profile_age">16岁</span>
+            </div>
+            <div id="profile_date" class="p_date">秦始皇三十七年 正月 初一</div>
+        </div>
+
+        <div class="ink_card status_card">
+            <div class="status_row">
+                <span class="s_label c_hp">❤️ 生命</span>
+                <span class="s_val" id="val_hp">100/100</span>
+            </div>
+            <div class="status_row">
+                <span class="s_label c_mp">💧 法力</span>
+                <span class="s_val" id="val_mp">50/50</span>
+            </div>
+            <div class="status_row">
+                <span class="s_label c_hunger">🍖 饱食</span>
+                <span class="s_val" id="val_hunger">100/100</span>
+            </div>
+            <div class="status_row">
+                <span class="s_label c_fatigue">😴 疲劳</span>
+                <span class="s_val" id="val_fatigue">0/100</span>
+            </div>
+        </div>
+
+        <div class="ink_card attr_primary_card">
+            <div class="attr_grid">
+                <div class="attr_item">
+                    <span class="a_label">精</span>
+                    <span class="a_val" id="val_jing">10</span>
+                </div>
+                <div class="attr_item">
+                    <span class="a_label">气</span>
+                    <span class="a_val" id="val_qi">10</span>
+                </div>
+                <div class="attr_item">
+                    <span class="a_label">神</span>
+                    <span class="a_val" id="val_shen">10</span>
                 </div>
             </div>
-            <div class="save_action_icon">🔄</div>
+            <div class="money_row">
+                <span id="ui_money" class="text_gold">💰 0</span>
+                <span id="ui_spirit" style="display:none; color: #29b6f6; font-weight: bold; font-size: 16px;">🌌 0</span>
+            </div>
         </div>
 
-        <div class="menu_btn_group">
-            <button id="menu_btn_start" class="ink_btn_large">开启一世轮回</button>
-            <button id="menu_btn_gallery" class="ink_btn_large">万物图鉴</button>
-            <button id="menu_btn_changelog" class="ink_btn_large">更新日志</button>
+        <div class="ink_card combat_card">
+            <div class="combat_header" onclick="toggleCombatPanel()">
+                <div class="combat_title">⚔️ 战力</div>
+                <div class="combat_summary">
+                    <span>攻<b id="val_atk">5</b></span>
+                    <span class="divider">/</span>
+                    <span>防<b id="val_def">1</b></span>
+                    <span class="divider">/</span>
+                    <span>速<b id="val_speed">10</b></span>
+                </div>
+                <div id="combat_arrow" class="arrow_icon">▼</div>
+            </div>
 
-
+            <div id="combat_details" class="combat_details_box collapsed">
+                <div class="detail_group">
+                    <div class="d_row">
+                        <span class="d_label">⚔️ 物理攻击</span> <span class="d_val" id="val_phy_atk">0</span>
+                    </div>
+                    <div class="d_row">
+                        <span class="d_label">🔮 法术攻击</span> <span class="d_val" id="val_mag_atk">0</span>
+                    </div>
+                    <div class="d_sep"></div>
+                    <div class="d_row">
+                        <span class="d_label">🛡️ 物理防御</span> <span class="d_val" id="val_phy_def">0</span>
+                    </div>
+                    <div class="d_row">
+                        <span class="d_label">✨ 法术防御</span> <span class="d_val" id="val_mag_def">0</span>
+                    </div>
+                    <div class="d_sep"></div>
+                    <div class="d_row">
+                        <span class="d_label">🎯 物暴</span> <span class="d_val" id="val_crit">0%</span>
+                    </div>
+                    <div class="d_row">
+                        <span class="d_label">🔥 法暴</span> <span class="d_val" id="val_mag_crit">0%</span>
+                    </div>
+                    <div class="d_row">
+                        <span class="d_label">🔪 锋利</span> <span class="d_val" id="val_sharpness">0</span>
+                    </div>
+                    <div class="d_row">
+                        <span class="d_label">🔱 灵透</span> <span class="d_val" id="val_penetration">0</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="menu_version">当前版本：HTML重构版 v2.0</div>
+        <div id="left_buff_container" class="ink_card flex_grow">
+            <div class="panel_header_sm">当前状态</div>
+            <div id="buff_list" class="buff_list_style"></div>
+        </div>
 
-        <div id="menu_changelog_panel" class="ink_panel hidden">
-            <h3>更新日志</h3>
-            <p>1. 架构重构完成</p>
-            <p>2. 全新水墨UI上线</p>
+        <div id="left_system_btns">
+            <button class="ink_btn_small" onclick="CloudArchive.uiSave()">💾 保存</button>
+            <button onclick="attemptDie()" class="ink_btn_small btn_danger">💀 兵解</button>
+            <button onclick="backToMenu()" class="ink_btn_small">🏠 主页</button>
         </div>
     </div>
 
-    <div id="scene_game" class="scene">
-
-        <div id="left_status_panel">
-            <div id="left_profile_box" class="ink_card profile_card">
-                <div class="profile_main">
-                    <span id="profile_name" class="p_name">道友未命名</span>
-                    <span id="profile_generation" class="ink_tag">第 1 世</span>
-                </div>
-                <div class="profile_sub">
-                    <span id="profile_level">凡人 (0/100)</span>
-                    <span class="p_divider">|</span>
-                    <span id="profile_age">16岁</span>
-                </div>
-                <div id="profile_date" class="p_date">秦始皇三十七年 正月 初一</div>
-            </div>
-
-            <div class="ink_card status_card">
-                <div class="status_row">
-                    <span class="s_label c_hp">❤️ 生命</span>
-                    <span class="s_val" id="val_hp">100/100</span>
-                </div>
-                <div class="status_row">
-                    <span class="s_label c_mp">💧 法力</span>
-                    <span class="s_val" id="val_mp">50/50</span>
-                </div>
-                <div class="status_row">
-                    <span class="s_label c_hunger">🍖 饱食</span>
-                    <span class="s_val" id="val_hunger">100/100</span>
-                </div>
-                <div class="status_row">
-                    <span class="s_label c_fatigue">😴 疲劳</span>
-                    <span class="s_val" id="val_fatigue">0/100</span>
-                </div>
-            </div>
-
-            <div class="ink_card attr_primary_card">
-                <div class="attr_grid">
-                    <div class="attr_item">
-                        <span class="a_label">精</span>
-                        <span class="a_val" id="val_jing">10</span>
-                    </div>
-                    <div class="attr_item">
-                        <span class="a_label">气</span>
-                        <span class="a_val" id="val_qi">10</span>
-                    </div>
-                    <div class="attr_item">
-                        <span class="a_label">神</span>
-                        <span class="a_val" id="val_shen">10</span>
-                    </div>
-                </div>
-                <div class="money_row">
-                    <span id="ui_money" class="text_gold">💰 0</span>
-
-                    <span id="ui_spirit" style="display:none; color: #29b6f6; font-weight: bold; font-size: 16px;">🌌 0</span>
-                </div>
-            </div>
-
-            <div class="ink_card combat_card">
-                <div class="combat_header" onclick="toggleCombatPanel()">
-                    <div class="combat_title">⚔️ 战力</div>
-                    <div class="combat_summary">
-                        <span>攻<b id="val_atk">5</b></span>
-                        <span class="divider">/</span>
-                        <span>防<b id="val_def">1</b></span>
-                        <span class="divider">/</span>
-                        <span>速<b id="val_speed">10</b></span>
-                    </div>
-                    <div id="combat_arrow" class="arrow_icon">▼</div>
-                </div>
-
-                <div id="combat_details" class="combat_details_box collapsed">
-                    <div class="detail_group">
-                        <div class="d_row">
-                            <span class="d_label">⚔️ 物理攻击</span> <span class="d_val" id="val_phy_atk">0</span>
-                        </div>
-                        <div class="d_row">
-                            <span class="d_label">🔮 法术攻击</span> <span class="d_val" id="val_mag_atk">0</span>
-                        </div>
-                        <div class="d_sep"></div>
-                        <div class="d_row">
-                            <span class="d_label">🛡️ 物理防御</span> <span class="d_val" id="val_phy_def">0</span>
-                        </div>
-                        <div class="d_row">
-                            <span class="d_label">✨ 法术防御</span> <span class="d_val" id="val_mag_def">0</span>
-                        </div>
-                        <div class="d_sep"></div>
-                        <div class="d_row">
-                            <span class="d_label">🎯 物暴</span> <span class="d_val" id="val_crit">0%</span>
-                        </div>
-                        <div class="d_row">
-                            <span class="d_label">🔥 法暴</span> <span class="d_val" id="val_mag_crit">0%</span>
-                        </div>
-                        <div class="d_row">
-                            <span class="d_label">🔪 锋利</span> <span class="d_val" id="val_sharpness">0</span>
-                        </div>
-                        <div class="d_row">
-                            <span class="d_label">🔱 灵透</span> <span class="d_val" id="val_penetration">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="left_buff_container" class="ink_card flex_grow">
-                <div class="panel_header_sm">当前状态</div>
-                <div id="buff_list" class="buff_list_style">
-                </div>
-            </div>
-
-            <div id="left_system_btns">
-                <button class="ink_btn_small" onclick="CloudArchive.uiSave()">💾 保存</button>
-                <button onclick="attemptDie()" class="ink_btn_small btn_danger">💀 兵解</button>
-                <button onclick="backToMenu()" class="ink_btn_small">🏠 主页</button>
-            </div>
+    <div id="center_action_panel">
+        <div id="center_toolbar">
+            <button id="btn_open_bag" class="ink_btn_tab" onclick="UIBag.open()">🎒 行囊 (I)</button>
+            <button id="btn_open_mortal" class="ink_btn_tab" onclick="UI_Mortal.open()">💪 修行(X)</button>
+            <button id="btn_open_gongfa" class="ink_btn_tab" onclick="if(window.UISkill) UISkill.open();">🎨 技艺 (K)</button>
+            <button id="btn_open_bounty" class="ink_btn_tab" onclick="UIBounty.open()">📜 悬赏 (T)</button>
+            <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图 (M)</button>
+            <button id="btn_help" class="ink_btn_tab" onclick="UITutorial.start(true)">❓ 指引</button>
+            <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
         </div>
 
-        <script>
-            function toggleCombatPanel() {
-                const box = document.getElementById('combat_details');
-                const arrow = document.getElementById('combat_arrow');
-                if (box.classList.contains('collapsed')) {
-                    box.classList.remove('collapsed');
-                    arrow.style.transform = 'rotate(180deg)';
-                } else {
-                    box.classList.add('collapsed');
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            }
-        </script>
+        <div id="center_map_container">
+            <canvas id="big_map_canvas"></canvas>
+            <div id="center_map_overlay">
+                <span id="overlay_terrain_info">当前: <span class="text_gold">未知区域</span></span>
+                <span id="overlay_coord">(0, 0)</span>
+            </div>
+        </div>
+    </div>
 
-        <div id="center_action_panel">
-            <div id="center_toolbar">
-
-                <button id="btn_open_bag" class="ink_btn_tab" onclick="UIBag.open()">🎒 行囊 (I)</button>
-                <button id="menu_btn_mortal" class="menu-btn">修行(X)</button>
-
-                <button id="btn_open_gongfa" class="ink_btn_tab" onclick="if(window.UISkill) UISkill.open();">
-                    🎨 技艺 (K)
+    <div id="right_info_panel">
+        <div id="right_log_container" class="ink_card">
+            <div class="panel_header">江湖传闻</div>
+            <div id="game_log_content">
+                <p class="log_time">[辰时]</p> <p>你踏入了江湖...</p>
+                <p class="log_time">[辰时]</p> <p>清风拂面，你感觉神清气爽。</p>
+            </div>
+            <div class="log_footer" style="text-align: right; padding: 5px; border-top: 1px dashed #ddd; background: rgba(255,255,255,0.5);">
+                <button onclick="LogManager.uiClear()" class="ink_btn_small" style="font-size: 12px; opacity: 0.7; padding: 2px 8px;">
+                    🗑️ 清空传闻
                 </button>
+            </div>
+        </div>
 
-                <button id="btn_open_bounty" class="ink_btn_tab" onclick="UIBounty.open()">
-                    📜 悬赏 (T)
+        <div id="right_action_container" class="ink_card">
+            <div class="panel_header">行动指令</div>
+            <div id="right_action_grid">
+                <button id="btn_action_gather" class="act_btn" onclick="doGather()">🌿 寻幽</button>
+                <button id="btn_action_study" class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
+                <button id="btn_action_train" class="ink_btn" onclick="window.UITrain.open()">
+                    <span class="btn_icon">⚔️</span>
+                    <span class="btn_text">练功</span>
                 </button>
-                <button id="btn_open_map" class="ink_btn_tab" onclick="MapView.open()">🗺️ 地图 (M)</button>
-                <button id="btn_help" class="ink_btn_tab" onclick="UITutorial.start(true)">
-                    ❓ 指引
-                </button>
-                <button id="btn_debug" class="ink_btn_tab btn_faded" onclick="DebugSystem.open()">🔧 天道</button>
-            </div>
-
-            <div id="center_map_container">
-                <canvas id="big_map_canvas"></canvas>
-                <div id="center_map_overlay">
-                    <span id="overlay_terrain_info">当前: <span class="text_gold">未知区域</span></span>
-                    <span id="overlay_coord">(0, 0)</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="right_info_panel">
-
-            <div id="right_log_container" class="ink_card">
-                <div class="panel_header">江湖传闻</div>
-                <div id="game_log_content">
-                    <p class="log_time">[辰时]</p> <p>你踏入了江湖...</p>
-                    <p class="log_time">[辰时]</p> <p>清风拂面，你感觉神清气爽。</p>
-                </div>
-                <div class="log_footer" style="text-align: right; padding: 5px; border-top: 1px dashed #ddd; background: rgba(255,255,255,0.5);">
-                    <button onclick="LogManager.uiClear()" class="ink_btn_small" style="font-size: 12px; opacity: 0.7; padding: 2px 8px;">
-                        🗑️ 清空传闻
-                    </button>
-                </div>
-            </div>
-
-            <div id="right_action_container" class="ink_card">
-                <div class="panel_header">行动指令</div>
-                <div id="right_action_grid">
-                    <button id="btn_action_gather" class="act_btn" onclick="doGather()">🌿 寻幽</button>
-
-                    <button id="btn_action_study" class="act_btn" onclick="window.UIStudy.open()">📖 研读</button>
-
-                    <button id="btn_action_train" class="ink_btn" onclick="window.UITrain.open()">
-                        <span class="btn_icon">⚔️</span>
-                        <span class="btn_text">修炼</span>
-                    </button>
-
-                    <button id="btn_action_rest" class="act_btn" onclick="doRest()">🛏️ 休憩</button>
-                    <button id="btn_action_fish" class="act_btn" onclick="window.UIFish.open()">🎣 垂钓</button>
-                    <button id="btn_action_water" class="act_btn" onclick="doFetchWater()">💧 打水</button>
-                    <button id="btn_action_cook" class="act_btn" onclick="window.UICook.open()">🍳 烹饪</button>
-
-                    <button id="btn_action_eat" class="act_btn" onclick="doEat()">🍖 进食</button>
-
-                    <button id="btn_action_market" class="act_btn" onclick="openTownMarket()">⚖️ 集市</button>
-                    <button id="btn_action_alchemy" class="act_btn" onclick="UIAlchemy.open()">🔮 炼丹</button>
-                </div>
+                <button id="btn_action_rest" class="act_btn" onclick="doRest()">🛏️ 休憩</button>
+                <button id="btn_action_fish" class="act_btn" onclick="window.UIFish.open()">🎣 垂钓</button>
+                <button id="btn_action_water" class="act_btn" onclick="doFetchWater()">💧 打水</button>
+                <button id="btn_action_cook" class="act_btn" onclick="window.UICook.open()">🍳 烹饪</button>
+                <button id="btn_action_eat" class="act_btn" onclick="doEat()">🍖 进食</button>
+                <button id="btn_action_market" class="act_btn" onclick="openTownMarket()">⚖️ 集市</button>
+                <button id="btn_action_alchemy" class="act_btn" onclick="UIAlchemy.open()">🔮 炼丹</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="modal_overlay" class="modal hidden">
-        <div id="modal_content" class="ink_modal_box">
-            <h2 id="modal_header">标题</h2>
-            <div id="modal_body">内容区域</div>
-            <div id="modal_footer">
-                <button onclick="closeModal()" class="ink_btn_medium">关闭</button>
-            </div>
+<div id="modal_overlay" class="modal hidden">
+    <div id="modal_content" class="ink_modal_box">
+        <h2 id="modal_header">标题</h2>
+        <div id="modal_body">内容区域</div>
+        <div id="modal_footer">
+            <button onclick="closeModal()" class="ink_btn_medium">关闭</button>
         </div>
     </div>
+</div>
 
-    <div id="global_tooltip" class="ink_tooltip hidden"></div>
-    <div id="tutorial_overlay" class="hidden">
-        <div id="tutorial_spotlight"></div>
+<div id="global_tooltip" class="ink_tooltip hidden"></div>
 
-        <div id="tutorial_box" class="ink_card">
-            <h3 id="tut_title">功能介绍</h3>
-            <p id="tut_content">这里是说明文字...</p>
-
-            <div class="tut_controls">
-                <div class="tut_page_info"><span id="tut_step">1</span> / <span id="tut_total">5</span></div>
-                <div class="tut_btns">
-                    <button id="tut_btn_prev" class="ink_btn_small" onclick="UITutorial.prev()">上一步</button>
-                    <button id="tut_btn_next" class="ink_btn_small" onclick="UITutorial.next()">下一步</button>
-                    <button id="tut_btn_finish" class="ink_btn_small btn_danger" onclick="UITutorial.finish()">关闭</button>
-                </div>
-            </div>
-
-            <div class="tut_footer">
-                <label>
-                    <input type="checkbox" id="tut_check_ignore"> 轮回不再自动提醒
-                </label>
+<div id="tutorial_overlay" class="hidden">
+    <div id="tutorial_spotlight"></div>
+    <div id="tutorial_box" class="ink_card">
+        <h3 id="tut_title">功能介绍</h3>
+        <p id="tut_content">这里是说明文字...</p>
+        <div class="tut_controls">
+            <div class="tut_page_info"><span id="tut_step">1</span> / <span id="tut_total">5</span></div>
+            <div class="tut_btns">
+                <button id="tut_btn_prev" class="ink_btn_small" onclick="UITutorial.prev()">上一步</button>
+                <button id="tut_btn_next" class="ink_btn_small" onclick="UITutorial.next()">下一步</button>
+                <button id="tut_btn_finish" class="ink_btn_small btn_danger" onclick="UITutorial.finish()">关闭</button>
             </div>
         </div>
+        <div class="tut_footer">
+            <label>
+                <input type="checkbox" id="tut_check_ignore"> 轮回不再自动提醒
+            </label>
+        </div>
     </div>
-    <script src="js/twemoji.min.js"></script>
-    <script src="js/modules/ui_tutorial.js"></script>
+</div>
 
+<script src="js/twemoji.min.js" defer></script>
+<script src="js/jquery.min.js"></script>
 
-    <script src="js/data/data_config.js"></script>
-    <script src="js/core/state.js"></script>
-
-<!--    时间线-->
-    <script src="js/data/data_timeline.js"></script>
-
-
-
-    <script src="js/data/data_materials.js"></script>
-    <script src="js/data/data_food_materials.js"></script>
-    <script src="js/data/data_foods.js"></script>
-    <script src="js/data/data_herbs.js"></script>
-    <script src="js/data/data_pills.js"></script>
-    <script src="js/data/data_weapons.js"></script>
-    <script src="js/data/data_head.js"></script>
-    <script src="js/data/data_body.js"></script>
-    <script src="js/data/data_feet.js"></script>
-    <script src="js/data/data_mounts.js"></script>
-    <script src="js/data/data_tools.js"></script>
-    <script src="js/data/data_books.js"></script>
-    <script src="js/data/data_fish.js"></script>
-    <script src="js/data/data_entry.js"></script>
-    <script src="js/data/data_zhaoshi.js"></script>
-
-
-    <script src="js/data/spirit/data_spiritItem.js"></script>
-
-<!--    敌人-->
-    <script src="js/data/data_enemies_config.js"></script>
-    <script src="js/data/data_enemies.js"></script>
-
-    <script src="js/data/data_event_enemies.js"></script>
-
-    <script src="js/data/data_world.js"></script>
-    <script src="js/data/data_npcs.js"></script>
-    <script src="js/data/data_icon.js"></script>
-
-
-    <script src="js/core/utils_enemy.js"></script>
-
-    <script src="js/action/util_gather.js"></script>
-    <script src="js/action/util_study.js"></script>
-    <script src="js/action/util_train.js"></script>
-    <script src="js/action/util_rest.js"></script>
-    <script src="js/action/util_cook.js"></script>
-    <script src="js/action/util_fish.js"></script>
-    <script src="js/action/util_eat.js"></script>
-    <script src="js/action/util_water.js"></script>
-    <script src="js/action/util_shop.js"></script>
-    <script src="js/action/util_alchemy.js"></script>
-
-<!--    事件处理工具类-->
-    <script src="js/action/times/time_history.js"></script>
-    <script src="js/action/times/time_raid.js"></script>
-    <script src="js/action/times/time_events.js"></script>
-    <script src="js/action/time.js"></script>
+<script src="js/core/utils_money.js" defer></script>
+<script src="js/core/utils_attribute.js" defer></script>
 
 
 
-    <script src="js/core/global.js"></script>
-    <script src="js/core/utils.js"></script>
+<script src="js/data/data_config.js" defer></script>
+<script src="js/data/data_timeline.js" defer></script>
+<script src="js/data/data_materials.js" defer></script>
+<script src="js/data/data_food_materials.js" defer></script>
+<script src="js/data/data_foods.js" defer></script>
+<script src="js/data/data_herbs.js" defer></script>
+<script src="js/data/data_pills.js" defer></script>
+<script src="js/data/data_weapons.js" defer></script>
+<script src="js/data/data_head.js" defer></script>
+<script src="js/data/data_body.js" defer></script>
+<script src="js/data/data_feet.js" defer></script>
+<script src="js/data/data_mounts.js" defer></script>
+<script src="js/data/data_tools.js" defer></script>
+<script src="js/data/data_books.js" defer></script>
+<script src="js/data/data_fish.js" defer></script>
+<script src="js/data/data_entry.js" defer></script>
+<script src="js/data/data_zhaoshi.js" defer></script>
+<script src="js/data/spirit/data_spiritItem.js" defer></script>
+<script src="js/data/data_enemies_config.js" defer></script>
+<script src="js/data/data_enemies.js" defer></script>
+<script src="js/data/data_event_enemies.js" defer></script>
+<script src="js/data/data_world.js" defer></script>
+<script src="js/data/data_npcs.js" defer></script>
+<script src="js/data/data_icon.js" defer></script>
+<script src="js/modules/mortal/data_mortal.js" defer></script>
 
-    <script src="js/core/utils_debug.js"></script>
-    <script src="js/core/utils_modal.js"></script>
-    <script src="js/core/utils_add.js"></script>
-    <script src="js/core/utils_item.js"></script>
-    <script src="js/core/utils_spiritPrice.js"></script>
-    <script src="js/core/utils_tip.js"></script>
-    <script src="js/core/utils_skill.js"></script>
-    <script src="js/core/utils_buff.js"></script>
-    <script src="js/core/utils_log.js"></script>
-    <script src="js/core/utils_transmit.js"></script>
-    <script src="js/core/cloud_archive.js"></script>
-    <script src="js/core/utils_life_skills.js"></script>
-    <script src="js/core/utils_gamble.js"></script>
-    <script src="js/core/utils_player.js"></script>
-
-
-
-    <script src="js/modules/ink_generator.js"></script>
-
-    <script src="js/modules/shop_system.js"></script>
-    <script src="js/modules/town_shops.js"></script>
-    <script src="js/modules/shops/inn.js"></script>
-    <script src="js/modules/shops/bounty/task_exterminate.js"></script>
-    <script src="js/modules/shops/bounty/task_delivery.js"></script>
-    <script src="js/modules/shops/bounty/task_collect.js"></script>
-    <script src="js/modules/shops/bounty_board.js"></script>
-    <script src="js/modules/shops/black_market.js"></script>
-    <script src="js/modules/shops/blacksmith.js"></script>
-    <script src="js/modules/shops/alchemy_shop.js"></script>
-    <script src="js/modules/shops/medical_shop.js"></script>
-    <script src="js/modules/shops/post_station.js"></script>
-    <script src="js/modules/shops/grocery.js"></script>
-    <script src="js/modules/shops/game/game_chupu.js"></script>
-    <script src="js/modules/shops/game/game_liubo.js"></script>
-
-
-    <script src="js/modules/shops/game/game_qingyun_ai.js"></script>
-    <script src="js/modules/shops/game/game_qingyun_model.js"></script>
-    <script src="js/modules/shops/game/game_qingyun_ui.js"></script>
-    <script src="js/modules/shops/game/game_qingyun_ctrl.js"></script>
-
-
-
-
-    <script src="js/modules/shops/gamble_shop.js"></script>
-
-
-    <script src="js/modules/ui_combat_modal.js"></script>
-    <script src="js/modules/map_enemy_manager.js"></script>
-    <script src="js/modules/map_camera.js"></script>
+<script src="js/core/state.js" defer></script>
+<script src="js/core/global.js" defer></script>
+<script src="js/core/utils.js" defer></script>
+<script src="js/core/utils_fail.js" defer></script>
+<script src="js/core/utils_debug.js" defer></script>
+<script src="js/core/utils_modal.js" defer></script>
+<script src="js/core/utils_add.js" defer></script>
+<script src="js/core/utils_item.js" defer></script>
+<script src="js/core/utils_spiritPrice.js" defer></script>
+<script src="js/core/utils_tip.js" defer></script>
+<script src="js/core/utils_skill.js" defer></script>
+<script src="js/core/utils_buff.js" defer></script>
+<script src="js/core/utils_log.js" defer></script>
+<script src="js/core/utils_transmit.js" defer></script>
+<script src="js/core/cloud_archive.js" defer></script>
+<script src="js/core/utils_life_skills.js" defer></script>
+<script src="js/core/utils_gamble.js" defer></script>
+<script src="js/core/utils_player.js" defer></script>
+<script src="js/core/utils_enemy.js" defer></script>
+<script src="js/core/utils_gongfa.js" defer></script>
+<script src="js/core/utils_npc.js" defer></script>
 
 
-    <script src="js/modules/map_atlas.js"></script>
+<script src="js/core/utils_mortal_task.js" defer></script>
 
-<!--  战斗相关  -->
-    <script src="js/modules/combat/combat_init.js"></script>
-    <script src="js/modules/combat/combat_action.js"></script>
-    <script src="js/modules/combat/combat_calc.js"></script>
-    <script src="js/modules/combat/combat_core.js"></script>
-    <script src="js/modules/combat/combat_ui.js"></script>
-    <script src="js/modules/combat.js"></script>
+<script src="js/action/util_gather.js" defer></script>
+<script src="js/action/util_study.js" defer></script>
+<script src="js/action/util_train.js" defer></script>
+<script src="js/action/util_rest.js" defer></script>
+<script src="js/action/util_cook.js" defer></script>
+<script src="js/action/util_fish.js" defer></script>
+<script src="js/action/util_eat.js" defer></script>
+<script src="js/action/util_water.js" defer></script>
+<script src="js/action/util_shop.js" defer></script>
+<script src="js/action/util_alchemy.js" defer></script>
+<script src="js/action/times/time_history.js" defer></script>
+<script src="js/action/times/time_raid.js" defer></script>
+<script src="js/action/times/time_events.js" defer></script>
+<script src="js/action/time.js" defer></script>
+
+<script src="js/modules/ink_generator.js" defer></script>
+<script src="js/modules/shop_system.js" defer></script>
+<script src="js/modules/town_shops.js" defer></script>
+<script src="js/modules/shops/inn.js" defer></script>
+<script src="js/modules/shops/bounty/task_exterminate.js" defer></script>
+<script src="js/modules/shops/bounty/task_delivery.js" defer></script>
+<script src="js/modules/shops/bounty/task_collect.js" defer></script>
+<script src="js/modules/shops/bounty_board.js" defer></script>
+<script src="js/modules/shops/black_market.js" defer></script>
+<script src="js/modules/shops/blacksmith.js" defer></script>
+<script src="js/modules/shops/alchemy_shop.js" defer></script>
+<script src="js/modules/shops/medical_shop.js" defer></script>
+<script src="js/modules/shops/post_station.js" defer></script>
+<script src="js/modules/shops/grocery.js" defer></script>
+<script src="js/modules/shops/game/game_chupu.js" defer></script>
+<script src="js/modules/shops/game/game_liubo.js" defer></script>
+<script src="js/modules/shops/game/game_qingyun_ai.js" defer></script>
+<script src="js/modules/shops/game/game_qingyun_model.js" defer></script>
+<script src="js/modules/shops/game/game_qingyun_ui.js" defer></script>
+<script src="js/modules/shops/game/game_qingyun_ctrl.js" defer></script>
+<script src="js/modules/shops/gamble_shop.js" defer></script>
+
+<script src="js/modules/ui_combat_modal.js" defer></script>
+<script src="js/modules/map_enemy_manager.js" defer></script>
+<script src="js/modules/map_camera.js" defer></script>
+<script src="js/modules/map_atlas.js" defer></script>
+<script src="js/modules/combat/combat_init.js" defer></script>
+<script src="js/modules/combat/combat_action.js" defer></script>
+<script src="js/modules/combat/combat_calc.js" defer></script>
+<script src="js/modules/combat/combat_core.js" defer></script>
+<script src="js/modules/combat/combat_ui.js" defer></script>
+<script src="js/modules/combat.js" defer></script>
+
+<script src="js/modules/ui.js" defer></script>
+<script src="js/modules/ui_bag.js" defer></script>
+<script src="js/modules/ui_skill.js" defer></script>
+<script src="js/modules/ui_train.js" defer></script>
+<script src="js/modules/ui_bounty.js" defer></script>
+<script src="js/modules/ui_fish.js" defer></script>
+<script src="js/modules/ui_cook.js" defer></script>
+<script src="js/modules/ui_alchemy.js" defer></script>
+<script src="js/modules/ui_tutorial.js" defer></script>
+<script src="js/modules/ui_study.js" defer></script>
 
 
+<script src="js/modules/mortal/mortal_game.js" defer></script>
+<script src="js/modules/mortal/ui_mortal.js" defer></script>
+<script src="js/modules/map_view.js" defer></script>
+<script src="js/modules/input_shortcuts.js" defer></script>
+<script src="js/modules/archive.js" defer></script>
 
-    <script src="js/modules/ui.js"></script>
-    <script src="js/modules/ui_bag.js"></script>
-    <script src="js/modules/ui_skill.js"></script>
-    <script src="js/modules/ui_train.js"></script>
-    <script src="js/modules/ui_bounty.js"></script>
-    <script src="js/modules/ui_fish.js"></script>
-    <script src="js/modules/ui_cook.js"></script>
-    <script src="js/modules/ui_alchemy.js"></script>
+<script src="js/main.js" defer></script>
 
-    <script src="js/modules/input_shortcuts.js"></script>
-    <script src="js/modules/map_view.js"></script>
-    <script src="js/modules/archive.js"></script>
-    <script src="js/modules/ui_study.js"></script>
-
-    <script src="js/core/utils_fail.js"></script>
-
-    <script src="js/main.js"></script>
-
-
-
+<script defer>
+    function toggleCombatPanel() {
+        const box = document.getElementById('combat_details');
+        const arrow = document.getElementById('combat_arrow');
+        if (box.classList.contains('collapsed')) {
+            box.classList.remove('collapsed');
+            arrow.style.transform = 'rotate(180deg)';
+        } else {
+            box.classList.add('collapsed');
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+</script>
 </body>
 </html>

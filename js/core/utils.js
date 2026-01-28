@@ -6,7 +6,7 @@
 /**
  * 模块 1: 高级随机系统 (基于种子)
  */
-const RandomSystem = {
+let RandomSystem = {
     _hash: function(str) {
         let h = 0x811c9dc5;
         for (let i = 0; i < str.length; i++) {
@@ -52,6 +52,7 @@ const RandomSystem = {
         return Math.floor(r * (max - min + 1)) + min;
     }
 };
+window.RandomSystem = RandomSystem;
 window.getSeededRandom = (...args) => RandomSystem.get(...args);
 
 

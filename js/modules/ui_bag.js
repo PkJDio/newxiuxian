@@ -1,5 +1,5 @@
-// js/modules/ui_bag.js - Part 1
-// 背包界面 (交互增强 + 词条显示完整版)
+// js/modules/ui_bag.js
+// 背包界面 (Refactored with HTML <template>)
 
 const UIBag = {
     // --- 状态管理 ---
@@ -8,8 +8,68 @@ const UIBag = {
     selectedIndex: -1,      // 当前选中的背包格子索引
     activeEquipSlot: null,  // 当前选中的装备槽位 (如 'weapon')
 
-    // --- 核心方法 ---
+    // --- 1. 模板初始化 (核心改动) ---
+    _initTemplates: function() {
+        // 防止重复注入
+        if (document.getElementById('tpl_bag_layout')) return;
+
+        const templates = `
+            <template id="tpl_bag_layout">
+                <div class="bag_container">
+                    <div id="bag_equipment_row" class="bag_equipment_row"></div>
+                    <div id="bag_toolbar_container" class="bag_toolbar"></div>
+                    <div class="bag_main_area">
+                        <div class="bag_grid_scroll">
+                            <div id="bag_grid_content" class="bag_grid_content"></div>
+                        </div>
+                        <div id="bag_detail_panel" class="bag_detail_panel">
+                            <div class="bag_empty_tip" style="color:#999; text-align:center; margin-top:50px;">点击物品查看详情</div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <template id="tpl_bag_equip_slot">
+                <div class="bag_equip_wrapper">
+                    <div class="bag_equip_slot">
+                        <div class="bag_equip_icon"></div>
+                    </div>
+                    <div class="bag_equip_label"></div>
+                </div>
+            </template>
+
+            <template id="tpl_bag_grid_item">
+                <div class="bag_grid_item">
+                    <div class="bag_check_mark" style="display:none;">✔</div>
+                    <div class="bag_grid_icon"></div>
+                    <div class="bag_grid_name"></div>
+                    <div class="bag_item_count"></div>
+                    <div class="bag_marks_container"></div> </div>
+            </template>
+            
+            <template id="tpl_bag_detail">
+                <div class="bag_detail_header" style="border-bottom:2px solid #333; padding-bottom:4px; margin-bottom:4px;">
+                    <span class="detail_title" style="font-size:20px; font-weight:bold;"></span>
+                    <span class="detail_tag ink_tag" style="color:#fff; font-size:12px; padding:1px 5px; border-radius:3px; float:right; margin-top:4px;"></span>
+                </div>
+                <div class="detail_type_row" style="color:#666; font-size:16px; margin-bottom:4px;"></div>
+                
+                <div class="detail_stats_container"></div> 
+                
+                <div class="detail_req_container"></div>   
+                
+                <div class="detail_desc" style="margin-top:8px; color:#4d4343; font-size:16px; line-height:1.4; border-top:1px solid #444; padding-top:8px;"></div>
+                <div class="detail_price" style="margin-top:10px; text-align:right; color:#d4af37; font-weight:bold; font-size:16px;"></div>
+                
+                <div class="detail_actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+            </template>
+        `;
+        document.body.insertAdjacentHTML('beforeend', templates);
+    },
+
+    // --- 2. 核心方法 ---
     open: function() {
+        this._initTemplates(); // 确保模板存在
         this.selectionMode = false;
         this.selectedIndices.clear();
         this.selectedIndex = -1;
@@ -24,20 +84,15 @@ const UIBag = {
 
     showModal: function() {
         const title = "修仙行囊";
-        const contentHtml = `
-            <div class="bag_container">
-                <div id="bag_equipment_row" class="bag_equipment_row"></div>
-                <div id="bag_toolbar_container" class="bag_toolbar"></div>
-                <div class="bag_main_area">
-                    <div class="bag_grid_scroll">
-                        <div id="bag_grid_content" class="bag_grid_content"></div>
-                    </div>
-                    <div id="bag_detail_panel" class="bag_detail_panel">
-                        <div style="color:#999; text-align:center; margin-top:50px;">点击物品查看详情</div>
-                    </div>
-                </div>
-            </div>
-        `;
+
+        // 从模板生成主 HTML
+        const tpl = document.getElementById('tpl_bag_layout');
+        const clone = tpl.content.cloneNode(true);
+        // showGeneralModal 通常需要字符串，所以我们用一个临时 div 包裹获取 innerHTML
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(clone);
+        const contentHtml = tempDiv.innerHTML;
+
         if (window.showGeneralModal) window.showGeneralModal(title, contentHtml, null, "modal_bag", 68, 80);
 
         this._bindGridEvents();
@@ -79,25 +134,20 @@ const UIBag = {
         this.renderGrid();
 
         // 根据当前焦点状态，自动刷新详情页
-        // 情况1: 焦点在装备槽
         if (this.activeEquipSlot) {
             const item = p.equipment[this.activeEquipSlot];
             if (item) {
                 this.renderDetail(item, { type: 'equip', key: this.activeEquipSlot });
             } else {
-                // 如果装备没了(比如被卸下)，重置
                 this.activeEquipSlot = null;
                 this._clearDetail();
             }
         }
-        // 情况2: 焦点在背包格子
         else if (this.selectedIndex !== -1) {
             const item = p.inventory[this.selectedIndex];
             if (item) {
-                // 自然渲染：如果原物品没了，显示该位置的新物品
                 this.renderDetail(item, { type: 'bag', index: this.selectedIndex });
             } else {
-                // 如果该位置没物品了（比如删除了最后一个），清空
                 this.selectedIndex = -1;
                 this._clearDetail();
             }
@@ -109,12 +159,12 @@ const UIBag = {
         if (panel) panel.innerHTML = '<div style="color:#999; text-align:center; margin-top:50px;">点击物品查看详情</div>';
     },
 
-    // 渲染顶部装备栏
+    // --- 3. 渲染顶部装备栏 (Template Refactor) ---
     renderEquipRow: function() {
         const equipRow = document.getElementById('bag_equipment_row');
         if (!equipRow) return;
-        const p = window.player;
 
+        const p = window.player;
         const slots = [
             { key: 'weapon', label: '兵器', defaultIcon: '⚔️' },
             { key: 'head',   label: '头部', defaultIcon: '🧢' },
@@ -124,81 +174,95 @@ const UIBag = {
             { key: 'fishing_rod', label: '钓具', defaultIcon: '🎣' }
         ];
 
-        let html = slots.map(slot => {
+        equipRow.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        const tpl = document.getElementById('tpl_bag_equip_slot');
+
+        // A. 渲染固定装备槽
+        slots.forEach(slot => {
             const item = p.equipment[slot.key];
+            const clone = tpl.content.cloneNode(true);
+
+            const wrapper = clone.querySelector('.bag_equip_wrapper');
+            const slotEl = clone.querySelector('.bag_equip_slot');
+            const iconEl = clone.querySelector('.bag_equip_icon');
+            const labelEl = clone.querySelector('.bag_equip_label');
+
             let icon = slot.defaultIcon;
             let borderColor = '#ccc';
-            let extraClass = '';
 
             if (item) {
                 icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || icon;
                 const qualityColor = (window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#ddd';
                 borderColor = qualityColor;
-                extraClass = 'active';
+                slotEl.classList.add('active');
             }
 
             // 高亮判断
             if (this.activeEquipSlot === slot.key) {
-                // 强制高亮样式
                 borderColor = '#ff9800';
-                extraClass += ' active_slot_highlight';
+                slotEl.classList.add('active_slot_highlight');
+                slotEl.style.boxShadow = '0 0 8px rgba(255,152,0,0.5)';
+                slotEl.style.borderWidth = '2px';
             }
 
-            const name = item ? item.name : slot.label;
-            const clickAction = `UIBag.selectEquipSlot('${slot.key}')`;
+            slotEl.style.borderColor = borderColor;
+            iconEl.innerHTML = icon;
 
-            // 增加选中时的阴影效果
-            const style = `border-color:${borderColor}; ${this.activeEquipSlot === slot.key ? 'box-shadow: 0 0 8px rgba(255,152,0,0.5); border-width:2px;' : ''}`;
+            labelEl.textContent = item ? item.name : slot.label;
+            labelEl.style.color = item ? borderColor : '#999';
 
-            return `
-            <div class="bag_equip_wrapper" onclick="${clickAction}">
-                <div class="bag_equip_slot ${extraClass}" style="${style}">
-                    <div class="bag_equip_icon">${icon}</div>
-                </div>
-                <div class="bag_equip_label" style="color:${item ? borderColor : '#999'}">${name}</div>
-            </div>
-            `;
-        }).join('');
+            // 绑定事件
+            wrapper.onclick = () => UIBag.selectEquipSlot(slot.key);
 
-        // 快捷栏渲染
-        html += `<div class="bag_equip_spacer"></div>`;
+            fragment.appendChild(clone);
+        });
+
+        // B. 渲染间隔符
+        const spacer = document.createElement('div');
+        spacer.className = 'bag_equip_spacer';
+        fragment.appendChild(spacer);
+
+        // C. 渲染快捷栏
         if (!p.consumables) p.consumables = [null, null, null];
-
         p.consumables.forEach((sid, idx) => {
             const item = sid ? p.inventory.find(i => i.sid === sid) : null;
             if(!item && sid) p.consumables[idx] = null; // 修正无效数据
 
-            let icon = item ? ((typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '💊') : '<span style="opacity:0.2; font-size:24px;">💊</span>';
-            let name = item ? item.name : `快捷${idx + 1}`;
-            let activeClass = item ? 'has_item' : '';
+            const clone = tpl.content.cloneNode(true);
+            const wrapper = clone.querySelector('.bag_equip_wrapper');
+            const slotEl = clone.querySelector('.bag_equip_slot');
+            const iconEl = clone.querySelector('.bag_equip_icon');
+            const labelEl = clone.querySelector('.bag_equip_label');
 
-            html += `
-                <div class="bag_equip_wrapper" onclick="UIBag.showConsumableDetail(${idx})">
-                    <div class="bag_equip_slot slot_consumable ${activeClass}">
-                        <div class="bag_equip_icon">${icon}</div>
-                    </div>
-                    <div class="bag_equip_label">${name}</div>
-                </div>
-            `;
+            slotEl.classList.add('slot_consumable');
+
+            let iconStr = '<span style="opacity:0.2; font-size:24px;">💊</span>';
+            if (item) {
+                slotEl.classList.add('has_item');
+                iconStr = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '💊';
+            }
+
+            iconEl.innerHTML = iconStr;
+            labelEl.textContent = item ? item.name : `快捷${idx + 1}`;
+
+            wrapper.onclick = () => UIBag.showConsumableDetail(idx);
+            fragment.appendChild(clone);
         });
 
-        equipRow.innerHTML = html;
-        if (window.twemoji) {
-            window.twemoji.parse(equipRow);
-        }
+        equipRow.appendChild(fragment);
+        if (window.twemoji) window.parseEmoji(equipRow);
     },
 
-    // 点击装备槽逻辑
     selectEquipSlot: function(slotKey) {
         const item = window.player.equipment[slotKey];
-        if (!item) return; // 空槽位不给选
-
+        if (!item) return;
         this.activeEquipSlot = slotKey;
-        this.selectedIndex = -1; // 清除背包选中
+        this.selectedIndex = -1;
         this.refresh();
     },
 
-    // 渲染背包网格
+    // --- 4. 渲染背包网格 (Template Refactor) ---
     renderGrid: function() {
         const container = document.getElementById('bag_grid_content');
         if (!container) return;
@@ -208,41 +272,70 @@ const UIBag = {
             return;
         }
 
-        const html = player.inventory.map((slot, index) => {
+        container.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        const tpl = document.getElementById('tpl_bag_grid_item');
+
+        player.inventory.forEach((slot, index) => {
             const item = player.inventory.find(i => i.id === slot.id);
-            if (!item) return '';
+            if (!item) return;
 
-            const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+            const clone = tpl.content.cloneNode(true);
+            const itemDiv = clone.querySelector('.bag_grid_item');
+            const checkMark = clone.querySelector('.bag_check_mark');
+            const iconDiv = clone.querySelector('.bag_grid_icon');
+            const nameDiv = clone.querySelector('.bag_grid_name');
+            const countDiv = clone.querySelector('.bag_item_count');
+            const marksContainer = clone.querySelector('.bag_marks_container');
 
+            // 基础数据
             const rarityColor = (window.RARITY_CONFIG && RARITY_CONFIG[item.rarity]) ? RARITY_CONFIG[item.rarity].color : '#333';
-            const sid = slot.sid;
-            const isSelected = this.selectedIndices.has(sid) ? 'selected' : '';
+            itemDiv.style.borderColor = rarityColor;
+            itemDiv.dataset.index = index;
 
-            // 判断高亮：必须不在选择模式，且索引匹配，且当前没有聚焦装备栏
-            const isActive = (!this.selectionMode && index === this.selectedIndex && !this.activeEquipSlot) ? 'active_item' : '';
+            // 选中状态判断
+            const isSelected = this.selectedIndices.has(slot.sid);
 
+            // 选中状态样式 (边框高亮等)
+            if (isSelected) itemDiv.classList.add('selected');
+
+            // 高亮状态 (详情页焦点)
+            const isActive = (!this.selectionMode && index === this.selectedIndex && !this.activeEquipSlot);
+            if (isActive) itemDiv.classList.add('active_item');
+
+            // === 【修改点】勾选标记显示逻辑 ===
+            // 原逻辑：if (this.selectionMode) checkMark.style.display = 'block';
+            // 新逻辑：仅在 (开启批量模式 且 当前物品被选中) 时才显示勾
+            if (this.selectionMode && isSelected) {
+                checkMark.style.display = 'block';
+            } else {
+                checkMark.style.display = 'none';
+            }
+            // =================================
+
+            // 图标与名字
+            const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+            iconDiv.innerHTML = icon;
+            nameDiv.textContent = item.name;
+            nameDiv.style.color = rarityColor;
+            countDiv.textContent = slot.count;
+
+            // 额外标记 (配/轮回)
+            let markHtml = '';
             const isConsumableEquipped = player.consumables && player.consumables.includes(item.id);
-            let markHtml = isConsumableEquipped ? `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>` : '';
-// 【新增代码】检测轮回标记 (samsaraItem)
+            if (isConsumableEquipped) {
+                markHtml += `<div style="position:absolute;top:2px;left:2px;font-size:10px;background:#4caf50;color:#fff;padding:1px 3px;border-radius:2px;">配</div>`;
+            }
             if (item.samsaraItem) {
-                // 在格子左上角添加紫色太极，并稍微调整层级防止遮挡
                 markHtml += `<div style="position:absolute;top:2px;left:2px;font-size:12px;color:#9c27b0;line-height:1;text-shadow:1px 1px 0 #fff;z-index:5;" title="轮回物品">☯️</div>`;
             }
-            return `
-                <div class="bag_grid_item ${isSelected} ${isActive}" data-index="${index}" style="border-color:${rarityColor}">
-                    ${this.selectionMode ? '<div class="bag_check_mark">✔</div>' : ''}
-                    <div class="bag_grid_icon">${icon}</div>
-                    <div class="bag_grid_name" style="color:${rarityColor}">${item.name}</div>
-                    <div class="bag_item_count">${slot.count}</div>
-                    ${markHtml}
-                </div>
-            `;
-        }).join('');
+            marksContainer.innerHTML = markHtml;
 
-        container.innerHTML = html;
-        if (window.twemoji) {
-            window.twemoji.parse(container);
-        }
+            fragment.appendChild(clone);
+        });
+
+        container.appendChild(fragment);
+        if (window.twemoji) window.parseEmoji(container);
     },
 
     // --- 详情显示 Wrapper 方法 ---
@@ -262,38 +355,49 @@ const UIBag = {
         this.renderDetail(item, { type: 'consumable', index: index });
     },
 
-    // --- 详情渲染核心 (接 Part 1) ---
-    // js/modules/ui_bag.js - renderDetail (只保留图标，去掉了文字前缀)
 
+    // --- 5. 详情渲染核心 (Hybrid: Template结构 + String内容) ---
     renderDetail: function(item, context) {
         if (!item) return;
         const container = document.getElementById('bag_detail_panel');
         if (!container) return;
 
-        // 1. 头部信息
+        // A. 准备 Template
+        const tpl = document.getElementById('tpl_bag_detail');
+        const clone = tpl.content.cloneNode(true);
+
+        // B. 填充头部
         const rarityInfo = (typeof RARITY_CONFIG !== 'undefined' ? RARITY_CONFIG[item.rarity] : null) || {color:'#333', name:'普通'};
-        const globalTypeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
-        //武器专属的weaponTypes
+        const headerDiv = clone.querySelector('.bag_detail_header');
+        headerDiv.style.color = rarityInfo.color;
+        headerDiv.style.borderColor = rarityInfo.color + '33';
 
-        let displayType = item.type === "weapon" ? item.subType :  (globalTypeMap[item.type]  || item.subType || item.type || "物品");
-
-
-
-        let combatTypeHtml = item.combatType ? ` <span style="color:#b8860b; font-weight:bold; margin-left:4px;">[${item.combatType}]</span>` : '';
         const icon = (typeof getItemIcon === 'function' ? getItemIcon(item) : item.icon) || '📦';
+        const samsaraMark = item.samsaraItem ? `<span style="color:#9c27b0; font-size:18px; margin-left:6px; vertical-align:middle; text-shadow:0 0 2px rgba(156,39,176,0.3);" title="轮回物品">☯️</span>` : '';
 
-        // 【保留】头部图标标记 (紫色太极)
-        let samsaraHeaderMark = item.samsaraItem ?
-            `<span style="color:#9c27b0; font-size:18px; margin-left:6px; vertical-align:middle; text-shadow:0 0 2px rgba(156,39,176,0.3);" title="轮回物品">☯️</span>`
-            : '';
+        // 【修改点1】标题增加强化等级显示 (+X)
+        let levelStr = "";
+        if (item.level && item.level > 0) {
+            levelStr = ` <span style="color:#ffd740; font-weight:bold; text-shadow:1px 1px 0 #000; font-size:18px;">+${item.level}</span>`;
+        }
+        clone.querySelector('.detail_title').innerHTML = `${icon} ${item.name}${levelStr}${samsaraMark}`;
 
-        // 【删除】这里不再定义 samsaraTag 文字前缀
+        const tagEl = clone.querySelector('.detail_tag');
+        tagEl.style.background = rarityInfo.color;
+        tagEl.textContent = rarityInfo.name;
+
+        // C. 类型行
+        const globalTypeMap = (typeof TYPE_MAPPING !== 'undefined') ? TYPE_MAPPING : {};
+        let displayType = item.type === "weapon" ? item.subType : (globalTypeMap[item.type] || item.subType || item.type || "物品");
+        let combatTypeHtml = item.combatType ? ` <span style="color:#b8860b; font-weight:bold; margin-left:4px;">[${item.combatType}]</span>` : '';
 
         let typeSuffix = '';
         if (context.type === 'equip') typeSuffix = '<span style="font-size:16px; margin-left:5px;">(已装备)</span>';
         if (context.type === 'consumable') typeSuffix = '<span style="font-size:16px; margin-left:5px;">(已携带)</span>';
 
-        // 2. 属性列表构建
+        clone.querySelector('.detail_type_row').innerHTML = `${displayType}${combatTypeHtml} ${typeSuffix}`;
+
+        // D. 属性计算
         let statsRows = [];
         if (item.durability !== undefined) {
             statsRows.push(`<div style="color:#795548; font-size:16px; margin-bottom:2px;">🛡 耐久: ${item.durability}</div>`);
@@ -351,11 +455,23 @@ const UIBag = {
             });
         }
 
-        // --- 装备词条显示 ---
+        // 【修改点2】插入强化属性显示 (Ex Stats)
+        if (item.level > 0) {
+            const exColor = "#f9a825"; // 强化属性使用亮橙金色
+            // 武器强化
+            if (item.exPhyAtk) statsRows.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; line-height:1.3; margin-bottom:1px;"><span style="color:#795548;">🔨 强化攻击</span><span style="color:${exColor}; font-weight:bold;">+${item.exPhyAtk}</span></div>`);
+            // 为了避免重复显示，如果法攻和物攻数值一样且都是武器，通常只显示一次或分开显示，这里分开显示最清晰
+            if (item.exMagAtk) statsRows.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; line-height:1.3; margin-bottom:1px;"><span style="color:#795548;">⚡ 强化法攻</span><span style="color:${exColor}; font-weight:bold;">+${item.exMagAtk}</span></div>`);
+
+            // 防具强化
+            if (item.exPhyDef) statsRows.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; line-height:1.3; margin-bottom:1px;"><span style="color:#795548;">🛡 强化防御</span><span style="color:${exColor}; font-weight:bold;">+${item.exPhyDef}</span></div>`);
+            if (item.exMagDef) statsRows.push(`<div style="display:flex; justify-content:space-between; align-items:center; font-size:16px; line-height:1.3; margin-bottom:1px;"><span style="color:#795548;">🔮 强化法防</span><span style="color:${exColor}; font-weight:bold;">+${item.exMagDef}</span></div>`);
+        }
+
+        // 词条显示逻辑
         let entriesHtml = '';
         if (['weapon','head','body','feet','fishing_rod'].includes(item.type) && item.entries && item.entries.length > 0 && window.ENTRY_DB) {
             let entryListHtml = '';
-
             item.entries.forEach(entry => {
                 const def = window.ENTRY_DB[entry.id];
                 if (!def) return;
@@ -400,17 +516,18 @@ const UIBag = {
             }
         }
 
-        // 3. 组合属性区域
-        const finalStatsHtml = (statsRows.length > 0 || entriesHtml) ?
-            `<div class="bag_detail_stats" style="margin-top:8px; padding:6px 8px; background:rgba(255,255,255,0.03); border-radius:4px; border:1px solid #444;">
-                ${statsRows.join('')}
-                ${entriesHtml ? (statsRows.length > 0 ? '<div style="margin:6px 0 6px 0; border-top:1px dashed #555;"></div>' : '') + entriesHtml : ''}
-            </div>` : '';
+        // 注入属性容器
+        const statsContainer = clone.querySelector('.detail_stats_container');
+        if (statsRows.length > 0 || entriesHtml) {
+            statsContainer.style.cssText = "margin-top:8px; padding:6px 8px; background:rgba(255,255,255,0.03); border-radius:4px; border:1px solid #444;";
+            statsContainer.innerHTML = statsRows.join('') + (entriesHtml ? (statsRows.length > 0 ? '<div style="margin:6px 0 6px 0; border-top:1px dashed #555;"></div>' : '') + entriesHtml : '');
+        } else {
+            statsContainer.style.display = 'none';
+        }
 
-        // 4. 穿戴条件
-        let reqHtml = '';
+        // E. 穿戴条件
+        let reqList = [];
         if (item.req) {
-            let reqList = [];
             const currentStats = window.player.derived || window.player.attr || {};
             for (let key in item.req) {
                 const reqVal = item.req[key];
@@ -420,19 +537,27 @@ const UIBag = {
                 const statusIcon = isMet ? '✅' : '🚫';
                 reqList.push(`<div style="display:flex; justify-content:space-between; color:${isMet ? '#4d4343' : '#d9534f'}; font-size:15px;"><span>${attrName}</span><span>${myVal}/${reqVal} ${statusIcon}</span></div>`);
             }
-            if (reqList.length > 0) {
-                reqHtml = `<div class="bag_detail_req" style="margin:8px 0; padding:6px 8px; background:rgba(0,0,0,0.1); border:1px dashed #555; border-radius:4px;"><div style="font-weight:bold; color:#777; font-size:15px; margin-bottom:3px;">▼ 穿戴条件</div>${reqList.join('')}</div>`;
-            }
         }
 
-        const descHtml = `<div class="bag_detail_desc" style="margin-top:8px; color:#4d4343; font-size:16px; line-height:1.4; border-top:1px solid #444; padding-top:8px;">${item.desc || "此物平平无奇。"}</div>`;
+        const reqContainer = clone.querySelector('.detail_req_container');
+        if (reqList.length > 0) {
+            reqContainer.innerHTML = `<div style="font-weight:bold; color:#777; font-size:15px; margin-bottom:3px;">▼ 穿戴条件</div>${reqList.join('')}`;
+            reqContainer.style.cssText = "margin:8px 0; padding:6px 8px; background:rgba(0,0,0,0.1); border:1px dashed #555; border-radius:4px;";
+        } else {
+            reqContainer.style.display = 'none';
+        }
 
-        let priceHtml = '';
+        // F. 描述与价格
+        clone.querySelector('.detail_desc').innerHTML = item.desc || "此物平平无奇。";
         const price = (item.value !== undefined) ? item.value : item.price;
-        if (price !== undefined) priceHtml = `<div style="margin-top:10px; text-align:right; color:#d4af37; font-weight:bold; font-size:16px;">💰 价值: ${price.toLocaleString()}</div>`;
+        if (price !== undefined) {
+            clone.querySelector('.detail_price').innerHTML = `💰 价值: ${price.toLocaleString()}`;
+        } else {
+            clone.querySelector('.detail_price').style.display = 'none';
+        }
 
-        // 5. 操作按钮组
-        let btnsHtml = `<div class="bag_detail_actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">`;
+        // G. 按钮组
+        let btnsHtml = '';
         const sid = item.sid;
 
         if (context.type === 'bag') {
@@ -456,24 +581,15 @@ const UIBag = {
         else if (context.type === 'consumable') {
             btnsHtml += `<button class="bag_btn_action" onclick="UIBag.unequipConsumable('${context.index}')">解除</button>`;
         }
-        btnsHtml += `</div>`;
 
-        // 6. 最终 HTML 注入
-        container.innerHTML = `
-            <div class="bag_detail_header" style="color:${rarityInfo.color}; border-bottom:2px solid ${rarityInfo.color}33; padding-bottom:4px; margin-bottom:4px;">
-                <span style="font-size:20px; font-weight:bold;">${icon} ${item.name}${samsaraHeaderMark}</span>
-                <span class="ink_tag" style="background:${rarityInfo.color}; color:#fff; font-size:12px; padding:1px 5px; border-radius:3px; float:right; margin-top:4px;">${rarityInfo.name}</span>
-            </div>
-            <div class="bag_detail_type" style="color:#666; font-size:16px; margin-bottom:4px;">${displayType}${combatTypeHtml} ${typeSuffix}</div>
-            ${finalStatsHtml}
-            ${reqHtml}  
-            ${descHtml}
-            ${priceHtml}
-            ${btnsHtml}
-        `;
+        clone.querySelector('.detail_actions').innerHTML = btnsHtml;
+
+        // 渲染到主容器
+        container.innerHTML = '';
+        container.appendChild(clone);
 
         if (window.twemoji) {
-            window.twemoji.parse(container);
+            window.parseEmoji(container);
         }
     },
 
@@ -542,13 +658,40 @@ const UIBag = {
     renderToolbar: function() {
         const container = document.getElementById('bag_toolbar_container');
         if (!container) return;
+
         let html = '';
+
+        // 1. 获取容量数据
+        const p = window.player;
+        const currentCount = p.inventory ? p.inventory.length : 0;
+        // 获取上限，优先读 derived.space，没有则默认 50
+        const maxSpace = (p.derived && p.derived.space) ? p.derived.space : 50;
+
+        // 2. 样式处理：满了变红，没满显示绿色或深色
+        const countColor = currentCount >= maxSpace ? '#d32f2f' : '#333';
+
+        // 3. 构建容量显示 HTML (使用 flex:1 占据左侧空间)
+        const spaceInfoHtml = `
+            <div style="flex:1; display:flex; align-items:center; font-family:'KaiTi'; font-size:16px; color:#5d4037;">
+                <span style="font-weight:bold; margin-right:4px;">🎒 容量:</span>
+                <span style="color:${countColor}; font-weight:bold;">${currentCount} / ${maxSpace}</span>
+            </div>
+        `;
+
         if (this.selectionMode) {
             const count = this.selectedIndices.size;
-            html = `<div class="bag_text_info"><span style="color:#a94442; margin-right:5px;">●</span> 已选: ${count}</div><button class="bag_btn_action" onclick="UIBag.exitSelectionMode()">取消</button><button class="bag_btn_danger" onclick="UIBag.confirmBatchDiscard()">确认丢弃</button>`;
+            // 批量模式：左侧显示已选数量
+            html = `<div class="bag_text_info" style="flex:1; font-weight:bold; color:#a94442;">● 已选: ${count}</div>
+                    <button class="bag_btn_action" onclick="UIBag.exitSelectionMode()">取消</button>
+                    <button class="bag_btn_danger" onclick="UIBag.confirmBatchDiscard()">确认丢弃</button>`;
         } else {
-            html = `<button class="bag_btn_action" onclick="UtilsItem.sortInventory();UIBag.refresh()">整理</button><button class="bag_btn_action" onclick="UIBag.enterSelectionMode()">批量丢弃</button><button class="bag_btn_action" style="color:#181815; border-color:#111111;" onclick="UIBag.showAttrHelp()">❓️属性详解</button>`;
+            // 正常模式：左侧显示容量，右侧显示按钮
+            html = spaceInfoHtml +
+                `<button class="bag_btn_action" onclick="UtilsItem.sortInventory();UIBag.refresh()">整理</button>
+                    <button class="bag_btn_action" onclick="UIBag.enterSelectionMode()">批量丢弃</button>
+                    <button class="bag_btn_action" style="color:#181815; border-color:#111111;" onclick="UIBag.showAttrHelp()">❓️属性详解</button>`;
         }
+
         container.innerHTML = html;
     },
 

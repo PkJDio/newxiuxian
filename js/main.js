@@ -11,6 +11,10 @@ window.onload = function() {
   loadGame();
   checkSaveFile();
   bindMainMenuEvents();
+    // 【新增】初始化 NPC 系统
+    if (window.UtilsNPC) {
+        window.UtilsNPC.initNPCs();
+    }
 
 
 

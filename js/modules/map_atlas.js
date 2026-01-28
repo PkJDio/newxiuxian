@@ -386,23 +386,35 @@ const MapAtlas = {
         const startY = Math.floor(viewRect.y) - 1;
         const endX = Math.ceil(viewRect.x + viewRect.w) + 1;
         const endY = Math.ceil(viewRect.y + viewRect.h) + 1;
+
         const seed = (player && player.worldSeed) ? player.worldSeed : 12345;
-        const totalWeight = 115; // sum of weights
-        const DENSITY = 0.10;
+
+        // 【核心修复】不要写死 115！动态计算当前所有素材的权重总和
+        // 这样无论你怎么改 init 里的数值，比例永远是正确的
+        const totalWeight = this.decoSprites.reduce((sum, s) => sum + s.weight, 0);
+
+        const DENSITY = 0.10; // 10% 密度
 
         for (let x = startX; x <= endX; x++) {
             for (let y = startY; y <= endY; y++) {
-                // 占用检查放到最前面
+                // 1. 占用检查
                 if (this._isOccupied(x, y)) continue;
 
+                // 2. 随机过滤
                 const rand = this._getDeterministicRandom(x, y, seed);
                 if (rand > DENSITY) continue;
 
+                // 3. 权重选择
+                // targetWeight 会在 0 到 totalWeight 之间
                 let targetWeight = (rand / DENSITY) * totalWeight;
+
+                // 容错：防止浮点数误差微超
+                if (targetWeight > totalWeight) targetWeight = totalWeight;
+
                 let sprite = null;
                 let currentWeight = 0;
 
-                // 优化查找：简单循环通常足够快
+                // 循环检查落在哪个区间
                 for(let i=0; i<this.decoSprites.length; i++) {
                     const s = this.decoSprites[i];
                     currentWeight += s.weight;
@@ -416,13 +428,11 @@ const MapAtlas = {
                     const screenX = (x - camera.x) * ts + cx;
                     const screenY = (y - camera.y) * ts + cy;
 
-                    // 随机偏移
                     const offsetX = (this._getDeterministicRandom(x, y, seed + 1) - 0.5) * ts * 0.5;
                     const offsetY = (this._getDeterministicRandom(x, y, seed + 2) - 0.5) * ts * 0.5;
-                    // alpha
                     const alpha = 0.5 + this._getDeterministicRandom(x, y, seed + 3) * 0.4;
 
-                    ctx.globalAlpha = alpha; // 外部已 save，这里直接设
+                    ctx.globalAlpha = alpha;
 
                     let drawScale = 1.5;
                     let drawYOffset = 0.5;
@@ -439,7 +449,6 @@ const MapAtlas = {
                 }
             }
         }
-        // 恢复 alpha
         ctx.globalAlpha = 1.0;
     },
 

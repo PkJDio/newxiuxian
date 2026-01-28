@@ -55,7 +55,7 @@ const InkSpriteGenerator = {
 
     _drawGrass: function(ctx, x, y) {
         const blades = 5 + Math.random() * 5;
-        ctx.lineCap = "round"; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 2;
+        ctx.lineCap = "round"; ctx.shadowColor = "rgb(26,138,26)"; ctx.shadowBlur = 2;
         for (let i = 0; i < blades; i++) {
             const height = 15 + Math.random() * 20;
             const lean = (Math.random() - 0.5) * 20;
@@ -100,7 +100,7 @@ const InkSpriteGenerator = {
         const height = 20 + Math.random() * 12;
 
         ctx.lineCap = "round";
-        ctx.strokeStyle = "rgba(20, 20, 20, 0.8)";
+        ctx.strokeStyle = "rgba(70,51,41,0.8)";
         ctx.lineWidth = 2 + Math.random() * 2;
 
         ctx.beginPath();
@@ -113,7 +113,7 @@ const InkSpriteGenerator = {
         const clusters = 4 + Math.random() * 3;
         ctx.fillStyle = `rgba(10, 20, 10, ${0.3 + Math.random() * 0.2})`;
         ctx.shadowBlur = 4;
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowColor = "rgba(25,72,2,0.5)";
 
         for(let i=0; i<clusters; i++) {
             const cx = x + (Math.random() - 0.5) * 24; // 稍微收窄横向范围

@@ -16,6 +16,7 @@
         'k': 'SKILL',  'K': 'SKILL',
         't': 'BOUNTY', 'T': 'BOUNTY',
         'j': 'JOURNAL','J': 'JOURNAL',
+        'x': 'MORTAL', 'X': 'MORTAL', // <--- 新增这行，绑定 X 键
         'Escape': 'CLOSE'
     };
 
@@ -46,6 +47,12 @@
         'JOURNAL': {
             getObj: () => window.UIJournal,
             open: (ui) => ui && ui.open(),
+            close: (ui) => (ui && typeof ui.close === 'function') ? ui.close() : tryGlobalClose()
+        },
+        // =========== 新增 Mortal 配置 ===========
+        'MORTAL': {
+            getObj: () => window.UI_Mortal, // 获取全局对象
+            open: (ui) => ui && ui.open(),  // 安全调用 open
             close: (ui) => (ui && typeof ui.close === 'function') ? ui.close() : tryGlobalClose()
         }
     };

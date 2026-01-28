@@ -69,7 +69,7 @@ const UIStudy = {
         `;
 
         if (window.UtilsModal && window.UtilsModal.showInteractiveModal) {
-            this.modalBody = window.UtilsModal.showInteractiveModal("青灯研读", contentHtml, null, "modal_study", 70, 70);
+            this.modalBody = window.UtilsModal.showInteractiveModal("研读功法", contentHtml, null, "modal_study", 70, 70);
         }
 
         this._injectStyles();

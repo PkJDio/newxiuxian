@@ -230,7 +230,7 @@ const BlacksmithShop = {
         const entry = this.currentStock[index];
         if (!entry || entry.qty <= 0) return;
         if (player.money >= entry.price) {
-            player.money -= entry.price;
+            UtilsMoney.removeMoney(entry.price);
             entry.qty--;
             if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, 1);
             const shopKey = entry.shopKey;
@@ -257,7 +257,7 @@ const BlacksmithShop = {
 
         if (buyQty <= 0) { window.showToast("银子不够！"); return; }
 
-        player.money -= (buyQty * entry.price);
+        UtilsMoney.removeMoney(buyQty * entry.price);
         entry.qty -= buyQty;
 
         if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
@@ -373,7 +373,7 @@ const BlacksmithShop = {
             return;
         }
 
-        player.money += price;
+        UtilsMoney.addMoney(price);
 
         if (window.UtilsItem) {
             window.UtilsItem.removeItem(sid, 1);
@@ -393,7 +393,7 @@ const BlacksmithShop = {
 
         const count = item.count || 1;
         const totalPrice = unitPrice * count;
-        player.money += totalPrice;
+        UtilsMoney.addMoney(totalPrice);
 
         if (window.UtilsItem) {
             window.UtilsItem.discardMultipleItems([sid]);

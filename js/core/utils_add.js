@@ -94,7 +94,8 @@ const UtilsAdd = {
     addMoney: function(amount) {
         if (typeof player === 'undefined') return;
 
-        player.money = (player.money || 0) + amount;
+
+        UtilsMoney.addMoney(amount)
 
         if(window.updateUI) window.updateUI();
 

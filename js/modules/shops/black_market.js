@@ -227,7 +227,7 @@ const BlackMarket = {
         if (!entry || entry.qty <= 0) return;
 
         if (window.player.money >= entry.price) {
-            window.player.money -= entry.price;
+            UtilsMoney.removeMoney(entry.price);
             entry.qty--;
 
             // 更新日志

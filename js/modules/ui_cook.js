@@ -243,7 +243,7 @@ let UICook = {
             `;
         }).join('');
         if (window.twemoji) {
-            window.twemoji.parse(grid);
+            window.parseEmoji(grid);
         }
     },
 
@@ -261,7 +261,7 @@ let UICook = {
             </div>
         `).join('');
         if (window.twemoji) {
-            window.twemoji.parse(pot);
+            window.parseEmoji(pot);
         }
     },
 
@@ -384,7 +384,7 @@ let UICook = {
         frame.innerHTML = `<div style="display:flex;width:100%;height:100%;padding:5px;">${leftHtml}${rightHtml}</div>`;
 
         if (window.twemoji) {
-            window.twemoji.parse(frame);
+            window.parseEmoji(frame);
         }
     },
 

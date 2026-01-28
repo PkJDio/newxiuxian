@@ -100,7 +100,8 @@ const ArchiveSystem = {
 
             UtilsItem.checkBagData();
             initZhaoshiSystem();
-
+            window.UtilsMortalTask.recalcSlots();
+            UtilsSkill.validateZhaoshiIntegrity();
 
             // 3. 恢复后的刷新
             if (window.recalcStats) window.recalcStats();

@@ -13,6 +13,102 @@ const ModalManager = {
             legacyOverlay.remove();
         }
         this._injectQingyunStyles(); // 注入青云赛专用样式
+        this._injectMortalStyles();
+    },
+    // =========================================================================
+    //  新增：凡尘武学突破/任务完成 专用提醒弹窗
+    // =========================================================================
+    /**
+     * 显示凡尘突破/任务完成提醒
+     * @param {string} title 标题 (如: "瓶颈突破")
+     * @param {string} content 内容 (如: "试炼圆满，可前往突破！")
+     * @param {Function} onConfirm 点击按钮后的回调 (可选)
+     */
+    showMortalBreakthroughModal: function(title, content, onConfirm = null) {
+        // 创建临时回调
+        const tempName = 'mortal_cb_' + Date.now();
+        window[tempName] = () => {
+            window.closeModal();
+            if (onConfirm) onConfirm();
+            delete window[tempName];
+        };
+
+        const footer = `
+            <div style="text-align:center; padding-bottom:10px;">
+                <button class="mortal_btn_confirm" onclick="window['${tempName}']()">前往查看</button>
+            </div>
+        `;
+
+        // 使用专用样式类 modal_mortal_alert
+        // 禁止点击外部关闭，必须点按钮确认
+        this._showBaseModal('modal_mortal_alert', title, content, footer, "", 35, null, { allowOutsideClick: false, allowEsc: true });
+    },
+
+    _injectMortalStyles: function() {
+        if (document.getElementById('style-modal-mortal')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-mortal';
+        style.innerHTML = `
+            /* 凡尘突破弹窗：深色金边风格 */
+            .modal_mortal_alert {
+                background: linear-gradient(135deg, #263238 0%, #37474f 100%) !important;
+                border: 2px solid #ffd700 !important;
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.4), inset 0 0 50px rgba(0,0,0,0.5) !important;
+                color: #eceff1;
+                font-family: "KaiTi", serif;
+                border-radius: 8px !important;
+                overflow: visible !important;
+                animation: mortal-pop 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            }
+            
+            .modal_mortal_alert .modal_header {
+                background: transparent !important;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.3) !important;
+                color: #ffd700 !important;
+                font-size: 24px !important;
+                text-align: center !important;
+                padding: 15px !important;
+                letter-spacing: 2px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            }
+
+            .modal_mortal_alert .modal_body {
+                font-size: 18px;
+                line-height: 1.6;
+                text-align: center;
+                padding: 30px 20px !important;
+                color: #fff;
+            }
+
+            /* 确认按钮：金色流光 */
+            .mortal_btn_confirm {
+                background: linear-gradient(to bottom, #ffca28, #ff6f00);
+                color: #3e2723;
+                border: 1px solid #ff8f00;
+                padding: 10px 40px;
+                font-size: 20px;
+                font-family: "KaiTi";
+                font-weight: bold;
+                border-radius: 4px;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+                transition: all 0.1s;
+            }
+            .mortal_btn_confirm:hover {
+                filter: brightness(1.1);
+                transform: scale(1.05);
+            }
+            .mortal_btn_confirm:active {
+                transform: scale(0.95);
+            }
+
+            /* 动画 */
+            @keyframes mortal-pop {
+                0% { transform: scale(0.8); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     },
     /**
      * 样式1：互动式决策弹窗 (确认/取消/自定义双按钮)
@@ -171,6 +267,163 @@ const ModalManager = {
         `;
         document.head.appendChild(style);
     },
+    // =========================================================================
+    //  新增：装备强化成功专属特效弹窗 (+8 ~ +14)
+    // =========================================================================
+    /**
+     * 显示强化成功特效弹窗
+     * @param {number} level 当前强化等级
+     * @param {string} itemName 装备名称
+     * @param {Function} onConfirm 确认回调
+     */
+    showReinforceSuccessModal: function(level, itemName, onConfirm) {
+        this._injectReinforceStyles();
+
+        // 根据等级选择样式类 (8-14)
+        // 如果超过14，默认使用14的样式
+        const styleIndex = Math.min(14, Math.max(8, level));
+        const styleClass = `modal_reinforce_lv${styleIndex}`;
+
+        // 不同等级的标题文案
+        const titles = {
+            8: "⚡ 异 象 初 现 ⚡",
+            9: "🌊 撼 动 天 地 🌊",
+            10: "👹 鬼 斧 神 工 👹",
+            11: "🌟 夺 天 造 化 🌟",
+            12: "🔥 神 鬼 皆 惊 🔥",
+            13: "⚡ 逆 转 乾 坤 ⚡",
+            14: "👑 举 世 无 双 👑"
+        };
+        const titleText = titles[styleIndex] || "强 化 成 功";
+
+        // 创建临时回调
+        const tempName = 'reinforce_cb_' + Date.now();
+        window[tempName] = () => {
+            window.closeModal();
+            if (onConfirm) onConfirm();
+            delete window[tempName];
+        };
+
+        const content = `
+            <div class="reinforce_success_body">
+                <div class="reinforce_item_name">${itemName}</div>
+                <div class="reinforce_level_tag">强化等级 <span class="num">+${level}</span></div>
+                <div class="reinforce_desc">器灵觉醒，威能大增！</div>
+            </div>
+        `;
+
+        const footer = `
+            <div style="text-align:center; padding-bottom:15px;">
+                <button class="reinforce_btn_confirm" onclick="window['${tempName}']()">收下神兵</button>
+            </div>
+        `;
+
+        // 这里的 40 是宽度 vw
+        this._showBaseModal(styleClass, titleText, content, footer, "modal_reinforce_base", 40, null, { allowOutsideClick: false, allowEsc: false });
+    },
+
+    _injectReinforceStyles: function() {
+        if (document.getElementById('style-modal-reinforce')) return;
+        const style = document.createElement('style');
+        style.id = 'style-modal-reinforce';
+        style.innerHTML = `
+            /* 基础布局 */
+            .modal_reinforce_base {
+                font-family: "KaiTi", serif;
+                text-align: center;
+                overflow: visible !important;
+                border-radius: 12px !important;
+                transition: transform 0.3s;
+                animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .reinforce_success_body { padding: 20px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+            .reinforce_item_name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+            .reinforce_level_tag { font-size: 36px; font-weight: bold; color: #ffd700; margin: 15px 0; }
+            .reinforce_level_tag .num { font-size: 48px; }
+            .reinforce_desc { font-size: 18px; opacity: 0.8; }
+            .reinforce_btn_confirm {
+                background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.5);
+                color: #fff; padding: 10px 40px; font-size: 20px; font-family: "KaiTi";
+                cursor: pointer; border-radius: 30px; transition: all 0.2s;
+            }
+            .reinforce_btn_confirm:hover { background: #fff; color: #000; transform: scale(1.05); }
+
+            @keyframes pop-in { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+            @keyframes breathe { 0%, 100% { box-shadow: 0 0 20px currentColor; } 50% { box-shadow: 0 0 40px currentColor; } }
+            @keyframes shake-hard { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+            @keyframes rainbow-border { 0% { border-color: #ff0000; box-shadow: 0 0 40px #ff0000; } 20% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; } 40% { border-color: #0000ff; box-shadow: 0 0 40px #0000ff; } 60% { border-color: #00ffff; box-shadow: 0 0 40px #00ffff; } 80% { border-color: #00ff00; box-shadow: 0 0 40px #00ff00; } 100% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; } }
+
+            /* ================= 样式分级 (+8 ~ +14) ================= */
+            
+            /* Lv.8: 异象初现 (青色悬浮) */
+            .modal_reinforce_lv8 {
+                background: linear-gradient(135deg, #006064 0%, #0097a7 100%) !important;
+                border: 2px solid #84ffff !important;
+                box-shadow: 0 0 20px #00bcd4 !important;
+            }
+            .modal_reinforce_lv8 .modal_header { background: rgba(0,0,0,0.2) !important; color: #84ffff !important; }
+
+            /* Lv.9: 撼动天地 (翠绿脉动) */
+            .modal_reinforce_lv9 {
+                background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+                border: 2px solid #69f0ae !important;
+                color: #69f0ae;
+                animation: breathe 3s infinite alternate !important;
+            }
+            .modal_reinforce_lv9 .modal_header { background: rgba(0,0,0,0.2) !important; color: #69f0ae !important; }
+
+            /* Lv.10: 鬼斧神工 (深紫幽冥) */
+            .modal_reinforce_lv10 {
+                background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%) !important;
+                border: 3px solid #e040fb !important;
+                box-shadow: 0 0 30px #d500f9 !important;
+            }
+            .modal_reinforce_lv10 .modal_header { background: transparent !important; color: #e040fb !important; font-size: 24px !important; letter-spacing: 4px; }
+
+            /* Lv.11: 夺天造化 (纯金圣光) */
+            .modal_reinforce_lv11 {
+                background: linear-gradient(to bottom, #ff6f00, #ff8f00) !important;
+                border: 3px solid #ffff00 !important;
+                box-shadow: 0 0 50px rgba(255, 215, 0, 0.8) !important;
+            }
+            .modal_reinforce_lv11 .modal_header { color: #fff !important; text-shadow: 0 0 10px #ffff00; font-size: 26px !important; }
+            .modal_reinforce_lv11 .reinforce_level_tag { color: #fff !important; text-shadow: 0 0 20px #ffd700; }
+
+            /* Lv.12: 神鬼皆惊 (血红震颤) */
+            .modal_reinforce_lv12 {
+                background: #b71c1c !important;
+                border: 4px solid #ff1744 !important;
+                box-shadow: 0 0 60px #ff1744 !important;
+                animation: shake-hard 0.5s infinite !important;
+            }
+            .modal_reinforce_lv12 .modal_header { color: #000 !important; background: #ff5252 !important; font-weight: 900 !important; }
+
+            /* Lv.13: 逆转乾坤 (黑洞雷霆 - 反色) */
+            .modal_reinforce_lv13 {
+                background: #000 !important;
+                border: 4px double #fff !important;
+                box-shadow: 0 0 40px #fff, inset 0 0 40px #2196f3 !important;
+            }
+            .modal_reinforce_lv13 .modal_header { color: #fff !important; border-bottom: 2px dashed #2196f3 !important; }
+            .modal_reinforce_lv13 .reinforce_item_name { color: #2196f3; text-shadow: 0 0 10px #fff; }
+
+            /* Lv.14: 举世无双 (彩虹流光 - 终极) */
+            .modal_reinforce_lv14 {
+                background: #1a1a1a !important;
+                border: 5px solid transparent !important;
+                animation: rainbow-border 2s linear infinite !important;
+            }
+            .modal_reinforce_lv14 .modal_header { 
+                background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff) !important;
+                -webkit-background-clip: text !important;
+                color: transparent !important;
+                font-size: 32px !important;
+                font-weight: 900 !important;
+            }
+            .modal_reinforce_lv14 .reinforce_level_tag { font-size: 50px !important; text-shadow: 0 0 30px #fff; }
+        `;
+        document.head.appendChild(style);
+    },
     // 1. Toast 提示
     showToast: function(msg, duration = 2000) {
         document.querySelectorAll('.ink_toast').forEach(el => el.remove());
@@ -273,40 +526,99 @@ const ModalManager = {
         });
     },
 
-    // 7. 选项列表
-    showSelectionModal: function(title, options, onConfirm = null) {
-        let listHtml = `<div class="modal_selection_list" style="display:flex; flex-direction:column; gap:10px; padding: 5px;">`;
-        options.forEach((opt) => {
-            const btnStyle = opt.style || 'ink_btn_long';
-            listHtml += `<button class="${btnStyle}" style="padding:12px; text-align:left; border:1px solid #ccc; background:#fff; cursor:pointer; border-radius:4px;">${opt.text}</button>`;
-        });
-        listHtml += `</div>`;
+    /**
+     * 显示选择弹窗 (最终修正版：宽窗口 + 黑色气泡 + 允许自定义HTML颜色)
+     * @param {String} title 标题
+     * @param {Array} options 选项数组
+     * @param {String} [contentText] (可选) 对话内容
+     */
+    showSelectionModal: function(title, options, contentText = null) {
+        // 1. 构建按钮列表
+        const callbacks = {};
+        let buttonsHtml = options.map((opt, index) => {
+            const cbName = `modal_sel_cb_${Date.now()}_${index}`;
+            window[cbName] = () => {
+                if (opt.autoClose !== false) this.closeTopModal();
+                if (opt.onClick) opt.onClick();
+                delete window[cbName];
+            };
+            const btnStyle = opt.style || "";
+            return `
+                <button onclick="window['${cbName}']()" class="ink_btn_normal" style="
+                    width:100%; padding: 10px 15px; font-size: 15px; margin-bottom: 8px; 
+                    min-height: auto; height: auto; line-height: 1.4; ${btnStyle}
+                ">
+                    ${opt.text}
+                </button>
+            `;
+        }).join('');
 
-        const wrapRender = (funcName) => {
-            let footerHtml = funcName ? `<button class="ink_btn" onclick="window['${funcName}']()">确认</button>` : '';
-            footerHtml += `<button class="ink_btn_normal" onclick="window.closeModal()">关闭</button>`;
+        // 2. 显示基础弹窗
+        const modalBody = this.showInteractiveModal(title, buttonsHtml, null, "modal_compact");
 
-            const { box } = this._showBaseModal('modal_selection', title, listHtml, footerHtml);
+        // 3. 样式调整 & 气泡挂载
+        if (modalBody) {
+            const modalBox = modalBody.closest('.ink_modal_box');
 
-            // 绑定事件
-            const container = box.querySelector('.modal_selection_list');
-            if (container) {
-                const buttons = container.querySelectorAll('button');
-                buttons.forEach((btn, idx) => {
-                    if (options[idx] && options[idx].onClick) {
-                        btn.onclick = () => {
-                            options[idx].onClick();
-                            if (options[idx].autoClose) window.closeModal();
-                        };
-                        btn.onmouseover = () => { btn.style.borderColor = '#333'; btn.style.background = '#fafafa'; };
-                        btn.onmouseout =  () => { btn.style.borderColor = '#ccc'; btn.style.background = '#fff'; };
-                    }
-                });
+            if (modalBox) {
+                // === A. 窗口样式 (宽版) ===
+                modalBox.style.width = '550px';
+                modalBox.style.maxWidth = '95%';
+                modalBox.style.height = 'auto';
+                modalBox.style.minHeight = 'auto';
+                modalBox.style.overflow = 'visible';
+                modalBox.style.position = 'relative';
+
+                modalBody.style.padding = '15px 20px';
+                modalBody.style.overflow = 'visible';
+
+                // === B. 气泡挂载 ===
+                if (contentText) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'npc-outside-bubble';
+
+                    Object.assign(bubble.style, {
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: '0',
+                        width: '100%',
+                        marginBottom: '15px',
+                        zIndex: '10',
+                        pointerEvents: 'none'
+                    });
+
+                    // 这里只设置默认颜色为白，不强制覆盖子元素
+                    bubble.innerHTML = `
+                        <div style="
+                            background: #111; 
+                            color: #fff;  /* 默认白色 */
+                            padding: 15px 20px;
+                            border-radius: 8px;
+                            border: 1px solid #555;
+                            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+                            font-size: 16px;
+                            line-height: 1.6;
+                            text-align: left;
+                            position: relative;
+                            pointer-events: auto;
+                            text-shadow: none; /* 去掉阴影，防止模糊 */
+                        ">
+                            ${contentText}
+                            
+                            <div style="
+                                position: absolute;
+                                bottom: -8px; left: 40px; 
+                                width: 0; height: 0; 
+                                border-left: 8px solid transparent;
+                                border-right: 8px solid transparent;
+                                border-top: 8px solid #111;
+                            "></div>
+                        </div>
+                    `;
+                    modalBox.appendChild(bubble);
+                }
             }
-        };
-
-        if (onConfirm) this._createTempCallback(onConfirm, wrapRender);
-        else wrapRender(null);
+        }
     },
 
     // 8. 大地图
@@ -981,4 +1293,7 @@ window.showDefeatModal = ModalManager.showDefeatModal.bind(ModalManager);
 window.showFortuneModal = ModalManager.showFortuneModal.bind(ModalManager);
 // 新增这一行
 window.showGambleResultModal = ModalManager.showGambleResultModal.bind(ModalManager);
-
+// 新增接口
+window.showMortalBreakthroughModal = ModalManager.showMortalBreakthroughModal.bind(ModalManager);
+// 新增接口 (添加到文件末尾)
+window.showReinforceSuccessModal = ModalManager.showReinforceSuccessModal.bind(ModalManager);

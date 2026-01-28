@@ -61,7 +61,7 @@ let GroceryShop = {
     _generateStock: function(town) {
         if (!window.GAME_DB || !player) return;
 
-        // 【修改】加入 day
+        // 保持原有的时间种子逻辑
         const timeKey = `${player.time.month}_${player.time.day}`;
         const shopKey = `groceryShop_${town.id}_${timeKey}`;
 
@@ -70,22 +70,64 @@ let GroceryShop = {
 
         const allItems = Object.values(window.GAME_DB.items || {});
 
+        // 原有的筛选逻辑
         const flavorings = allItems.filter(i => i.subType === 'flavoring' && (i.rarity || 1) <= config.maxRarity);
         const rods = allItems.filter(i => i.type === 'fishing_rod' && (i.rarity || 1) <= config.maxRarity);
 
+        // ============================================================
+        // 【新增】筛选 R1-R2 的外功功法 (type=book, subType=body)
+        // ============================================================
+        const basicBooks = allItems.filter(i =>
+            i.type === 'book' &&
+            i.subType === 'body' &&
+            (i.rarity === 1 || i.rarity === 2)
+        );
+
         let selectedItems = [];
 
+        // 1. 处理鱼竿 (保持不变)
         if (rods.length > 0) {
-            const rodIndex = Math.round(window.getSeededRandom(shopKey, "rodSelect") * rods.length);
+            const rodIndex = Math.round(window.getSeededRandom(shopKey, "rodSelect") * (rods.length - 1));
             const rod = rods[rodIndex];
-            selectedItems.push({
-                item: rod,
-                price: Math.round((rod.price || rod.value || 100) * 2),
-                qty: 1,
-                isRod: true
-            });
+            if (rod) {
+                selectedItems.push({
+                    item: rod,
+                    price: Math.round((rod.price || rod.value || 100) * 2),
+                    qty: 1,
+                    isRod: true
+                });
+            }
         }
 
+        // ============================================================
+        // 【新增】随机抽取 1-2 本基础功法
+        // ============================================================
+        if (basicBooks.length > 0) {
+            // 决定上架几本 (1本 或 2本)
+            const bookCount = 1 + Math.round(window.getSeededRandom(shopKey, "bookCount"));
+
+            // 打乱顺序 (基于种子)
+            const scoredBooks = basicBooks.map(item => {
+                return { item: item, score: window.getSeededRandom(shopKey, item.id, "bookRank") };
+            });
+            scoredBooks.sort((a, b) => b.score - a.score);
+
+            // 选取前 N 本
+            const chosenBooks = scoredBooks.slice(0, bookCount).map(entry => {
+                const item = entry.item;
+                return {
+                    item: item,
+                    // 功法价格倍率，这里设为价值的 1.5 倍，你可以根据需要调整
+                    price: Math.round((item.price || item.value || 100) * 1.5),
+                    qty: 1, // 功法通常一本就够，或者你可以设为 3-5 本
+                    isRod: false
+                };
+            });
+
+            selectedItems = [...selectedItems, ...chosenBooks];
+        }
+
+        // 2. 处理调料/食材 (保持不变)
         const targetFlavorCount = config.minType + Math.round(window.getSeededRandom(shopKey, "typeCount") * (config.maxType - config.minType));
 
         const scoredFlavorings = flavorings.map(item => {
@@ -106,6 +148,7 @@ let GroceryShop = {
 
         selectedItems = [...selectedItems, ...chosenFlavorings];
 
+        // 3. 生成最终库存对象 (保持不变)
         this.currentStock = selectedItems.map(entry => {
             const item = entry.item;
             if (!player.shopLogs) player.shopLogs = {};
@@ -222,7 +265,7 @@ let GroceryShop = {
         const entry = this.currentStock[index];
         if (!entry || entry.qty <= 0 || player.money < entry.price) return;
 
-        player.money -= entry.price;
+        UtilsMoney.removeMoney(entry.price);
         entry.qty--;
 
         const shopKey = entry.shopKey;
@@ -248,7 +291,7 @@ let GroceryShop = {
 
         if (buyQty <= 0) { window.showToast("银子不够！"); return; }
 
-        player.money -= (buyQty * entry.price);
+        UtilsMoney.removeMoney(buyQty * entry.price);
         entry.qty -= buyQty;
 
         if (window.UtilsAdd && window.UtilsAdd.addItem) window.UtilsAdd.addItem(entry.id, buyQty);
@@ -369,7 +412,7 @@ let GroceryShop = {
             return;
         }
 
-        player.money += price;
+        UtilsMoney.addMoney(price);
 
         // 调用 UtilsItem 移除 1 个
         if (window.UtilsItem) {
@@ -391,7 +434,7 @@ let GroceryShop = {
 
         const count = item.count || 1;
         const totalPrice = unitPrice * count;
-        player.money += totalPrice;
+        UtilsMoney.addMoney(totalPrice);
 
         // 调用 UtilsItem 移除整个堆叠
         if (window.UtilsItem) {
