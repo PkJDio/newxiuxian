@@ -1,0 +1,103 @@
+/* css/app_layout.css */
+
+:root {
+    /* --- 水墨风格配色定义 --- */
+    --app-ink-black: #1a1a1a;       /* 浓墨：标题、重点 */
+    --app-ink-dark: #333333;        /* 焦墨：正文 */
+    --app-ink-gray: #666666;        /* 淡墨：次要信息 */
+    --app-ink-light: #dcdcdc;       /* 极淡：边框、分割线 */
+    --app-paper-bg: #f7f7f2;        /* 宣纸白：游戏主背景 */
+    --app-paper-texture: #ebe8e0;   /* 旧纸色：弹窗背景 */
+    --app-bg-outside: #2c2c2c;      /* 外部背景：深灰/黑 */
+
+    /* --- 字体设置 --- */
+    /* 优先使用楷体/宋体，营造古风感 */
+    --app-font-family: "Kaiti SC", "STKaiti", "KaiTi", "Microsoft YaHei", serif;
+}
+
+/* 1. 基础环境设置 */
+body {
+    background-color: var(--app-bg-outside);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--app-font-family);
+    color: var(--app-ink-dark);
+}
+
+/* 2. 手机仿真容器 */
+#app_ui_container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: var(--app-paper-bg);
+    /* 模拟宣纸纹理（可选，这里用微噪点模拟） */
+    background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+/* PC端适配限制 */
+@media screen and (min-width: 600px) {
+    #app_ui_container {
+        width: 480px;
+        height: 90vh;
+        max-height: 900px;
+        border-radius: 4px;
+        /* 给PC端加一个外边框，像画框一样 */
+        border: 2px solid #555;
+    }
+}
+
+/* 3. 层级管理 (全部加上 app_ui_ 前缀) */
+.app_ui_layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* 默认点击穿透 */
+}
+
+/* 场景层 */
+#app_ui_layer_scene { z-index: 1; }
+/* 交互层 */
+#app_ui_layer_gameplay { z-index: 10; }
+/* UI层 (开启点击) */
+#app_ui_layer_ui { z-index: 100; }
+#app_ui_layer_ui * { pointer-events: auto; }
+/* 弹窗层 */
+#app_ui_layer_modal { z-index: 1000; }
+
+/* --- 通用水墨组件样式 (示例) --- */
+
+/* 简单的水墨按钮 */
+.app_ui_btn {
+    border: 2px solid var(--app-ink-black);
+    background-color: transparent;
+    color: var(--app-ink-black);
+    padding: 10px 24px;
+    font-family: var(--app-font-family);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* 模拟毛笔边缘的粗糙感（可选） */
+    border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
+}
+
+.app_ui_btn:active {
+    background-color: var(--app-ink-black);
+    color: var(--app-paper-bg);
+}
+
+/* 标题样式 */
+.app_ui_title_large {
+    font-size: 32px;
+    color: var(--app-ink-black);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
