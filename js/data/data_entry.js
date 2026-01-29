@@ -36,14 +36,7 @@ const ENTRY_DB = {
         name: "震慑", type: "buff", trigger: "onPhyHit",
         desc: "物伤 {val}% 概率晕眩", color: "#8d6e63", icon: "💫"
     },
-    "freeze": {
-        name: "寒霜", type: "buff", trigger: "onMagHit",
-        desc: "法伤 {val}% 概率迟缓", color: "#4dd0e1", icon: "❄️"
-    },
-    "burn": {
-        name: "红莲", type: "buff", trigger: "onMagHit",
-        desc: "法伤 {val}% 概率灼烧", color: "#ff5722", icon: "🔥"
-    },
+
     "true_strike": {
         name: "剑意", type: "buff", trigger: "onPostDamage",
         desc: "追加 {val} 点真实伤害", color: "#f06292", icon: "🗡️"
@@ -52,10 +45,7 @@ const ENTRY_DB = {
         name: "夺元", type: "buff", trigger: "onHit",
         desc: "偷取 {val} 点法力", color: "#7e57c2", icon: "🌑"
     },
-    "combo_master": {
-        name: "叠浪", type: "buff", trigger: "onTurnStart",
-        desc: "每回合伤害 +{val}%", color: "#42a5f5", icon: "🌊"
-    },
+
 
     // ==========================================
     // B. 防御触发类 (On Damaged/Dodge) - 绿色/护体系
@@ -103,7 +93,7 @@ const ENTRY_DB = {
     },
     "hp_up_pct": {
         name: "长生", type: "buff", trigger: "statMod",
-        desc: "生命 +{val}%", color: "#d4e157", icon: "🍑"
+        desc: "生命上限 +{val}%", color: "#d4e157", icon: "🍑"
     },
     "atk_up_pct": {
         name: "神力", type: "buff", trigger: "statMod",
@@ -113,10 +103,7 @@ const ENTRY_DB = {
         name: "元神", type: "buff", trigger: "statMod",
         desc: "法攻 +{val}%", color: "#ab47bc", icon: "🔮"
     },
-    "luck_up": {
-        name: "天眷", type: "buff", trigger: "statMod",
-        desc: "气运 +{val}", color: "#ffca28", icon: "🍀"
-    },
+
     "first_strike": {
         name: "先机", type: "buff", trigger: "battleStart",
         desc: "初始行动条 +{val}%", color: "#ffee58", icon: "⚡"
@@ -149,7 +136,7 @@ const ENTRY_DB = {
     // ==========================================
     "gold_rate_up": {
         name: "聚财", type: "buff", trigger: "onLoot",
-        desc: "战斗 文获取 +{val}%", color: "#ffd700", icon: "💰"
+        desc: "战斗 金钱获取 +{val}%", color: "#ffd700", icon: "💰"
     },
     "drop_rate_up": {
         name: "机缘", type: "buff", trigger: "onLoot",
@@ -157,7 +144,7 @@ const ENTRY_DB = {
     },
     "exp_rate_up": {
         name: "慧根", type: "buff", trigger: "onBattleEnd",
-        desc: "修为/经验获取 +{val}%", color: "#81c784", icon: "🧠"
+        desc: "修为获取 +{val}%", color: "#81c784", icon: "🧠"
     },
     "gather_yield": {
         name: "丰饶", type: "buff", trigger: "onGather",

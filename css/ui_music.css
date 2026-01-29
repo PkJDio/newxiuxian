@@ -1,0 +1,40 @@
+/* ================= 音乐控制按钮 ================= */
+#music_control_btn {
+    position: fixed;
+    top: 15px;
+    right: 15px; /* 放在右上角，如果挡住了其他按钮可以调整这个值 */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 圆形 */
+    background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+    border: 2px solid #a89f91; /* 淡金色边框 */
+    cursor: pointer;
+    z-index: 10000; /* 保证在最上层 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#music_control_btn svg {
+    width: 24px;
+    height: 24px;
+    fill: #e0d6c5; /* 图标颜色 */
+}
+
+/* 旋转动画类 */
+.music-rotating {
+    animation: music-spin 5s linear infinite;
+}
+
+/* 停止状态：稍微暗一点，表示暂停 */
+.music-paused svg {
+    opacity: 0.5;
+}
+
+@keyframes music-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

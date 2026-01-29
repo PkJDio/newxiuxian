@@ -248,7 +248,14 @@
         </div>
     </div>
 </div>
+<audio id="bgm_audio" src="assets/music/bgm.mp3" loop preload="auto"></audio>
 
+<div id="music_control_btn" class="music-paused" title="点击开关音乐" onclick="UtilsAudio.toggleBgm()">
+    <svg viewBox="0 0 24 24">
+        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+    </svg>
+</div>
+<script src="js/core/utils_audio.js" defer></script> <script src="js/core/utils.js" defer></script>
 <script src="js/twemoji.min.js" defer></script>
 <script src="js/jquery.min.js"></script>
 
@@ -304,6 +311,7 @@
 <script src="js/core/utils_enemy.js" defer></script>
 <script src="js/core/utils_gongfa.js" defer></script>
 <script src="js/core/utils_npc.js" defer></script>
+
 
 
 <script src="js/core/utils_mortal_task.js" defer></script>

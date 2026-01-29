@@ -25,6 +25,11 @@ function enterGameScene() {
     }
 
     if (window.initMap) window.initMap();
+
+    // 【新增】点击后播放音乐
+    if (window.UtilsAudio) {
+        window.UtilsAudio.playBgm();
+    }
 }
 
 // 使用 requestAnimationFrame 防抖，防止同一帧多次调用
