@@ -1,5 +1,15 @@
 /* css/app_layout.css */
 
+/* === 重点：必须放在文件最开头 === */
+* {
+    /* 去除手机端默认的蓝色半透明高亮框 */
+    -webkit-tap-highlight-color: transparent;
+    /* 去除文字长按选中的蓝色背景 */
+    user-select: none;
+    /* 去除PC端点击焦点的蓝框 */
+    outline: none;
+}
+
 :root {
     /* --- 水墨风格配色定义 --- */
     --app-ink-black: #1a1a1a;       /* 浓墨：标题、重点 */
@@ -11,7 +21,6 @@
     --app-bg-outside: #2c2c2c;      /* 外部背景：深灰/黑 */
 
     /* --- 字体设置 --- */
-    /* 优先使用楷体/宋体，营造古风感 */
     --app-font-family: "Kaiti SC", "STKaiti", "KaiTi", "Microsoft YaHei", serif;
 }
 
@@ -36,7 +45,6 @@ body {
     width: 100%;
     height: 100%;
     background-color: var(--app-paper-bg);
-    /* 模拟宣纸纹理（可选，这里用微噪点模拟） */
     background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
     overflow: hidden;
     box-shadow: 0 0 50px rgba(0,0,0,0.5);
@@ -49,29 +57,24 @@ body {
         height: 90vh;
         max-height: 900px;
         border-radius: 4px;
-        /* 给PC端加一个外边框，像画框一样 */
         border: 2px solid #555;
     }
 }
 
-/* 3. 层级管理 (全部加上 app_ui_ 前缀) */
+/* 3. 层级管理 */
 .app_ui_layer {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; /* 默认点击穿透 */
+    pointer-events: none;
 }
 
-/* 场景层 */
 #app_ui_layer_scene { z-index: 1; }
-/* 交互层 */
 #app_ui_layer_gameplay { z-index: 10; }
-/* UI层 (开启点击) */
 #app_ui_layer_ui { z-index: 100; }
 #app_ui_layer_ui * { pointer-events: auto; }
-/* 弹窗层 */
 #app_ui_layer_modal { z-index: 1000; }
 
-/* --- 通用水墨组件样式 (示例) --- */
+/* --- 通用水墨组件样式 --- */
 
 /* 简单的水墨按钮 */
 .app_ui_btn {
@@ -83,14 +86,17 @@ body {
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
-    /* 模拟毛笔边缘的粗糙感（可选） */
+    transition: transform 0.1s ease-in-out; /* 只对缩放做动画 */
     border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
+
+    /* 再次强制去除高亮 */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .app_ui_btn:active {
-    background-color: var(--app-ink-black);
-    color: var(--app-paper-bg);
+    /* === 重点：这里不要写 background-color，否则会变色 === */
+    /* 只保留缩放效果 */
+    transform: scale(0.96); /* 缩小一点点，产生按压感 */
 }
 
 /* 标题样式 */

@@ -1,0 +1,175 @@
+/* css/app_ui_modal.css */
+
+/* --- 1. 基础容器与遮罩 --- */
+/* 遮罩层：不再支持点击关闭，单纯的阻挡层 */
+.util_app_modal_overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* 深墨色半透明 */
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px); /* 微微模糊背景，突出弹窗 */
+    /* === 新增这行关键代码 === */
+    pointer-events: auto;
+    /* 强制恢复点击事件，否则会继承父层的 none */
+}
+
+/* 弹窗主体：白底水墨风 */
+.util_app_modal_window {
+    position: relative;
+    width: 85%;
+    max-width: 400px;
+    background-color: #fcfcfc; /* 纯白偏一点点纸色 */
+    border: 2px solid #1a1a1a; /* 浓墨边框 */
+    border-radius: 4px;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.2); /* 硬阴影，增加纸张厚度感 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: util_app_modal_fade_in 0.2s ease-out;
+}
+
+/* 针对大弹窗（如更新日志）的特殊类 */
+.util_app_modal_large {
+    height: 75vh; /* 占据屏幕高度 3/4 */
+    max-width: 90%;
+}
+
+@keyframes util_app_modal_fade_in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* --- 2. 弹窗内部结构 --- */
+.util_app_modal_header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    background-color: #f7f7f7;
+    font-family: var(--app-font-family, serif);
+}
+
+.util_app_modal_content {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto; /* 内容过多可滚动 */
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap; /* 保留换行 */
+}
+
+.util_app_modal_footer {
+    padding: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    background-color: #fff;
+}
+
+/* --- 3. 按钮样式 --- */
+.util_app_modal_btn {
+    flex: 1;
+    padding: 10px 0;
+    border: 1px solid #1a1a1a;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s;
+    font-family: var(--app-font-family, serif);
+
+    /* 强制去除高亮 */
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+}
+.util_app_modal_btn:active {
+    /* === 这里也不要加背景色 === */
+    transform: scale(0.95); /* 按压缩小 */
+    background-color: transparent; /* 强制透明，防止变色 */
+}
+/* 取消按钮稍微淡一点 */
+.util_app_modal_btn_cancel {
+    border-color: #999;
+    color: #666;
+}
+
+/* --- 4. 风格变种 (普通/好事/坏事/历史) --- */
+/* 好事：标题带点朱砂红 */
+.util_app_modal_style_good .util_app_modal_header {
+    border-bottom: 2px solid #8B0000;
+    color: #8B0000;
+}
+/* 坏事：标题深灰偏黑 */
+.util_app_modal_style_bad .util_app_modal_header {
+    border-bottom: 2px solid #000;
+    background-color: #e0e0e0;
+}
+/* 历史：泛黄陈旧感 */
+.util_app_modal_style_history {
+    background-color: #f4f0e6;
+    border-color: #5d4037;
+}
+.util_app_modal_style_history .util_app_modal_header {
+    background-color: #eae0d0;
+    color: #5d4037;
+}
+
+/* --- 5. 迷你提醒 (Toast) --- */
+.util_app_modal_toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 3000;
+    pointer-events: none; /* 不阻挡操作 */
+    animation: util_app_modal_toast_in 0.3s forwards;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 80%;
+    text-align: center;
+}
+
+/* 位置变种 */
+.util_app_modal_toast_top { top: 15%; }
+.util_app_modal_toast_center { top: 45%; }
+
+/* 风格变种 */
+.util_app_modal_toast_white {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+}
+.util_app_modal_toast_black {
+    background-color: #1a1a1a;
+    color: #fff;
+    border: 1px solid #fff;
+}
+
+@keyframes util_app_modal_toast_in {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* --- 6. 列表弹窗专用列表样式 --- */
+.util_app_modal_list_ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.util_app_modal_list_li {
+    padding: 12px 10px;
+    border-bottom: 1px dashed #ccc;
+    display: flex;
+    justify-content: space-between;
+}
+.util_app_modal_list_li:last-child {
+    border-bottom: none;
+}
